@@ -41,34 +41,13 @@ export function WaitlistForm() {
   }
 
   return (
-    <form className="waitlist-form" onSubmit={onSubmit}>
-      <label>
-        Email
-        <input required type="email" name="email" placeholder="you@company.com" />
-      </label>
-      <label>
-        X handle (optional)
-        <input name="x_handle" placeholder="danbuilds" />
-      </label>
-      <label>
-        What will you use x402Books AI for first?
-        <textarea name="use_case" placeholder="Track agent spend, monitor API costs..." />
-      </label>
-      <label>
-        Biggest pain with wallet tracking today?
-        <textarea name="pain_point" placeholder="Raw exports, no categorization, hard monthly reporting..." />
-      </label>
-      <button disabled={state === "loading"} className="btn btn-primary" type="submit">
-        {state === "loading" ? "Joining..." : "Join Waitlist"}
-      </button>
-      {message ? <p className={state === "success" ? "ok" : "err"}>{message}</p> : null}
-      <style jsx>{`
-        .waitlist-form{display:grid;gap:12px}
-        label{display:grid;gap:6px;color:#9aa8bc;font-size:14px}
-        input,textarea{border:1px solid #223046;background:#0d1420;color:#ecf2fb;padding:11px 12px;border-radius:12px;font:inherit}
-        textarea{min-height:94px;resize:vertical}
-        .ok{color:#8de6dd}.err{color:#fda4af}
-      `}</style>
+    <form className="grid gap-4" onSubmit={onSubmit}>
+      <input required type="email" name="email" placeholder="Email" className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
+      <input name="x_handle" placeholder="X handle (optional)" className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
+      <textarea name="use_case" placeholder="What will you use x402Books AI for first?" className="min-h-24 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
+      <textarea name="pain_point" placeholder="What’s your biggest pain with wallet tracking today?" className="min-h-24 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
+      <button disabled={state === "loading"} className="rounded-xl bg-teal-400 px-5 py-3 font-medium text-slate-950 disabled:opacity-60">{state === "loading" ? "Joining..." : "Join Waitlist"}</button>
+      {message ? <p className={state === "success" ? "text-teal-300" : "text-rose-300"}>{message}</p> : null}
     </form>
   );
 }
