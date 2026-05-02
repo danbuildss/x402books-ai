@@ -19,8 +19,8 @@ const features = [
     body: "Turn raw wallet activity into clear totals, counterparties, categories, and net flow.",
   },
   {
-    title: "Agent-Readable Reports",
-    body: "Generate clean JSON summaries your agent, app, or internal tool can consume.",
+    title: "CSV + Agent JSON",
+    body: "Export clean rows for humans and structured summaries your agent or app can consume.",
   },
 ];
 
@@ -59,9 +59,10 @@ const featureIcons = [
 ];
 
 const steps = [
-  ["01", "Paste Wallet", "Drop in any Base wallet address when the scanner opens."],
-  ["02", "Scan USDC Activity", "Fetch transfers and identify payment-like microtransaction behavior."],
-  ["03", "Get Readable Books", "Review spend, income, likely x402 payments, and export-ready reports."],
+  ["01", "Paste Base Wallet", "Drop in a wallet address when the first scanner opens."],
+  ["02", "Scan USDC Transfers", "Fetch Base USDC activity and normalize raw transfer records."],
+  ["03", "Label x402 Signals", "Flag repeated micropayment behavior as likely x402, not guaranteed."],
+  ["04", "Export Books", "Review reports, CSV rows, and agent-readable JSON summaries."],
 ];
 
 const reportRows = [
@@ -93,37 +94,38 @@ export default function HomePage() {
       <section className="hero-shell">
         <FadeContent>
           <div className="hero-copy">
-          <p className="eyebrow">
-            <ShinyText text="Readable books for the x402 economy" />
-            <span aria-hidden="true">-&gt;</span>
-          </p>
-          <h1>Your agent&apos;s books, finally readable.</h1>
-          <p className="typing-line">
-            <TextType
-              texts={[
-                "Paste a wallet. Get readable x402 books.",
-                "Scan Base USDC activity in seconds.",
-                "Export reports your agents can understand.",
-              ]}
-              typingSpeed={56}
-              deletingSpeed={34}
-              pauseDuration={1300}
-              showCursor
-              cursorCharacter="_"
-            />
-          </p>
-          <p className="hero-subtext">
-            x402Books AI turns raw Base USDC payments into clean spend reports,
-            income summaries, and audit-ready exports for builders and AI agents.
-          </p>
-          <div className="hero-actions">
-            <a className="primary-button" href="#waitlist">
-              Analyze Wallet
-            </a>
-            <a className="secondary-button" href="#report">
-              View Sample Report
-            </a>
-          </div>
+            <p className="eyebrow">
+              <ShinyText text="Built for Base USDC and likely x402 payment activity" speed={4} />
+              <span aria-hidden="true">-&gt;</span>
+            </p>
+            <h1>Your agent&apos;s books, finally readable.</h1>
+            <p className="typing-line">
+              <TextType
+                texts={[
+                  "Paste a wallet. Get readable x402 books.",
+                  "Scan Base USDC activity in seconds.",
+                  "Export reports humans and agents can understand.",
+                ]}
+                typingSpeed={56}
+                deletingSpeed={34}
+                pauseDuration={1300}
+                showCursor
+                cursorCharacter="_"
+              />
+            </p>
+            <p className="hero-subtext">
+              x402Books AI turns raw Base USDC payments into clean spend reports,
+              income summaries, and audit-ready exports for builders and AI agents.
+            </p>
+            <p className="trust-note">Product-first early access. No token required.</p>
+            <div className="hero-actions">
+              <a className="primary-button" href="#waitlist">
+                Get Wallet Scan Access
+              </a>
+              <a className="secondary-button" href="#report">
+                View Sample Report
+              </a>
+            </div>
           </div>
         </FadeContent>
 
@@ -132,7 +134,7 @@ export default function HomePage() {
             <div className="dashboard-card">
               <div className="card-topline">
                 <LogoMark />
-                <span>April 2026 Agent Spend</span>
+                <span>Base USDC Wallet Report</span>
               </div>
               <div className="metric-stack">
                 <div>
@@ -147,6 +149,20 @@ export default function HomePage() {
               <div className="net-flow">
                 <span>Net Flow</span>
                 <strong>+$48.40</strong>
+              </div>
+              <div className="signal-list">
+                <div>
+                  <span>Likely x402</span>
+                  <strong>128 payments</strong>
+                </div>
+                <div>
+                  <span>Top counterparty</span>
+                  <strong>0x91...a8c2</strong>
+                </div>
+                <div>
+                  <span>Export status</span>
+                  <strong>CSV + JSON ready</strong>
+                </div>
               </div>
               <div className="chart-preview">
                 <span style={{ height: "38%" }} />
@@ -166,25 +182,25 @@ export default function HomePage() {
       <section className="trust-strip" aria-label="Product metrics preview">
         <div>
           <span>128</span>
-          <p>Likely x402 payments</p>
+          <p>Sample likely x402 signals</p>
         </div>
         <div>
-          <span>4</span>
-          <p>Core report views</p>
+          <span>USDC</span>
+          <p>Focused Base payment asset</p>
         </div>
         <div>
-          <span>Base USDC</span>
-          <p>Focused chain and asset</p>
+          <span>JSON</span>
+          <p>Agent-readable output</p>
         </div>
       </section>
 
       <FadeContent delay={80}>
         <section className="section-heading" id="how">
-        <h2>How it works</h2>
-        <p>
-          A simple flow for turning agent payment activity into readable financial
-          records.
-        </p>
+          <h2>How it works</h2>
+          <p>
+            A simple flow for turning agent payment activity into readable financial
+            records.
+          </p>
         </section>
       </FadeContent>
 
@@ -223,14 +239,14 @@ export default function HomePage() {
       <section className="report-section" id="report">
         <div className="report-copy">
           <p className="micro-label">Sample report</p>
-          <h2>April 2026 Agent Spend Report</h2>
+          <h2>Base USDC Wallet Report</h2>
           <p>
             Wallet summaries should read like books, not block explorer residue.
             x402Books AI keeps uncertainty visible while still giving builders a
             clean operating view.
           </p>
           <a className="primary-button small" href="#waitlist">
-            Get Early Access
+            Get Wallet Scan Access
           </a>
         </div>
         <BorderGlow>
@@ -284,8 +300,8 @@ export default function HomePage() {
           <h2>Free while the first scanner ships.</h2>
         </div>
         <p>
-          Join the waitlist now. Early users will help shape wallet scans, CSV
-          exports, and the first agent API access tier before paid plans open.
+          Early access is free. Paid API access comes later after builders have
+          helped shape wallet scans, CSV exports, and agent-readable summaries.
         </p>
       </section>
 
@@ -297,6 +313,7 @@ export default function HomePage() {
             Get updates as wallet scans, likely x402 detection, CSV exports, and
             agent-readable reports ship.
           </p>
+          <p className="trust-note">Product-first. Token later, only after usage.</p>
         </div>
         <WaitlistForm />
       </section>
