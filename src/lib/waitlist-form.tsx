@@ -17,37 +17,71 @@ export function WaitlistForm() {
 
     const payload = {
       email: String(form.get("email") || "").trim().toLowerCase(),
-      x_handle: String(form.get("x_handle") || "").trim().replace(/^@/, ""),
+      x_handle: String(form.get("x_handle") || "")
+        .trim()
+        .replace(/^@/, ""),
       use_case: String(form.get("use_case") || "").trim(),
       pain_point: String(form.get("pain_point") || "").trim(),
     };
 
-    const res = await fetch("/api/waitlist", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const response = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    const body = await res.json();
-    if (res.ok) {
-      setState("success");
-      setMessage("You’re in. We’ll email you early access.");
-      event.currentTarget.reset();
-      return;
+      const body = await response.json();
+
+      if (response.ok) {
+        setState("success");
+        setMessage("You are in. Early access updates will land in your inbox.");
+        event.currentTarget.reset();
+        return;
+      }
+
+      setState("error");
+      setMessage(body.error || "Could not submit right now. Please try again.");
+    } catch {
+      setState("error");
+      setMessage("Network issue. Please try again in a moment.");
     }
-
-    setState("error");
-    setMessage(body.error || "Couldn’t submit right now. Please try again.");
   }
 
   return (
-    <form className="grid gap-4" onSubmit={onSubmit}>
-      <input required type="email" name="email" placeholder="Email" className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
-      <input name="x_handle" placeholder="X handle (optional)" className="rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
-      <textarea name="use_case" placeholder="What will you use x402Books AI for first?" className="min-h-24 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
-      <textarea name="pain_point" placeholder="What’s your biggest pain with wallet tracking today?" className="min-h-24 rounded-xl border border-slate-700 bg-slate-950 px-4 py-3" />
-      <button disabled={state === "loading"} className="rounded-xl bg-teal-400 px-5 py-3 font-medium text-slate-950 disabled:opacity-60">{state === "loading" ? "Joining..." : "Join Waitlist"}</button>
-      {message ? <p className={state === "success" ? "text-teal-300" : "text-rose-300"}>{message}</p> : null}
+    <form className="waitlist-form" onSubmit={onSubmit}>
+      <div className="field-grid">
+        <label>
+          <span>Email</span>
+          <input required type="email" name="email" placeholder="dan@example.com" />
+        </label>
+        <label>
+          <span>X handle</span>
+          <input name="x_handle" placeholder="@danbuildss" />
+        </label>
+      </div>
+      <label>
+        <span>What are you building?</span>
+        <textarea
+          name="use_case"
+          placeholder="Agent app, API, payment flow, x402 service..."
+        />
+      </label>
+      <label>
+        <span>What is painful about tracking wallet activity?</span>
+        <textarea
+          name="pain_point"
+          placeholder="Raw exports, missing categories, messy microtransactions..."
+        />
+      </label>
+      <button className="form-submit" disabled={state === "loading"} type="submit">
+        {state === "loading" ? "Joining..." : "Join Waitlist"}
+      </button>
+      {message ? (
+        <p className={state === "success" ? "form-message success" : "form-message error"}>
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }

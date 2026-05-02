@@ -20,7 +20,10 @@ export async function POST(request: Request) {
 
     const normalizedEmail = String(email || "").trim().toLowerCase();
     if (!EMAIL_REGEX.test(normalizedEmail)) {
-      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+      return NextResponse.json(
+        { error: "Please enter a valid email address." },
+        { status: 400 },
+      );
     }
 
     const supabase = getSupabaseAdminClient();
@@ -33,17 +36,26 @@ export async function POST(request: Request) {
     });
 
     if (error?.code === "23505") {
-      return NextResponse.json({ error: "You’re already on the waitlist." }, { status: 409 });
+      return NextResponse.json(
+        { error: "You are already on the waitlist." },
+        { status: 409 },
+      );
     }
 
     if (error) {
-      return NextResponse.json({ error: "Couldn’t submit right now. Please try again." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Could not submit right now. Please try again." },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.message.includes("Missing Supabase")) {
-      return NextResponse.json({ error: "Server is not configured yet." }, { status: 500 });
+      return NextResponse.json(
+        { error: "Server is not configured yet." },
+        { status: 500 },
+      );
     }
 
     return NextResponse.json({ error: "Invalid request payload." }, { status: 400 });
