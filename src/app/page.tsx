@@ -11,16 +11,16 @@ import { WaitlistForm } from "@/lib/waitlist-form";
 
 const features = [
   {
-    title: "Likely x402 Detection",
-    body: "Spot repeated Base USDC micropayment patterns without claiming certainty when metadata is missing.",
+    title: "Detect payment patterns",
+    body: "Identify repeated USDC microtransactions and label them as likely x402 when the signal is clear.",
   },
   {
-    title: "Income & Spend Books",
-    body: "Turn raw wallet activity into clear totals, counterparties, categories, and net flow.",
+    title: "Clean wallet books",
+    body: "See income, spend, counterparties, categories, and net flow without reading raw exports.",
   },
   {
-    title: "CSV + Agent JSON",
-    body: "Export clean rows for humans and structured summaries your agent or app can consume.",
+    title: "Export reports",
+    body: "Create CSV rows and agent-readable JSON summaries for apps, agents, and operators.",
   },
 ];
 
@@ -59,10 +59,10 @@ const featureIcons = [
 ];
 
 const steps = [
-  ["01", "Paste Base Wallet", "Drop in a wallet address when the first scanner opens."],
-  ["02", "Scan USDC Transfers", "Fetch Base USDC activity and normalize raw transfer records."],
-  ["03", "Label x402 Signals", "Flag repeated micropayment behavior as likely x402, not guaranteed."],
-  ["04", "Export Books", "Review reports, CSV rows, and agent-readable JSON summaries."],
+  ["01", "Paste a wallet", "Start with a Base wallet address."],
+  ["02", "Scan USDC", "Fetch and normalize transfer activity."],
+  ["03", "Label payments", "Mark repeated micropayments as likely x402."],
+  ["04", "Export books", "Download CSV and agent-readable JSON."],
 ];
 
 const reportRows = [
@@ -95,16 +95,16 @@ export default function HomePage() {
         <FadeContent>
           <div className="hero-copy">
             <p className="eyebrow">
-              <ShinyText text="Built for Base USDC and likely x402 payment activity" speed={4} />
+            <ShinyText text="Readable books for the x402 economy" speed={5} />
               <span aria-hidden="true">-&gt;</span>
             </p>
-            <h1>Your agent&apos;s books, finally readable.</h1>
+            <h1>Make agent payments readable.</h1>
             <p className="typing-line">
               <TextType
                 texts={[
-                  "Paste a wallet. Get readable x402 books.",
-                  "Scan Base USDC activity in seconds.",
-                  "Export reports humans and agents can understand.",
+                  "Paste a wallet.",
+                  "Scan Base USDC.",
+                  "Export clean books.",
                 ]}
                 typingSpeed={56}
                 deletingSpeed={34}
@@ -114,10 +114,10 @@ export default function HomePage() {
               />
             </p>
             <p className="hero-subtext">
-              x402Books AI turns raw Base USDC payments into clean spend reports,
-              income summaries, and audit-ready exports for builders and AI agents.
+              x402Books AI turns raw USDC microtransactions into clear reports,
+              categories, and agent-readable financial summaries.
             </p>
-            <p className="trust-note">Product-first early access. No token required.</p>
+            <p className="trust-note">Product first. Token later.</p>
             <div className="hero-actions">
               <a className="primary-button" href="#waitlist">
                 Get Wallet Scan Access
@@ -134,7 +134,7 @@ export default function HomePage() {
             <div className="dashboard-card">
               <div className="card-topline">
                 <LogoMark />
-                <span>Base USDC Wallet Report</span>
+              <span>Wallet report</span>
               </div>
               <div className="metric-stack">
                 <div>
@@ -182,15 +182,15 @@ export default function HomePage() {
       <section className="trust-strip" aria-label="Product metrics preview">
         <div>
           <span>128</span>
-          <p>Sample likely x402 signals</p>
+          <p>Likely x402 signals</p>
         </div>
         <div>
           <span>USDC</span>
-          <p>Focused Base payment asset</p>
+          <p>Base payment asset</p>
         </div>
         <div>
           <span>JSON</span>
-          <p>Agent-readable output</p>
+          <p>Agent output</p>
         </div>
       </section>
 
@@ -198,8 +198,7 @@ export default function HomePage() {
         <section className="section-heading" id="how">
           <h2>How it works</h2>
           <p>
-            A simple flow for turning agent payment activity into readable financial
-            records.
+            A simple flow for turning wallet activity into readable records.
           </p>
         </section>
       </FadeContent>
@@ -218,10 +217,10 @@ export default function HomePage() {
 
       <section className="feature-section" id="features">
         <div className="section-heading compact">
-          <h2>Financial visibility for AI agents.</h2>
+          <h2>Financial visibility for agent payments.</h2>
           <p>
-            Product first, token later. The MVP focuses on useful reporting for
-            builders handling real microtransactions.
+            Start with the ledger. Add the API, exports, and automation as usage
+            grows.
           </p>
         </div>
         <GlassIcons items={featureIcons} />
@@ -239,11 +238,10 @@ export default function HomePage() {
       <section className="report-section" id="report">
         <div className="report-copy">
           <p className="micro-label">Sample report</p>
-          <h2>Base USDC Wallet Report</h2>
+          <h2>A cleaner report from raw wallet activity.</h2>
           <p>
-            Wallet summaries should read like books, not block explorer residue.
-            x402Books AI keeps uncertainty visible while still giving builders a
-            clean operating view.
+            Track spend, income, categories, and likely x402 activity from one
+            wallet view.
           </p>
           <a className="primary-button small" href="#waitlist">
             Get Wallet Scan Access
@@ -297,23 +295,22 @@ export default function HomePage() {
       <section className="pricing-section" id="pricing">
         <div>
           <p className="micro-label">Pricing</p>
-          <h2>Free while the first scanner ships.</h2>
+          <h2>Free while the scanner launches.</h2>
         </div>
         <p>
-          Early access is free. Paid API access comes later after builders have
-          helped shape wallet scans, CSV exports, and agent-readable summaries.
+          Early users help shape wallet scans, CSV exports, and the first API
+          access tier.
         </p>
       </section>
 
       <section className="waitlist-section" id="waitlist">
         <div className="waitlist-copy">
           <p className="micro-label">Early access</p>
-          <h2>Join the first wave of agent accounting.</h2>
+          <h2>Join the early access list.</h2>
           <p>
-            Get updates as wallet scans, likely x402 detection, CSV exports, and
-            agent-readable reports ship.
+            Get updates as wallet scans, x402 labels, exports, and reports ship.
           </p>
-          <p className="trust-note">Product-first. Token later, only after usage.</p>
+          <p className="trust-note">No token required for early access.</p>
         </div>
         <WaitlistForm />
       </section>
