@@ -70,6 +70,12 @@ const reportRows = [
   ["Compute", "$13.15", "expense"],
 ];
 
+const previewRows = [
+  ["0.42 USDC", "Expense", "API call", "0xabc...", "2h ago"],
+  ["1.20 USDC", "Expense", "Data access", "0xdef...", "5h ago"],
+  ["12.80 USDC", "Income", "Agent service", "0xghi...", "1d ago"],
+];
+
 export default function HomePage() {
   return (
     <main>
@@ -208,6 +214,100 @@ export default function HomePage() {
         ))}
       </section>
 
+      <section className="screenshots-section" aria-label="App screenshots">
+        <div className="section-heading compact">
+          <p className="micro-label">App preview</p>
+          <h2>What the first dashboard will look like.</h2>
+          <p>
+            A clean wallet view for spend, income, categories, and agent-readable
+            reports.
+          </p>
+        </div>
+        <div className="screenshot-grid">
+          <article className="app-shot dashboard-shot">
+            <div className="shot-header">
+              <div>
+                <span>Wallet</span>
+                <strong>0x7d...42f1</strong>
+              </div>
+              <div className="range-toggle">
+                <span>7d</span>
+                <strong>30d</strong>
+              </div>
+            </div>
+            <div className="shot-metrics">
+              <div><span>Spend</span><strong>$42.80</strong></div>
+              <div><span>Income</span><strong>$91.20</strong></div>
+              <div><span>Net</span><strong>+$48.40</strong></div>
+              <div><span>Txs</span><strong>128</strong></div>
+            </div>
+            <div className="shot-body">
+              <div className="line-chart">
+                <span style={{ height: "32%" }} />
+                <span style={{ height: "58%" }} />
+                <span style={{ height: "41%" }} />
+                <span style={{ height: "74%" }} />
+                <span style={{ height: "52%" }} />
+                <span style={{ height: "68%" }} />
+              </div>
+              <div className="category-list">
+                <div><span>API calls</span><strong>$18.40</strong></div>
+                <div><span>Data access</span><strong>$11.25</strong></div>
+                <div><span>Compute</span><strong>$13.15</strong></div>
+              </div>
+            </div>
+          </article>
+
+          <article className="app-shot table-shot">
+            <div className="shot-header">
+              <div>
+                <span>Transactions</span>
+                <strong>Clean ledger rows</strong>
+              </div>
+              <span className="status-pill">CSV ready</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Amount</th>
+                  <th>Type</th>
+                  <th>Category</th>
+                  <th>Counterparty</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {previewRows.map(([amount, type, category, counterparty, time]) => (
+                  <tr key={`${amount}-${counterparty}`}>
+                    <td>{amount}</td>
+                    <td>{type}</td>
+                    <td>{category}</td>
+                    <td>{counterparty}</td>
+                    <td>{time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </article>
+
+          <article className="app-shot json-shot">
+            <div className="shot-header">
+              <div>
+                <span>Agent API</span>
+                <strong>Summary response</strong>
+              </div>
+              <span className="status-pill">JSON</span>
+            </div>
+            <pre>{`{
+  "total_spend": 42.8,
+  "total_income": 91.2,
+  "top_category": "api_call",
+  "budget_status": "safe"
+}`}</pre>
+          </article>
+        </div>
+      </section>
+
       <section className="feature-section" id="features">
         <div className="section-heading compact">
           <h2>Financial visibility for agent payments.</h2>
@@ -334,7 +434,11 @@ export default function HomePage() {
             </a>
           </div>
         </div>
-        <p className="copyright">© 2026 x402Books AI. All rights reserved.</p>
+        <p className="copyright">
+          <span>© 2026</span>
+          <strong>x402Books AI</strong>
+          <span>All rights reserved.</span>
+        </p>
       </footer>
     </main>
   );
