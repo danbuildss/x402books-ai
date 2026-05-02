@@ -4,6 +4,12 @@ create table if not exists public.waitlist_signups (
   x_handle text,
   use_case text,
   pain_point text,
+  referral_code text unique,
+  referred_by text,
   source text not null default 'landing_page',
   created_at timestamptz not null default now()
 );
+
+alter table public.waitlist_signups
+  add column if not exists referral_code text unique,
+  add column if not exists referred_by text;

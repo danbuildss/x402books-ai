@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -12,6 +13,15 @@ function getSupabaseAdminClient() {
   }
 
   return createClient(supabaseUrl, serviceRoleKey);
+}
+
+function getReferralCode(email: string) {
+  return createHash("sha256").update(email).digest("base64url").slice(0, 8);
+}
+
+function getReferralUrl(request: Request, code: string) {
+  const origin = request.headers.get("origin") || new URL(request.url).origin;
+  return `${origin}/?ref=${code}`;
 }
 
 export async function POST(request: Request) {
@@ -27,6 +37,9 @@ export async function POST(request: Request) {
     }
 
     const supabase = getSupabaseAdminClient();
+    const referralCode = getReferralCode(normalizedEmail);
+    const referralUrl = getReferralUrl(request, referralCode);
+
     const { error } = await supabase.from("waitlist_signups").insert({
       email: normalizedEmail,
       x_handle: x_handle ? String(x_handle).trim().replace(/^@/, "") : null,
@@ -36,9 +49,29 @@ export async function POST(request: Request) {
     });
 
     if (error?.code === "23505") {
+      const { data: existing } = await supabase
+        .from("waitlist_signups")
+        .select("created_at")
+        .eq("email", normalizedEmail)
+        .single();
+
+      const countQuery = supabase
+        .from("waitlist_signups")
+        .select("*", { count: "exact", head: true });
+
+      const { count } = existing?.created_at
+        ? await countQuery.lte("created_at", existing.created_at)
+        : await countQuery;
+
       return NextResponse.json(
-        { error: "You are already on the waitlist." },
-        { status: 409 },
+        {
+          ok: true,
+          alreadyJoined: true,
+          position: count || 1,
+          referralCode,
+          referralUrl,
+        },
+        { status: 200 },
       );
     }
 
@@ -49,7 +82,20 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json({ ok: true }, { status: 201 });
+    const { count } = await supabase
+      .from("waitlist_signups")
+      .select("*", { count: "exact", head: true });
+
+    return NextResponse.json(
+      {
+        ok: true,
+        alreadyJoined: false,
+        position: count || 1,
+        referralCode,
+        referralUrl,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof Error && error.message.includes("Missing Supabase")) {
       return NextResponse.json(

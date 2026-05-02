@@ -1,9 +1,7 @@
 import { Logo, LogoMark } from "@/components/logo";
 import {
-  BorderGlow,
   FadeContent,
   GlassIcons,
-  ShinyText,
   TextType,
   ThemeToggle,
 } from "@/components/effects";
@@ -95,8 +93,7 @@ export default function HomePage() {
         <FadeContent>
           <div className="hero-copy">
             <p className="eyebrow">
-            <ShinyText text="Readable books for the x402 economy" speed={5} />
-              <span aria-hidden="true">-&gt;</span>
+              Readable books for the x402 economy
             </p>
             <h1>Make agent payments readable.</h1>
             <p className="typing-line">
@@ -130,52 +127,48 @@ export default function HomePage() {
         </FadeContent>
 
         <div className="hero-visual" aria-label="x402Books AI product preview">
-          <BorderGlow>
-            <div className="dashboard-card">
-              <div className="card-topline">
-                <LogoMark />
+          <div className="dashboard-card">
+            <div className="card-topline">
+              <LogoMark />
               <span>Wallet report</span>
+            </div>
+            <div className="metric-stack">
+              <div>
+                <span>Total Income</span>
+                <strong>$91.20</strong>
               </div>
-              <div className="metric-stack">
-                <div>
-                  <span>Total Income</span>
-                  <strong>$91.20</strong>
-                </div>
-                <div>
-                  <span>Total Spend</span>
-                  <strong>$42.80</strong>
-                </div>
-              </div>
-              <div className="net-flow">
-                <span>Net Flow</span>
-                <strong>+$48.40</strong>
-              </div>
-              <div className="signal-list">
-                <div>
-                  <span>Likely x402</span>
-                  <strong>128 payments</strong>
-                </div>
-                <div>
-                  <span>Top counterparty</span>
-                  <strong>0x91...a8c2</strong>
-                </div>
-                <div>
-                  <span>Export status</span>
-                  <strong>CSV + JSON ready</strong>
-                </div>
-              </div>
-              <div className="chart-preview">
-                <span style={{ height: "38%" }} />
-                <span style={{ height: "62%" }} />
-                <span style={{ height: "44%" }} />
-                <span style={{ height: "78%" }} />
-                <span style={{ height: "50%" }} />
-                <span style={{ height: "70%" }} />
+              <div>
+                <span>Total Spend</span>
+                <strong>$42.80</strong>
               </div>
             </div>
-          </BorderGlow>
-          <div className="floating-pill income">Income +$12.80</div>
-          <div className="floating-pill spend">API call -$0.42</div>
+            <div className="net-flow">
+              <span>Net Flow</span>
+              <strong>+$48.40</strong>
+            </div>
+            <div className="signal-list">
+              <div>
+                <span>Likely x402</span>
+                <strong>128 payments</strong>
+              </div>
+              <div>
+                <span>Top counterparty</span>
+                <strong>0x91...a8c2</strong>
+              </div>
+              <div>
+                <span>Export status</span>
+                <strong>CSV + JSON ready</strong>
+              </div>
+            </div>
+            <div className="chart-preview">
+              <span style={{ height: "38%" }} />
+              <span style={{ height: "62%" }} />
+              <span style={{ height: "44%" }} />
+              <span style={{ height: "78%" }} />
+              <span style={{ height: "50%" }} />
+              <span style={{ height: "70%" }} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -247,49 +240,47 @@ export default function HomePage() {
             Get Wallet Scan Access
           </a>
         </div>
-        <BorderGlow>
-          <div className="report-card">
-            <div className="report-header">
-              <div>
-                <span>Wallet</span>
-                <strong>0x7d...42f1</strong>
-              </div>
-              <span className="status-pill">Likely x402: 128</span>
+        <div className="report-card">
+          <div className="report-header">
+            <div>
+              <span>Wallet</span>
+              <strong>0x7d...42f1</strong>
             </div>
-            <div className="summary-grid">
-              <div>
-                <span>Spend</span>
-                <strong>$42.80</strong>
-              </div>
-              <div>
-                <span>Income</span>
-                <strong>$91.20</strong>
-              </div>
-              <div>
-                <span>Net</span>
-                <strong>+$48.40</strong>
-              </div>
-            </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Amount</th>
-                  <th>Signal</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportRows.map(([category, amount, signal]) => (
-                  <tr key={category}>
-                    <td>{category}</td>
-                    <td>{amount}</td>
-                    <td>{signal}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <span className="status-pill">Likely x402: 128</span>
           </div>
-        </BorderGlow>
+          <div className="summary-grid">
+            <div>
+              <span>Spend</span>
+              <strong>$42.80</strong>
+            </div>
+            <div>
+              <span>Income</span>
+              <strong>$91.20</strong>
+            </div>
+            <div>
+              <span>Net</span>
+              <strong>+$48.40</strong>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Signal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportRows.map(([category, amount, signal]) => (
+                <tr key={category}>
+                  <td>{category}</td>
+                  <td>{amount}</td>
+                  <td>{signal}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="pricing-section" id="pricing">
