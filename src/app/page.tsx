@@ -6,6 +6,7 @@ import {
   ThemeToggle,
 } from "@/components/effects";
 import { WaitlistForm } from "@/lib/waitlist-form";
+import { ScrollLink } from "@/components/scroll-link";
 
 const features = [
   {
@@ -82,16 +83,16 @@ export default function HomePage() {
       <header className="site-header">
         <Logo />
         <nav aria-label="Main navigation">
-          <a href="#how">How it works</a>
-          <a href="#features">Features</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#report">Sample report</a>
+          <ScrollLink targetId="how">How it works</ScrollLink>
+          <ScrollLink targetId="features">Features</ScrollLink>
+          <ScrollLink targetId="pricing">Pricing</ScrollLink>
+          <ScrollLink targetId="report">Sample report</ScrollLink>
         </nav>
         <div className="header-actions">
           <ThemeToggle />
-          <a className="nav-cta" href="#waitlist">
+          <ScrollLink className="nav-cta" targetId="waitlist">
             Join Waitlist
-          </a>
+          </ScrollLink>
         </div>
       </header>
 
@@ -122,12 +123,12 @@ export default function HomePage() {
             </p>
             <p className="trust-note">Product first. Token later.</p>
             <div className="hero-actions">
-              <a className="primary-button" href="#waitlist">
+              <ScrollLink className="primary-button" targetId="waitlist">
                 Get Wallet Scan Access
-              </a>
-              <a className="secondary-button" href="#report">
+              </ScrollLink>
+              <ScrollLink className="secondary-button" targetId="report">
                 View Sample Report
-              </a>
+              </ScrollLink>
             </div>
           </div>
         </FadeContent>
@@ -336,9 +337,9 @@ export default function HomePage() {
             Track spend, income, categories, and likely x402 activity from one
             wallet view.
           </p>
-          <a className="primary-button small" href="#waitlist">
+          <ScrollLink className="primary-button small" targetId="waitlist">
             Get Wallet Scan Access
-          </a>
+          </ScrollLink>
         </div>
         <div className="report-card">
           <div className="report-header">
@@ -417,15 +418,15 @@ export default function HomePage() {
         <div className="footer-links">
           <div>
             <h3>Product</h3>
-            <a href="#how">How it works</a>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
+            <ScrollLink targetId="how">How it works</ScrollLink>
+            <ScrollLink targetId="features">Features</ScrollLink>
+            <ScrollLink targetId="pricing">Pricing</ScrollLink>
           </div>
           <div>
             <h3>Company</h3>
-            <a href="#waitlist">Privacy</a>
-            <a href="#waitlist">Terms</a>
-            <a href="#waitlist">Support</a>
+            <ScrollLink targetId="waitlist">Privacy</ScrollLink>
+            <ScrollLink targetId="waitlist">Terms</ScrollLink>
+            <ScrollLink targetId="waitlist">Support</ScrollLink>
           </div>
           <div>
             <h3>Connect</h3>
@@ -434,11 +435,7 @@ export default function HomePage() {
             </a>
           </div>
         </div>
-        <p className="copyright">
-          <span>© 2026</span>
-          <strong>x402Books AI</strong>
-          <span>All rights reserved.</span>
-        </p>
+        <p className="copyright">© 2026 x402Books. All rights reserved.</p>
       </footer>
     </main>
   );
