@@ -1,19 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
+import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function getSupabaseAdminClient() {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase server environment variables.");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
 
 function getReferralCode(email: string) {
   return createHash("sha256").update(email).digest("base64url").slice(0, 8);
