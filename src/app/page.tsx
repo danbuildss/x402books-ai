@@ -7,6 +7,7 @@ import {
 } from "@/components/effects";
 import { WaitlistForm } from "@/lib/waitlist-form";
 import { ScrollLink } from "@/components/scroll-link";
+import Link from "next/link";
 
 const features = [
   {
@@ -90,6 +91,9 @@ export default function HomePage() {
         </nav>
         <div className="header-actions">
           <ThemeToggle />
+          <Link className="nav-cta subtle" href="/access">
+            Open App
+          </Link>
           <ScrollLink className="nav-cta" targetId="waitlist">
             Join Waitlist
           </ScrollLink>
@@ -123,9 +127,9 @@ export default function HomePage() {
             </p>
             <p className="trust-note">Product first. Token later.</p>
             <div className="hero-actions">
-              <ScrollLink className="primary-button" targetId="waitlist">
-                Get Wallet Scan Access
-              </ScrollLink>
+              <Link className="primary-button" href="/access">
+                Open Private Beta
+              </Link>
               <ScrollLink className="secondary-button" targetId="report">
                 View Sample Report
               </ScrollLink>
@@ -337,9 +341,9 @@ export default function HomePage() {
             Track spend, income, categories, and likely x402 activity from one
             wallet view.
           </p>
-          <ScrollLink className="primary-button small" targetId="waitlist">
-            Get Wallet Scan Access
-          </ScrollLink>
+          <Link className="primary-button small" href="/access">
+            Open Private Beta
+          </Link>
         </div>
         <div className="report-card">
           <div className="report-header">
