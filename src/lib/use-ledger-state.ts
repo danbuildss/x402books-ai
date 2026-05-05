@@ -2,13 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  appCategories,
-  appFlows,
-  appSummary,
-  appTransactions,
-  appWallets,
-} from "@/lib/app-demo-data";
-import {
   getCategorySummary,
   getDailyFlows,
   getLedgerReport,
@@ -38,9 +31,17 @@ type StoredLedger = {
   transactions: LedgerTransaction[];
 };
 
+type RecentWallet = {
+  address: string;
+  label: string;
+  status: string;
+  balance: number;
+  transactions: number;
+  lastScanned: string;
+};
+
 function readStoredLedger() {
   if (typeof window === "undefined") return null;
-
   try {
     const value = window.localStorage.getItem(storageKey);
     return value ? (JSON.parse(value) as StoredLedger) : null;
@@ -54,13 +55,12 @@ function writeStoredLedger(value: StoredLedger) {
 }
 
 function readRecentWallets() {
-  if (typeof window === "undefined") return appWallets;
-
+  if (typeof window === "undefined") return [] as RecentWallet[];
   try {
     const value = window.localStorage.getItem(recentWalletsKey);
-    return value ? (JSON.parse(value) as typeof appWallets) : appWallets;
+    return value ? (JSON.parse(value) as RecentWallet[]) : [];
   } catch {
-    return appWallets;
+    return [];
   }
 }
 
@@ -83,23 +83,20 @@ function saveRecentWallet(wallet: string, ledger: StoredLedger) {
   return nextWallets;
 }
 
-function buildFallbackLedger(range: TimeRange): StoredLedger {
-  const summary = appSummary;
-  const report = getLedgerReport({
-    range,
-    summary,
-    transactions: appTransactions,
-  });
+function emptyLedger(range: TimeRange): StoredLedger {
+  const transactions: LedgerTransaction[] = [];
+  const summary = getLedgerSummary(transactions);
+  const report = getLedgerReport({ range, summary, transactions });
 
   return {
-    wallet: appWallets[0].address,
+    wallet: "",
     range,
     generatedAt: new Date().toISOString(),
     summary,
     report,
-    categories: appCategories,
-    dailyFlows: appFlows,
-    transactions: appTransactions,
+    categories: [],
+    dailyFlows: getDailyFlows(transactions, range),
+    transactions,
   };
 }
 
@@ -144,10 +141,10 @@ function exportCsv(transactions: LedgerTransaction[]) {
 }
 
 export function useLedgerState() {
-  const [range, setRange] = useState<TimeRange>("30d");
+  const [range, setRangeValue] = useState<TimeRange>("30d");
   const [walletInput, setWalletInput] = useState("");
   const [ledger, setLedger] = useState<StoredLedger | null>(null);
-  const [recentWallets, setRecentWallets] = useState(readRecentWallets);
+  const [recentWallets, setRecentWallets] = useState<RecentWallet[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCategorizing, setIsCategorizing] = useState(false);
   const [error, setError] = useState("");
@@ -158,17 +155,15 @@ export function useLedgerState() {
     const stored = readStoredLedger();
     if (stored) {
       setLedger(stored);
-      setRange(stored.range);
+      setRangeValue(stored.range);
       setWalletInput(stored.wallet);
     } else {
-      const fallback = buildFallbackLedger("30d");
-      setLedger(fallback);
-      setWalletInput(fallback.wallet);
+      setLedger(emptyLedger("30d"));
     }
     setRecentWallets(readRecentWallets());
   }, []);
 
-  const activeLedger = ledger || buildFallbackLedger(range);
+  const activeLedger = ledger || emptyLedger(range);
   const transactions = activeLedger.transactions;
   const summary = activeLedger.summary || getLedgerSummary(transactions);
   const categories = activeLedger.categories?.length
@@ -178,20 +173,18 @@ export function useLedgerState() {
     ? activeLedger.dailyFlows
     : getDailyFlows(transactions, range);
   const report = activeLedger.report || getLedgerReport({ range, summary, transactions });
-
-  const apiWallet = activeLedger.wallet || walletInput || appWallets[0].address;
+  const apiWallet = activeLedger.wallet || walletInput;
   const endpoints = useMemo(
     () => [
-      `/api/ledger/summary?wallet=${apiWallet}&range=${range}`,
-      `/api/ledger/transactions?wallet=${apiWallet}&range=${range}`,
-      `/api/ledger/report?wallet=${apiWallet}&period=${range}`,
+      `/api/ledger/summary?wallet=${apiWallet || "0x..."}&range=${range}`,
+      `/api/ledger/transactions?wallet=${apiWallet || "0x..."}&range=${range}`,
+      `/api/ledger/report?wallet=${apiWallet || "0x..."}&period=${range}`,
     ],
     [apiWallet, range],
   );
 
   async function scanWallet(nextWallet = walletInput, nextRange = range) {
     const wallet = nextWallet.trim();
-
     if (!isValidWalletAddress(wallet)) {
       setError("Enter a valid Base wallet address.");
       return null;
@@ -206,7 +199,6 @@ export function useLedgerState() {
         `/api/scan?wallet=${encodeURIComponent(wallet)}&range=${nextRange}`,
       );
       const body = await response.json();
-
       if (!response.ok) {
         setError(body.error || "Could not scan this wallet.");
         return null;
@@ -224,7 +216,7 @@ export function useLedgerState() {
       };
 
       setLedger(nextLedger);
-      setRange(nextLedger.range);
+      setRangeValue(nextLedger.range);
       setWalletInput(nextLedger.wallet);
       writeStoredLedger(nextLedger);
       setRecentWallets(saveRecentWallet(nextLedger.wallet, nextLedger));
@@ -263,7 +255,6 @@ export function useLedgerState() {
         }),
       });
       const body = await response.json();
-
       if (!response.ok) {
         setError(body.error || "Could not categorize transactions.");
         return;
@@ -293,15 +284,21 @@ export function useLedgerState() {
   }
 
   async function copyText(value: string, label = value) {
+    if (!value || value.includes("0x...")) {
+      setError("Scan a wallet before copying this value.");
+      return;
+    }
     await window.navigator.clipboard.writeText(value);
     setCopied(label);
     setTimeout(() => setCopied(""), 1400);
   }
 
   function updateRange(nextRange: TimeRange) {
-    setRange(nextRange);
+    setRangeValue(nextRange);
     if (activeLedger.wallet && isValidWalletAddress(activeLedger.wallet)) {
       scanWallet(activeLedger.wallet, nextRange);
+    } else {
+      setLedger(emptyLedger(nextRange));
     }
   }
 
@@ -324,6 +321,7 @@ export function useLedgerState() {
     error,
     status,
     copied,
+    hasLedger: Boolean(activeLedger.wallet),
     scanWallet,
     categorizeTransactions,
     exportCsv: () => exportCsv(transactions),

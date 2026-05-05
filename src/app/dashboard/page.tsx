@@ -8,8 +8,7 @@ import {
   SpendLineChart,
   TransactionsTable,
 } from "@/components/product-widgets";
-import { relativeTime } from "@/lib/app-demo-data";
-import { formatUsdc } from "@/lib/ledger";
+import { formatUsdc, relativeTime } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 export default function DashboardPage() {

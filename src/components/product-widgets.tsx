@@ -1,7 +1,12 @@
 "use client";
 
-import { formatCategory, formatUsdc, shortenAddress } from "@/lib/ledger";
-import { relativeTime, signedAmount } from "@/lib/app-demo-data";
+import {
+  formatCategory,
+  formatUsdc,
+  relativeTime,
+  shortenAddress,
+  signedAmount,
+} from "@/lib/ledger";
 import type { CategorySummary, DailyFlow, LedgerTransaction } from "@/lib/ledger";
 
 export function MetricCard({

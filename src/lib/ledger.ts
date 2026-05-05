@@ -136,6 +136,20 @@ export function formatCategory(category: LedgerCategory) {
   return categoryLabels[category] || "Unknown";
 }
 
+export function relativeTime(timestamp: string) {
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const minutes = Math.max(1, Math.round(diffMs / (1000 * 60)));
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.round(hours / 24)}d ago`;
+}
+
+export function signedAmount(transaction: LedgerTransaction) {
+  const sign = transaction.direction === "income" ? "+" : "-";
+  return `${sign}${transaction.amountUsdc.toFixed(2)} USDC`;
+}
+
 function getCounterpartyStats(transactions: LedgerTransaction[]) {
   const stats = new Map<string, CounterpartySummary>();
 
