@@ -1,41 +1,49 @@
-import { AppShell, PageHeader } from "@/components/app-shell";
+"use client";
 
-const endpoints = [
-  { method: "GET", path: "/api/ledger/summary", note: "Get wallet summary" },
-  { method: "GET", path: "/api/ledger/transactions", note: "List all transactions" },
-  { method: "GET", path: "/api/ledger/report", note: "Generate report" },
+import { AppShell, PageHeader, WalletSelect } from "@/components/app-shell";
+import { useLedgerState } from "@/lib/use-ledger-state";
+
+const staticEndpoints = [
   { method: "POST", path: "/api/categorize", note: "Categorize transactions" },
+  { method: "GET", path: "/api/health", note: "Check service readiness" },
 ];
 
 export default function ApiPage() {
+  const ledger = useLedgerState();
+  const apiKey = "x402bk_live_••••••••••••••••••••••••••••";
+
   return (
     <AppShell>
       <PageHeader
         title="API"
         description="Programmatic access to wallet financial data."
-        actions={<button className="primary-action">Create Key</button>}
+        actions={<WalletSelect wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />}
       />
 
       <section className="api-doc-grid">
         <div className="content-card">
           <h2>Your API Key</h2>
           <div className="api-key-box">
-            <code>x402bk_live_••••••••••••••••••••••••••••</code>
-            <button type="button">Copy</button>
+            <code>{apiKey}</code>
+            <button type="button" onClick={() => ledger.copyText(apiKey, "api-key")}>
+              {ledger.copied === "api-key" ? "Copied" : "Copy"}
+            </button>
           </div>
-          <p>Created on May 10, 2026</p>
-          <a href="/settings">Rotate key</a>
+          <p>Private beta key placeholder. Real API keys are Stage 2.</p>
+          <a href="/settings">Manage API preferences</a>
         </div>
 
         <div className="content-card">
           <h2>Endpoints</h2>
           <div className="endpoint-doc-list">
-            {endpoints.map((endpoint) => (
+            {[...ledger.endpoints.map((path) => ({ method: "GET", path, note: "Live wallet endpoint" })), ...staticEndpoints].map((endpoint) => (
               <div key={endpoint.path}>
                 <span>{endpoint.method}</span>
                 <code>{endpoint.path}</code>
                 <p>{endpoint.note}</p>
-                <button type="button">Copy</button>
+                <button type="button" onClick={() => ledger.copyText(`${window.location.origin}${endpoint.path}`, endpoint.path)}>
+                  {ledger.copied === endpoint.path ? "Copied" : "Copy"}
+                </button>
               </div>
             ))}
           </div>
@@ -44,7 +52,7 @@ export default function ApiPage() {
         <div className="content-card api-example-card">
           <h2>API Documentation</h2>
           <p>Use wallet and range query params to retrieve clean, agent-readable ledger data.</p>
-          <pre>{`curl "https://x402books.ai/api/ledger/summary?wallet=0x...&range=30d" \\
+          <pre>{`curl "${typeof window === "undefined" ? "" : window.location.origin}${ledger.endpoints[0]}" \\
   -H "Authorization: Bearer x402bk_live_..."`}</pre>
         </div>
       </section>

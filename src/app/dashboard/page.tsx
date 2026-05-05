@@ -1,3 +1,6 @@
+"use client";
+
+import { FormEvent } from "react";
 import { AppShell, DateFilter, PageHeader, WalletSelect } from "@/components/app-shell";
 import {
   CategoryDonut,
@@ -5,17 +8,18 @@ import {
   SpendLineChart,
   TransactionsTable,
 } from "@/components/product-widgets";
-import {
-  appCategories,
-  appFlows,
-  appSummary,
-  appTransactions,
-  relativeTime,
-} from "@/lib/app-demo-data";
+import { relativeTime } from "@/lib/app-demo-data";
 import { formatUsdc } from "@/lib/ledger";
+import { useLedgerState } from "@/lib/use-ledger-state";
 
 export default function DashboardPage() {
-  const recent = appTransactions.slice(0, 6);
+  const ledger = useLedgerState();
+  const recent = ledger.transactions.slice(0, 6);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await ledger.scanWallet();
+  }
 
   return (
     <AppShell>
@@ -24,41 +28,71 @@ export default function DashboardPage() {
         description="Financial overview for the selected wallet"
         actions={
           <>
-            <WalletSelect />
-            <DateFilter />
+            <WalletSelect
+              wallet={ledger.wallet}
+              onCopy={() => ledger.copyText(ledger.wallet, "wallet")}
+            />
+            <DateFilter range={ledger.range} onChange={ledger.setRange} />
           </>
         }
       />
 
+      <form className="scan-strip" onSubmit={onSubmit}>
+        <label>
+          <span>Base wallet</span>
+          <input
+            value={ledger.walletInput}
+            onChange={(event) => ledger.setWalletInput(event.target.value)}
+            placeholder="0x..."
+          />
+        </label>
+        <button className="primary-action" disabled={ledger.isLoading} type="submit">
+          {ledger.isLoading ? "Scanning..." : "Scan Wallet"}
+        </button>
+        <button
+          className="shell-button"
+          disabled={ledger.isCategorizing || !ledger.transactions.length}
+          type="button"
+          onClick={ledger.categorizeTransactions}
+        >
+          {ledger.isCategorizing ? "Categorizing..." : "AI Categorize"}
+        </button>
+        <button className="shell-button" type="button" onClick={ledger.exportCsv}>
+          Export CSV
+        </button>
+        {ledger.error ? <p className="form-message error">{ledger.error}</p> : null}
+        {ledger.status ? <p className="form-message success">{ledger.status}</p> : null}
+      </form>
+
       <section className="metrics-grid">
         <MetricCard
           label="Total Spend"
-          value={`$${formatUsdc(appSummary.totalSpend)}`}
-          delta="down 12.4% vs last 7d"
+          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
+          delta="Base USDC outflow"
         />
         <MetricCard
           label="Total Income"
-          value={`$${formatUsdc(appSummary.totalIncome)}`}
-          delta="up 22.7% vs last 7d"
+          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
+          delta="Base USDC inflow"
           tone="green"
         />
         <MetricCard
           label="Net Flow"
-          value={`+$${formatUsdc(appSummary.netFlow)}`}
-          delta="up 15.3% vs last 7d"
+          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
+          delta={ledger.report.budgetStatus}
           tone="purple"
         />
         <MetricCard
           label="Transactions"
-          value="128"
-          delta="up 18.6% vs last 7d"
+          value={String(ledger.summary.transactionCount)}
+          delta={`${ledger.summary.likelyX402Count} likely x402`}
           tone="cyan"
         />
       </section>
 
       <section className="overview-grid">
-        <SpendLineChart flows={appFlows} />
-        <CategoryDonut categories={appCategories} />
+        <SpendLineChart flows={ledger.dailyFlows} />
+        <CategoryDonut categories={ledger.categories} />
       </section>
 
       <section className="overview-grid lower">
@@ -67,7 +101,11 @@ export default function DashboardPage() {
             <h2>Recent Transactions</h2>
             <a href="/transactions">View all</a>
           </div>
-          <TransactionsTable compact transactions={recent} />
+          {recent.length ? (
+            <TransactionsTable compact transactions={recent} />
+          ) : (
+            <div className="empty-state compact">No USDC transactions found for this range.</div>
+          )}
         </div>
 
         <div className="content-card">
@@ -75,23 +113,27 @@ export default function DashboardPage() {
             <h2>Activity Feed</h2>
             <a href="/transactions">View all</a>
           </div>
-          <div className="activity-list">
-            {recent.slice(0, 4).map((transaction) => (
-              <div key={transaction.txHash}>
-                <span className={transaction.direction === "income" ? "feed-income" : "feed-spend"}>
-                  {transaction.direction === "income" ? "↗" : "↘"}
-                </span>
-                <div>
-                  <strong>
-                    {transaction.direction === "income" ? "Received" : "Spent"}{" "}
-                    {transaction.amountUsdc.toFixed(2)} USDC
-                  </strong>
-                  <p>From {transaction.counterparty}</p>
+          {recent.length ? (
+            <div className="activity-list">
+              {recent.slice(0, 4).map((transaction) => (
+                <div key={transaction.txHash}>
+                  <span className={transaction.direction === "income" ? "feed-income" : "feed-spend"}>
+                    {transaction.direction === "income" ? "↗" : "↘"}
+                  </span>
+                  <div>
+                    <strong>
+                      {transaction.direction === "income" ? "Received" : "Spent"}{" "}
+                      {transaction.amountUsdc.toFixed(2)} USDC
+                    </strong>
+                    <p>{transaction.counterparty}</p>
+                  </div>
+                  <small>{relativeTime(transaction.timestamp)}</small>
                 </div>
-                <small>{relativeTime(transaction.timestamp)}</small>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state compact">Scan a wallet to populate activity.</div>
+          )}
         </div>
       </section>
 
@@ -99,9 +141,11 @@ export default function DashboardPage() {
         <div className="cta-icon" />
         <div>
           <h2>Generate clean reports in seconds</h2>
-          <p>Export your data as CSV or PDF. Perfect for accounting, audits, and analysis.</p>
+          <p>{ledger.report.narrative}</p>
         </div>
-        <a href="/reports">Generate Report</a>
+        <a href={`/report?wallet=${encodeURIComponent(ledger.wallet)}&range=${ledger.range}`}>
+          Open Report
+        </a>
       </section>
     </AppShell>
   );

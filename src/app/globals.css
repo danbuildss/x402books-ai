@@ -3232,7 +3232,8 @@ footer {
   .product-page-header,
   .page-actions,
   .cta-strip,
-  .setting-row {
+  .setting-row,
+  .scan-strip {
     display: grid;
     grid-template-columns: 1fr;
   }
@@ -3422,6 +3423,74 @@ footer {
 
 .control-pill.compact {
   min-width: 130px;
+}
+
+.range-tabs {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  min-height: 36px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.range-tabs button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 9px;
+}
+
+.range-tabs button.active {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.scan-strip {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.scan-strip label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.scan-strip input {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  padding: 0 11px;
+}
+
+.scan-strip .form-message {
+  grid-column: 1 / -1;
+}
+
+.wallet-scan {
+  max-width: 760px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .metrics-grid {

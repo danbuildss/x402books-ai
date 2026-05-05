@@ -90,23 +90,45 @@ export function PageHeader({
   );
 }
 
-export function WalletSelect() {
+export function WalletSelect({
+  wallet,
+  onCopy,
+}: {
+  wallet?: string;
+  onCopy?: () => void;
+}) {
+  const display = wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : "No wallet";
+
   return (
     <div className="control-pill">
       <span>Wallet</span>
-      <strong>0xA1b2...C3d4</strong>
-      <button type="button" aria-label="Copy wallet address">
+      <strong>{display}</strong>
+      <button type="button" aria-label="Copy wallet address" onClick={onCopy}>
         ⧉
       </button>
     </div>
   );
 }
 
-export function DateFilter() {
+export function DateFilter({
+  range = "30d",
+  onChange,
+}: {
+  range?: "7d" | "30d";
+  onChange?: (range: "7d" | "30d") => void;
+}) {
   return (
-    <div className="control-pill compact">
-      <strong>Last 7 days</strong>
-      <span>▾</span>
+    <div className="range-tabs" aria-label="Date range">
+      {(["7d", "30d"] as const).map((value) => (
+        <button
+          className={range === value ? "active" : ""}
+          key={value}
+          type="button"
+          onClick={() => onChange?.(value)}
+        >
+          {value === "7d" ? "Last 7 days" : "Last 30 days"}
+        </button>
+      ))}
     </div>
   );
 }
