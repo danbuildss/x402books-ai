@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const { data: accessCode, error } = await supabase
       .from("access_codes")
       .select("id,label,max_uses,use_count,expires_at,revoked_at")
-      .eq("code_hash", codeHash)
+      .or(`code.eq.${normalizedCode},code_hash.eq.${codeHash}`)
       .maybeSingle();
 
     if (error) {
@@ -99,4 +99,3 @@ export async function DELETE() {
 
   return response;
 }
-

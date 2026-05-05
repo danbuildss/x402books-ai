@@ -2,6 +2,7 @@ create extension if not exists pgcrypto;
 
 create table if not exists public.access_codes (
   id uuid primary key default gen_random_uuid(),
+  code text unique,
   code_hash text not null unique,
   label text,
   max_uses integer,
@@ -38,8 +39,14 @@ create policy "Service role can manage access redemptions"
   with check (auth.role() = 'service_role');
 
 create index if not exists access_codes_code_hash_idx on public.access_codes(code_hash);
+create index if not exists access_codes_code_idx on public.access_codes(code);
 create index if not exists access_code_redemptions_code_id_idx
   on public.access_code_redemptions(access_code_id);
+
+alter table public.access_codes
+  add column if not exists code text unique;
+
+create index if not exists access_codes_code_idx on public.access_codes(code);
 
 -- Generate code_hash locally with:
 -- node -e "const crypto=require('crypto'); const salt='YOUR_ACCESS_CODE_SALT'; const code='XBOOKS-BETA-001'; console.log(crypto.createHash('sha256').update(`${salt}:${code.trim().replace(/\\s+/g,'').toUpperCase()}`).digest('hex'))"
@@ -47,4 +54,3 @@ create index if not exists access_code_redemptions_code_id_idx
 -- Then insert it:
 -- insert into public.access_codes (code_hash, label, max_uses)
 -- values ('PASTE_HASH_HERE', 'Founding beta', 25);
-

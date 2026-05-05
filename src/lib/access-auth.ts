@@ -4,7 +4,7 @@ export const ACCESS_COOKIE_NAME = "x402books_access";
 export const ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 14;
 
 export function normalizeAccessCode(code: string) {
-  return code.trim().replace(/\s+/g, "").toUpperCase();
+  return code.trim().replace(/[^a-z0-9]/gi, "").toUpperCase();
 }
 
 export function hashAccessCode(code: string) {
@@ -26,4 +26,3 @@ export function createAccessToken(codeId: string) {
 
   return `${payload}.${signature}`;
 }
-
