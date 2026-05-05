@@ -71,7 +71,7 @@ export default function SettingsPage() {
         <div className="content-card settings-card">
           <h2>Account</h2>
           <div className="setting-row">
-            <div><strong>Email</strong><p>builder@x402.dev</p></div>
+            <div><strong>Workspace</strong><p>Private beta workspace</p></div>
           </div>
           <div className="setting-row">
             <div><strong>Plan</strong><p>Private beta</p></div>

@@ -10,7 +10,6 @@ const staticEndpoints = [
 
 export default function ApiPage() {
   const ledger = useLedgerState();
-  const apiKey = "x402bk_live_••••••••••••••••••••••••••••";
 
   return (
     <AppShell>
@@ -24,12 +23,12 @@ export default function ApiPage() {
         <div className="content-card">
           <h2>Your API Key</h2>
           <div className="api-key-box">
-            <code>{apiKey}</code>
-            <button type="button" onClick={() => ledger.copyText(apiKey, "api-key")}>
-              {ledger.copied === "api-key" ? "Copied" : "Copy"}
+            <code>API keys unlock in Stage 2</code>
+            <button type="button" disabled>
+              Pending
             </button>
           </div>
-          <p>Private beta key placeholder. Real API keys are Stage 2.</p>
+          <p>Use the live public ledger routes locally while the beta key system is being built.</p>
           <a href="/settings">Manage API preferences</a>
         </div>
 
@@ -53,7 +52,7 @@ export default function ApiPage() {
           <h2>API Documentation</h2>
           <p>Use wallet and range query params to retrieve clean, agent-readable ledger data.</p>
           <pre>{`curl "${typeof window === "undefined" ? "" : window.location.origin}${ledger.endpoints[0]}" \\
-  -H "Authorization: Bearer x402bk_live_..."`}</pre>
+  -H "Accept: application/json"`}</pre>
         </div>
       </section>
     </AppShell>

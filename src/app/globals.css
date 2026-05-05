@@ -3919,3 +3919,802 @@ button:disabled {
     font-size: 26px;
   }
 }
+
+/* Stitch app replacement */
+.product-shell {
+  --ledger-bg: #0e1511;
+  --ledger-bg-deep: #09100c;
+  --ledger-surface: #171d19;
+  --ledger-surface-2: #1b211d;
+  --ledger-surface-3: #252c27;
+  --ledger-border: #3d4a41;
+  --ledger-text: #dee4dd;
+  --ledger-muted: #bccabf;
+  --ledger-primary: #66e4a5;
+  --ledger-primary-strong: #47c78b;
+  --ledger-primary-soft: rgba(102, 228, 165, 0.11);
+  --ledger-danger: #ff6b64;
+  --ledger-blue: #8fb2ff;
+  position: relative;
+  display: block;
+  min-height: 100vh;
+  background: var(--ledger-bg);
+  color: var(--ledger-text);
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.product-shell * {
+  letter-spacing: 0;
+}
+
+.product-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  width: 256px;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 16px;
+  padding: 20px 14px 14px;
+  border-right: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  background: var(--ledger-bg-deep);
+  box-shadow: none;
+}
+
+.product-topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 256px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  background: color-mix(in srgb, var(--ledger-bg) 94%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.product-topbar span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--ledger-muted);
+  font-size: 11px;
+  font-weight: 560;
+}
+
+.product-topbar strong {
+  color: var(--ledger-text);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.topbar-actions a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--ledger-border) 70%, transparent);
+  border-radius: 6px;
+  background: var(--ledger-surface);
+  color: var(--ledger-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.product-sidebar > div:first-child {
+  gap: 10px;
+  padding: 2px 4px 4px;
+}
+
+.product-sidebar .brand {
+  gap: 9px;
+  color: var(--ledger-text);
+  font-size: 16px;
+  font-weight: 720;
+}
+
+.product-sidebar .logo-mark {
+  width: 25px;
+  height: 25px;
+}
+
+.product-sidebar p {
+  max-width: 190px;
+  color: var(--ledger-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.product-nav {
+  gap: 3px;
+}
+
+.product-nav a {
+  min-height: 36px;
+  gap: 10px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--ledger-muted);
+  font-size: 13px;
+  font-weight: 560;
+}
+
+.product-nav a:hover,
+.product-nav a.active {
+  border-color: color-mix(in srgb, var(--ledger-primary) 20%, transparent);
+  background: var(--ledger-primary-soft);
+  color: var(--ledger-text);
+}
+
+.product-nav svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.7;
+}
+
+.sidebar-card,
+.sidebar-account,
+.metric-card,
+.chart-card,
+.content-card,
+.detail-panel,
+.cta-strip,
+.wallet-card {
+  border: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  background: var(--ledger-surface);
+  box-shadow: none;
+}
+
+.sidebar-card {
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.sidebar-card span,
+.sidebar-account strong,
+.content-card h2,
+.chart-card h2,
+.detail-panel h2 {
+  color: var(--ledger-text);
+}
+
+.sidebar-card p,
+.sidebar-account p,
+.product-page-header p,
+.content-card p,
+.detail-list span,
+.report-row p,
+.setting-row p {
+  color: var(--ledger-muted);
+}
+
+.sidebar-card a,
+.primary-action,
+.cta-strip a {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--ledger-primary-strong);
+  color: #003822;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.sidebar-account {
+  gap: 10px;
+  padding: 11px;
+  border-radius: 8px;
+}
+
+.sidebar-account > span {
+  width: 31px;
+  height: 31px;
+  background: var(--ledger-primary-strong);
+  color: #003822;
+  font-size: 11px;
+}
+
+.product-main {
+  min-width: 0;
+  margin-left: 256px;
+  padding: 88px 24px 28px;
+}
+
+.product-page-header {
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.product-page-header h1 {
+  margin-bottom: 4px;
+  color: var(--ledger-text);
+  font-size: 20px;
+  font-weight: 680;
+  line-height: 1.2;
+}
+
+.product-page-header p {
+  font-size: 13px;
+}
+
+.page-actions {
+  gap: 8px;
+}
+
+.control-pill,
+.shell-button,
+.toolbar-row button,
+.filter-row button,
+.filter-row a,
+.detail-list a,
+.report-row button,
+.settings-card button,
+.endpoint-doc-list button {
+  min-height: 34px;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  border-radius: 6px;
+  background: var(--ledger-surface-2);
+  color: var(--ledger-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.control-pill {
+  min-width: 176px;
+}
+
+.control-pill span {
+  color: var(--ledger-muted);
+  font-size: 11px;
+}
+
+.control-pill button {
+  width: 26px;
+  height: 26px;
+  border-color: color-mix(in srgb, var(--ledger-border) 70%, transparent);
+  border-radius: 5px;
+}
+
+.range-tabs {
+  min-height: 34px;
+  padding: 3px;
+  border-color: color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  border-radius: 6px;
+  background: var(--ledger-surface-2);
+}
+
+.range-tabs button {
+  border-radius: 4px;
+  color: var(--ledger-muted);
+  font-size: 11px;
+  padding: 0 8px;
+}
+
+.range-tabs button.active {
+  background: var(--ledger-surface-3);
+  color: var(--ledger-text);
+}
+
+.scan-strip {
+  grid-template-columns: minmax(260px, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  border-radius: 8px;
+  background: var(--ledger-surface);
+}
+
+.scan-strip label {
+  gap: 6px;
+  color: var(--ledger-muted);
+  font-size: 11px;
+}
+
+.scan-strip input,
+.toolbar-row input,
+.content-card input,
+.content-card select,
+.settings-card select {
+  min-height: 34px;
+  border: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  border-radius: 6px;
+  background: var(--ledger-bg-deep);
+  color: var(--ledger-text);
+  font-size: 12px;
+  padding: 0 10px;
+}
+
+.form-message {
+  margin: 0;
+  font-size: 12px;
+}
+
+.metrics-grid {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.metric-card {
+  min-height: 104px;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.metric-card span {
+  margin-bottom: 9px;
+  color: var(--ledger-muted);
+  font-size: 12px;
+}
+
+.metric-card strong {
+  margin-bottom: 8px;
+  color: var(--ledger-text);
+  font-size: 28px;
+  font-weight: 680;
+}
+
+.metric-card small,
+.tone-green,
+.tone-purple,
+.tone-cyan {
+  color: var(--ledger-primary) !important;
+}
+
+.metric-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ledger-primary-soft);
+}
+
+.overview-grid,
+.transactions-layout,
+.reports-grid,
+.api-doc-grid {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.overview-grid.lower {
+  grid-template-columns: minmax(0, 1.38fr) minmax(300px, 0.62fr);
+}
+
+.chart-card,
+.content-card,
+.detail-panel {
+  padding: 14px;
+  border-radius: 8px;
+}
+
+.card-heading {
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.card-heading h2 {
+  color: var(--ledger-text);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.card-heading button,
+.card-heading a {
+  min-height: 28px;
+  padding: 0 9px;
+  border-color: color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  border-radius: 5px;
+  background: var(--ledger-surface-2);
+  color: var(--ledger-muted);
+  font-size: 11px;
+}
+
+.product-line-chart {
+  height: 156px;
+}
+
+.product-line-chart line {
+  stroke: color-mix(in srgb, var(--ledger-border) 50%, transparent);
+}
+
+.product-line-chart polyline {
+  stroke: var(--ledger-primary);
+  stroke-width: 2.5;
+}
+
+.product-line-chart circle {
+  fill: var(--ledger-primary);
+}
+
+.chart-axis {
+  color: var(--ledger-muted);
+  font-size: 10px;
+}
+
+.donut-layout {
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.donut-chart {
+  width: 118px;
+  background: conic-gradient(var(--ledger-primary-strong) 0 42%, var(--ledger-blue) 42% 66%, #8acaa6 66% 83%, #c9a652 83% 94%, #6e7a70 94% 100%);
+}
+
+.donut-chart::after {
+  inset: 34px;
+  background: var(--ledger-surface);
+}
+
+.donut-legend {
+  gap: 8px;
+}
+
+.donut-legend div {
+  gap: 7px;
+  color: var(--ledger-text);
+  font-size: 12px;
+}
+
+.donut-legend small,
+.donut-legend em {
+  color: var(--ledger-muted);
+}
+
+.legend-dot,
+.dot-0,
+.blue {
+  background: var(--ledger-primary-strong);
+}
+
+.dot-1,
+.purple {
+  background: var(--ledger-blue);
+}
+
+.dot-2,
+.cyan {
+  background: #8acaa6;
+}
+
+.dot-3,
+.green {
+  background: #c9a652;
+}
+
+.dot-4,
+.muted {
+  background: #6e7a70;
+}
+
+.table-card {
+  border-color: color-mix(in srgb, var(--ledger-border) 64%, transparent);
+  border-radius: 7px;
+}
+
+.product-table {
+  font-size: 12px;
+}
+
+.product-table th,
+.product-table td {
+  padding: 8px 10px;
+  border-top-color: color-mix(in srgb, var(--ledger-border) 42%, transparent);
+  color: var(--ledger-text);
+}
+
+.product-table th {
+  color: var(--ledger-muted);
+  font-size: 11px;
+}
+
+.product-table tbody tr:hover {
+  background: var(--ledger-primary-soft);
+}
+
+.income-text {
+  color: var(--ledger-primary) !important;
+}
+
+.spend-text {
+  color: var(--ledger-danger) !important;
+}
+
+.category-pill {
+  min-height: 20px;
+  padding: 0 7px;
+  border-radius: 5px;
+  background: var(--ledger-primary-soft);
+  color: var(--ledger-primary);
+  font-size: 11px;
+}
+
+.category-pill.data_access {
+  background: rgba(143, 178, 255, 0.12);
+  color: var(--ledger-blue);
+}
+
+.category-pill.compute {
+  background: rgba(201, 166, 82, 0.14);
+  color: #d9b860;
+}
+
+.category-pill.unknown {
+  background: rgba(188, 202, 191, 0.1);
+  color: var(--ledger-muted);
+}
+
+.activity-list {
+  gap: 9px;
+}
+
+.activity-list > div {
+  gap: 9px;
+}
+
+.activity-list span {
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+}
+
+.activity-list strong,
+.activity-list p,
+.activity-list small {
+  font-size: 12px;
+}
+
+.feed-income {
+  background: var(--ledger-primary-soft);
+  color: var(--ledger-primary);
+}
+
+.feed-spend {
+  background: rgba(255, 107, 100, 0.12);
+  color: var(--ledger-danger);
+}
+
+.cta-strip {
+  gap: 14px;
+  padding: 15px 16px;
+  border-radius: 8px;
+  background: var(--ledger-surface);
+}
+
+.cta-strip h2 {
+  color: var(--ledger-text);
+  font-size: 15px;
+}
+
+.cta-strip p {
+  color: var(--ledger-muted);
+  font-size: 12px;
+}
+
+.cta-icon,
+.wallet-icon {
+  width: 32px;
+  height: 32px;
+  border-color: color-mix(in srgb, var(--ledger-primary) 45%, transparent);
+  border-radius: 6px;
+  background: var(--ledger-primary-soft);
+}
+
+.toolbar-row {
+  gap: 8px;
+}
+
+.filter-row {
+  gap: 6px;
+}
+
+.filter-row button,
+.filter-row a {
+  min-height: 27px;
+  font-size: 11px;
+}
+
+.transactions-layout {
+  grid-template-columns: minmax(0, 1fr) 304px;
+}
+
+.detail-panel {
+  position: sticky;
+  top: 88px;
+}
+
+.detail-list {
+  gap: 10px;
+}
+
+.detail-list strong,
+.detail-list p {
+  color: var(--ledger-text);
+  font-size: 12px;
+}
+
+.empty-state {
+  min-height: 148px;
+  border-color: color-mix(in srgb, var(--ledger-border) 70%, transparent);
+  color: var(--ledger-muted);
+  font-size: 12px;
+}
+
+.empty-state.compact {
+  min-height: 96px;
+}
+
+.mini-trend polyline {
+  stroke: var(--ledger-primary);
+}
+
+.report-row {
+  border-bottom-color: color-mix(in srgb, var(--ledger-border) 42%, transparent);
+}
+
+.report-row strong,
+.report-preview-grid strong,
+.wallet-card dd,
+.wallet-card strong,
+.setting-row strong {
+  color: var(--ledger-text);
+}
+
+.report-preview-grid div,
+.api-key-box,
+.endpoint-doc-list > div,
+.api-example-card pre,
+.segmented-control {
+  border-color: color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  background: var(--ledger-bg-deep);
+  border-radius: 7px;
+}
+
+.endpoint-doc-list span {
+  color: var(--ledger-primary);
+}
+
+.segmented-control button.active,
+.toggle-switch span {
+  background: var(--ledger-primary-strong);
+  color: #003822;
+}
+
+@media (max-width: 1180px) {
+  .product-sidebar {
+    width: 72px;
+    padding-inline: 10px;
+  }
+
+  .product-topbar {
+    left: 72px;
+  }
+
+  .product-main {
+    margin-left: 72px;
+  }
+
+  .product-sidebar p,
+  .product-nav span,
+  .sidebar-card,
+  .sidebar-account div,
+  .sidebar-account small,
+  .product-sidebar .brand span:last-child {
+    display: none;
+  }
+
+  .product-nav a {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .metrics-grid,
+  .report-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-grid,
+  .overview-grid.lower,
+  .transactions-layout,
+  .reports-grid,
+  .api-doc-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .product-sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    display: block;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--ledger-border) 72%, transparent);
+  }
+
+  .product-sidebar > div:first-child {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .product-sidebar .brand span:last-child {
+    display: inline;
+  }
+
+  .product-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .product-nav a {
+    flex: 0 0 38px;
+    width: 38px;
+  }
+
+  .product-topbar {
+    position: sticky;
+    left: 0;
+    height: 54px;
+    padding: 0 12px;
+  }
+
+  .product-main {
+    margin-left: 0;
+    padding: 14px 10px 24px;
+  }
+
+  .product-page-header,
+  .page-actions,
+  .scan-strip,
+  .toolbar-row,
+  .cta-strip,
+  .setting-row,
+  .endpoint-doc-list > div,
+  .api-key-box {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-grid,
+  .report-preview-grid,
+  .wallet-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    min-height: 94px;
+  }
+
+  .metric-card strong {
+    font-size: 24px;
+  }
+
+  .donut-layout {
+    grid-template-columns: 1fr;
+  }
+}

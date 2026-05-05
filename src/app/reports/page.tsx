@@ -10,6 +10,7 @@ export default function ReportsPage() {
   const [format, setFormat] = useState("CSV");
 
   const reportUrl = `/report?wallet=${encodeURIComponent(ledger.wallet)}&range=${ledger.range}`;
+  const hasReport = ledger.hasLedger && ledger.transactions.length > 0;
 
   return (
     <AppShell>
@@ -76,21 +77,31 @@ export default function ReportsPage() {
 
         <div className="content-card">
           <h2>Recent Reports</h2>
-          {["Summary Report", "Category Breakdown", "Agent JSON"].map((name, index) => (
-            <div className="report-row" key={name}>
-              <div>
-                <strong>{name}</strong>
-                <p>{new Date(Date.now() - index * 86400000).toLocaleDateString()} · {format}</p>
+          {hasReport ? (
+            <>
+              <div className="report-row">
+                <div>
+                  <strong>{ledger.range === "7d" ? "7-day" : "30-day"} Summary Report</strong>
+                  <p>{new Date(ledger.generatedAt).toLocaleDateString()} · {format}</p>
+                </div>
+                <button type="button" onClick={() => (format === "CSV" ? ledger.exportCsv() : window.location.assign(reportUrl))}>
+                  Download
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => (name === "Agent JSON" ? ledger.copyText(JSON.stringify(ledger.report, null, 2), "report-json") : ledger.exportCsv())}
-              >
-                {name === "Agent JSON" ? "Copy" : "Download"}
-              </button>
-            </div>
-          ))}
-          <a href={reportUrl}>View full report</a>
+              <div className="report-row">
+                <div>
+                  <strong>Agent JSON</strong>
+                  <p>Latest wallet ledger summary</p>
+                </div>
+                <button type="button" onClick={() => ledger.copyText(JSON.stringify(ledger.report, null, 2), "report-json")}>
+                  {ledger.copied === "report-json" ? "Copied" : "Copy"}
+                </button>
+              </div>
+              <a href={reportUrl}>View full report</a>
+            </>
+          ) : (
+            <div className="empty-state compact">Scan a wallet to create your first report.</div>
+          )}
         </div>
       </section>
 

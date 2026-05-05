@@ -15,6 +15,16 @@ const navItems = [
   { href: "/settings", label: "Settings", icon: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-5v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" },
 ];
 
+const pageTitles: Record<string, string> = {
+  "/dashboard": "Overview",
+  "/transactions": "Transactions",
+  "/categories": "Categories",
+  "/reports": "Reports",
+  "/wallets": "Wallets",
+  "/api": "API",
+  "/settings": "Settings",
+};
+
 function Icon({ path }: { path: string }) {
   return (
     <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -25,13 +35,14 @@ function Icon({ path }: { path: string }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const currentPage = pageTitles[pathname] || "Overview";
 
   return (
     <div className="product-shell" data-theme="dark">
       <aside className="product-sidebar">
         <div>
           <Logo />
-          <p>Readable books for the agent economy.</p>
+          <p>Onchain books for Base USDC activity.</p>
         </div>
 
         <nav className="product-nav" aria-label="Product navigation">
@@ -50,20 +61,31 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-card">
-          <span>x402Books API</span>
-          <p>Access your financial data programmatically.</p>
-          <Link href="/api">View API Docs</Link>
+          <span>Stage 1</span>
+          <p>Wallet scanner, categorized ledger, exports, and reports.</p>
+          <Link href="/dashboard">Scan Wallet</Link>
         </div>
 
         <div className="sidebar-account">
-          <span>AI</span>
+          <span>xB</span>
           <div>
-            <strong>x402Builder</strong>
-            <p>builder@x402.dev</p>
+            <strong>Private beta</strong>
+            <p>x402Books workspace</p>
           </div>
           <small>⌄</small>
         </div>
       </aside>
+
+      <header className="product-topbar">
+        <div>
+          <span>Workspace</span>
+          <strong>{currentPage}</strong>
+        </div>
+        <div className="topbar-actions">
+          <Link href="/dashboard">Scan</Link>
+          <Link href="/api">API</Link>
+        </div>
+      </header>
 
       <section className="product-main">{children}</section>
     </div>
