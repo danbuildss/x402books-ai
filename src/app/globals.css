@@ -4817,24 +4817,88 @@ button:disabled {
 }
 
 .stitch-shell {
-  --st-bg: #0e1511;
-  --st-lowest: #09100c;
-  --st-low: #171d19;
-  --st-container: #1b211d;
-  --st-high: #252c27;
-  --st-highest: #303631;
-  --st-text: #dee4dd;
-  --st-muted: #bccabf;
-  --st-line: #3d4a41;
-  --st-primary: #66e4a5;
+  /* ---- Core surface scale ---- */
+  --st-bg:             #0e1511;
+  --st-lowest:         #09100c;
+  --st-low:            #171d19;
+  --st-container:      #1b211d;
+  --st-high:           #252c27;
+  --st-highest:        #303631;
+  /* ---- Typography ---- */
+  --st-text:           #dee4dd;
+  --st-muted:          #bccabf;
+  /* ---- Structure ---- */
+  --st-line:           #3d4a41;
+  /* ---- Brand / data viz ---- */
+  --st-primary:        #66e4a5;
   --st-primary-strong: #47c78b;
-  --st-on-primary: #003822;
-  --st-blue: #b0c6ff;
-  --st-red: #ffb4ab;
+  --st-on-primary:     #003822;
+  --st-green:          #00D395;   /* Coinbase brand green — charts & income */
+  --st-blue:           #b0c6ff;
+  --st-red:            #ffb4ab;
+  /* ---- Polish additions ---- */
+  --st-mono:           var(--font-mono), 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --st-radius-sm:      4px;
+  --st-radius-md:      8px;
+  --st-shadow-card:    0 1px 3px rgba(0,0,0,0.4), 0 4px 16px rgba(0,0,0,0.25);
+  --st-shadow-hover:   0 2px 8px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.3);
+  --st-glow:           0 0 0 1px rgba(0,211,149,0.25), 0 0 16px rgba(0,211,149,0.3);
+  --st-glow-subtle:    0 0 8px rgba(0,211,149,0.2);
+
   min-height: 100vh;
   background: var(--st-bg);
   color: var(--st-text);
   font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ================================================================
+   KEYFRAMES — all micro-interactions
+   ================================================================ */
+
+@keyframes ping {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes card-pop {
+  from { opacity: 0; transform: scale(0.97) translateY(4px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(0,211,149,0.3); }
+  50%       { box-shadow: 0 0 14px rgba(0,211,149,0.6), 0 0 4px rgba(0,211,149,0.4); }
+}
+
+@keyframes draw-in {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  60%  { transform: scale(1.2) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+@keyframes drawer-open {
+  from { max-height: 0; opacity: 0; }
+  to   { max-height: 480px; opacity: 1; }
+}
+
+@keyframes drawer-close {
+  from { max-height: 480px; opacity: 1; }
+  to   { max-height: 0; opacity: 0; }
 }
 
 .stitch-shell * {
@@ -4960,8 +5024,9 @@ button:disabled {
   height: 64px;
   padding: 0 24px;
   border-bottom: 1px solid var(--st-line);
-  background: rgba(14, 21, 17, 0.92);
-  backdrop-filter: blur(16px);
+  background: rgba(14, 21, 17, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .stitch-topbar h1 {
@@ -5131,15 +5196,28 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   min-height: 38px;
   border: 0;
-  border-radius: 4px;
-  background: var(--st-primary-strong);
-  color: var(--st-on-primary);
+  border-radius: 999px;
+  background: var(--st-green);
+  color: #002918;
   cursor: pointer;
   font-size: 13px;
   font-weight: 800;
-  padding: 0 14px;
+  padding: 0 18px;
+  letter-spacing: 0.01em;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease;
+}
+
+.stitch-primary:hover:not(:disabled) {
+  background: #00e8a2;
+  box-shadow: 0 0 0 3px rgba(0,211,149,0.2);
+  transform: translateY(-1px);
+}
+
+.stitch-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .stitch-primary:disabled,
@@ -5173,8 +5251,9 @@ button:disabled {
 .stitch-card,
 .stitch-wallet-card {
   border: 1px solid var(--st-line);
-  border-radius: 8px;
+  border-radius: var(--st-radius-md);
   background: var(--st-low);
+  box-shadow: var(--st-shadow-card);
 }
 
 .stitch-stat {
@@ -5183,6 +5262,13 @@ button:disabled {
   gap: 16px;
   min-height: 144px;
   padding: 24px;
+  animation: card-pop 280ms ease both;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.stitch-stat:hover {
+  box-shadow: var(--st-shadow-hover);
+  border-color: color-mix(in srgb, var(--st-line) 70%, var(--st-primary));
 }
 
 .stitch-stat span {
@@ -5328,10 +5414,14 @@ button:disabled {
 .stitch-legend div {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
-  gap: 10px;
+  gap: 6px 10px;
   align-items: center;
   color: var(--st-text);
   font-size: 13px;
+}
+
+.stitch-legend .stitch-legend-bar {
+  grid-column: 1 / -1;
 }
 
 .stitch-legend span {
@@ -5381,8 +5471,13 @@ button:disabled {
   text-transform: uppercase;
 }
 
+.stitch-table tbody tr {
+  transition: background 120ms ease;
+}
+
 .stitch-table tr:hover td {
   background: var(--st-container);
+  cursor: pointer;
 }
 
 .stitch-table .mono,
@@ -5407,17 +5502,46 @@ button:disabled {
 .stitch-chip {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(102, 228, 165, 0.12);
-  color: var(--st-primary);
-  font-size: 12px;
+  background: rgba(0, 211, 149, 0.1);
+  color: var(--st-green);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
-.stitch-chip.data_access { background: rgba(176, 198, 255, 0.12); color: var(--st-blue); }
-.stitch-chip.compute { background: rgba(201, 166, 82, 0.14); color: #d9b860; }
-.stitch-chip.unknown { background: rgba(188, 202, 191, 0.1); color: var(--st-muted); }
+.stitch-chip .stitch-icon {
+  font-size: 12px !important;
+  line-height: 1;
+}
+
+.stitch-chip.data_access   { background: rgba(176, 198, 255, 0.12); color: var(--st-blue); }
+.stitch-chip.compute        { background: rgba(201, 166, 82, 0.14);  color: #d9b860; }
+.stitch-chip.agent_service  { background: rgba(196, 160, 255, 0.12); color: #c4a0ff; }
+.stitch-chip.subscription   { background: rgba(176, 198, 255, 0.12); color: var(--st-blue); }
+.stitch-chip.unknown        { background: rgba(188, 202, 191, 0.1);  color: var(--st-muted); }
+
+/* x402 badge with emerald glow */
+.stitch-x402 {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(0, 211, 149, 0.12);
+  border: 1px solid rgba(0, 211, 149, 0.3);
+  color: var(--st-green);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  animation: pulse-glow 2.8s ease-in-out infinite;
+}
 
 .stitch-feed {
   display: grid;
@@ -5916,4 +6040,338 @@ button:disabled {
   .stitch-donut-layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* ================================================================
+   POLISH — Stripe × Coinbase × Moonpay additions
+   ================================================================ */
+
+/* ---- Live network indicator ---- */
+.stitch-live-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--st-green);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stitch-live-dot::before {
+  content: "";
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--st-green);
+  flex-shrink: 0;
+}
+
+.stitch-live-dot::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translate(0, -50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--st-green);
+  animation: ping 1.8s cubic-bezier(0,0,0.2,1) infinite;
+}
+
+/* ---- Topbar scan pill ---- */
+.stitch-scan-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--st-green);
+  color: #002918;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease;
+}
+
+.stitch-scan-pill:hover {
+  background: #00e8a2;
+  box-shadow: 0 0 0 3px rgba(0,211,149,0.2);
+  transform: translateY(-1px);
+}
+
+.stitch-scan-pill:active {
+  transform: translateY(0);
+}
+
+/* ---- Topbar secondary link ---- */
+.stitch-topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-container);
+  color: var(--st-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+
+.stitch-topbar-link:hover {
+  border-color: var(--st-primary);
+  color: var(--st-primary);
+}
+
+/* ---- Row entrance animation ---- */
+.stitch-table tbody tr {
+  animation: row-in 220ms ease both;
+  animation-delay: calc(var(--row-i, 0) * 35ms);
+}
+
+/* ---- Monospace amounts & addresses ---- */
+.stitch-mono,
+.stitch-table td.mono,
+.stitch-table td.amount {
+  font-family: var(--st-mono);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Coinbase-style line chart area fill ---- */
+.stitch-area-fill {
+  fill: url(#area-gradient);
+  stroke: none;
+  opacity: 0.22;
+}
+
+.stitch-line-stroke {
+  fill: none;
+  stroke: var(--st-green);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stitch-line-dot {
+  fill: var(--st-bg);
+  stroke: var(--st-green);
+  stroke-width: 2;
+}
+
+.stitch-grid-dash {
+  stroke: rgba(61,74,65,0.5);
+  stroke-width: 1;
+  stroke-dasharray: 2 5;
+}
+
+/* ---- Donut centre label ---- */
+.stitch-donut-wrap {
+  position: relative;
+  width: 170px;
+  aspect-ratio: 1;
+  flex-shrink: 0;
+}
+
+.stitch-donut-centre {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.stitch-donut-centre strong {
+  display: block;
+  font-family: var(--st-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--st-text);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.stitch-donut-centre span {
+  font-size: 10px;
+  color: var(--st-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 3px;
+}
+
+/* ---- Legend progress bar ---- */
+.stitch-legend-bar {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--st-line);
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.stitch-legend-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: currentColor;
+  transition: width 600ms cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ---- Developer Mode JSON drawer ---- */
+.stitch-dev-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.stitch-dev-toggle.active {
+  border-color: var(--st-green);
+  color: var(--st-green);
+  background: rgba(0,211,149,0.06);
+}
+
+.stitch-dev-toggle .dev-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--st-muted);
+  transition: background 140ms ease;
+}
+
+.stitch-dev-toggle.active .dev-dot {
+  background: var(--st-green);
+}
+
+.stitch-json-drawer {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 320ms cubic-bezier(0.4,0,0.2,1), opacity 240ms ease;
+}
+
+.stitch-json-drawer.open {
+  max-height: 480px;
+  opacity: 1;
+}
+
+.stitch-json-inner {
+  margin-top: 12px;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius-md);
+  background: var(--st-lowest);
+  overflow: hidden;
+}
+
+.stitch-json-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--st-line);
+  background: var(--st-container);
+}
+
+.stitch-json-toolbar span {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--st-muted);
+}
+
+.stitch-json-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+
+.stitch-json-toolbar button:hover {
+  color: var(--st-text);
+  border-color: var(--st-primary);
+}
+
+.stitch-json-pre {
+  overflow-y: auto;
+  max-height: 380px;
+  padding: 14px 16px;
+  font-family: var(--st-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--st-muted);
+  white-space: pre;
+  margin: 0;
+}
+
+/* ---- Card border animation on data load ---- */
+.stitch-card {
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.stitch-card:hover {
+  box-shadow: var(--st-shadow-hover);
+}
+
+/* ---- Stitch button hover ---- */
+.stitch-button {
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+
+.stitch-button:hover:not(:disabled) {
+  border-color: var(--st-primary);
+  color: var(--st-primary);
+}
+
+/* ---- Amount cell — mono font everywhere ---- */
+.stitch-table td:has(.income),
+.stitch-table td:has(.expense),
+.stitch-table td.amount {
+  font-family: var(--st-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Sidebar nav — smooth active bar ---- */
+.stitch-nav a {
+  position: relative;
+  border-right: 2px solid transparent;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+/* ---- Scanbar input focus ring ---- */
+.stitch-scanbar input:focus,
+.stitch-toolbar input:focus {
+  outline: none;
+  border-color: var(--st-green);
+  box-shadow: 0 0 0 3px rgba(0,211,149,0.12);
 }

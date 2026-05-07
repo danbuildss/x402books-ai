@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
   formatCategory,
@@ -13,28 +14,45 @@ import {
 import type { CategorySummary, DailyFlow, LedgerTransaction, TimeRange } from "@/lib/ledger";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: "dashboard" },
+  { href: "/dashboard",    label: "Overview",     icon: "dashboard" },
   { href: "/transactions", label: "Transactions", icon: "receipt_long" },
-  { href: "/categories", label: "Categories", icon: "category" },
-  { href: "/reports", label: "Reports", icon: "description" },
-  { href: "/wallets", label: "Wallets", icon: "account_balance_wallet" },
-  { href: "/api", label: "API", icon: "api" },
-  { href: "/settings", label: "Settings", icon: "settings" },
+  { href: "/categories",   label: "Categories",   icon: "category" },
+  { href: "/reports",      label: "Reports",      icon: "description" },
+  { href: "/wallets",      label: "Wallets",      icon: "account_balance_wallet" },
+  { href: "/api",          label: "API",          icon: "api" },
+  { href: "/settings",     label: "Settings",     icon: "settings" },
 ];
 
 const pageNames: Record<string, string> = {
-  "/dashboard": "Overview",
+  "/dashboard":    "Overview",
   "/transactions": "Transactions",
-  "/categories": "Categories",
-  "/reports": "Reports",
-  "/wallets": "Wallets",
-  "/api": "API",
-  "/settings": "Settings",
+  "/categories":   "Categories",
+  "/reports":      "Reports",
+  "/wallets":      "Wallets",
+  "/api":          "API",
+  "/settings":     "Settings",
 };
+
+/* Category icon map — Stripe-style functional icons */
+const CATEGORY_ICONS: Record<string, string> = {
+  api_call:          "electrical_plug",
+  data_access:       "database",
+  compute:           "memory",
+  agent_service:     "smart_toy",
+  subscription:      "autorenew",
+  income:            "north_east",
+  refund:            "undo",
+  internal_transfer: "swap_horiz",
+  unknown:           "help_outline",
+};
+
+// ---- Primitives ----
 
 export function StitchIcon({ name }: { name: string }) {
   return <span className="material-symbols-outlined stitch-icon">{name}</span>;
 }
+
+// ---- Shell ----
 
 export function StitchShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -77,11 +95,17 @@ export function StitchShell({ children }: { children: ReactNode }) {
       <header className="stitch-topbar">
         <div>
           <h1>{page}</h1>
-          <p>Financial visibility for AI agents.</p>
+          {/* Live network indicator — Moonpay-style pulse */}
+          <span className="stitch-live-dot">Base Network</span>
         </div>
         <div className="stitch-topbar-actions">
-          <Link href="/dashboard">Scan Wallet</Link>
-          <Link href="/api">API Docs</Link>
+          <Link href="/api" className="stitch-topbar-link">
+            <StitchIcon name="api" /> API Docs
+          </Link>
+          {/* Moonpay-style primary scan pill */}
+          <Link href="/dashboard" className="stitch-scan-pill">
+            <StitchIcon name="search" /> Scan Wallet
+          </Link>
         </div>
       </header>
 
@@ -89,6 +113,8 @@ export function StitchShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+// ---- Page header ----
 
 export function StitchHeader({
   title,
@@ -110,17 +136,23 @@ export function StitchHeader({
   );
 }
 
+// ---- Wallet pill ----
+
 export function StitchWalletPill({ wallet, onCopy }: { wallet: string; onCopy: () => void }) {
   return (
     <div className="stitch-wallet-pill">
       <span>Wallet</span>
-      <strong>{wallet ? shortenAddress(wallet) : "No wallet"}</strong>
+      <strong style={{ fontFamily: "var(--st-mono)", fontSize: "12px" }}>
+        {wallet ? shortenAddress(wallet) : "No wallet"}
+      </strong>
       <button type="button" onClick={onCopy} aria-label="Copy wallet">
         <StitchIcon name="content_copy" />
       </button>
     </div>
   );
 }
+
+// ---- Date range ----
 
 export function StitchRange({
   value,
@@ -144,6 +176,8 @@ export function StitchRange({
     </div>
   );
 }
+
+// ---- Scanner bar ----
 
 export function StitchScanBar({
   value,
@@ -172,22 +206,40 @@ export function StitchScanBar({
     <form className="stitch-scanbar" onSubmit={onSubmit}>
       <label>
         <span>Base wallet</span>
-        <input value={value} onChange={(event) => onChange(event.target.value)} placeholder="0x..." />
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0x..."
+          spellCheck={false}
+          autoComplete="off"
+          style={{ fontFamily: "var(--st-mono)", fontSize: "13px" }}
+        />
       </label>
       <button className="stitch-primary" disabled={loading} type="submit">
-        {loading ? "Scanning..." : "Scan Wallet"}
+        {loading ? (
+          <>
+            <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite", fontSize: "16px" }}>
+              <StitchIcon name="sync" />
+            </span>
+            Scanning…
+          </>
+        ) : (
+          <><StitchIcon name="search" /> Scan Wallet</>
+        )}
       </button>
       <button className="stitch-button" disabled={categorizing || !hasTransactions} type="button" onClick={onCategorize}>
-        {categorizing ? "Categorizing..." : "AI Categorize"}
+        {categorizing ? "Categorizing…" : "AI Categorize"}
       </button>
       <button className="stitch-button" disabled={!hasTransactions} type="button" onClick={onExport}>
-        Export CSV
+        <StitchIcon name="download" /> Export CSV
       </button>
-      {error ? <p className="stitch-message error">{error}</p> : null}
+      {error  ? <p className="stitch-message error">{error}</p>   : null}
       {status ? <p className="stitch-message success">{status}</p> : null}
     </form>
   );
 }
+
+// ---- Stat card ----
 
 export function StitchStat({
   label,
@@ -206,7 +258,9 @@ export function StitchStat({
     <article className="stitch-stat">
       <div>
         <span>{label}</span>
-        <strong>{value}</strong>
+        <strong style={{ fontFamily: "var(--st-mono)", fontVariantNumeric: "tabular-nums" }}>
+          {value}
+        </strong>
         <small className={`tone-${tone}`}>{helper}</small>
       </div>
       <i className={`stitch-stat-icon tone-${tone}`}>
@@ -216,42 +270,89 @@ export function StitchStat({
   );
 }
 
-export function StitchLineChart({ flows, title = "Spend Over Time" }: { flows: DailyFlow[]; title?: string }) {
-  const visible = flows.length ? flows : [];
-  const max = Math.max(1, ...visible.map((flow) => flow.spend));
-  const points = visible
-    .map((flow, index) => {
-      const x = visible.length === 1 ? 12 : 12 + (index / (visible.length - 1)) * 616;
-      const y = 202 - (flow.spend / max) * 174;
-      return `${x},${y}`;
-    })
-    .join(" ");
+// ---- Coinbase-style line chart with area fill ----
+
+export function StitchLineChart({
+  flows,
+  title = "Spend Over Time",
+}: {
+  flows: DailyFlow[];
+  title?: string;
+}) {
+  const visible = flows.length >= 2 ? flows : [];
+  const max = Math.max(1, ...visible.map((f) => f.spend));
+
+  const W = 640; const H = 220;
+  const PAD_L = 12; const PAD_R = 12; const PAD_T = 16; const PAD_B = 24;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  const pts = visible.map((f, i) => ({
+    x: PAD_L + (i / (visible.length - 1)) * plotW,
+    y: PAD_T + plotH - (f.spend / max) * plotH,
+  }));
+
+  const linePath = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaPath = pts.length >= 2
+    ? `${linePath} L${pts[pts.length - 1].x},${PAD_T + plotH} L${pts[0].x},${PAD_T + plotH} Z`
+    : "";
+
+  const gridYs = [0, 0.25, 0.5, 0.75, 1].map((f) => PAD_T + plotH * (1 - f));
+
+  const maxLabels = 7;
+  const step = Math.max(1, Math.ceil(visible.length / maxLabels));
+  const labelIdx = visible.map((_, i) => i).filter((i) => i % step === 0 || i === visible.length - 1);
 
   return (
     <section className="stitch-card stitch-chart-card">
       <div className="stitch-card-head">
         <h3>{title}</h3>
-        <button type="button">By Spend</button>
+        <span style={{ fontSize: "11px", color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>
+          USDC · Base
+        </span>
       </div>
-      {visible.length ? (
+
+      {visible.length >= 2 ? (
         <>
-          <svg className="stitch-line" viewBox="0 0 640 220" preserveAspectRatio="none">
-            {[0, 1, 2, 3].map((line) => (
-              <line key={line} x1="12" x2="628" y1={32 + line * 48} y2={32 + line * 48} />
+          <svg
+            className="stitch-line"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            style={{ display: "block", width: "100%", height: "200px" }}
+          >
+            <defs>
+              <linearGradient id="area-gradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor="#00D395" stopOpacity="0.35" />
+                <stop offset="85%"  stopColor="#00D395" stopOpacity="0.03" />
+              </linearGradient>
+            </defs>
+
+            {/* Dashed grid lines — Stripe style */}
+            {gridYs.map((y) => (
+              <line
+                key={y}
+                x1={PAD_L} y1={y} x2={W - PAD_R} y2={y}
+                className="stitch-grid-dash"
+              />
             ))}
-            <polyline points={points} />
-            {visible.map((flow, index) => {
-              const x = visible.length === 1 ? 12 : 12 + (index / (visible.length - 1)) * 616;
-              const y = 202 - (flow.spend / max) * 174;
-              return <circle cx={x} cy={y} key={flow.date} r="4" />;
-            })}
+
+            {/* Area fill */}
+            {areaPath && <path d={areaPath} className="stitch-area-fill" />}
+
+            {/* Line stroke — Coinbase green */}
+            <path d={linePath} className="stitch-line-stroke" />
+
+            {/* Dots */}
+            {pts.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r="4.5" className="stitch-line-dot" />
+            ))}
           </svg>
+
           <div className="stitch-axis">
-            {visible.map((flow) => (
-              <span key={flow.date}>
-                {new Date(`${flow.date}T00:00:00`).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
+            {labelIdx.map((i) => (
+              <span key={i} style={{ fontFamily: "var(--st-mono)", fontSize: "10px" }}>
+                {new Date(`${visible[i].date}T00:00:00`).toLocaleDateString("en-US", {
+                  month: "short", day: "numeric",
                 })}
               </span>
             ))}
@@ -264,8 +365,10 @@ export function StitchLineChart({ flows, title = "Spend Over Time" }: { flows: D
   );
 }
 
+// ---- Coinbase-style donut with centre total ----
+
 export function StitchDonut({ categories }: { categories: CategorySummary[] }) {
-  const total = categories.reduce((sum, category) => sum + category.totalUsdc, 0);
+  const total = categories.reduce((s, c) => s + c.totalUsdc, 0);
   const rows = categories.slice(0, 5);
 
   return (
@@ -274,18 +377,39 @@ export function StitchDonut({ categories }: { categories: CategorySummary[] }) {
         <h3>Top Categories</h3>
         <button type="button">By Spend</button>
       </div>
+
       {rows.length ? (
         <div className="stitch-donut-layout">
-          <div className="stitch-donut" />
+          {/* Donut with centred total */}
+          <div className="stitch-donut-wrap">
+            <div className="stitch-donut" />
+            <div className="stitch-donut-centre">
+              <strong style={{ fontFamily: "var(--st-mono)", fontSize: "13px" }}>
+                ${formatUsdc(total)}
+              </strong>
+              <span>total</span>
+            </div>
+          </div>
+
           <div className="stitch-legend">
-            {rows.map((category, index) => {
-              const percent = total ? Math.round((category.totalUsdc / total) * 1000) / 10 : 0;
+            {rows.map((cat, i) => {
+              const pct = total ? Math.round((cat.totalUsdc / total) * 1000) / 10 : 0;
               return (
-                <div key={category.category}>
-                  <span className={`dot-${index}`} />
-                  <strong>{category.label}</strong>
-                  <small>${formatUsdc(category.totalUsdc)}</small>
-                  <em>{percent}%</em>
+                <div key={cat.category}>
+                  <span className={`dot-${i}`} />
+                  <strong>{cat.label}</strong>
+                  <small style={{ fontFamily: "var(--st-mono)" }}>${formatUsdc(cat.totalUsdc)}</small>
+                  <em>{pct}%</em>
+                  {/* Progress bar spanning full grid width */}
+                  <div className="stitch-legend-bar">
+                    <div
+                      className="stitch-legend-bar-fill"
+                      style={{
+                        width: `${pct}%`,
+                        color: ["var(--st-green)", "var(--st-blue)", "#8acaa6", "#c9a652", "#6e7a70"][i],
+                      }}
+                    />
+                  </div>
                 </div>
               );
             })}
@@ -298,13 +422,15 @@ export function StitchDonut({ categories }: { categories: CategorySummary[] }) {
   );
 }
 
+// ---- Stripe-inspired transactions table ----
+
 export function StitchTransactionsTable({
   transactions,
   onSelect,
   compact = false,
 }: {
   transactions: LedgerTransaction[];
-  onSelect?: (transaction: LedgerTransaction) => void;
+  onSelect?: (tx: LedgerTransaction) => void;
   compact?: boolean;
 }) {
   return (
@@ -312,33 +438,61 @@ export function StitchTransactionsTable({
       <table className="stitch-table">
         <thead>
           <tr>
-            {!compact ? <th>Tx Hash</th> : null}
+            {!compact && <th>Tx Hash</th>}
             <th>Type</th>
             <th>Category</th>
             <th>Counterparty</th>
-            <th>Amount</th>
+            <th style={{ textAlign: "right" }}>Amount</th>
             <th>{compact ? "Time" : "Timestamp"}</th>
-            {!compact ? <th>AI Confidence</th> : null}
+            {!compact && <th>AI Confidence</th>}
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => (
-            <tr key={transaction.txHash} onClick={() => onSelect?.(transaction)}>
-              {!compact ? <td className="mono">{shortenAddress(transaction.txHash)}</td> : null}
-              <td className={transaction.direction === "income" ? "income" : "expense"}>
-                {transaction.direction === "income" ? "Income" : "Spend"}
-              </td>
-              <td>
-                <span className={`stitch-chip ${transaction.category || "unknown"}`}>
-                  {formatCategory(transaction.category || "unknown")}
+          {transactions.map((tx, i) => (
+            <tr
+              key={tx.txHash}
+              style={{ "--row-i": i } as React.CSSProperties}
+              onClick={() => onSelect?.(tx)}
+            >
+              {!compact && (
+                <td className="mono" style={{ fontFamily: "var(--st-mono)", fontSize: "12px" }}>
+                  {shortenAddress(tx.txHash)}
+                </td>
+              )}
+              <td className={tx.direction === "income" ? "income" : "expense"}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                  <StitchIcon name={tx.direction === "income" ? "north_east" : "south_east"} />
+                  {tx.direction === "income" ? "Income" : "Spend"}
                 </span>
               </td>
-              <td className="mono">{shortenAddress(transaction.counterparty)}</td>
-              <td className={transaction.direction === "income" ? "income amount" : "expense amount"}>
-                {signedAmount(transaction)}
+              <td>
+                {/* Icon chip — Stripe-style functional icon + label */}
+                <span className={`stitch-chip ${tx.category ?? "unknown"}`}>
+                  <StitchIcon name={CATEGORY_ICONS[tx.category ?? "unknown"] ?? "help_outline"} />
+                  {formatCategory(tx.category ?? "unknown")}
+                </span>
+                {/* x402 badge with emerald glow */}
+                {tx.isLikelyX402 && (
+                  <span className="stitch-x402">x402</span>
+                )}
               </td>
-              <td>{relativeTime(transaction.timestamp)}</td>
-              {!compact ? <td>{transaction.confidenceScore || 0}%</td> : null}
+              <td className="mono" style={{ fontFamily: "var(--st-mono)", fontSize: "12px", color: "var(--st-muted)" }}>
+                {shortenAddress(tx.counterparty)}
+              </td>
+              <td
+                className={`amount ${tx.direction === "income" ? "income" : "expense"}`}
+                style={{ textAlign: "right", fontFamily: "var(--st-mono)", fontVariantNumeric: "tabular-nums" }}
+              >
+                {signedAmount(tx)}
+              </td>
+              <td style={{ color: "var(--st-muted)", fontSize: "12px" }}>
+                {relativeTime(tx.timestamp)}
+              </td>
+              {!compact && (
+                <td style={{ color: "var(--st-muted)", fontSize: "12px" }}>
+                  {tx.confidenceScore ?? 0}%
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -347,23 +501,73 @@ export function StitchTransactionsTable({
   );
 }
 
-export function StitchEmpty({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
-  return <div className={compact ? "stitch-empty compact" : "stitch-empty"}>{children}</div>;
-}
+// ---- Mini sparkline ----
 
 export function StitchMiniTrend({ values }: { values: number[] }) {
   const max = Math.max(1, ...values);
-  const points = values
-    .map((value, index) => {
-      const x = values.length === 1 ? 0 : (index / (values.length - 1)) * 100;
-      const y = 34 - (value / max) * 30;
+  const pts = values
+    .map((v, i) => {
+      const x = values.length === 1 ? 0 : (i / (values.length - 1)) * 100;
+      const y = 34 - (v / max) * 30;
       return `${x},${y}`;
     })
     .join(" ");
   return (
     <svg className="stitch-mini-trend" viewBox="0 0 100 36" preserveAspectRatio="none">
-      <polyline points={points} />
+      <polyline points={pts} />
     </svg>
   );
 }
 
+// ---- Empty state ----
+
+export function StitchEmpty({ children, compact = false }: { children: ReactNode; compact?: boolean }) {
+  return (
+    <div className={compact ? "stitch-empty compact" : "stitch-empty"}>{children}</div>
+  );
+}
+
+// ---- Developer Mode JSON Drawer (Stripe-style) ----
+
+export function StitchJsonDrawer({
+  data,
+  copied,
+  onCopy,
+}: {
+  data: unknown;
+  copied: string;
+  onCopy: (text: string, key: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const json = JSON.stringify(data, null, 2);
+
+  return (
+    <div>
+      <button
+        type="button"
+        className={`stitch-dev-toggle ${open ? "active" : ""}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="dev-dot" />
+        {"{ }"} Developer Mode
+        <StitchIcon name={open ? "keyboard_arrow_up" : "keyboard_arrow_down"} />
+      </button>
+
+      <div className={`stitch-json-drawer ${open ? "open" : ""}`}>
+        <div className="stitch-json-inner">
+          <div className="stitch-json-toolbar">
+            <span>Agent-Readable JSON · x402Books AI</span>
+            <button
+              type="button"
+              onClick={() => onCopy(json, "json-drawer")}
+            >
+              <StitchIcon name={copied === "json-drawer" ? "check" : "content_copy"} />
+              {copied === "json-drawer" ? "Copied!" : "Copy JSON"}
+            </button>
+          </div>
+          <pre className="stitch-json-pre">{json}</pre>
+        </div>
+      </div>
+    </div>
+  );
+}
