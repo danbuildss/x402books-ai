@@ -142,11 +142,9 @@ export function StitchShell({ children }: { children: ReactNode }) {
   return (
     <div className="stitch-shell">
       <aside className="stitch-sidebar">
-        {/* Brand — logo slot ready; drop logo.png into /public to activate */}
+        {/* Brand */}
         <div className="stitch-brand">
-          <div className="stitch-cube">
-            <StitchIcon name="deployed_code" />
-          </div>
+          <img src="/logo.svg" alt="x402Books AI" width={32} height={32} style={{ borderRadius: "7px", flexShrink: 0 }} />
           <div>
             <strong>x402Books AI</strong>
             <span>Onchain Ledger</span>

@@ -39,7 +39,7 @@ export default function TransactionsPage() {
     <StitchShell>
       <StitchHeader
         title="Transactions"
-        description="Browse and analyze every scanned wallet transfer."
+        description={`Browse and analyze wallet transfers · ${ledger.range === "7d" ? "Last 7 days" : "Last 30 days"}`}
         actions={
           <>
             <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />

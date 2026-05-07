@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import {
   LedgerCategory,
   LedgerRiskFlag,
@@ -57,7 +58,7 @@ function sanitizeAiResult(result: AiTransactionResult) {
 }
 
 export async function categorizeWithAi(transactions: LedgerTransaction[]) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     return {
@@ -77,35 +78,27 @@ export async function categorizeWithAi(transactions: LedgerTransaction[]) {
     risk_flag: transaction.riskFlag || "none",
   }));
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
-      temperature: 0.1,
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are x402Books AI, an accounting assistant for Base USDC microtransactions and AI-agent payments. Return strict JSON only. Categories: api_call, data_access, compute, agent_service, subscription, income, refund, internal_transfer, unknown. Risk flags: none, duplicate, unusual_amount, high_frequency, unknown_counterparty. Do not invent facts. If unsure, use unknown. Prefer conservative accounting labels. Keep memo under 12 words.",
-        },
-        {
-          role: "user",
-          content: JSON.stringify(compactTransactions),
-        },
-      ],
-    }),
+  const client = new Anthropic({ apiKey });
+
+  const message = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 4096,
+    system:
+      "You are x402Books AI, an accounting assistant for Base USDC microtransactions and AI-agent payments. " +
+      "Return a strict JSON array only — no prose, no markdown fences. " +
+      "Each element must have: tx_hash, direction, category, memo (≤12 words), confidence (0-100), tax_note (≤20 words), risk_flag. " +
+      "Valid categories: api_call, data_access, compute, agent_service, subscription, income, refund, internal_transfer, unknown. " +
+      "Valid risk_flags: none, duplicate, unusual_amount, high_frequency, unknown_counterparty. " +
+      "Do not invent facts. Use unknown when unsure. Prefer conservative accounting labels.",
+    messages: [
+      {
+        role: "user",
+        content: JSON.stringify(compactTransactions),
+      },
+    ],
   });
 
-  if (!response.ok) {
-    throw new Error("AI categorization failed.");
-  }
-
-  const body = await response.json();
-  const content = body.choices?.[0]?.message?.content;
+  const content = message.content[0]?.type === "text" ? message.content[0].text : null;
 
   if (!content) {
     throw new Error("AI categorization returned no content.");
@@ -115,7 +108,7 @@ export async function categorizeWithAi(transactions: LedgerTransaction[]) {
   const resultsByHash = new Map(results.map((result) => [result.tx_hash, result]));
 
   return {
-    provider: "openai",
+    provider: "claude",
     transactions: transactions.map((transaction) => {
       const result = resultsByHash.get(transaction.txHash);
 

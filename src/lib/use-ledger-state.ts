@@ -272,9 +272,9 @@ export function useLedgerState() {
       setLedger(nextLedger);
       writeStoredLedger(nextLedger);
       setStatus(
-        body.provider === "openai"
-          ? "AI categorization complete."
-          : "Rule categorization refreshed. Add OpenAI key for live AI.",
+        body.provider === "claude"
+          ? "AI categorization complete (Claude)."
+          : "Rule-based categorization applied. Add ANTHROPIC_API_KEY for live AI.",
       );
     } catch {
       setError("Could not categorize transactions right now.");

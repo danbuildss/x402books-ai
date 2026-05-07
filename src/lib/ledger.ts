@@ -76,15 +76,15 @@ export type LedgerReport = {
 export const BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 export const categoryLabels: Record<LedgerCategory, string> = {
-  api_call: "API call",
-  data_access: "Data access",
+  api_call: "API Call",
+  data_access: "Data Access",
   compute: "Compute",
-  agent_service: "Agent service",
+  agent_service: "Agent Service",
   subscription: "Subscription",
-  unknown: "Unknown",
+  unknown: "Uncategorized",
   income: "Income",
   refund: "Refund",
-  internal_transfer: "Internal transfer",
+  internal_transfer: "Internal Transfer",
 };
 
 export function isValidWalletAddress(address: string) {

@@ -6221,7 +6221,7 @@ button:disabled {
 .stitch-donut-centre strong {
   display: block;
   font-family: var(--st-mono);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--st-primary);
   font-variant-numeric: tabular-nums;
@@ -6229,11 +6229,11 @@ button:disabled {
 }
 
 .stitch-donut-centre span {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--st-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* ---- Legend progress bar ---- */
@@ -6622,5 +6622,52 @@ html, body {
 .stitch-nav-items > * {
   min-height: 0;
   overflow: hidden;
+}
+
+/* ---- Access page tabs ---- */
+.access-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: #1b211d;
+  border-radius: 8px;
+  border: 1px solid #3d4a41;
+}
+
+.access-tabs button {
+  padding: 8px 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: #9ca69f;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.access-tabs button.active {
+  background: #252c27;
+  color: #dee4dd;
+}
+
+.access-tabs button:hover:not(.active) {
+  color: #dee4dd;
+}
+
+.access-footer-link {
+  background: none;
+  border: none;
+  color: #47c78b;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.access-footer-link:hover {
+  color: #66e4a5;
 }
 

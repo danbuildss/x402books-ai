@@ -29,7 +29,7 @@ export default function DashboardPage() {
     <StitchShell>
       <StitchHeader
         title="Overview"
-        description="Financial overview for the selected Base wallet."
+        description={`Financial overview · ${ledger.range === "7d" ? "Last 7 days" : "Last 30 days"}`}
         actions={
           <>
             <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
@@ -54,7 +54,7 @@ export default function DashboardPage() {
       <section className="stitch-stats-grid">
         <StitchStat
           label="Total Spend"
-          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
+          value={`${formatUsdc(ledger.summary.totalSpend)} USDC`}
           usd={`≈ $${formatUsdc(ledger.summary.totalSpend)} USD`}
           helper="Base USDC outflow"
           icon="south_east"
@@ -62,14 +62,14 @@ export default function DashboardPage() {
         />
         <StitchStat
           label="Total Income"
-          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
+          value={`${formatUsdc(ledger.summary.totalIncome)} USDC`}
           usd={`≈ $${formatUsdc(ledger.summary.totalIncome)} USD`}
           helper="Base USDC inflow"
           icon="north_east"
         />
         <StitchStat
           label="Net Flow"
-          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
+          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}${formatUsdc(Math.abs(ledger.summary.netFlow))} USDC`}
           usd={`≈ ${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))} USD`}
           helper={ledger.report.budgetStatus}
           icon="monitoring"
