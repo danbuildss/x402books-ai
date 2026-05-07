@@ -1,76 +1,81 @@
 "use client";
 
-import { AppShell, DateFilter, PageHeader, WalletSelect } from "@/components/app-shell";
-import { MiniTrend } from "@/components/product-widgets";
+import {
+  StitchEmpty,
+  StitchHeader,
+  StitchMiniTrend,
+  StitchRange,
+  StitchShell,
+  StitchWalletPill,
+} from "@/components/stitch-app";
 import { formatUsdc } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
-function trendFor(index: number) {
-  return [0, 1, 2, 3, 4, 5].map((step) => Math.max(1, (index + 1) * (step + 2)));
+function trendFor(index: number, total: number) {
+  return [1, 1.2, 0.9, 1.4, 1.1, 1.6].map((value) => value * Math.max(1, total) * (index + 1));
 }
 
 export default function CategoriesPage() {
   const ledger = useLedgerState();
 
   return (
-    <AppShell>
-      <PageHeader
+    <StitchShell>
+      <StitchHeader
         title="Categories"
-        description="AI-categorized breakdown of your activity."
+        description="AI-categorized breakdown of scanned wallet activity."
         actions={
           <>
-            <WalletSelect wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
-            <DateFilter range={ledger.range} onChange={ledger.setRange} />
-            <button className="shell-button" type="button" onClick={ledger.exportCsv}>Export CSV</button>
+            <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
+            <StitchRange value={ledger.range} onChange={ledger.setRange} />
+            <button className="stitch-button" type="button" onClick={ledger.exportCsv}>Export CSV</button>
           </>
         }
       />
 
-      <section className="content-card">
-        <table className="product-table category-table">
-          <thead>
-            <tr>
-              <th>Category</th>
-              <th>Total Amount</th>
-              <th>% of Spend</th>
-              <th>Transactions</th>
-              <th>Trend</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ledger.categories.map((category, index) => {
-              const trend = trendFor(index);
-              const share = ledger.summary.totalSpend
-                ? (category.totalUsdc / ledger.summary.totalSpend) * 100
-                : 0;
-
-              return (
-                <tr key={category.category}>
-                  <td>
-                    <span className="legend-dot green" />
-                    {category.label}
-                  </td>
-                  <td>${formatUsdc(category.totalUsdc)}</td>
-                  <td>{share.toFixed(1)}%</td>
-                  <td>{category.count}</td>
-                  <td><MiniTrend values={trend} /></td>
+      <section className="stitch-card">
+        {ledger.categories.length ? (
+          <div className="stitch-table-wrap">
+            <table className="stitch-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Total Amount</th>
+                  <th>% of Spend</th>
+                  <th>Transactions</th>
+                  <th>Trend</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {!ledger.categories.length ? (
-          <div className="empty-state compact">Scan a wallet to generate category breakdowns.</div>
-        ) : null}
+              </thead>
+              <tbody>
+                {ledger.categories.map((category, index) => {
+                  const share = ledger.summary.totalSpend
+                    ? (category.totalUsdc / ledger.summary.totalSpend) * 100
+                    : 0;
+                  return (
+                    <tr key={category.category}>
+                      <td><span className={`stitch-chip ${category.category}`}>{category.label}</span></td>
+                      <td>${formatUsdc(category.totalUsdc)}</td>
+                      <td>{share.toFixed(1)}%</td>
+                      <td>{category.count}</td>
+                      <td><StitchMiniTrend values={trendFor(index, category.totalUsdc)} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <StitchEmpty>Scan a wallet to generate category breakdowns.</StitchEmpty>
+        )}
       </section>
 
-      <section className="content-card insight-callout">
-        <div><span className="callout-icon">AI</span></div>
+      <section className="stitch-card stitch-insight">
+        <span>AI</span>
         <div>
-          <h2>Category Insights</h2>
-          <p>{ledger.report.narrative}</p>
+          <h3>Category Insights</h3>
+          <p>{ledger.hasLedger ? ledger.report.narrative : "Insights appear after a wallet scan."}</p>
         </div>
       </section>
-    </AppShell>
+    </StitchShell>
   );
 }
+

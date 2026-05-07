@@ -1,6 +1,6 @@
 "use client";
 
-import { AppShell, PageHeader, WalletSelect } from "@/components/app-shell";
+import { StitchEmpty, StitchHeader, StitchShell, StitchWalletPill } from "@/components/stitch-app";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 const staticEndpoints = [
@@ -12,49 +12,51 @@ export default function ApiPage() {
   const ledger = useLedgerState();
 
   return (
-    <AppShell>
-      <PageHeader
+    <StitchShell>
+      <StitchHeader
         title="API"
         description="Programmatic access to wallet financial data."
-        actions={<WalletSelect wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />}
+        actions={<StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />}
       />
 
-      <section className="api-doc-grid">
-        <div className="content-card">
-          <h2>Your API Key</h2>
-          <div className="api-key-box">
+      <section className="stitch-api-grid">
+        <div className="stitch-card">
+          <h3>Your API Key</h3>
+          <div className="stitch-code-row">
             <code>API keys unlock in Stage 2</code>
-            <button type="button" disabled>
-              Pending
-            </button>
+            <button type="button" disabled>Pending</button>
           </div>
-          <p>Use the live public ledger routes locally while the beta key system is being built.</p>
-          <a href="/settings">Manage API preferences</a>
+          <p>Use the live ledger routes during the private beta. API key management comes next.</p>
         </div>
 
-        <div className="content-card">
-          <h2>Endpoints</h2>
-          <div className="endpoint-doc-list">
-            {[...ledger.endpoints.map((path) => ({ method: "GET", path, note: "Live wallet endpoint" })), ...staticEndpoints].map((endpoint) => (
-              <div key={endpoint.path}>
-                <span>{endpoint.method}</span>
-                <code>{endpoint.path}</code>
-                <p>{endpoint.note}</p>
-                <button type="button" onClick={() => ledger.copyText(`${window.location.origin}${endpoint.path}`, endpoint.path)}>
-                  {ledger.copied === endpoint.path ? "Copied" : "Copy"}
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="stitch-card">
+          <h3>Endpoints</h3>
+          {ledger.hasLedger ? (
+            <div className="stitch-endpoints">
+              {[...ledger.endpoints.map((path) => ({ method: "GET", path, note: "Live wallet endpoint" })), ...staticEndpoints].map((endpoint) => (
+                <div key={endpoint.path}>
+                  <span>{endpoint.method}</span>
+                  <code>{endpoint.path}</code>
+                  <p>{endpoint.note}</p>
+                  <button type="button" onClick={() => ledger.copyText(`${window.location.origin}${endpoint.path}`, endpoint.path)}>
+                    {ledger.copied === endpoint.path ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <StitchEmpty compact>Scan a wallet to generate wallet-specific endpoints.</StitchEmpty>
+          )}
         </div>
 
-        <div className="content-card api-example-card">
-          <h2>API Documentation</h2>
+        <div className="stitch-card stitch-api-example">
+          <h3>API Documentation</h3>
           <p>Use wallet and range query params to retrieve clean, agent-readable ledger data.</p>
           <pre>{`curl "${typeof window === "undefined" ? "" : window.location.origin}${ledger.endpoints[0]}" \\
   -H "Accept: application/json"`}</pre>
         </div>
       </section>
-    </AppShell>
+    </StitchShell>
   );
 }
+

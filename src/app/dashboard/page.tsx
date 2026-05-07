@@ -1,14 +1,19 @@
 "use client";
 
 import { FormEvent } from "react";
-import { AppShell, DateFilter, PageHeader, WalletSelect } from "@/components/app-shell";
 import {
-  CategoryDonut,
-  MetricCard,
-  SpendLineChart,
-  TransactionsTable,
-} from "@/components/product-widgets";
-import { formatUsdc, relativeTime } from "@/lib/ledger";
+  StitchDonut,
+  StitchEmpty,
+  StitchHeader,
+  StitchLineChart,
+  StitchRange,
+  StitchScanBar,
+  StitchShell,
+  StitchStat,
+  StitchTransactionsTable,
+  StitchWalletPill,
+} from "@/components/stitch-app";
+import { formatUsdc, relativeTime, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 export default function DashboardPage() {
@@ -21,131 +26,89 @@ export default function DashboardPage() {
   }
 
   return (
-    <AppShell>
-      <PageHeader
+    <StitchShell>
+      <StitchHeader
         title="Overview"
-        description="Financial overview for the selected wallet"
+        description="Financial overview for the selected Base wallet."
         actions={
           <>
-            <WalletSelect
-              wallet={ledger.wallet}
-              onCopy={() => ledger.copyText(ledger.wallet, "wallet")}
-            />
-            <DateFilter range={ledger.range} onChange={ledger.setRange} />
+            <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
+            <StitchRange value={ledger.range} onChange={ledger.setRange} />
           </>
         }
       />
 
-      <form className="scan-strip" onSubmit={onSubmit}>
-        <label>
-          <span>Base wallet</span>
-          <input
-            value={ledger.walletInput}
-            onChange={(event) => ledger.setWalletInput(event.target.value)}
-            placeholder="0x..."
-          />
-        </label>
-        <button className="primary-action" disabled={ledger.isLoading} type="submit">
-          {ledger.isLoading ? "Scanning..." : "Scan Wallet"}
-        </button>
-        <button
-          className="shell-button"
-          disabled={ledger.isCategorizing || !ledger.transactions.length}
-          type="button"
-          onClick={ledger.categorizeTransactions}
-        >
-          {ledger.isCategorizing ? "Categorizing..." : "AI Categorize"}
-        </button>
-        <button className="shell-button" type="button" onClick={ledger.exportCsv}>
-          Export CSV
-        </button>
-        {ledger.error ? <p className="form-message error">{ledger.error}</p> : null}
-        {ledger.status ? <p className="form-message success">{ledger.status}</p> : null}
-      </form>
+      <StitchScanBar
+        value={ledger.walletInput}
+        onChange={ledger.setWalletInput}
+        onSubmit={onSubmit}
+        onCategorize={ledger.categorizeTransactions}
+        onExport={ledger.exportCsv}
+        loading={ledger.isLoading}
+        categorizing={ledger.isCategorizing}
+        error={ledger.error}
+        status={ledger.status}
+        hasTransactions={ledger.transactions.length > 0}
+      />
 
-      <section className="metrics-grid">
-        <MetricCard
-          label="Total Spend"
-          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
-          delta="Base USDC outflow"
-        />
-        <MetricCard
-          label="Total Income"
-          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
-          delta="Base USDC inflow"
-          tone="green"
-        />
-        <MetricCard
+      <section className="stitch-stats-grid">
+        <StitchStat label="Total Spend" value={`$${formatUsdc(ledger.summary.totalSpend)}`} helper="Base USDC outflow" icon="south_east" tone="red" />
+        <StitchStat label="Total Income" value={`$${formatUsdc(ledger.summary.totalIncome)}`} helper="Base USDC inflow" icon="north_east" />
+        <StitchStat
           label="Net Flow"
           value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
-          delta={ledger.report.budgetStatus}
-          tone="purple"
+          helper={ledger.report.budgetStatus}
+          icon="monitoring"
         />
-        <MetricCard
-          label="Transactions"
-          value={String(ledger.summary.transactionCount)}
-          delta={`${ledger.summary.likelyX402Count} likely x402`}
-          tone="cyan"
-        />
+        <StitchStat label="Transactions" value={String(ledger.summary.transactionCount)} helper={`${ledger.summary.likelyX402Count} likely x402`} icon="receipt_long" tone="blue" />
       </section>
 
-      <section className="overview-grid">
-        <SpendLineChart flows={ledger.dailyFlows} />
-        <CategoryDonut categories={ledger.categories} />
+      <section className="stitch-two-grid">
+        <StitchLineChart flows={ledger.dailyFlows} />
+        <StitchDonut categories={ledger.categories} />
       </section>
 
-      <section className="overview-grid lower">
-        <div className="content-card wide">
-          <div className="card-heading">
-            <h2>Recent Transactions</h2>
+      <section className="stitch-lower-grid">
+        <div className="stitch-card">
+          <div className="stitch-card-head">
+            <h3>Recent Transactions</h3>
             <a href="/transactions">View all</a>
           </div>
           {recent.length ? (
-            <TransactionsTable compact transactions={recent} />
+            <StitchTransactionsTable compact transactions={recent} />
           ) : (
-            <div className="empty-state compact">No USDC transactions found for this range.</div>
+            <StitchEmpty compact>Scan a wallet to see recent USDC transfers.</StitchEmpty>
           )}
         </div>
 
-        <div className="content-card">
-          <div className="card-heading">
-            <h2>Activity Feed</h2>
+        <div className="stitch-card">
+          <div className="stitch-card-head">
+            <h3>Activity Feed</h3>
             <a href="/transactions">View all</a>
           </div>
           {recent.length ? (
-            <div className="activity-list">
-              {recent.slice(0, 4).map((transaction) => (
+            <div className="stitch-feed">
+              {recent.slice(0, 5).map((transaction) => (
                 <div key={transaction.txHash}>
-                  <span className={transaction.direction === "income" ? "feed-income" : "feed-spend"}>
-                    {transaction.direction === "income" ? "↗" : "↘"}
+                  <span className={transaction.direction === "income" ? "income" : "expense"}>
+                    {transaction.direction === "income" ? "north_east" : "south_east"}
                   </span>
                   <div>
                     <strong>
-                      {transaction.direction === "income" ? "Received" : "Spent"}{" "}
-                      {transaction.amountUsdc.toFixed(2)} USDC
+                      {transaction.direction === "income" ? "Received" : "Spent"} {formatUsdc(transaction.amountUsdc)} USDC
                     </strong>
-                    <p>{transaction.counterparty}</p>
+                    <p>{shortenAddress(transaction.counterparty)}</p>
                   </div>
                   <small>{relativeTime(transaction.timestamp)}</small>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="empty-state compact">Scan a wallet to populate activity.</div>
+            <StitchEmpty compact>Wallet activity will appear here.</StitchEmpty>
           )}
         </div>
       </section>
-
-      <section className="cta-strip">
-        <div className="cta-icon" />
-        <div>
-          <h2>Generate clean reports in seconds</h2>
-          <p>{ledger.report.narrative}</p>
-        </div>
-        <a href={`/report?wallet=${encodeURIComponent(ledger.wallet)}&range=${ledger.range}`}>
-          Open Report
-        </a>
-      </section>
-    </AppShell>
+    </StitchShell>
   );
 }
+

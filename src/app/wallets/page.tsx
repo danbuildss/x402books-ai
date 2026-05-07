@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent } from "react";
-import { AppShell, PageHeader } from "@/components/app-shell";
+import { StitchEmpty, StitchHeader, StitchShell, StitchIcon } from "@/components/stitch-app";
 import { formatUsdc } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
@@ -14,46 +14,42 @@ export default function WalletsPage() {
   }
 
   return (
-    <AppShell>
-      <PageHeader title="Wallets" description="Manage and switch between your wallets." />
+    <StitchShell>
+      <StitchHeader title="Wallets" description="Manage and switch between scanned Base wallets." />
 
-      <form className="scan-strip wallet-scan" onSubmit={onSubmit}>
+      <form className="stitch-scanbar stitch-wallet-scan" onSubmit={onSubmit}>
         <label>
           <span>Add Base wallet</span>
-          <input
-            value={ledger.walletInput}
-            onChange={(event) => ledger.setWalletInput(event.target.value)}
-            placeholder="0x..."
-          />
+          <input value={ledger.walletInput} onChange={(event) => ledger.setWalletInput(event.target.value)} placeholder="0x..." />
         </label>
-        <button className="primary-action" disabled={ledger.isLoading} type="submit">
+        <button className="stitch-primary" disabled={ledger.isLoading} type="submit">
           {ledger.isLoading ? "Scanning..." : "Add Wallet"}
         </button>
-        {ledger.error ? <p className="form-message error">{ledger.error}</p> : null}
-        {ledger.status ? <p className="form-message success">{ledger.status}</p> : null}
+        {ledger.error ? <p className="stitch-message error">{ledger.error}</p> : null}
+        {ledger.status ? <p className="stitch-message success">{ledger.status}</p> : null}
       </form>
 
-      <section className="wallet-list">
-        {ledger.recentWallets.map((wallet, index) => (
-          <article className="wallet-card" key={wallet.address}>
-            <div>
-              <span className="wallet-icon" />
+      <section className="stitch-wallet-list">
+        {ledger.recentWallets.length ? (
+          ledger.recentWallets.map((wallet, index) => (
+            <article className="stitch-wallet-card" key={wallet.address}>
               <div>
-                <strong>{wallet.label}</strong>
-                <p>{wallet.address}</p>
+                <span><StitchIcon name="account_balance_wallet" /></span>
+                <div><strong>{wallet.label}</strong><p>{wallet.address}</p></div>
               </div>
-            </div>
-            {index === 0 ? <span className="status-good">Active</span> : (
-              <button type="button" onClick={() => ledger.scanWallet(wallet.address)}>Scan</button>
-            )}
-            <dl>
-              <div><dt>Net Flow</dt><dd>${formatUsdc(wallet.balance)}</dd></div>
-              <div><dt>Total Transactions</dt><dd>{wallet.transactions.toLocaleString()}</dd></div>
-              <div><dt>Last Scanned</dt><dd>{wallet.lastScanned}</dd></div>
-            </dl>
-          </article>
-        ))}
+              {index === 0 ? <em>Active</em> : <button type="button" onClick={() => ledger.scanWallet(wallet.address)}>Scan</button>}
+              <dl>
+                <div><dt>Net Flow</dt><dd>${formatUsdc(wallet.balance)}</dd></div>
+                <div><dt>Total Transactions</dt><dd>{wallet.transactions.toLocaleString()}</dd></div>
+                <div><dt>Last Scanned</dt><dd>{wallet.lastScanned}</dd></div>
+              </dl>
+            </article>
+          ))
+        ) : (
+          <StitchEmpty>Scan a Base wallet to save it here.</StitchEmpty>
+        )}
       </section>
-    </AppShell>
+    </StitchShell>
   );
 }
+

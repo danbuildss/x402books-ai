@@ -4797,3 +4797,1123 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 }
+
+/* Exact Stitch financial dashboard UI */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.stitch-shell {
+  --st-bg: #0e1511;
+  --st-lowest: #09100c;
+  --st-low: #171d19;
+  --st-container: #1b211d;
+  --st-high: #252c27;
+  --st-highest: #303631;
+  --st-text: #dee4dd;
+  --st-muted: #bccabf;
+  --st-line: #3d4a41;
+  --st-primary: #66e4a5;
+  --st-primary-strong: #47c78b;
+  --st-on-primary: #003822;
+  --st-blue: #b0c6ff;
+  --st-red: #ffb4ab;
+  min-height: 100vh;
+  background: var(--st-bg);
+  color: var(--st-text);
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.stitch-shell * {
+  letter-spacing: 0;
+}
+
+.stitch-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  width: 256px;
+  height: 100vh;
+  padding: 24px 0;
+  border-right: 1px solid var(--st-line);
+  background: var(--st-bg);
+}
+
+.stitch-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 24px;
+  margin-bottom: 32px;
+}
+
+.stitch-cube {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid color-mix(in srgb, var(--st-primary) 55%, transparent);
+  border-radius: 4px;
+  color: var(--st-primary);
+}
+
+.stitch-brand strong {
+  display: block;
+  color: var(--st-primary);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.stitch-brand span {
+  color: var(--st-muted);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stitch-nav {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  flex: 1;
+  padding: 0 12px;
+}
+
+.stitch-nav a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-right: 2px solid transparent;
+  color: var(--st-muted);
+  font-size: 14px;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.stitch-nav a:hover,
+.stitch-nav a.active {
+  border-right-color: var(--st-primary);
+  background: rgba(102, 228, 165, 0.1);
+  color: var(--st-primary);
+  font-weight: 650;
+}
+
+.stitch-sidebar-panel {
+  display: grid;
+  gap: 6px;
+  margin: 0 16px;
+  padding: 14px;
+  border: 1px solid var(--st-line);
+  border-radius: 6px;
+  background: var(--st-low);
+}
+
+.stitch-sidebar-panel span,
+.stitch-page-header p,
+.stitch-topbar p,
+.stitch-card p,
+.stitch-detail-list span,
+.stitch-preview-grid span,
+.stitch-wallet-card dt,
+.stitch-wallet-card p,
+.stitch-setting-row p,
+.stitch-message {
+  color: var(--st-muted);
+  font-size: 13px;
+}
+
+.stitch-sidebar-panel strong,
+.stitch-card h3,
+.stitch-detail-list strong,
+.stitch-wallet-card strong,
+.stitch-setting-row strong {
+  color: var(--st-text);
+}
+
+.stitch-topbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 256px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--st-line);
+  background: rgba(14, 21, 17, 0.92);
+  backdrop-filter: blur(16px);
+}
+
+.stitch-topbar h1 {
+  margin: 0 0 2px;
+  color: var(--st-text);
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.stitch-topbar p {
+  margin: 0;
+}
+
+.stitch-topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.stitch-topbar-actions a,
+.stitch-button,
+.stitch-card-head button,
+.stitch-card-head a,
+.stitch-toolbar button,
+.stitch-filters button,
+.stitch-report-list button,
+.stitch-wallet-card button,
+.stitch-endpoints button,
+.stitch-code-row button,
+.stitch-settings-card button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-container);
+  color: var(--st-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stitch-main {
+  margin-left: 256px;
+  padding: 88px 24px 32px;
+}
+
+.stitch-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stitch-page-header h2 {
+  margin: 0 0 4px;
+  color: var(--st-text);
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.stitch-page-header p {
+  margin: 0;
+}
+
+.stitch-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.stitch-wallet-pill {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  min-width: 240px;
+  min-height: 44px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-low);
+}
+
+.stitch-wallet-pill span {
+  grid-column: 1 / -1;
+  color: var(--st-muted);
+  font-size: 11px;
+}
+
+.stitch-wallet-pill strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--st-text);
+  font-size: 13px;
+}
+
+.stitch-wallet-pill button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-container);
+  color: var(--st-muted);
+}
+
+.stitch-range {
+  display: inline-flex;
+  min-height: 36px;
+  padding: 3px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-low);
+}
+
+.stitch-range button {
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.stitch-range button.active {
+  background: var(--st-high);
+  color: var(--st-text);
+}
+
+.stitch-scanbar {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto auto auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--st-line);
+  border-radius: 8px;
+  background: var(--st-low);
+}
+
+.stitch-scanbar label,
+.stitch-form-card label {
+  display: grid;
+  gap: 6px;
+  color: var(--st-muted);
+  font-size: 12px;
+}
+
+.stitch-scanbar input,
+.stitch-toolbar input,
+.stitch-form-card input,
+.stitch-form-card select,
+.stitch-settings-card select {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-lowest);
+  color: var(--st-text);
+  font-size: 13px;
+  padding: 0 12px;
+}
+
+.stitch-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--st-primary-strong);
+  color: var(--st-on-primary);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 0 14px;
+}
+
+.stitch-primary:disabled,
+.stitch-button:disabled,
+.stitch-code-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.stitch-message {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.stitch-message.error {
+  color: var(--st-red);
+}
+
+.stitch-message.success {
+  color: var(--st-primary);
+}
+
+.stitch-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stitch-stat,
+.stitch-card,
+.stitch-wallet-card {
+  border: 1px solid var(--st-line);
+  border-radius: 8px;
+  background: var(--st-low);
+}
+
+.stitch-stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 144px;
+  padding: 24px;
+}
+
+.stitch-stat span {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--st-muted);
+  font-size: 14px;
+}
+
+.stitch-stat strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--st-text);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 40px;
+}
+
+.stitch-stat small {
+  color: var(--st-primary);
+  font-size: 13px;
+}
+
+.stitch-stat-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(102, 228, 165, 0.12);
+  color: var(--st-primary);
+}
+
+.tone-blue,
+.stitch-stat-icon.tone-blue {
+  color: var(--st-blue);
+}
+
+.stitch-stat-icon.tone-blue {
+  background: rgba(176, 198, 255, 0.12);
+}
+
+.tone-red,
+.stitch-stat-icon.tone-red {
+  color: var(--st-red);
+}
+
+.stitch-stat-icon.tone-red {
+  background: rgba(255, 180, 171, 0.12);
+}
+
+.stitch-two-grid,
+.stitch-reports-grid,
+.stitch-api-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stitch-lower-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 16px;
+}
+
+.stitch-card {
+  padding: 24px;
+}
+
+.stitch-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stitch-card h3,
+.stitch-card-head h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.stitch-line {
+  width: 100%;
+  height: 220px;
+}
+
+.stitch-line line {
+  stroke: rgba(61, 74, 65, 0.72);
+}
+
+.stitch-line polyline {
+  fill: none;
+  stroke: var(--st-primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.stitch-line circle {
+  fill: var(--st-primary);
+}
+
+.stitch-axis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--st-muted);
+  font-size: 12px;
+}
+
+.stitch-donut-layout {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+}
+
+.stitch-donut {
+  width: 170px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(var(--st-primary-strong) 0 42%, var(--st-blue) 42% 66%, #8acaa6 66% 83%, #c9a652 83% 94%, #6e7a70 94% 100%);
+  position: relative;
+}
+
+.stitch-donut::after {
+  content: "";
+  position: absolute;
+  inset: 48px;
+  border-radius: 50%;
+  background: var(--st-low);
+}
+
+.stitch-legend {
+  display: grid;
+  gap: 12px;
+}
+
+.stitch-legend div {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  color: var(--st-text);
+  font-size: 13px;
+}
+
+.stitch-legend span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--st-primary);
+}
+
+.stitch-legend small,
+.stitch-legend em {
+  color: var(--st-muted);
+  font-style: normal;
+}
+
+.dot-1 { background: var(--st-blue) !important; }
+.dot-2 { background: #8acaa6 !important; }
+.dot-3 { background: #c9a652 !important; }
+.dot-4 { background: #6e7a70 !important; }
+
+.stitch-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(61, 74, 65, 0.68);
+  border-radius: 4px;
+}
+
+.stitch-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.stitch-table th,
+.stitch-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(61, 74, 65, 0.55);
+  color: var(--st-text);
+  text-align: left;
+}
+
+.stitch-table th {
+  color: var(--st-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.stitch-table tr:hover td {
+  background: var(--st-container);
+}
+
+.stitch-table .mono,
+.stitch-code-row code,
+.stitch-endpoints code,
+.stitch-api-example pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.stitch-table .amount {
+  white-space: nowrap;
+}
+
+.income {
+  color: var(--st-primary) !important;
+}
+
+.expense {
+  color: var(--st-red) !important;
+}
+
+.stitch-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(102, 228, 165, 0.12);
+  color: var(--st-primary);
+  font-size: 12px;
+}
+
+.stitch-chip.data_access { background: rgba(176, 198, 255, 0.12); color: var(--st-blue); }
+.stitch-chip.compute { background: rgba(201, 166, 82, 0.14); color: #d9b860; }
+.stitch-chip.unknown { background: rgba(188, 202, 191, 0.1); color: var(--st-muted); }
+
+.stitch-feed {
+  display: grid;
+  gap: 14px;
+}
+
+.stitch-feed > div {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.stitch-feed > div > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(102, 228, 165, 0.12);
+  font-family: "Material Symbols Outlined";
+}
+
+.stitch-feed strong {
+  color: var(--st-text);
+  font-size: 14px;
+}
+
+.stitch-feed p,
+.stitch-feed small {
+  margin: 2px 0 0;
+  color: var(--st-muted);
+  font-size: 13px;
+}
+
+.stitch-empty {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  border: 1px dashed var(--st-line);
+  border-radius: 4px;
+  color: var(--st-muted);
+  text-align: center;
+}
+
+.stitch-empty.compact {
+  min-height: 110px;
+}
+
+.stitch-transactions-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 16px;
+}
+
+.stitch-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stitch-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stitch-filters button {
+  min-height: 30px;
+  font-size: 12px;
+}
+
+.stitch-detail {
+  position: sticky;
+  top: 88px;
+  align-self: start;
+}
+
+.stitch-detail-list {
+  display: grid;
+  gap: 12px;
+}
+
+.stitch-detail-list > div {
+  display: grid;
+  gap: 4px;
+}
+
+.stitch-detail-list strong {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+
+.stitch-detail-list p {
+  margin: 0;
+}
+
+.stitch-detail-list a {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-container);
+  color: var(--st-text);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.stitch-mini-trend {
+  width: 120px;
+  height: 36px;
+}
+
+.stitch-mini-trend polyline {
+  fill: none;
+  stroke: var(--st-primary);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.stitch-insight {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.stitch-insight > span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(102, 228, 165, 0.12);
+  color: var(--st-primary);
+  font-weight: 800;
+}
+
+.stitch-form-card,
+.stitch-settings-card {
+  display: grid;
+  gap: 16px;
+}
+
+.stitch-radio-row {
+  display: flex;
+  gap: 16px;
+}
+
+.stitch-radio-row label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--st-muted);
+}
+
+.stitch-report-list {
+  display: grid;
+  gap: 0;
+}
+
+.stitch-report-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--st-line);
+}
+
+.stitch-report-list p {
+  margin: 3px 0 0;
+}
+
+.stitch-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+
+.stitch-preview-grid div {
+  min-height: 84px;
+  padding: 14px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-lowest);
+}
+
+.stitch-preview-grid strong,
+.stitch-wallet-card dd {
+  display: block;
+  margin-top: 8px;
+  color: var(--st-text);
+  font-size: 18px;
+}
+
+.stitch-wallet-scan {
+  max-width: 760px;
+}
+
+.stitch-wallet-list {
+  display: grid;
+  gap: 16px;
+  max-width: 820px;
+}
+
+.stitch-wallet-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  padding: 20px;
+}
+
+.stitch-wallet-card > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stitch-wallet-card > div:first-child > span {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid color-mix(in srgb, var(--st-primary) 45%, transparent);
+  border-radius: 4px;
+  color: var(--st-primary);
+}
+
+.stitch-wallet-card em {
+  align-self: start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(102, 228, 165, 0.12);
+  color: var(--st-primary);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.stitch-wallet-card dl {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 0;
+}
+
+.stitch-wallet-card dd {
+  margin-left: 0;
+}
+
+.stitch-api-grid {
+  grid-template-columns: minmax(320px, 0.75fr) minmax(420px, 1fr);
+}
+
+.stitch-api-example {
+  grid-column: 1 / -1;
+}
+
+.stitch-code-row,
+.stitch-endpoints > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 13px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-lowest);
+}
+
+.stitch-endpoints {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.stitch-endpoints > div {
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  margin: 0;
+}
+
+.stitch-endpoints span {
+  color: var(--st-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.stitch-api-example pre {
+  overflow-x: auto;
+  margin: 16px 0 0;
+  padding: 16px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-lowest);
+  color: var(--st-muted);
+  font-size: 13px;
+}
+
+.stitch-settings-stack {
+  display: grid;
+  gap: 16px;
+  max-width: 980px;
+}
+
+.stitch-setting-row {
+  display: grid;
+  grid-template-columns: 1fr minmax(240px, 360px);
+  gap: 24px;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid var(--st-line);
+}
+
+.stitch-setting-row:first-of-type {
+  border-top: 0;
+}
+
+.stitch-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: var(--st-lowest);
+}
+
+.stitch-segmented button {
+  border: 0;
+  background: transparent;
+}
+
+.stitch-segmented button.active {
+  background: var(--st-primary-strong);
+  color: var(--st-on-primary);
+}
+
+.stitch-toggle {
+  justify-self: end;
+}
+
+.stitch-toggle input {
+  display: none;
+}
+
+.stitch-toggle span {
+  display: block;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--st-primary-strong);
+  position: relative;
+}
+
+.stitch-toggle span::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--st-on-primary);
+}
+
+@media (max-width: 1180px) {
+  .stitch-sidebar {
+    width: 76px;
+  }
+
+  .stitch-brand {
+    padding: 0 18px;
+  }
+
+  .stitch-brand div:last-child,
+  .stitch-nav span:not(.material-symbols-outlined),
+  .stitch-sidebar-panel {
+    display: none;
+  }
+
+  .stitch-nav a {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .stitch-topbar {
+    left: 76px;
+  }
+
+  .stitch-main {
+    margin-left: 76px;
+  }
+
+  .stitch-stats-grid,
+  .stitch-preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stitch-two-grid,
+  .stitch-lower-grid,
+  .stitch-transactions-layout,
+  .stitch-reports-grid,
+  .stitch-api-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stitch-detail {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .stitch-sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 14px 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--st-line);
+  }
+
+  .stitch-brand div:last-child {
+    display: block;
+  }
+
+  .stitch-brand {
+    margin-bottom: 12px;
+  }
+
+  .stitch-nav {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .stitch-nav a {
+    flex: 0 0 auto;
+    width: 42px;
+  }
+
+  .stitch-topbar {
+    position: sticky;
+    left: 0;
+    height: auto;
+    min-height: 58px;
+    padding: 10px 12px;
+  }
+
+  .stitch-topbar-actions {
+    display: none;
+  }
+
+  .stitch-main {
+    margin-left: 0;
+    padding: 14px 10px 24px;
+  }
+
+  .stitch-page-header,
+  .stitch-page-actions,
+  .stitch-scanbar,
+  .stitch-toolbar,
+  .stitch-report-list > div,
+  .stitch-setting-row,
+  .stitch-endpoints > div,
+  .stitch-code-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .stitch-stats-grid,
+  .stitch-preview-grid,
+  .stitch-wallet-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .stitch-stat {
+    min-height: 112px;
+    padding: 18px;
+  }
+
+  .stitch-stat strong {
+    font-size: 28px;
+  }
+
+  .stitch-card {
+    padding: 16px;
+  }
+
+  .stitch-donut-layout {
+    grid-template-columns: 1fr;
+  }
+}
