@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/logo";
+
+const SAVED_EMAIL_KEY = "x402books_email";
 
 function AccessForm() {
   const searchParams = useSearchParams();
@@ -13,6 +15,16 @@ function AccessForm() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [savedEmail, setSavedEmail] = useState("");
+
+  // Pre-fill email from localStorage if returning user
+  useEffect(() => {
+    const stored = localStorage.getItem(SAVED_EMAIL_KEY);
+    if (stored) {
+      setEmail(stored);
+      setSavedEmail(stored);
+    }
+  }, []);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -33,7 +45,12 @@ function AccessForm() {
         return;
       }
 
-      setStatus("Access unlocked. Opening the app...");
+      // Remember email for next time cookie expires
+      if (email.trim()) {
+        localStorage.setItem(SAVED_EMAIL_KEY, email.trim().toLowerCase());
+      }
+
+      setStatus("Access unlocked. Opening the app…");
       window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
     } catch {
       setError("Could not verify this code right now.");
@@ -65,23 +82,30 @@ function AccessForm() {
               autoFocus
               placeholder="XBOOKS-..."
               value={code}
-              onChange={(event) => setCode(event.target.value)}
+              onChange={(e) => setCode(e.target.value)}
             />
           </label>
           <label>
-            <span>Email optional</span>
+            <span>
+              Email
+              {savedEmail && (
+                <span className="access-saved-indicator" style={{ display: "inline-flex", gap: "4px", marginLeft: "8px" }}>
+                  ✓ remembered
+                </span>
+              )}
+            </span>
             <input
               autoComplete="email"
               inputMode="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </label>
           <button disabled={isLoading} type="submit">
-            {isLoading ? "Checking..." : "Unlock App"}
+            {isLoading ? "Checking…" : "Unlock App"}
           </button>
-          {error ? <p className="form-message error">{error}</p> : null}
+          {error  ? <p className="form-message error">{error}</p>   : null}
           {status ? <p className="form-message success">{status}</p> : null}
         </form>
 

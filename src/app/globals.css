@@ -6375,3 +6375,178 @@ button:disabled {
   border-color: var(--st-green);
   box-shadow: 0 0 0 3px rgba(0,211,149,0.12);
 }
+
+/* ================================================================
+   BUG FIXES & BETA POLISH
+   ================================================================ */
+
+/* Fix 1 — Override landing-page global main rule inside the app shell */
+.stitch-shell {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.stitch-main {
+  width: auto !important;
+  max-width: 100% !important;
+  margin-right: 0 !important;
+  box-sizing: border-box;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+/* Fix 2 — Light mode token set */
+[data-theme="light"] .stitch-shell {
+  --st-bg:             #f4f6f4;
+  --st-lowest:         #eaeeea;
+  --st-low:            #ffffff;
+  --st-container:      #f0f3f0;
+  --st-high:           #e4e9e4;
+  --st-highest:        #d8dfd8;
+  --st-text:           #0e1511;
+  --st-muted:          #4a5e50;
+  --st-line:           #ccd5cc;
+  --st-primary:        #00a86b;
+  --st-primary-strong: #00875a;
+  --st-on-primary:     #ffffff;
+  --st-green:          #008f5c;
+  --st-blue:           #3366cc;
+  --st-red:            #cc2200;
+  --st-shadow-card:    0 1px 3px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.06);
+  --st-shadow-hover:   0 2px 8px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+}
+
+[data-theme="light"] .stitch-sidebar {
+  background: var(--st-bg);
+}
+
+[data-theme="light"] .stitch-topbar {
+  background: rgba(244,246,244,0.94);
+}
+
+/* Fix 3 — Sign out row in sidebar */
+.stitch-signout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition: color 140ms ease;
+}
+
+.stitch-signout:hover {
+  color: var(--st-red);
+}
+
+.stitch-signout .stitch-icon {
+  font-size: 16px !important;
+}
+
+/* Fix 4 — Copy-address inline button in detail + wallet cards */
+.stitch-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--st-line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 120ms ease, color 120ms ease;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+
+.stitch-copy-btn:hover {
+  border-color: var(--st-primary);
+  color: var(--st-primary);
+}
+
+.stitch-copy-btn .stitch-icon {
+  font-size: 13px !important;
+}
+
+/* Fix 5 — Basescan external link styled as a button */
+.stitch-basescan-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--st-blue);
+  text-decoration: none;
+  padding: 3px 0;
+  border-bottom: 1px solid transparent;
+  transition: border-color 120ms ease;
+}
+
+.stitch-basescan-link:hover {
+  border-bottom-color: var(--st-blue);
+}
+
+/* Fix 6 — Wallet card address row with copy */
+.stitch-wallet-address-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--st-mono);
+  font-size: 11px;
+  color: var(--st-muted);
+  overflow: hidden;
+}
+
+.stitch-wallet-address-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fix 7 — Detail list action row (copy + basescan) */
+.stitch-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid var(--st-line);
+  margin-top: 4px;
+}
+
+/* Fix 8 — Session saved indicator on access page */
+.access-saved-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--st-primary, #47c78b);
+  font-weight: 600;
+  padding: 4px 0;
+}
+
+/* Fix 9 — Responsive sidebar width at 1180px already handled;
+   ensure stitch-main margin tracks it */
+@media (max-width: 1180px) {
+  .stitch-main {
+    margin-left: 76px !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .stitch-main {
+    margin-left: 0 !important;
+    padding: 14px 10px 24px !important;
+  }
+}
