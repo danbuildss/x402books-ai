@@ -52,15 +52,35 @@ export default function DashboardPage() {
       />
 
       <section className="stitch-stats-grid">
-        <StitchStat label="Total Spend" value={`$${formatUsdc(ledger.summary.totalSpend)}`} helper="Base USDC outflow" icon="south_east" tone="red" />
-        <StitchStat label="Total Income" value={`$${formatUsdc(ledger.summary.totalIncome)}`} helper="Base USDC inflow" icon="north_east" />
+        <StitchStat
+          label="Total Spend"
+          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
+          usd={`≈ $${formatUsdc(ledger.summary.totalSpend)} USD`}
+          helper="Base USDC outflow"
+          icon="south_east"
+          tone="red"
+        />
+        <StitchStat
+          label="Total Income"
+          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
+          usd={`≈ $${formatUsdc(ledger.summary.totalIncome)} USD`}
+          helper="Base USDC inflow"
+          icon="north_east"
+        />
         <StitchStat
           label="Net Flow"
           value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
+          usd={`≈ ${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))} USD`}
           helper={ledger.report.budgetStatus}
           icon="monitoring"
         />
-        <StitchStat label="Transactions" value={String(ledger.summary.transactionCount)} helper={`${ledger.summary.likelyX402Count} likely x402`} icon="receipt_long" tone="blue" />
+        <StitchStat
+          label="Transactions"
+          value={String(ledger.summary.transactionCount)}
+          helper={`${ledger.summary.likelyX402Count} likely x402`}
+          icon="receipt_long"
+          tone="blue"
+        />
       </section>
 
       <section className="stitch-two-grid">

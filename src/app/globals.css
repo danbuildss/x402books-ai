@@ -4981,13 +4981,29 @@ button:disabled {
 }
 
 .stitch-sidebar-panel {
-  display: grid;
-  gap: 6px;
-  margin: 0 16px;
-  padding: 14px;
+  display: flex;
+  align-items: center;
+  margin: 0 12px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--st-line);
   border-radius: 6px;
   background: var(--st-low);
+}
+
+.stitch-sidebar-panel-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.stitch-beta-badge {
+  font-size: 10px !important;
+  font-weight: 600;
+  color: var(--st-muted) !important;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .stitch-sidebar-panel span,
@@ -5259,9 +5275,9 @@ button:disabled {
 .stitch-stat {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 144px;
-  padding: 24px;
+  gap: 12px;
+  min-height: 110px;
+  padding: 18px 20px;
   animation: card-pop 280ms ease both;
   transition: box-shadow 180ms ease, border-color 180ms ease;
 }
@@ -5273,23 +5289,32 @@ button:disabled {
 
 .stitch-stat span {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   color: var(--st-muted);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .stitch-stat strong {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 4px;
   color: var(--st-text);
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 600;
-  line-height: 40px;
+  line-height: 28px;
 }
 
 .stitch-stat small {
   color: var(--st-primary);
-  font-size: 13px;
+  font-size: 11px;
+}
+
+.stitch-stat-usd {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--st-muted);
+  font-size: 11px;
+  font-family: var(--st-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .stitch-stat-icon {
@@ -6189,26 +6214,26 @@ button:disabled {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  z-index: 1;
+  z-index: 10;
   pointer-events: none;
 }
 
 .stitch-donut-centre strong {
   display: block;
   font-family: var(--st-mono);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--st-text);
+  color: var(--st-primary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
 
 .stitch-donut-centre span {
-  font-size: 10px;
+  font-size: 9px;
   color: var(--st-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 /* ---- Legend progress bar ---- */
@@ -6550,3 +6575,52 @@ html, body {
     padding: 14px 10px 24px !important;
   }
 }
+
+/* ---- Collapsible nav accordion ---- */
+.stitch-nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.stitch-nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--st-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: color 140ms ease;
+  margin-top: 8px;
+}
+
+.stitch-nav-section:hover {
+  color: var(--st-text);
+}
+
+.stitch-nav-section .stitch-icon {
+  font-size: 14px !important;
+  opacity: 0.6;
+}
+
+.stitch-nav-items {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  transition: grid-template-rows 220ms ease;
+}
+
+.stitch-nav-items:not(.open) {
+  grid-template-rows: 0fr;
+}
+
+.stitch-nav-items > * {
+  min-height: 0;
+  overflow: hidden;
+}
+

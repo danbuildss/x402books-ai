@@ -13,14 +13,29 @@ import {
 } from "@/lib/ledger";
 import type { CategorySummary, DailyFlow, LedgerTransaction, TimeRange } from "@/lib/ledger";
 
-const navItems = [
-  { href: "/dashboard",    label: "Overview",     icon: "dashboard" },
-  { href: "/transactions", label: "Transactions", icon: "receipt_long" },
-  { href: "/categories",   label: "Categories",   icon: "category" },
-  { href: "/reports",      label: "Reports",      icon: "description" },
-  { href: "/wallets",      label: "Wallets",      icon: "account_balance_wallet" },
-  { href: "/api",          label: "API",          icon: "api" },
-  { href: "/settings",     label: "Settings",     icon: "settings" },
+const navGroups = [
+  {
+    label: "Analytics",
+    items: [
+      { href: "/dashboard",    label: "Overview",      icon: "dashboard" },
+      { href: "/transactions", label: "Transactions",  icon: "receipt_long" },
+      { href: "/categories",   label: "Categories",    icon: "category" },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      { href: "/reports", label: "Reports", icon: "description" },
+      { href: "/wallets", label: "Wallets", icon: "account_balance_wallet" },
+      { href: "/api",     label: "API",     icon: "api" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { href: "/settings", label: "Settings", icon: "settings" },
+    ],
+  },
 ];
 
 const pageNames: Record<string, string> = {
@@ -32,6 +47,8 @@ const pageNames: Record<string, string> = {
   "/api":          "API",
   "/settings":     "Settings",
 };
+
+const allNavItems = navGroups.flatMap((g) => g.items);
 
 const CATEGORY_ICONS: Record<string, string> = {
   api_call:          "electrical_plug",
@@ -101,7 +118,16 @@ export function CopyBtn({
 
 export function StitchShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const page = pageNames[pathname] || "Overview";
+  const page = pageNames[pathname] || allNavItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
+
+  // Track which nav groups are open (all open by default)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(navGroups.map((g) => [g.label, true]))
+  );
+
+  function toggleGroup(label: string) {
+    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+  }
 
   // Apply stored theme on mount
   useEffect(() => {
@@ -116,6 +142,7 @@ export function StitchShell({ children }: { children: ReactNode }) {
   return (
     <div className="stitch-shell">
       <aside className="stitch-sidebar">
+        {/* Brand — logo slot ready; drop logo.png into /public to activate */}
         <div className="stitch-brand">
           <div className="stitch-cube">
             <StitchIcon name="deployed_code" />
@@ -127,28 +154,45 @@ export function StitchShell({ children }: { children: ReactNode }) {
         </div>
 
         <nav className="stitch-nav" aria-label="App navigation">
-          {navItems.map((item) => {
-            const active =
-              pathname === item.href ||
-              (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          {navGroups.map((group) => {
+            const isOpen = openGroups[group.label] ?? true;
             return (
-              <Link className={active ? "active" : ""} href={item.href} key={item.href}>
-                <StitchIcon name={item.icon} />
-                <span>{item.label}</span>
-              </Link>
+              <div key={group.label} className="stitch-nav-group">
+                <button
+                  type="button"
+                  className="stitch-nav-section"
+                  onClick={() => toggleGroup(group.label)}
+                  aria-expanded={isOpen}
+                >
+                  <span>{group.label}</span>
+                  <StitchIcon name={isOpen ? "expand_less" : "expand_more"} />
+                </button>
+                <div className={`stitch-nav-items ${isOpen ? "open" : ""}`}>
+                  {group.items.map((item) => {
+                    const active =
+                      pathname === item.href ||
+                      (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                    return (
+                      <Link className={active ? "active" : ""} href={item.href} key={item.href}>
+                        <StitchIcon name={item.icon} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             );
           })}
         </nav>
 
-        {/* Sidebar footer — beta info + sign out */}
+        {/* Compact sidebar footer */}
         <div className="stitch-sidebar-panel">
-          <span>Private Beta · Stage 1</span>
-          <strong>x402Books AI</strong>
-          <p>Wallet scans, reports, exports, and agent ledger APIs.</p>
-          <button type="button" className="stitch-signout" onClick={handleSignOut}>
-            <StitchIcon name="logout" />
-            Sign out
-          </button>
+          <div className="stitch-sidebar-panel-row">
+            <span className="stitch-beta-badge">Private Beta · Stage 1</span>
+            <button type="button" className="stitch-signout" onClick={handleSignOut}>
+              <StitchIcon name="logout" /> Sign out
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -305,12 +349,14 @@ export function StitchStat({
   helper,
   icon,
   tone = "primary",
+  usd,
 }: {
   label: string;
   value: string;
   helper: string;
   icon: string;
   tone?: "primary" | "blue" | "red";
+  usd?: string;
 }) {
   return (
     <article className="stitch-stat">
@@ -319,6 +365,7 @@ export function StitchStat({
         <strong style={{ fontFamily: "var(--st-mono)", fontVariantNumeric: "tabular-nums" }}>
           {value}
         </strong>
+        {usd && <span className="stitch-stat-usd">{usd}</span>}
         <small className={`tone-${tone}`}>{helper}</small>
       </div>
       <i className={`stitch-stat-icon tone-${tone}`}>
