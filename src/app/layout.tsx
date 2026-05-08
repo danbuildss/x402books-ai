@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
+import { Providers } from "@/components/privy-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,7 +34,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${robotoMono.variable} ${inter.className}`}>{children}</body>
+      <body className={`${inter.variable} ${robotoMono.variable} ${inter.className}`}>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
@@ -119,36 +120,54 @@ export function CopyBtn({
 export function StitchShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const page = pageNames[pathname] || allNavItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
+  const { logout: privyLogout } = usePrivy();
 
-  // Track which nav groups are open (all open by default)
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(navGroups.map((g) => [g.label, true]))
   );
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   function toggleGroup(label: string) {
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   }
 
-  // Apply stored theme on mount
+  function closeSidebar() {
+    setSidebarOpen(false);
+  }
+
   useEffect(() => {
     applyTheme(readStoredTheme());
   }, []);
 
+  // Close sidebar on route change
+  useEffect(() => {
+    closeSidebar();
+  }, [pathname]);
+
   async function handleSignOut() {
     await fetch("/api/access", { method: "DELETE" });
+    try { await privyLogout(); } catch { /* ignore */ }
     window.location.assign("/");
   }
 
   return (
     <div className="stitch-shell">
-      <aside className="stitch-sidebar">
-        {/* Brand */}
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div className="stitch-sidebar-backdrop" onClick={closeSidebar} />
+      )}
+
+      <aside className={`stitch-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="stitch-brand">
           <img src="/logo.svg" alt="x402Books AI" width={32} height={32} style={{ borderRadius: "7px", flexShrink: 0 }} />
           <div>
             <strong>x402Books AI</strong>
             <span>Onchain Ledger</span>
           </div>
+          {/* Close button (mobile only) */}
+          <button type="button" className="stitch-sidebar-close" onClick={closeSidebar} aria-label="Close menu">
+            <StitchIcon name="close" />
+          </button>
         </div>
 
         <nav className="stitch-nav" aria-label="App navigation">
@@ -183,7 +202,6 @@ export function StitchShell({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {/* Compact sidebar footer */}
         <div className="stitch-sidebar-panel">
           <div className="stitch-sidebar-panel-row">
             <span className="stitch-beta-badge">Private Beta · Stage 1</span>
@@ -195,16 +213,25 @@ export function StitchShell({ children }: { children: ReactNode }) {
       </aside>
 
       <header className="stitch-topbar">
+        {/* Hamburger — mobile only */}
+        <button
+          type="button"
+          className="stitch-hamburger"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          <StitchIcon name="menu" />
+        </button>
         <div>
           <h1>{page}</h1>
           <span className="stitch-live-dot">Base Network</span>
         </div>
         <div className="stitch-topbar-actions">
           <Link href="/api" className="stitch-topbar-link">
-            <StitchIcon name="api" /> API Docs
+            <StitchIcon name="api" /> <span className="stitch-topbar-label">API Docs</span>
           </Link>
           <Link href="/dashboard" className="stitch-scan-pill">
-            <StitchIcon name="search" /> Scan Wallet
+            <StitchIcon name="search" /> <span className="stitch-topbar-label">Scan Wallet</span>
           </Link>
         </div>
       </header>

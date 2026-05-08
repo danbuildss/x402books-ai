@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/logo";
 
@@ -10,56 +10,77 @@ const SAVED_EMAIL_KEY = "x402books_email";
 function AccessForm() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => searchParams.get("next") || "/dashboard", [searchParams]);
+  const { ready, authenticated, user, login, logout } = usePrivy();
 
-  const [tab, setTab] = useState<"signin" | "signup">("signin");
+  const [step, setStep] = useState<"loading" | "privy" | "code">("loading");
   const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [savedEmail, setSavedEmail] = useState("");
 
+  // Once Privy is ready and authenticated, try auto sign-in
   useEffect(() => {
-    const stored = localStorage.getItem(SAVED_EMAIL_KEY);
-    if (stored) {
-      setEmail(stored);
-      setSavedEmail(stored);
+    if (!ready) return;
+    if (!authenticated || !user) {
+      setStep("privy");
+      return;
     }
-  }, []);
 
-  function clearMessages() {
+    const email =
+      user.email?.address ||
+      user.linkedAccounts.find((a) => a.type === "email")?.address ||
+      null;
+
+    if (!email) {
+      setStep("code");
+      return;
+    }
+
+    // Try returning-user sign-in first
+    setIsLoading(true);
+    fetch("/api/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ signin: true, email }),
+    })
+      .then((res) => {
+        if (res.ok) {
+          localStorage.setItem(SAVED_EMAIL_KEY, email);
+          window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
+        } else {
+          setStep("code");
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        setStep("code");
+        setIsLoading(false);
+      });
+  }, [ready, authenticated, user, nextPath]);
+
+  async function onCodeSubmit(e: React.FormEvent) {
+    e.preventDefault();
     setError("");
-    setStatus("");
-  }
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    clearMessages();
     setIsLoading(true);
 
-    try {
-      const payload =
-        tab === "signin"
-          ? { signin: true, email }
-          : { signin: false, code, email };
+    const email =
+      user?.email?.address ||
+      user?.linkedAccounts.find((a) => a.type === "email")?.address ||
+      "";
 
-      const response = await fetch("/api/access", {
+    try {
+      const res = await fetch("/api/access", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ signin: false, code, email }),
       });
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
-        setError(data.error || "Could not complete this action.");
+      if (!res.ok) {
+        setError(data.error || "Invalid code.");
         return;
       }
 
-      if (email.trim()) {
-        localStorage.setItem(SAVED_EMAIL_KEY, email.trim().toLowerCase());
-      }
-
-      setStatus(tab === "signin" ? "Signing you in…" : "Access unlocked. Opening the app…");
+      if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
       window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
     } catch {
       setError("Could not connect right now. Try again.");
@@ -67,6 +88,16 @@ function AccessForm() {
       setIsLoading(false);
     }
   }
+
+  async function handleLogout() {
+    await logout();
+    setStep("privy");
+    setError("");
+  }
+
+  const userEmail =
+    user?.email?.address ||
+    user?.linkedAccounts.find((a) => a.type === "email")?.address;
 
   return (
     <main className="access-page" data-theme="dark">
@@ -76,92 +107,79 @@ function AccessForm() {
           <span>Private beta</span>
         </div>
 
-        <div className="access-copy">
-          <h1>{tab === "signin" ? "Welcome back" : "Access x402Books"}</h1>
-          <p>
-            {tab === "signin"
-              ? "Sign in with the email you used when you first joined."
-              : "Enter your beta code to open the wallet scanner, reports, and agent ledger API."}
-          </p>
-        </div>
+        {/* Loading / authenticating */}
+        {(step === "loading" || (authenticated && isLoading && step !== "code")) && (
+          <>
+            <div className="access-copy">
+              <h1>Signing you in…</h1>
+              <p>Just a moment while we verify your account.</p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+              <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite", fontSize: "28px", color: "#66e4a5" }}>
+                ⟳
+              </span>
+            </div>
+          </>
+        )}
 
-        {/* Tab switcher */}
-        <div className="access-tabs">
-          <button
-            type="button"
-            className={tab === "signin" ? "active" : ""}
-            onClick={() => { setTab("signin"); clearMessages(); }}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={tab === "signup" ? "active" : ""}
-            onClick={() => { setTab("signup"); clearMessages(); }}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        <form className="access-form" onSubmit={onSubmit}>
-          <label>
-            <span>
-              Email
-              {savedEmail && tab === "signin" && (
-                <span className="access-saved-indicator" style={{ display: "inline-flex", gap: "4px", marginLeft: "8px" }}>
-                  ✓ remembered
-                </span>
-              )}
-            </span>
-            <input
-              autoComplete="email"
-              autoFocus
-              inputMode="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-
-          {tab === "signup" && (
-            <label>
-              <span>Beta access code</span>
-              <input
-                autoComplete="one-time-code"
-                placeholder="XBOOKS-..."
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </label>
-          )}
-
-          <button disabled={isLoading} type="submit">
-            {isLoading
-              ? "Checking…"
-              : tab === "signin"
-              ? "Sign In"
-              : "Unlock App"}
-          </button>
-
-          {error  ? <p className="form-message error">{error}</p>   : null}
-          {status ? <p className="form-message success">{status}</p> : null}
-        </form>
-
-        <div className="access-footer">
-          {tab === "signin" ? (
-            <>
-              <span style={{ color: "#9ca69f", fontSize: "13px" }}>New user?</span>
-              <button type="button" className="access-footer-link" onClick={() => { setTab("signup"); clearMessages(); }}>
-                Sign up with a beta code →
+        {/* Step 1 — Privy login */}
+        {step === "privy" && (
+          <>
+            <div className="access-copy">
+              <h1>Access x402Books</h1>
+              <p>Sign in with your email, Google account, or crypto wallet to continue.</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <button
+                className="access-privy-btn"
+                onClick={login}
+                disabled={!ready}
+              >
+                <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "4px" }} />
+                Continue with Email or Wallet
               </button>
-            </>
-          ) : (
-            <>
-              <Link href="/#waitlist">Join waitlist</Link>
-              <Link href="/">Back to landing</Link>
-            </>
-          )}
-        </div>
+            </div>
+            <div className="access-footer">
+              <a href="/#waitlist" style={{ color: "#9ca69f", fontSize: "13px" }}>Join waitlist</a>
+              <a href="/" style={{ color: "#9ca69f", fontSize: "13px" }}>Back to landing</a>
+            </div>
+          </>
+        )}
+
+        {/* Step 2 — Beta code entry */}
+        {step === "code" && (
+          <>
+            <div className="access-copy">
+              <h1>Enter your beta code</h1>
+              <p>
+                {userEmail
+                  ? `Signed in as ${userEmail}. Enter your invite code to unlock the app.`
+                  : "Enter your invite code to unlock the app."}
+              </p>
+            </div>
+            <form className="access-form" onSubmit={onCodeSubmit}>
+              <label>
+                <span>Beta access code</span>
+                <input
+                  autoComplete="one-time-code"
+                  autoFocus
+                  placeholder="XBOOKS-..."
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </label>
+              <button disabled={isLoading} type="submit">
+                {isLoading ? "Checking…" : "Unlock App"}
+              </button>
+              {error && <p className="form-message error">{error}</p>}
+            </form>
+            <div className="access-footer">
+              <button type="button" className="access-footer-link" onClick={handleLogout}>
+                ← Use a different account
+              </button>
+            </div>
+          </>
+        )}
       </section>
     </main>
   );

@@ -6671,3 +6671,262 @@ html, body {
   color: #66e4a5;
 }
 
+
+/* ================================================================
+   MOBILE RESPONSIVE — full layout for screens < 768px
+   ================================================================ */
+
+/* Privy login button on access page */
+.access-privy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid #3d4a41;
+  border-radius: 8px;
+  background: #1b211d;
+  color: #dee4dd;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.access-privy-btn:hover {
+  background: #252c27;
+  border-color: #66e4a5;
+}
+.access-privy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Hamburger — hidden on desktop */
+.stitch-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--st-text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Sidebar close button — hidden on desktop */
+.stitch-sidebar-close {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Overlay backdrop */
+.stitch-sidebar-backdrop {
+  display: none;
+}
+
+/* Hide topbar label text on very small screens */
+.stitch-topbar-label {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  /* ---- Sidebar becomes a slide-in drawer ---- */
+  .stitch-sidebar {
+    transform: translateX(-100%);
+    transition: transform 240ms cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    box-shadow: none;
+  }
+
+  .stitch-sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .stitch-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  .stitch-sidebar-close {
+    display: flex;
+  }
+
+  /* ---- Topbar full width ---- */
+  .stitch-topbar {
+    left: 0;
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .stitch-hamburger {
+    display: flex;
+  }
+
+  .stitch-topbar h1 {
+    font-size: 15px;
+  }
+
+  .stitch-live-dot {
+    display: none;
+  }
+
+  /* ---- Main content full width ---- */
+  .stitch-main {
+    margin-left: 0 !important;
+    padding: 76px 12px 24px;
+  }
+
+  /* ---- Stats: 2 columns ---- */
+  .stitch-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stitch-stat {
+    min-height: 90px;
+    padding: 14px;
+  }
+
+  .stitch-stat strong {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .stitch-stat-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  /* ---- Two-grid stacks ---- */
+  .stitch-two-grid,
+  .stitch-reports-grid,
+  .stitch-api-grid,
+  .stitch-lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---- Donut stacks ---- */
+  .stitch-donut-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  /* ---- Page header stacks ---- */
+  .stitch-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .stitch-page-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* ---- Scan bar stacks ---- */
+  .stitch-scanbar {
+    grid-template-columns: 1fr;
+  }
+
+  .stitch-scanbar label {
+    grid-column: 1;
+  }
+
+  /* ---- Card padding ---- */
+  .stitch-card {
+    padding: 16px;
+  }
+
+  /* ---- Transactions layout stacks ---- */
+  .stitch-transactions-layout {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---- Settings stack ---- */
+  .stitch-settings-stack {
+    gap: 12px;
+  }
+
+  .stitch-setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .stitch-setting-row select,
+  .stitch-setting-row .stitch-segmented {
+    width: 100%;
+  }
+
+  /* ---- Topbar actions — icons only on small screens ---- */
+  .stitch-topbar-label {
+    display: none;
+  }
+
+  .stitch-topbar-link,
+  .stitch-scan-pill {
+    padding: 0 10px;
+    min-height: 34px;
+    font-size: 12px;
+  }
+
+  /* ---- Wallet cards ---- */
+  .stitch-wallet-scan {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---- Range / wallet pill wrap ---- */
+  .stitch-range,
+  .stitch-wallet-pill {
+    flex-wrap: wrap;
+  }
+
+  /* ---- Toolbar stacks ---- */
+  .stitch-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .stitch-toolbar input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  /* ---- Stats: single column on very small screens ---- */
+  .stitch-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stitch-main {
+    padding: 72px 10px 20px;
+  }
+
+  .stitch-page-header h2 {
+    font-size: 18px;
+  }
+
+  /* ---- Brand text smaller ---- */
+  .stitch-brand strong {
+    font-size: 15px;
+  }
+}
