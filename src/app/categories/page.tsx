@@ -3,7 +3,6 @@
 import {
   StitchEmpty,
   StitchHeader,
-  StitchMiniTrend,
   StitchRange,
   StitchShell,
   StitchWalletPill,
@@ -11,12 +10,9 @@ import {
 import { formatUsdc } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
-function trendFor(index: number, total: number) {
-  return [1, 1.2, 0.9, 1.4, 1.1, 1.6].map((value) => value * Math.max(1, total) * (index + 1));
-}
-
 export default function CategoriesPage() {
   const ledger = useLedgerState();
+  const maxUsdc = Math.max(...ledger.categories.map((c) => c.totalUsdc), 0.01);
 
   return (
     <StitchShell>
@@ -34,39 +30,77 @@ export default function CategoriesPage() {
 
       <section className="stitch-card">
         {ledger.categories.length ? (
-          <div className="stitch-table-wrap">
-            <table className="stitch-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Total Amount</th>
-                  <th>% of Spend</th>
-                  <th>Transactions</th>
-                  <th>Trend</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ledger.categories.map((category, index) => {
-                  const share = ledger.summary.totalSpend
-                    ? (category.totalUsdc / ledger.summary.totalSpend) * 100
-                    : 0;
-                  return (
-                    <tr key={category.category}>
-                      <td><span className={`stitch-chip ${category.category}`}>{category.label}</span></td>
-                      <td>${formatUsdc(category.totalUsdc)}</td>
-                      <td>{share.toFixed(1)}%</td>
-                      <td>{category.count}</td>
-                      <td><StitchMiniTrend values={trendFor(index, category.totalUsdc)} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="stitch-cat-list">
+            {ledger.categories.map((cat) => {
+              const spendShare = ledger.summary.totalSpend
+                ? (cat.totalUsdc / ledger.summary.totalSpend) * 100
+                : 0;
+              const barPct = (cat.totalUsdc / maxUsdc) * 100;
+              return (
+                <div key={cat.category} className="stitch-cat-row">
+                  <div className="stitch-cat-label-col">
+                    <span className={`stitch-chip ${cat.category}`}>{cat.label}</span>
+                    <span className="stitch-cat-count">{cat.count} tx</span>
+                  </div>
+                  <div className="stitch-cat-bar-col">
+                    <div className="stitch-cat-bar-track">
+                      <div className="stitch-cat-bar-fill" style={{ width: `${barPct}%` }} />
+                    </div>
+                  </div>
+                  <div className="stitch-cat-amount-col">
+                    <strong style={{ fontFamily: "var(--st-mono)" }}>{formatUsdc(cat.totalUsdc)} USDC</strong>
+                    <span style={{ color: "var(--st-muted)", fontSize: "11px" }}>{spendShare.toFixed(1)}%</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <StitchEmpty>Scan a wallet to generate category breakdowns.</StitchEmpty>
         )}
       </section>
+
+      {/* Income-only categories */}
+      {ledger.transactions.some((tx) => tx.direction === "income") && (
+        <section className="stitch-card">
+          <div className="stitch-card-head"><h3>Income Breakdown</h3></div>
+          <div className="stitch-cat-list">
+            {ledger.categories
+              .filter((cat) =>
+                ledger.transactions.some(
+                  (tx) => tx.category === cat.category && tx.direction === "income",
+                ),
+              )
+              .map((cat) => {
+                const incomeForCat = ledger.transactions
+                  .filter((tx) => tx.category === cat.category && tx.direction === "income")
+                  .reduce((sum, tx) => sum + tx.amountUsdc, 0);
+                const pct = ledger.summary.totalIncome
+                  ? (incomeForCat / ledger.summary.totalIncome) * 100
+                  : 0;
+                const barPct = (incomeForCat / Math.max(ledger.summary.totalIncome, 0.01)) * 100;
+                return (
+                  <div key={cat.category} className="stitch-cat-row">
+                    <div className="stitch-cat-label-col">
+                      <span className={`stitch-chip ${cat.category}`}>{cat.label}</span>
+                    </div>
+                    <div className="stitch-cat-bar-col">
+                      <div className="stitch-cat-bar-track">
+                        <div className="stitch-cat-bar-fill income" style={{ width: `${barPct}%` }} />
+                      </div>
+                    </div>
+                    <div className="stitch-cat-amount-col">
+                      <strong style={{ fontFamily: "var(--st-mono)", color: "var(--st-green)" }}>
+                        +{formatUsdc(incomeForCat)} USDC
+                      </strong>
+                      <span style={{ color: "var(--st-muted)", fontSize: "11px" }}>{pct.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </section>
+      )}
 
       <section className="stitch-card stitch-insight">
         <span>AI</span>
@@ -78,4 +112,3 @@ export default function CategoriesPage() {
     </StitchShell>
   );
 }
-
