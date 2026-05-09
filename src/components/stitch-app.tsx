@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import {
   formatCategory,
@@ -431,6 +431,32 @@ export function StitchLineChart({
   const step = Math.max(1, Math.ceil(visible.length / 7));
   const labelIdx = visible.map((_, i) => i).filter((i) => i % step === 0 || i === visible.length - 1);
 
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+
+  function handleMouseMove(e: React.MouseEvent<SVGRectElement>) {
+    if (!svgRef.current || visible.length < 2) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const relX = ((e.clientX - rect.left) / rect.width) * W;
+    let closest = 0;
+    let minDist = Infinity;
+    pts.forEach((p, i) => {
+      const d = Math.abs(p.x - relX);
+      if (d < minDist) { minDist = d; closest = i; }
+    });
+    setHoverIdx(closest);
+  }
+
+  const hovered = hoverIdx !== null ? visible[hoverIdx] : null;
+  const hoveredPt = hoverIdx !== null ? pts[hoverIdx] : null;
+
+  // Clamp tooltip so it doesn't overflow the SVG viewBox
+  const tooltipW = 110;
+  const tooltipX = hoveredPt
+    ? Math.min(Math.max(hoveredPt.x - tooltipW / 2, PL), W - PR - tooltipW)
+    : 0;
+  const tooltipY = hoveredPt ? Math.max(hoveredPt.y - 52, PT) : 0;
+
   return (
     <section className="stitch-card stitch-chart-card">
       <div className="stitch-card-head">
@@ -439,12 +465,17 @@ export function StitchLineChart({
       </div>
       {visible.length >= 2 ? (
         <>
-          <svg className="stitch-line" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
-            style={{ display: "block", width: "100%", height: "200px" }}>
+          <svg
+            ref={svgRef}
+            className="stitch-line"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            style={{ display: "block", width: "100%", height: "200px" }}
+          >
             <defs>
               <linearGradient id="area-gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"  stopColor="#00D395" stopOpacity="0.35" />
-                <stop offset="85%" stopColor="#00D395" stopOpacity="0.03" />
+                <stop offset="0%"  stopColor="#6DB874" stopOpacity="0.30" />
+                <stop offset="85%" stopColor="#6DB874" stopOpacity="0.02" />
               </linearGradient>
             </defs>
             {gridYs.map((y) => (
@@ -452,7 +483,64 @@ export function StitchLineChart({
             ))}
             {areaPath && <path d={areaPath} className="stitch-area-fill" />}
             <path d={linePath} className="stitch-line-stroke" />
-            {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="4.5" className="stitch-line-dot" />)}
+            {pts.map((p, i) => (
+              <circle
+                key={i}
+                cx={p.x} cy={p.y} r={hoverIdx === i ? "6" : "4"}
+                className="stitch-line-dot"
+                style={{ opacity: hoverIdx === null || hoverIdx === i ? 1 : 0.35, transition: "r 100ms ease, opacity 100ms ease" }}
+              />
+            ))}
+
+            {/* Crosshair */}
+            {hoveredPt && (
+              <line
+                x1={hoveredPt.x} y1={PT} x2={hoveredPt.x} y2={PT + plotH}
+                stroke="var(--st-primary)" strokeOpacity="0.35" strokeWidth="1" strokeDasharray="3 3"
+              />
+            )}
+
+            {/* Tooltip box */}
+            {hovered && hoveredPt && (
+              <g>
+                <rect
+                  x={tooltipX} y={tooltipY}
+                  width={tooltipW} height={40}
+                  rx="5" ry="5"
+                  fill="var(--st-container)"
+                  stroke="var(--st-line)"
+                  strokeWidth="1"
+                />
+                <text
+                  x={tooltipX + tooltipW / 2} y={tooltipY + 14}
+                  textAnchor="middle"
+                  fill="var(--st-muted)"
+                  fontSize="9"
+                  fontFamily="var(--st-mono)"
+                >
+                  {new Date(`${hovered.date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                </text>
+                <text
+                  x={tooltipX + tooltipW / 2} y={tooltipY + 30}
+                  textAnchor="middle"
+                  fill="var(--st-primary)"
+                  fontSize="12"
+                  fontWeight="600"
+                  fontFamily="var(--st-mono)"
+                >
+                  ${formatUsdc(hovered.spend)} USDC
+                </text>
+              </g>
+            )}
+
+            {/* Invisible hover capture layer */}
+            <rect
+              x={PL} y={PT} width={plotW} height={plotH}
+              fill="transparent"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={() => setHoverIdx(null)}
+              style={{ cursor: "crosshair" }}
+            />
           </svg>
           <div className="stitch-axis">
             {labelIdx.map((i) => (

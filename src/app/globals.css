@@ -120,7 +120,7 @@ footer {
 .access-copy h1 {
   margin-bottom: 8px;
   color: #E8E6E1;
-  font-size: 28px;
+  font-size: 16px;
   line-height: 1.1;
   font-family: var(--font-serif), 'Libre Baskerville', Georgia, serif;
   font-style: italic;
@@ -193,8 +193,8 @@ footer {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  font-size: 16px;
-  font-weight: 720;
+  font-size: 15px;
+  font-weight: 650;
   letter-spacing: 0;
 }
 
@@ -295,7 +295,7 @@ p {
 h1 {
   max-width: 680px;
   margin-bottom: 12px;
-  font-size: clamp(36px, 4.8vw, 58px);
+  font-size: clamp(26px, 3.2vw, 40px);
   line-height: 1;
   letter-spacing: 0;
   font-family: var(--font-serif), 'Libre Baskerville', Georgia, serif;
@@ -309,7 +309,7 @@ h2 {
   min-height: 24px;
   margin-bottom: 10px;
   color: var(--accent);
-  font-size: clamp(14px, 1.4vw, 18px);
+  font-size: clamp(13px, 1.1vw, 15px);
   font-weight: 650;
 }
 
@@ -325,7 +325,7 @@ h2 {
   max-width: 520px;
   margin-bottom: 16px;
   color: #58635f;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.55;
 }
 
@@ -469,7 +469,7 @@ h2 {
 .summary-grid strong {
   display: block;
   margin-top: 6px;
-  font-size: 21px;
+  font-size: 14px;
   letter-spacing: 0;
 }
 
@@ -572,8 +572,8 @@ h2 {
 .trust-strip span {
   display: block;
   margin-bottom: 6px;
-  font-size: 22px;
-  font-weight: 730;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .trust-strip p,
@@ -602,7 +602,7 @@ footer p {
 .waitlist-copy h2,
 .pricing-section h2 {
   margin-bottom: 12px;
-  font-size: clamp(28px, 3.4vw, 42px);
+  font-size: clamp(20px, 2.4vw, 30px);
   line-height: 1.05;
   letter-spacing: 0;
 }
@@ -1070,7 +1070,7 @@ footer a {
   }
 
   .brand span:last-child {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .nav-cta {
@@ -1080,7 +1080,7 @@ footer a {
   }
 
   h1 {
-    font-size: 38px;
+    font-size: 26px;
   }
 
   .hero-shell {
@@ -1122,7 +1122,7 @@ footer a {
   .report-copy h2,
   .waitlist-copy h2,
   .pricing-section h2 {
-    font-size: 29px;
+    font-size: 20px;
   }
 
   .report-section,
@@ -1178,7 +1178,7 @@ footer,
 
 h1 {
   max-width: 580px;
-  font-size: clamp(34px, 4.2vw, 52px);
+  font-size: clamp(22px, 2.8vw, 34px);
 }
 
 .hero-subtext {
@@ -1250,7 +1250,7 @@ h1 {
 }
 
 .trust-strip span {
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .section-heading {
@@ -1261,7 +1261,7 @@ h1 {
 .report-copy h2,
 .waitlist-copy h2,
 .pricing-section h2 {
-  font-size: clamp(23px, 2.6vw, 32px);
+  font-size: clamp(18px, 2vw, 26px);
 }
 
 .steps-grid {
@@ -1565,7 +1565,7 @@ textarea {
 
 .referral-panel strong {
   color: var(--accent-dark);
-  font-size: 22px;
+  font-size: 16px;
 }
 
 .referral-actions {
@@ -1661,7 +1661,7 @@ footer {
   }
 
   h1 {
-    font-size: 32px;
+    font-size: 16px;
   }
 
   .typing-line {
@@ -1750,7 +1750,7 @@ footer {
 }
 
 .scanner-panel h1 {
-  font-size: clamp(30px, 4vw, 46px);
+  font-size: clamp(22px, 2.8vw, 34px);
 }
 
 .scanner-panel p {
@@ -1931,7 +1931,7 @@ footer {
 .panel-heading h2,
 .report-panel h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.1;
 }
 
@@ -2056,7 +2056,7 @@ footer {
 
 .api-panel h2 {
   margin: 0;
-  font-size: 22px;
+  font-size: 16px;
   line-height: 1.1;
 }
 
@@ -2141,7 +2141,7 @@ footer {
 
 .ledger-heading h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 18px;
 }
 
 .ledger-actions {
@@ -2215,7 +2215,7 @@ footer {
 .report-document-header h2,
 .empty-report h2 {
   margin: 0;
-  font-size: clamp(28px, 3vw, 40px);
+  font-size: clamp(18px, 2.2vw, 28px);
   line-height: 1.05;
 }
 
@@ -2506,7 +2506,7 @@ footer {
   margin: 0 0 8px;
   max-width: none;
   color: #ffffff;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1.2;
 }
 
@@ -2592,7 +2592,7 @@ footer {
   display: block;
   margin-bottom: 12px;
   color: #ffffff;
-  font-size: 38px;
+  font-size: 26px;
   line-height: 1;
   letter-spacing: 0;
 }
@@ -2653,7 +2653,7 @@ footer {
 
 .card-heading h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 14px;
 }
 
 .card-heading button,
@@ -3342,7 +3342,7 @@ footer {
   }
 
   .metric-card strong {
-    font-size: 32px;
+    font-size: 16px;
   }
 
   .donut-layout,
@@ -3478,7 +3478,7 @@ footer {
 }
 
 .product-page-header h1 {
-  font-size: 22px;
+  font-size: 16px;
 }
 
 .product-page-header p {
@@ -3610,7 +3610,7 @@ button:disabled {
 
 .metric-card strong {
   margin-bottom: 8px;
-  font-size: 30px;
+  font-size: 20px;
 }
 
 .metric-card small {
@@ -4115,8 +4115,8 @@ button:disabled {
 .product-sidebar .brand {
   gap: 9px;
   color: var(--ledger-text);
-  font-size: 16px;
-  font-weight: 720;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .product-sidebar .logo-mark {
@@ -4364,8 +4364,8 @@ button:disabled {
 .metric-card strong {
   margin-bottom: 8px;
   color: var(--ledger-text);
-  font-size: 28px;
-  font-weight: 680;
+  font-size: 18px;
+  font-weight: 650;
 }
 
 .metric-card small,
@@ -4808,7 +4808,7 @@ button:disabled {
   }
 
   .metric-card strong {
-    font-size: 24px;
+    font-size: 18px;
   }
 
   .donut-layout {
@@ -4958,8 +4958,8 @@ button:disabled {
 .stitch-brand strong {
   display: block;
   color: var(--st-primary);
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -5121,7 +5121,7 @@ button:disabled {
 .stitch-page-header h2 {
   margin: 0 0 4px;
   color: var(--st-text);
-  font-size: 22px;
+  font-size: 16px;
   line-height: 28px;
 }
 
@@ -5317,7 +5317,7 @@ button:disabled {
   display: block;
   margin-bottom: 4px;
   color: var(--st-text);
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 28px;
 }
