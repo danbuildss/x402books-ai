@@ -1,16 +1,25 @@
 import type { Metadata } from "next";
-import { Inter, Roboto_Mono } from "next/font/google";
+import { DM_Sans, Libre_Baskerville, IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "@/components/privy-provider";
 import "./globals.css";
 
-const inter = Inter({
+const dmSans = DM_Sans({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
+  variable: "--font-sans",
 });
 
-const robotoMono = Roboto_Mono({
+const libreBaskerville = Libre_Baskerville({
   subsets: ["latin"],
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-serif",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   display: "swap",
   variable: "--font-mono",
 });
@@ -34,7 +43,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.variable} ${robotoMono.variable} ${inter.className}`}>
+      <body className={`${dmSans.variable} ${libreBaskerville.variable} ${ibmPlexMono.variable} ${dmSans.className}`}>
         <Providers>{children}</Providers>
       </body>
     </html>
