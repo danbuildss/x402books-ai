@@ -6536,26 +6536,6 @@ html, body {
 
 
 /* ================================================================
-   MOBILE RESPONSIVE — full layout for screens < 768px
-   ================================================================ */
-
-
-
-  .stitch-main {
-    padding: 72px 10px 20px;
-  }
-
-  .stitch-page-header h2 {
-    font-size: 18px;
-  }
-
-  /* ---- Brand text smaller ---- */
-  .stitch-brand strong {
-    font-size: 15px;
-  }
-}
-
-/* ================================================================
    MOBILE — single system, ≤768px drawer sidebar, ≤480px small phone
    Desktop (>768px) is completely unaffected.
    ================================================================ */
