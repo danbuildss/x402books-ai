@@ -447,6 +447,30 @@ export function useLedgerState() {
     updateNote,
     generateAiSummary,
     exportCsv: () => exportCsv(transactions),
+    exportPdf: async () => {
+      if (!activeLedger.wallet) return;
+      const res = await fetch("/api/export/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet: activeLedger.wallet,
+          range,
+          summary,
+          categories,
+          transactions,
+          aiSummary,
+          generatedAt: activeLedger.generatedAt,
+        }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `x402books-${activeLedger.wallet.slice(0, 8)}-${range}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
     copyText,
   };
 }

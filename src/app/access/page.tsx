@@ -5,179 +5,102 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/logo";
 
-const SAVED_EMAIL_KEY = "x402books_email";
-
 function AccessForm() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => searchParams.get("next") || "/dashboard", [searchParams]);
   const { ready, authenticated, user, login, logout } = usePrivy();
 
-  const [step, setStep] = useState<"loading" | "privy" | "code">("loading");
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Once Privy is ready and authenticated, try auto sign-in
   useEffect(() => {
     if (!ready) return;
-    if (!authenticated || !user) {
-      setStep("privy");
-      return;
-    }
+    if (!authenticated || !user) return;
 
     const email =
       user.email?.address ||
-      user.linkedAccounts.find((a) => a.type === "email")?.address ||
+      (user.linkedAccounts.find((a) => a.type === "email") as { address?: string } | undefined)?.address ||
       null;
 
-    if (!email) {
-      setStep("code");
-      return;
-    }
+    const xHandle =
+      (user.linkedAccounts.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username ||
+      null;
 
-    // Try returning-user sign-in first
     setIsLoading(true);
+    setError("");
+
     fetch("/api/access", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ signin: true, email }),
+      body: JSON.stringify({ privy: true, userId: user.id, email, xHandle }),
     })
-      .then((res) => {
-        if (res.ok) {
-          localStorage.setItem(SAVED_EMAIL_KEY, email);
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
           window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
         } else {
-          setStep("code");
+          setError(data.error || "Could not sign in right now.");
           setIsLoading(false);
         }
       })
       .catch(() => {
-        setStep("code");
+        setError("Could not connect right now. Try again.");
         setIsLoading(false);
       });
   }, [ready, authenticated, user, nextPath]);
 
-  async function onCodeSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setIsLoading(true);
-
-    const email =
-      user?.email?.address ||
-      user?.linkedAccounts.find((a) => a.type === "email")?.address ||
-      "";
-
-    try {
-      const res = await fetch("/api/access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ signin: false, code, email }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Invalid code.");
-        return;
-      }
-
-      if (email) localStorage.setItem(SAVED_EMAIL_KEY, email);
-      window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
-    } catch {
-      setError("Could not connect right now. Try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleLogout() {
-    await logout();
-    setStep("privy");
-    setError("");
-  }
-
-  const userEmail =
-    user?.email?.address ||
-    user?.linkedAccounts.find((a) => a.type === "email")?.address;
+  const showSpinner = !ready || (authenticated && isLoading);
 
   return (
     <main className="access-page" data-theme="dark">
       <section className="access-card">
         <div className="access-brand">
           <Logo />
-          <span>Private beta</span>
+          <span>x402Books AI</span>
         </div>
 
-        {/* Loading / authenticating */}
-        {(step === "loading" || (authenticated && isLoading && step !== "code")) && (
+        {showSpinner && (
           <>
             <div className="access-copy">
               <h1>Signing you in…</h1>
-              <p>Just a moment while we verify your account.</p>
+              <p>Just a moment while we set up your account.</p>
             </div>
             <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
-              <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite", fontSize: "28px", color: "#66e4a5" }}>
+              <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite", fontSize: "28px", color: "#6DB874" }}>
                 ⟳
               </span>
             </div>
           </>
         )}
 
-        {/* Step 1 — Privy login */}
-        {step === "privy" && (
+        {!showSpinner && !authenticated && (
           <>
             <div className="access-copy">
-              <h1>Access x402Books</h1>
-              <p>Sign in with your email, Google account, or crypto wallet to continue.</p>
+              <h1>Sign in to x402Books</h1>
+              <p>Track your Base USDC activity, categorize transactions, and generate financial reports.</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <button
-                className="access-privy-btn"
-                onClick={login}
-                disabled={!ready}
-              >
+              <button className="access-privy-btn" onClick={login} disabled={!ready}>
                 <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "4px" }} />
-                Continue with Email or Wallet
+                Continue with Email or X
               </button>
             </div>
+            {error && <p className="form-message error">{error}</p>}
             <div className="access-footer">
-              <a href="/#waitlist" style={{ color: "#9ca69f", fontSize: "13px" }}>Join waitlist</a>
-              <a href="/" style={{ color: "#9ca69f", fontSize: "13px" }}>Back to landing</a>
+              <a href="/" style={{ color: "#6B6960", fontSize: "13px" }}>← Back to home</a>
             </div>
           </>
         )}
 
-        {/* Step 2 — Beta code entry */}
-        {step === "code" && (
+        {!showSpinner && authenticated && !isLoading && error && (
           <>
             <div className="access-copy">
-              <h1>Enter your beta code</h1>
-              <p>
-                {userEmail
-                  ? `Signed in as ${userEmail}. Enter your invite code to unlock the app.`
-                  : "Enter your invite code to unlock the app."}
-              </p>
+              <h1>Something went wrong</h1>
+              <p>{error}</p>
             </div>
-            <form className="access-form" onSubmit={onCodeSubmit}>
-              <label>
-                <span>Beta access code</span>
-                <input
-                  autoComplete="one-time-code"
-                  autoFocus
-                  placeholder="XBOOKS-..."
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                />
-              </label>
-              <button disabled={isLoading} type="submit">
-                {isLoading ? "Checking…" : "Unlock App"}
-              </button>
-              {error && <p className="form-message error">{error}</p>}
-            </form>
-            <div className="access-footer">
-              <button type="button" className="access-footer-link" onClick={handleLogout}>
-                ← Use a different account
-              </button>
-            </div>
+            <button className="access-privy-btn" onClick={() => { logout(); setError(""); }}>
+              Try a different account
+            </button>
           </>
         )}
       </section>

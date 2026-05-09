@@ -30,7 +30,7 @@ export default function DashboardPage() {
     <StitchShell>
       <StitchHeader
         title="Overview"
-        description={`Financial overview · ${ledger.range === "7d" ? "Last 7 days" : "Last 30 days"}`}
+        description={`Financial overview · Last ${{ "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days" }[ledger.range]}`}
         actions={
           <>
             <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
@@ -45,6 +45,7 @@ export default function DashboardPage() {
         onSubmit={onSubmit}
         onCategorize={ledger.categorizeTransactions}
         onExport={ledger.exportCsv}
+        onExportPdf={ledger.exportPdf}
         loading={ledger.isLoading}
         categorizing={ledger.isCategorizing}
         error={ledger.error}

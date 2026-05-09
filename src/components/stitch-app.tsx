@@ -21,6 +21,7 @@ const navGroups = [
       { href: "/dashboard",    label: "Overview",      icon: "dashboard" },
       { href: "/transactions", label: "Transactions",  icon: "receipt_long" },
       { href: "/categories",   label: "Categories",    icon: "category" },
+      { href: "/flags",        label: "Flags",         icon: "flag" },
     ],
   },
   {
@@ -43,6 +44,7 @@ const pageNames: Record<string, string> = {
   "/dashboard":    "Overview",
   "/transactions": "Transactions",
   "/categories":   "Categories",
+  "/flags":        "Flags",
   "/reports":      "Reports",
   "/wallets":      "Wallets",
   "/api":          "API",
@@ -347,6 +349,7 @@ export function StitchScanBar({
   onSubmit,
   onCategorize,
   onExport,
+  onExportPdf,
   loading,
   categorizing,
   error,
@@ -358,6 +361,7 @@ export function StitchScanBar({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onCategorize: () => void;
   onExport: () => void;
+  onExportPdf: () => void;
   loading: boolean;
   categorizing: boolean;
   error: string;
@@ -393,7 +397,10 @@ export function StitchScanBar({
         {categorizing ? "Categorizing…" : "AI Categorize"}
       </button>
       <button className="stitch-button" disabled={!hasTransactions} type="button" onClick={onExport}>
-        <StitchIcon name="download" /> Export CSV
+        <StitchIcon name="download" /> CSV
+      </button>
+      <button className="stitch-button" disabled={!hasTransactions} type="button" onClick={onExportPdf}>
+        <StitchIcon name="picture_as_pdf" /> PDF
       </button>
       {error  ? <p className="stitch-message error">{error}</p>   : null}
       {status ? <p className="stitch-message success">{status}</p> : null}

@@ -25,6 +25,24 @@ function setCookie(response: NextResponse, tokenValue: string) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+
+    // ---- Open access: Privy-authenticated user ----
+    if (body.privy && body.userId) {
+      const userId = String(body.userId).trim();
+      const email = String(body.email || "").trim().toLowerCase() || null;
+      const xHandle = String(body.xHandle || "").trim().replace(/^@/, "") || null;
+
+      const supabase = getSupabaseAdminClient();
+      await supabase.from("users").upsert(
+        { privy_user_id: userId, email, x_handle: xHandle, last_seen_at: new Date().toISOString() },
+        { onConflict: "privy_user_id" },
+      );
+
+      const response = NextResponse.json({ ok: true });
+      setCookie(response, createAccessToken(userId));
+      return response;
+    }
+
     const signin = Boolean(body.signin);
     const normalizedEmail = String(body.email || "").trim().toLowerCase();
 
