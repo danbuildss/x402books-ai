@@ -12,7 +12,7 @@ import {
   shortenAddress,
   signedAmount,
 } from "@/lib/ledger";
-import type { CategorySummary, DailyFlow, LedgerTransaction, TimeRange } from "@/lib/ledger";
+import type { CategorySummary, DailyFlow, LedgerCategory, LedgerTransaction, TimeRange } from "@/lib/ledger";
 
 const navGroups = [
   {
@@ -604,13 +604,69 @@ export function StitchDonut({ categories }: { categories: CategorySummary[] }) {
 
 // ---- Stripe-style transaction table ----
 
+const CATEGORY_LIST = Object.keys(CATEGORY_ICONS).filter((c) => c !== "income") as LedgerCategory[];
+
+function CategoryCell({
+  tx,
+  onCategoryChange,
+}: {
+  tx: LedgerTransaction;
+  onCategoryChange?: (txHash: string, category: LedgerCategory) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const cat = tx.category ?? "unknown";
+
+  useEffect(() => {
+    if (!open) return;
+    function close(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+      <button
+        type="button"
+        className={`stitch-chip ${cat}${onCategoryChange ? " stitch-chip-editable" : ""}`}
+        onClick={() => onCategoryChange && setOpen((v) => !v)}
+        title={onCategoryChange ? "Click to change category" : undefined}
+      >
+        <StitchIcon name={CATEGORY_ICONS[cat] ?? "help_outline"} />
+        {formatCategory(cat)}
+        {onCategoryChange && <StitchIcon name="edit" />}
+      </button>
+      {tx.isLikelyX402 && <span className="stitch-x402">x402</span>}
+      {open && (
+        <div className="stitch-category-dropdown">
+          {CATEGORY_LIST.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={c === cat ? "active" : ""}
+              onClick={() => { onCategoryChange?.(tx.txHash, c as LedgerCategory); setOpen(false); }}
+            >
+              <StitchIcon name={CATEGORY_ICONS[c] ?? "help_outline"} />
+              {formatCategory(c)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function StitchTransactionsTable({
   transactions,
   onSelect,
+  onCategoryChange,
   compact = false,
 }: {
   transactions: LedgerTransaction[];
   onSelect?: (tx: LedgerTransaction) => void;
+  onCategoryChange?: (txHash: string, category: LedgerCategory) => void;
   compact?: boolean;
 }) {
   return (
@@ -645,12 +701,8 @@ export function StitchTransactionsTable({
                   {tx.direction === "income" ? "Income" : "Spend"}
                 </span>
               </td>
-              <td>
-                <span className={`stitch-chip ${tx.category ?? "unknown"}`}>
-                  <StitchIcon name={CATEGORY_ICONS[tx.category ?? "unknown"] ?? "help_outline"} />
-                  {formatCategory(tx.category ?? "unknown")}
-                </span>
-                {tx.isLikelyX402 && <span className="stitch-x402">x402</span>}
+              <td onClick={(e) => e.stopPropagation()}>
+                <CategoryCell tx={tx} onCategoryChange={onCategoryChange} />
               </td>
               <td style={{ fontFamily: "var(--st-mono)", fontSize: "12px", color: "var(--st-muted)" }}>
                 {shortenAddress(tx.counterparty)}

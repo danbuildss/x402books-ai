@@ -101,7 +101,7 @@ export default function TransactionsPage() {
           </div>
 
           {rows.length ? (
-            <StitchTransactionsTable transactions={rows} onSelect={setSelected} />
+            <StitchTransactionsTable transactions={rows} onSelect={setSelected} onCategoryChange={ledger.updateCategory} />
           ) : (
             <StitchEmpty>
               {ledger.transactions.length

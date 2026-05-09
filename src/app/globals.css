@@ -5550,16 +5550,71 @@ button:disabled {
   min-height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(0, 211, 149, 0.1);
+  border: 0;
+  background: rgba(109, 184, 116, 0.10);
   color: var(--st-green);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
+  cursor: default;
+}
+
+.stitch-chip-editable {
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.stitch-chip-editable:hover {
+  background: rgba(109, 184, 116, 0.18);
 }
 
 .stitch-chip .stitch-icon {
   font-size: 12px !important;
   line-height: 1;
+}
+
+.stitch-chip-editable .stitch-icon:last-child {
+  font-size: 10px !important;
+  opacity: 0.55;
+}
+
+.stitch-category-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  border: 1px solid var(--st-line);
+  border-radius: 8px;
+  background: var(--st-container);
+  box-shadow: var(--st-shadow-hover);
+}
+
+.stitch-category-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--st-text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.stitch-category-dropdown button:hover,
+.stitch-category-dropdown button.active {
+  background: var(--st-high);
+}
+
+.stitch-category-dropdown button.active {
+  color: var(--st-primary);
 }
 
 .stitch-chip.data_access   { background: rgba(176, 198, 255, 0.12); color: var(--st-blue); }
@@ -5576,8 +5631,8 @@ button:disabled {
   margin-left: 5px;
   padding: 1px 6px;
   border-radius: 999px;
-  background: rgba(0, 211, 149, 0.12);
-  border: 1px solid rgba(0, 211, 149, 0.3);
+  background: rgba(109, 184, 116, 0.10);
+  border: 1px solid rgba(109, 184, 116, 0.25);
   color: var(--st-green);
   font-size: 10px;
   font-weight: 800;

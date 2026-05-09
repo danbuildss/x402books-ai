@@ -11,6 +11,7 @@ import {
 import type {
   CategorySummary,
   DailyFlow,
+  LedgerCategory,
   LedgerReport,
   LedgerSummary,
   LedgerTransaction,
@@ -161,6 +162,41 @@ export function useLedgerState() {
       setLedger(emptyLedger("30d"));
     }
     setRecentWallets(readRecentWallets());
+
+    // Load wallet saved to this account on the server
+    fetch("/api/user/wallet")
+      .then((r) => r.json())
+      .then(({ wallet }) => {
+        if (!wallet) return;
+        if (stored?.wallet) return; // local data already present, don't clobber
+        setWalletInput(wallet);
+        // Auto-scan so the dashboard populates immediately on login
+        setIsLoading(true);
+        fetch(`/api/scan?wallet=${encodeURIComponent(wallet)}&range=30d`)
+          .then((r) => r.json())
+          .then((body) => {
+            if (!body.error) {
+              const next: StoredLedger = {
+                wallet: body.wallet,
+                range: body.range,
+                generatedAt: body.generatedAt,
+                summary: body.summary,
+                report: body.report,
+                categories: body.categories ?? getCategorySummary(body.transactions ?? []),
+                dailyFlows: body.dailyFlows ?? getDailyFlows(body.transactions ?? [], body.range),
+                transactions: body.transactions ?? [],
+              };
+              setLedger(next);
+              setRangeValue(next.range);
+              writeStoredLedger(next);
+              setRecentWallets(saveRecentWallet(next.wallet, next));
+            }
+          })
+          .catch(() => {})
+          .finally(() => setIsLoading(false));
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeLedger = ledger || emptyLedger(range);
@@ -220,6 +256,12 @@ export function useLedgerState() {
       setWalletInput(nextLedger.wallet);
       writeStoredLedger(nextLedger);
       setRecentWallets(saveRecentWallet(nextLedger.wallet, nextLedger));
+      // Persist wallet to server for this account
+      fetch("/api/user/wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: nextLedger.wallet }),
+      }).catch(() => {});
       setStatus(
         nextLedger.transactions.length
           ? `Scan complete: ${nextLedger.transactions.length} USDC transfers found.`
@@ -283,6 +325,19 @@ export function useLedgerState() {
     }
   }
 
+  function updateCategory(txHash: string, category: string) {
+    const nextTransactions = transactions.map((tx) =>
+      tx.txHash === txHash ? { ...tx, category: category as LedgerCategory } : tx,
+    );
+    const nextLedger: StoredLedger = {
+      ...activeLedger,
+      transactions: nextTransactions,
+      categories: getCategorySummary(nextTransactions),
+    };
+    setLedger(nextLedger);
+    writeStoredLedger(nextLedger);
+  }
+
   async function copyText(value: string, label = value) {
     if (!value || value.includes("0x...")) {
       setError("Scan a wallet before copying this value.");
@@ -324,6 +379,7 @@ export function useLedgerState() {
     hasLedger: Boolean(activeLedger.wallet),
     scanWallet,
     categorizeTransactions,
+    updateCategory,
     exportCsv: () => exportCsv(transactions),
     copyText,
   };
