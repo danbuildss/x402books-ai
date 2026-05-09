@@ -33,16 +33,22 @@ export default function ApiPage() {
           <h3>Endpoints</h3>
           {ledger.hasLedger ? (
             <div className="stitch-endpoints">
-              {[...ledger.endpoints.map((path) => ({ method: "GET", path, note: "Live wallet endpoint" })), ...staticEndpoints].map((endpoint) => (
-                <div key={endpoint.path}>
-                  <span>{endpoint.method}</span>
-                  <code>{endpoint.path}</code>
-                  <p>{endpoint.note}</p>
-                  <button type="button" onClick={() => ledger.copyText(`${window.location.origin}${endpoint.path}`, endpoint.path)}>
-                    {ledger.copied === endpoint.path ? "Copied" : "Copy"}
-                  </button>
-                </div>
-              ))}
+              {[...ledger.endpoints.map((path) => ({ method: "GET", path, note: "Live wallet endpoint" })), ...staticEndpoints].map((endpoint) => {
+                const [basePath, query] = endpoint.path.split("?");
+                return (
+                  <div key={endpoint.path}>
+                    <span>{endpoint.method}</span>
+                    <div className="stitch-endpoint-path">
+                      <code>{basePath}</code>
+                      {query && <small>?{query}</small>}
+                    </div>
+                    <p>{endpoint.note}</p>
+                    <button type="button" onClick={() => ledger.copyText(`${window.location.origin}${endpoint.path}`, endpoint.path)}>
+                      {ledger.copied === endpoint.path ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <StitchEmpty compact>Scan a wallet to generate wallet-specific endpoints.</StitchEmpty>

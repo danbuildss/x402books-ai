@@ -5112,17 +5112,17 @@ button:disabled {
 
 .stitch-page-header {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-end;
   gap: 16px;
   margin-bottom: 16px;
+  min-height: 32px;
 }
 
-.stitch-page-header h2 {
-  margin: 0 0 4px;
-  color: var(--st-text);
-  font-size: 16px;
-  line-height: 28px;
+.stitch-page-desc {
+  margin: 0 auto 0 0;
+  color: var(--st-muted);
+  font-size: 13px;
 }
 
 .stitch-page-header p {
@@ -5865,19 +5865,43 @@ button:disabled {
 
 .stitch-endpoints {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   margin-top: 16px;
 }
 
 .stitch-endpoints > div {
-  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 160px) auto;
   margin: 0;
 }
 
 .stitch-endpoints span {
   color: var(--st-primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.stitch-endpoint-path {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.stitch-endpoint-path code {
+  font-family: var(--st-mono);
   font-size: 12px;
-  font-weight: 800;
+  color: var(--st-text);
+  white-space: nowrap;
+}
+
+.stitch-endpoint-path small {
+  font-family: var(--st-mono);
+  font-size: 10px;
+  color: var(--st-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stitch-api-example pre {
@@ -6686,7 +6710,6 @@ html, body {
     justify-content: flex-start;
     flex-wrap: wrap;
   }
-  .stitch-page-header h2 { font-size: 20px; }
 
   /* ---- Scan bar: stacks ---- */
   .stitch-scanbar {
@@ -6732,7 +6755,6 @@ html, body {
 @media (max-width: 480px) {
   .stitch-stats-grid { grid-template-columns: 1fr; }
   .stitch-main { padding: 72px 10px 20px; }
-  .stitch-page-header h2 { font-size: 18px; }
   .stitch-brand strong { font-size: 15px; }
   .stitch-preview-grid { grid-template-columns: 1fr; }
   .stitch-donut-wrap,

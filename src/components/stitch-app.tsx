@@ -244,7 +244,7 @@ export function StitchShell({ children }: { children: ReactNode }) {
 // ---- Page header ----
 
 export function StitchHeader({
-  title,
+  title: _title,
   description,
   actions,
 }: {
@@ -254,10 +254,7 @@ export function StitchHeader({
 }) {
   return (
     <div className="stitch-page-header">
-      <div>
-        <h2>{title}</h2>
-        <p>{description}</p>
-      </div>
+      {description && <p className="stitch-page-desc">{description}</p>}
       {actions ? <div className="stitch-page-actions">{actions}</div> : null}
     </div>
   );
