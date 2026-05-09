@@ -9,7 +9,7 @@ import {
   isValidWalletAddress,
 } from "@/lib/ledger";
 
-const VALID_RANGES = new Set(["7d", "30d"]);
+const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
 
 export async function POST(request: Request) {
   try {
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     if (!VALID_RANGES.has(range)) {
       return NextResponse.json(
-        { error: "Range must be 7d or 30d." },
+        { error: "Range must be 7d, 14d, 30d, or 90d." },
         { status: 400 },
       );
     }

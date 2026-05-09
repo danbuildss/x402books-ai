@@ -82,6 +82,17 @@ footer {
   box-shadow: var(--shadow);
 }
 
+@keyframes access-glow-spin {
+  0%   { --glow-angle: 0deg; }
+  100% { --glow-angle: 360deg; }
+}
+
+@property --glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
 .access-page {
   min-height: 100vh;
   display: grid;
@@ -89,17 +100,49 @@ footer {
   padding: 20px;
   background: #0E0F0E;
   color: #E8E6E1;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(109, 184, 116, 0.07) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 80% 80%, rgba(109, 184, 116, 0.04) 0%, transparent 60%);
 }
 
 .access-card {
+  position: relative;
   width: min(100%, 440px);
   display: grid;
   gap: 24px;
-  padding: 24px;
-  border: 1px solid rgba(96, 113, 97, 0.18);
-  border-radius: 10px;
-  background: #151716;
+  padding: 28px;
+  border-radius: 16px;
+  background: rgba(21, 23, 22, 0.72);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(109, 184, 116, 0.15);
+  box-shadow:
+    0 0 0 1px rgba(109, 184, 116, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: access-glow-spin 6s linear infinite;
+  background-image:
+    conic-gradient(
+      from var(--glow-angle, 0deg) at 50% 0%,
+      rgba(109, 184, 116, 0.0) 0deg,
+      rgba(109, 184, 116, 0.18) 60deg,
+      rgba(109, 184, 116, 0.0) 120deg,
+      rgba(109, 184, 116, 0.0) 360deg
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 2px;
+  background-position: top;
 }
+
+/* Inner content sits above the glow overlay */
+.access-card > * { position: relative; z-index: 1; }
+
+/* Hide Privy "Powered by" footer branding */
+[class*="privy-"] footer,
+[class*="privy-"] [class*="footer"],
+[class*="privy-"] [class*="branding"],
+[class*="privy-"] [class*="powered"],
+iframe[src*="privy"] { display: none !important; }
 
 .access-brand,
 .access-footer {
@@ -5253,7 +5296,7 @@ button:disabled {
 
 .stitch-scanbar {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) auto auto auto;
+  grid-template-columns: minmax(280px, 1fr) auto auto auto auto;
   gap: 8px;
   align-items: end;
   margin-bottom: 16px;
@@ -6880,26 +6923,28 @@ html, body {
 .stitch-flag-summary {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .stitch-flag-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 10px;
+  gap: 4px;
+  height: 24px;
+  padding: 0 9px;
   border-radius: 20px;
   border: 1px solid var(--st-line);
   background: transparent;
   color: var(--st-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-family: var(--st-sans);
   cursor: pointer;
   transition: all 0.15s;
 }
+
+.stitch-flag-chip .material-symbols-outlined { font-size: 12px; }
 
 .stitch-flag-chip:hover {
   border-color: var(--st-primary);
@@ -6921,8 +6966,8 @@ html, body {
 .stitch-flag-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 8px 14px;
   border-bottom: 1px solid var(--st-line);
   cursor: pointer;
   transition: background 0.1s;
@@ -6937,71 +6982,76 @@ html, body {
 }
 
 .stitch-flag-row.selected {
-  background: rgba(109, 184, 116, 0.08);
+  background: rgba(109, 184, 116, 0.07);
 }
 
 .stitch-flag-row.reviewed {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 .stitch-flag-icon {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--st-surface);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   color: var(--st-muted);
 }
+
+.stitch-flag-icon .material-symbols-outlined { font-size: 12px; }
 
 .stitch-flag-info {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .stitch-flag-top {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .stitch-flag-amount {
   font-family: var(--st-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .stitch-flag-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   flex-wrap: wrap;
+  font-size: 10px;
+  color: var(--st-muted);
 }
 
 .stitch-flag-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
   font-weight: 600;
-  background: color-mix(in srgb, var(--flag-color, #6B6960) 15%, transparent);
+  background: color-mix(in srgb, var(--flag-color, #6B6960) 14%, transparent);
   color: var(--flag-color, #6B6960);
-  border: 1px solid color-mix(in srgb, var(--flag-color, #6B6960) 25%, transparent);
+  border: 1px solid color-mix(in srgb, var(--flag-color, #6B6960) 22%, transparent);
 }
+
+.stitch-flag-badge .material-symbols-outlined { font-size: 11px; }
 
 .stitch-flag-review-btn {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid var(--st-line);
   background: transparent;
@@ -7009,10 +7059,11 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
   cursor: pointer;
   transition: all 0.15s;
 }
+
+.stitch-flag-review-btn .material-symbols-outlined { font-size: 13px; }
 
 .stitch-flag-review-btn:hover {
   border-color: var(--st-primary);
