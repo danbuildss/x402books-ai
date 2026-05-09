@@ -5183,12 +5183,71 @@ button:disabled {
   background: transparent;
   color: var(--st-muted);
   cursor: pointer;
-  font-size: 12px;
-  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 0 9px;
+  letter-spacing: 0.02em;
+  transition: color 120ms ease;
+}
+
+.stitch-range button:hover {
+  color: var(--st-text);
 }
 
 .stitch-range button.active {
   background: var(--st-high);
+  color: var(--st-text);
+}
+
+/* AI Summary card */
+.stitch-ai-summary {
+  margin-bottom: 16px;
+}
+
+.stitch-ai-summary h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stitch-ai-text {
+  margin: 12px 0 0;
+  color: var(--st-text);
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.stitch-ai-loading,
+.stitch-ai-empty {
+  margin: 12px 0 0;
+  color: var(--st-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Transaction note input */
+.stitch-note-input {
+  width: 100%;
+  min-width: 140px;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--st-muted);
+  font-size: 11px;
+  font-family: inherit;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.stitch-note-input:hover {
+  border-color: var(--st-line);
+}
+
+.stitch-note-input:focus {
+  outline: none;
+  border-color: rgba(109, 184, 116, 0.35);
+  background: var(--st-lowest);
   color: var(--st-text);
 }
 

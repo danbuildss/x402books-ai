@@ -20,6 +20,18 @@ import type {
 
 const storageKey = "x402books_active_ledger";
 const recentWalletsKey = "x402books_recent_wallets";
+const notesKey = "x402books_notes";
+
+function readNotes(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(notesKey) || "{}");
+  } catch { return {}; }
+}
+
+function writeNotes(notes: Record<string, string>) {
+  window.localStorage.setItem(notesKey, JSON.stringify(notes));
+}
 
 type StoredLedger = {
   wallet: string;
@@ -151,6 +163,9 @@ export function useLedgerState() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [copied, setCopied] = useState("");
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [aiSummary, setAiSummary] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   useEffect(() => {
     const stored = readStoredLedger();
@@ -162,6 +177,7 @@ export function useLedgerState() {
       setLedger(emptyLedger("30d"));
     }
     setRecentWallets(readRecentWallets());
+    setNotes(readNotes());
 
     // Load wallet saved to this account on the server
     fetch("/api/user/wallet")
@@ -267,6 +283,24 @@ export function useLedgerState() {
           ? `Scan complete: ${nextLedger.transactions.length} USDC transfers found.`
           : "Scan complete: no Base USDC transfers found in this range.",
       );
+      // Auto-generate AI summary if transactions found
+      if (nextLedger.transactions.length > 0) {
+        setIsGeneratingSummary(true);
+        fetch("/api/ai-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wallet: nextLedger.wallet,
+            range: nextLedger.range,
+            summary: nextLedger.summary,
+            categories: nextLedger.categories,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => { if (d.summary) setAiSummary(d.summary); })
+          .catch(() => {})
+          .finally(() => setIsGeneratingSummary(false));
+      }
       return nextLedger;
     } catch {
       setError("Could not scan this wallet right now.");
@@ -338,6 +372,33 @@ export function useLedgerState() {
     writeStoredLedger(nextLedger);
   }
 
+  function updateNote(txHash: string, note: string) {
+    const next = { ...notes, [txHash]: note };
+    setNotes(next);
+    writeNotes(next);
+  }
+
+  async function generateAiSummary() {
+    if (!activeLedger.wallet || !activeLedger.transactions.length) return;
+    setIsGeneratingSummary(true);
+    try {
+      const res = await fetch("/api/ai-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet: activeLedger.wallet,
+          range,
+          summary,
+          categories,
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) setAiSummary(data.summary);
+    } catch { /* silent */ } finally {
+      setIsGeneratingSummary(false);
+    }
+  }
+
   async function copyText(value: string, label = value) {
     if (!value || value.includes("0x...")) {
       setError("Scan a wallet before copying this value.");
@@ -377,9 +438,14 @@ export function useLedgerState() {
     status,
     copied,
     hasLedger: Boolean(activeLedger.wallet),
+    notes,
+    aiSummary,
+    isGeneratingSummary,
     scanWallet,
     categorizeTransactions,
     updateCategory,
+    updateNote,
+    generateAiSummary,
     exportCsv: () => exportCsv(transactions),
     copyText,
   };

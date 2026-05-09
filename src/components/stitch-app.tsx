@@ -278,6 +278,10 @@ export function StitchWalletPill({ wallet, onCopy }: { wallet: string; onCopy: (
 
 // ---- Date range ----
 
+const RANGE_LABELS: Record<TimeRange, string> = {
+  "7d": "7d", "14d": "14d", "30d": "30d", "90d": "90d",
+};
+
 export function StitchRange({
   value,
   onChange,
@@ -287,17 +291,51 @@ export function StitchRange({
 }) {
   return (
     <div className="stitch-range">
-      {(["7d", "30d"] as const).map((range) => (
+      {(["7d", "14d", "30d", "90d"] as TimeRange[]).map((range) => (
         <button
           className={value === range ? "active" : ""}
           key={range}
           type="button"
           onClick={() => onChange(range)}
         >
-          {range === "7d" ? "Last 7 days" : "Last 30 days"}
+          {RANGE_LABELS[range]}
         </button>
       ))}
     </div>
+  );
+}
+
+// ---- AI Summary card ----
+
+export function StitchAiSummary({
+  summary,
+  isLoading,
+  onRefresh,
+}: {
+  summary: string;
+  isLoading: boolean;
+  onRefresh: () => void;
+}) {
+  return (
+    <section className="stitch-card stitch-ai-summary">
+      <div className="stitch-card-head">
+        <h3>
+          <StitchIcon name="auto_awesome" />
+          AI Insight
+        </h3>
+        <button type="button" className="stitch-button" onClick={onRefresh} disabled={isLoading}
+          style={{ fontSize: "11px", minHeight: "26px", padding: "0 10px" }}>
+          {isLoading ? "Generating…" : "Refresh"}
+        </button>
+      </div>
+      {isLoading ? (
+        <p className="stitch-ai-loading">Analysing your transactions…</p>
+      ) : summary ? (
+        <p className="stitch-ai-text">{summary}</p>
+      ) : (
+        <p className="stitch-ai-empty">Scan a wallet to generate an AI financial summary.</p>
+      )}
+    </section>
   );
 }
 
@@ -662,11 +700,15 @@ export function StitchTransactionsTable({
   transactions,
   onSelect,
   onCategoryChange,
+  notes = {},
+  onNoteChange,
   compact = false,
 }: {
   transactions: LedgerTransaction[];
   onSelect?: (tx: LedgerTransaction) => void;
   onCategoryChange?: (txHash: string, category: LedgerCategory) => void;
+  notes?: Record<string, string>;
+  onNoteChange?: (txHash: string, note: string) => void;
   compact?: boolean;
 }) {
   return (
@@ -681,6 +723,7 @@ export function StitchTransactionsTable({
             <th style={{ textAlign: "right" }}>Amount</th>
             <th>{compact ? "Time" : "Timestamp"}</th>
             {!compact && <th>Confidence</th>}
+            {!compact && onNoteChange && <th>Note</th>}
           </tr>
         </thead>
         <tbody>
@@ -714,6 +757,18 @@ export function StitchTransactionsTable({
               <td style={{ color: "var(--st-muted)", fontSize: "12px" }}>{relativeTime(tx.timestamp)}</td>
               {!compact && (
                 <td style={{ color: "var(--st-muted)", fontSize: "12px" }}>{tx.confidenceScore ?? 0}%</td>
+              )}
+              {!compact && onNoteChange && (
+                <td onClick={(e) => e.stopPropagation()}>
+                  <input
+                    className="stitch-note-input"
+                    type="text"
+                    placeholder="Add note…"
+                    value={notes[tx.txHash] ?? ""}
+                    onChange={(e) => onNoteChange(tx.txHash, e.target.value)}
+                    maxLength={120}
+                  />
+                </td>
               )}
             </tr>
           ))}

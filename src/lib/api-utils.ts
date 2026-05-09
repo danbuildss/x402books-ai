@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { TimeRange, isValidWalletAddress } from "@/lib/ledger";
 
-export const VALID_RANGES = new Set(["7d", "30d"]);
+export const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
 
 export function parseLedgerParams(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -20,7 +20,7 @@ export function parseLedgerParams(request: Request) {
   if (!VALID_RANGES.has(range)) {
     return {
       error: NextResponse.json(
-        { error: "Range must be 7d or 30d." },
+        { error: "Range must be 7d, 14d, 30d, or 90d." },
         { status: 400 },
       ),
     };

@@ -2,6 +2,7 @@
 
 import { FormEvent } from "react";
 import {
+  StitchAiSummary,
   StitchDonut,
   StitchEmpty,
   StitchHeader,
@@ -82,6 +83,12 @@ export default function DashboardPage() {
           tone="blue"
         />
       </section>
+
+      <StitchAiSummary
+        summary={ledger.aiSummary}
+        isLoading={ledger.isGeneratingSummary}
+        onRefresh={ledger.generateAiSummary}
+      />
 
       <section className="stitch-two-grid">
         <StitchLineChart flows={ledger.dailyFlows} />

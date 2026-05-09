@@ -1,4 +1,4 @@
-export type TimeRange = "7d" | "30d";
+export type TimeRange = "7d" | "14d" | "30d" | "90d";
 
 export type LedgerTransaction = {
   txHash: string;
@@ -91,9 +91,12 @@ export function isValidWalletAddress(address: string) {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 }
 
+export function getRangeDays(range: TimeRange): number {
+  return range === "7d" ? 7 : range === "14d" ? 14 : range === "90d" ? 90 : 30;
+}
+
 export function getRangeStart(range: TimeRange) {
-  const days = range === "7d" ? 7 : 30;
-  return Date.now() - days * 24 * 60 * 60 * 1000;
+  return Date.now() - getRangeDays(range) * 24 * 60 * 60 * 1000;
 }
 
 export function getLedgerSummary(transactions: LedgerTransaction[]): LedgerSummary {
@@ -347,7 +350,7 @@ export function getCategorySummary(transactions: LedgerTransaction[]) {
 }
 
 export function getDailyFlows(transactions: LedgerTransaction[], range: TimeRange) {
-  const days = range === "7d" ? 7 : 30;
+  const days = getRangeDays(range);
   const flows = new Map<string, DailyFlow>();
 
   for (let index = days - 1; index >= 0; index -= 1) {
@@ -384,7 +387,7 @@ export function getLedgerReport(params: {
   const categories = getCategorySummary(params.transactions);
   const topCategory = categories[0]?.label || "Unknown";
   const topCounterparty = params.summary.topCounterparties[0]?.address || "No counterparty yet";
-  const rangeLabel = params.range === "7d" ? "7-day" : "30-day";
+  const rangeLabel = { "7d": "7-day", "14d": "14-day", "30d": "30-day", "90d": "90-day" }[params.range] ?? "30-day";
   const budgetStatus =
     params.summary.netFlow >= 0
       ? "healthy"
