@@ -35,13 +35,18 @@ const INFRA = [
   {
     name: "Base",
     logo: (
-      <img src="/logos/base.png" alt="Base" width={22} height={22} style={{ objectFit: "contain" }} />
+      <svg width="22" height="22" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <rect width="100" height="100" rx="22" fill="#2200FF"/>
+      </svg>
     ),
   },
   {
     name: "Privy",
     logo: (
-      <img src="/logos/privy.png" alt="Privy" width={22} height={22} style={{ objectFit: "contain", filter: "var(--lp-infra-filter)" }} />
+      <svg width="22" height="22" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <circle cx="50" cy="44" r="36" fill="#080B0A"/>
+        <ellipse cx="50" cy="90" rx="22" ry="7" fill="#080B0A" opacity="0.45"/>
+      </svg>
     ),
   },
   {
@@ -153,7 +158,6 @@ export default function HomePage() {
       <header className="lp-header">
         <a href="/" className="lp-brand">
           <Logo />
-          <span>x402Books AI</span>
         </a>
         <nav className="lp-nav" aria-label="Main navigation">
           <ScrollLink targetId="how">How it works</ScrollLink>
@@ -415,7 +419,6 @@ export default function HomePage() {
           <div className="lp-footer-brand">
             <a href="/" className="lp-brand lp-brand-sm">
               <Logo />
-              <span>x402Books AI</span>
             </a>
             <p>Onchain financial intelligence for Base USDC.</p>
             <p className="lp-footer-builder">

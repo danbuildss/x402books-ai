@@ -7,7 +7,6 @@ export default function DocsPage() {
       <header className="pub-report-header">
         <a href="/" className="pub-report-brand">
           <Logo />
-          <span>x402Books AI</span>
         </a>
       </header>
       <div className="pub-report-body">
