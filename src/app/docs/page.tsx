@@ -1,14 +1,8 @@
 import Link from "next/link";
-import { Logo } from "@/components/logo";
 
 export default function DocsPage() {
   return (
     <main className="pub-report-page">
-      <header className="pub-report-header">
-        <a href="/" className="pub-report-brand">
-          <Logo />
-        </a>
-      </header>
       <div className="pub-report-body">
         <div className="pub-report-hero" style={{ maxWidth: "560px" }}>
           <div>
@@ -18,12 +12,12 @@ export default function DocsPage() {
               Full API reference, agent JSON schema, and integration guides are being prepared. Drop by on X or Telegram for early access.
             </p>
           </div>
-          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "24px" }}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "24px", alignItems: "center" }}>
             <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="pub-report-btn primary">
               @x402Books on X
             </a>
             <Link href="/" className="pub-report-btn">
-              Back to Home
+              ← Back to Home
             </Link>
           </div>
         </div>

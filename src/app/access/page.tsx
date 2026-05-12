@@ -56,7 +56,6 @@ function AccessForm() {
       <section className="access-card">
         <div className="access-brand">
           <Logo />
-          <span>x402Books AI</span>
         </div>
 
         {showSpinner && (
@@ -66,9 +65,7 @@ function AccessForm() {
               <p>Just a moment while we set up your account.</p>
             </div>
             <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
-              <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite", fontSize: "28px", color: "#6DB874" }}>
-                ⟳
-              </span>
+              <span className="access-spinner" aria-label="Loading" />
             </div>
           </>
         )}
@@ -81,13 +78,13 @@ function AccessForm() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <button className="access-privy-btn" onClick={login} disabled={!ready}>
-                <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "4px" }} />
+                <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "5px" }} />
                 Continue with Email or X
               </button>
             </div>
-            {error && <p className="form-message error">{error}</p>}
+            {error && <p className="access-error">{error}</p>}
             <div className="access-footer">
-              <a href="/" style={{ color: "#6B6960", fontSize: "13px" }}>← Back to home</a>
+              <a href="/">← Back to home</a>
             </div>
           </>
         )}
