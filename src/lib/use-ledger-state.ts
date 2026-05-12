@@ -18,6 +18,19 @@ import type {
   TimeRange,
 } from "@/lib/ledger";
 
+async function resolveEns(name: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.ensideas.com/ens/resolve/${encodeURIComponent(name)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.address === "string" && isValidWalletAddress(data.address)
+      ? data.address
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 const storageKey = "x402books_active_ledger";
 const recentWalletsKey = "x402books_recent_wallets";
 const notesKey = "x402books_notes";
@@ -236,10 +249,26 @@ export function useLedgerState() {
   );
 
   async function scanWallet(nextWallet = walletInput, nextRange = range) {
-    const wallet = nextWallet.trim();
+    let wallet = nextWallet.trim();
+
     if (!isValidWalletAddress(wallet)) {
-      setError("Enter a valid Base wallet address.");
-      return null;
+      if (/\.eth$/i.test(wallet)) {
+        setIsLoading(true);
+        setError("");
+        setStatus("Resolving ENS name…");
+        const resolved = await resolveEns(wallet);
+        if (!resolved) {
+          setIsLoading(false);
+          setError("Could not resolve this ENS name. Try pasting the 0x address directly.");
+          setStatus("");
+          return null;
+        }
+        wallet = resolved;
+        setWalletInput(resolved);
+      } else {
+        setError("Enter a valid Base wallet address or ENS name.");
+        return null;
+      }
     }
 
     setIsLoading(true);

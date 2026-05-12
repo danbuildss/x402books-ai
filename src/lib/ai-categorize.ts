@@ -80,49 +80,49 @@ export async function categorizeWithAi(transactions: LedgerTransaction[]) {
 
   const client = new Anthropic({ apiKey });
 
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 4096,
-    system:
-      "You are x402Books AI, an accounting assistant for Base USDC microtransactions and AI-agent payments. " +
-      "Return a strict JSON array only — no prose, no markdown fences. " +
-      "Each element must have: tx_hash, direction, category, memo (≤12 words), confidence (0-100), tax_note (≤20 words), risk_flag. " +
-      "Valid categories: api_call, data_access, compute, agent_service, subscription, income, refund, internal_transfer, unknown. " +
-      "Valid risk_flags: none, duplicate, unusual_amount, high_frequency, unknown_counterparty. " +
-      "Do not invent facts. Use unknown when unsure. Prefer conservative accounting labels.",
-    messages: [
-      {
-        role: "user",
-        content: JSON.stringify(compactTransactions),
-      },
-    ],
-  });
+  try {
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4096,
+      system:
+        "You are x402Books AI, an accounting assistant for Base USDC microtransactions and AI-agent payments. " +
+        "Return a strict JSON array only — no prose, no markdown fences. " +
+        "Each element must have: tx_hash, direction, category, memo (≤12 words), confidence (0-100), tax_note (≤20 words), risk_flag. " +
+        "Valid categories: api_call, data_access, compute, agent_service, subscription, income, refund, internal_transfer, unknown. " +
+        "Valid risk_flags: none, duplicate, unusual_amount, high_frequency, unknown_counterparty. " +
+        "Do not invent facts. Use unknown when unsure. Prefer conservative accounting labels.",
+      messages: [
+        {
+          role: "user",
+          content: JSON.stringify(compactTransactions),
+        },
+      ],
+    });
 
-  const content = message.content[0]?.type === "text" ? message.content[0].text : null;
+    const content = message.content[0]?.type === "text" ? message.content[0].text : null;
 
-  if (!content) {
-    throw new Error("AI categorization returned no content.");
+    if (!content) {
+      return { provider: "rules", transactions: enrichLedgerTransactions(transactions) };
+    }
+
+    const results = parseJsonArray(content).map(sanitizeAiResult);
+    const resultsByHash = new Map(results.map((result) => [result.tx_hash, result]));
+
+    return {
+      provider: "claude",
+      transactions: transactions.map((transaction) => {
+        const result = resultsByHash.get(transaction.txHash);
+        if (!result) return transaction;
+        return {
+          ...transaction,
+          category: result.category,
+          confidenceScore: result.confidence,
+          memo: result.memo,
+          riskFlag: result.risk_flag,
+        } satisfies LedgerTransaction;
+      }),
+    };
+  } catch {
+    return { provider: "rules", transactions: enrichLedgerTransactions(transactions) };
   }
-
-  const results = parseJsonArray(content).map(sanitizeAiResult);
-  const resultsByHash = new Map(results.map((result) => [result.tx_hash, result]));
-
-  return {
-    provider: "claude",
-    transactions: transactions.map((transaction) => {
-      const result = resultsByHash.get(transaction.txHash);
-
-      if (!result) {
-        return transaction;
-      }
-
-      return {
-        ...transaction,
-        category: result.category,
-        confidenceScore: result.confidence,
-        memo: result.memo,
-        riskFlag: result.risk_flag,
-      } satisfies LedgerTransaction;
-    }),
-  };
 }
