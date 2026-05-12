@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/logo";
 
 const NAV_GROUPS = [
   {
@@ -177,11 +176,7 @@ export default function DocsPage() {
       <header className="docs-header">
         <div className="docs-header-inner">
           <div className="docs-header-left">
-            <a href="/" className="docs-brand">
-              <Logo />
-            </a>
-            <span className="docs-sep">/</span>
-            <span className="docs-header-label">Documentation</span>
+            <span className="docs-header-title">Documentation</span>
           </div>
           <div className="docs-header-right">
             <div className="docs-version-pill">v1 · Live</div>

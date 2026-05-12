@@ -381,7 +381,9 @@ export default function HomePage() {
           {FEATURES.map((f, i) => (
             <FadeContent key={f.title} delay={i * 60}>
               <div className="lp-feature-card">
-                <span className="lp-feature-icon material-symbols-outlined">{f.icon}</span>
+                <span className="lp-feature-icon">
+                  <span className="material-symbols-outlined">{f.icon}</span>
+                </span>
                 <h3>{f.title}</h3>
                 <p>{f.body}</p>
               </div>
