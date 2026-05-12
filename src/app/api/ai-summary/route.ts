@@ -2,12 +2,35 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { LedgerSummary, CategorySummary, TimeRange } from "@/lib/ledger";
 
-export async function POST(request: Request) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI summary not available." }, { status: 503 });
-  }
+function buildFallbackSummary(
+  wallet: string,
+  range: string,
+  summary: LedgerSummary,
+  categories: CategorySummary[],
+): string {
+  const top = categories[0];
+  const x402Note =
+    summary.likelyX402Count > 0
+      ? `${summary.likelyX402Count} likely x402 agent payments detected.`
+      : "No x402 agent payments detected.";
+  const flowNote =
+    summary.netFlow >= 0
+      ? `Net flow is positive at +$${summary.netFlow.toFixed(2)} USDC.`
+      : `Net flow is negative at -$${Math.abs(summary.netFlow).toFixed(2)} USDC — spending exceeds income.`;
+  const categoryNote = top
+    ? `${top.label} is the leading spend category at $${top.totalUsdc.toFixed(2)} USDC across ${top.count} transactions.`
+    : "";
+  return [
+    `This wallet recorded ${summary.transactionCount} USDC transfers over the ${range} period.`,
+    flowNote,
+    x402Note,
+    categoryNote,
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
 
+export async function POST(request: Request) {
   const body = await request.json();
   const { wallet, range, summary, categories } = body as {
     wallet: string;
@@ -17,7 +40,19 @@ export async function POST(request: Request) {
   };
 
   const rangeLabel = { "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days" }[range] ?? "30 days";
-  const topCats = categories.slice(0, 3).map((c) => `${c.label} ($${c.totalUsdc.toFixed(2)} USDC)`).join(", ");
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({
+      summary: buildFallbackSummary(wallet, rangeLabel, summary, categories),
+      provider: "rules",
+    });
+  }
+
+  const topCats = categories
+    .slice(0, 3)
+    .map((c) => `${c.label} ($${c.totalUsdc.toFixed(2)} USDC, ${c.count} tx)`)
+    .join(", ");
 
   const prompt = `You are x402Books AI, a financial analyst for onchain Base USDC activity.
 
@@ -33,15 +68,22 @@ Budget status: ${summary.netFlow >= 0 ? "healthy" : summary.totalSpend > summary
 
 Write a concise 2-3 sentence financial summary for this wallet. Be specific with numbers. Mention x402 agent payments if present. End with one actionable insight. Plain text only — no markdown, no headers.`;
 
-  const client = new Anthropic({ apiKey });
-  const message = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 256,
-    messages: [{ role: "user", content: prompt }],
-  });
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 256,
+      messages: [{ role: "user", content: prompt }],
+    });
 
-  const text = message.content[0]?.type === "text" ? message.content[0].text.trim() : null;
-  if (!text) return NextResponse.json({ error: "No summary generated." }, { status: 500 });
+    const text = message.content[0]?.type === "text" ? message.content[0].text.trim() : null;
+    if (!text) throw new Error("empty response");
 
-  return NextResponse.json({ summary: text });
+    return NextResponse.json({ summary: text, provider: "claude" });
+  } catch {
+    return NextResponse.json({
+      summary: buildFallbackSummary(wallet, rangeLabel, summary, categories),
+      provider: "rules",
+    });
+  }
 }

@@ -102,13 +102,79 @@ export default function CategoriesPage() {
         </section>
       )}
 
-      <section className="stitch-card stitch-insight">
-        <span>AI</span>
-        <div>
-          <h3>Category Insights</h3>
-          <p>{ledger.hasLedger ? ledger.report.narrative : "Insights appear after a wallet scan."}</p>
-        </div>
-      </section>
+      {ledger.hasLedger && (
+        <section className="stitch-card stitch-cat-insight">
+          <div className="stitch-cat-insight-head">
+            <h3>
+              <span className="material-symbols-outlined" style={{ fontSize: "15px", color: "var(--st-primary)" }}>auto_awesome</span>
+              Category Insights
+            </h3>
+            <span className={`stitch-budget-badge ${ledger.report.budgetStatus}`}>
+              <span className="stitch-budget-dot" />
+              {ledger.report.budgetStatus === "healthy" ? "Healthy" : ledger.report.budgetStatus === "watch" ? "Watch" : "Overspending"}
+            </span>
+          </div>
+
+          <div className="stitch-cat-insight-stats">
+            <div className="stitch-cat-insight-stat">
+              <span>Transactions</span>
+              <strong>{ledger.summary.transactionCount}</strong>
+            </div>
+            <div className="stitch-cat-insight-stat">
+              <span>x402 payments</span>
+              <strong style={{ color: ledger.summary.likelyX402Count > 0 ? "var(--st-primary)" : "var(--st-muted)" }}>
+                {ledger.summary.likelyX402Count}
+              </strong>
+            </div>
+            <div className="stitch-cat-insight-stat">
+              <span>Net flow</span>
+              <strong style={{ color: ledger.summary.netFlow >= 0 ? "var(--st-green)" : "var(--st-red)" }}>
+                {ledger.summary.netFlow >= 0 ? "+" : ""}{formatUsdc(ledger.summary.netFlow)} USDC
+              </strong>
+            </div>
+            <div className="stitch-cat-insight-stat">
+              <span>Top category</span>
+              <strong>{ledger.report.topCategory}</strong>
+            </div>
+          </div>
+
+          {ledger.categories.length > 0 && (
+            <div className="stitch-cat-insight-bars">
+              <p className="stitch-cat-insight-label">Top spend categories</p>
+              {ledger.categories.slice(0, 3).map((cat) => {
+                const maxUsdc2 = ledger.categories[0]?.totalUsdc || 1;
+                const pct = (cat.totalUsdc / maxUsdc2) * 100;
+                return (
+                  <div key={cat.category} className="stitch-cat-insight-bar-row">
+                    <span className={`stitch-chip ${cat.category}`} style={{ fontSize: "10px", padding: "2px 7px" }}>{cat.label}</span>
+                    <div className="stitch-cat-bar-track" style={{ flex: 1 }}>
+                      <div className="stitch-cat-bar-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span style={{ fontFamily: "var(--st-mono)", fontSize: "12px", color: "var(--st-text)", minWidth: "80px", textAlign: "right" }}>
+                      {formatUsdc(cat.totalUsdc)} USDC
+                    </span>
+                    <span style={{ fontSize: "11px", color: "var(--st-muted)", minWidth: "36px", textAlign: "right" }}>
+                      {cat.count} tx
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <p className="stitch-cat-insight-narrative">{ledger.report.narrative}</p>
+        </section>
+      )}
+
+      {!ledger.hasLedger && (
+        <section className="stitch-card stitch-insight">
+          <span>AI</span>
+          <div>
+            <h3>Category Insights</h3>
+            <p>Insights appear after a wallet scan.</p>
+          </div>
+        </section>
+      )}
     </StitchShell>
   );
 }

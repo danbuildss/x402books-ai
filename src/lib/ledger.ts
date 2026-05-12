@@ -402,9 +402,26 @@ export function getLedgerReport(params: {
     likelyX402Count: params.summary.likelyX402Count,
     topCounterparty,
     budgetStatus,
-    narrative:
-      params.summary.transactionCount === 0
-        ? "No Base USDC activity found in this range."
-        : `This wallet shows ${params.summary.transactionCount} USDC transfers, ${params.summary.likelyX402Count} likely x402 payments, and ${topCategory.toLowerCase()} as the leading category.`,
+    narrative: (() => {
+      if (params.summary.transactionCount === 0) return "No Base USDC activity found in this range.";
+      const flowNote =
+        params.summary.netFlow >= 0
+          ? `Net flow is positive at +$${params.summary.netFlow.toFixed(2)} USDC.`
+          : `Net flow is negative at -$${Math.abs(params.summary.netFlow).toFixed(2)} USDC — spending exceeds income.`;
+      const x402Note =
+        params.summary.likelyX402Count > 0
+          ? `${params.summary.likelyX402Count} likely x402 agent payments detected.`
+          : "No x402 payments detected in this range.";
+      const topCat = categories[0];
+      const catNote = topCat
+        ? `${topCat.label} is the leading spend category at $${topCat.totalUsdc.toFixed(2)} USDC across ${topCat.count} transactions.`
+        : "";
+      return [
+        `${params.summary.transactionCount} USDC transfers recorded in the ${rangeLabel.toLowerCase()} period.`,
+        flowNote,
+        x402Note,
+        catNote,
+      ].filter(Boolean).join(" ");
+    })(),
   } satisfies LedgerReport;
 }

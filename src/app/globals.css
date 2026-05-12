@@ -3585,6 +3585,144 @@ iframe[src*="privy"] { display: none !important; }
   stroke-linejoin: round;
 }
 
+/* ---- Rich Category Insights card ---- */
+.stitch-cat-insight {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  border-left: 3px solid var(--st-primary) !important;
+}
+
+.stitch-cat-insight-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stitch-cat-insight-head h3 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--st-primary);
+  margin: 0;
+}
+
+.stitch-budget-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stitch-budget-badge.healthy {
+  background: rgba(109,184,116,0.1);
+  color: var(--st-green);
+  border: 1px solid rgba(109,184,116,0.2);
+}
+
+.stitch-budget-badge.watch {
+  background: rgba(255,196,0,0.1);
+  color: #f0b429;
+  border: 1px solid rgba(255,196,0,0.2);
+}
+
+.stitch-budget-badge.negative {
+  background: rgba(255,100,100,0.1);
+  color: var(--st-red);
+  border: 1px solid rgba(255,100,100,0.2);
+}
+
+.stitch-budget-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.stitch-cat-insight-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--st-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.stitch-cat-insight-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--st-surface);
+}
+
+.stitch-cat-insight-stat span {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--st-muted);
+}
+
+.stitch-cat-insight-stat strong {
+  font-family: var(--st-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--st-text);
+}
+
+.stitch-cat-insight-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stitch-cat-insight-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--st-muted);
+  margin: 0 0 4px;
+}
+
+.stitch-cat-insight-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stitch-cat-insight-narrative {
+  font-size: 13px;
+  color: var(--st-muted);
+  line-height: 1.65;
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid var(--st-line);
+}
+
+@media (max-width: 600px) {
+  .stitch-cat-insight-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stitch-cat-insight-bar-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* ---- Legacy insight card ---- */
 .stitch-insight {
   display: grid;
   grid-template-columns: auto 1fr;
