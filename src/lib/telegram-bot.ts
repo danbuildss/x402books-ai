@@ -1,6 +1,5 @@
 import { buildLedgerScan } from "@/lib/ledger-service";
-import { categorizeWithAi } from "@/lib/ai-categorize";
-import { isValidWalletAddress, getCategorySummary, type TimeRange } from "@/lib/ledger";
+import { isValidWalletAddress, type TimeRange } from "@/lib/ledger";
 
 const APP_URL = "https://x402books.xyz";
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
@@ -184,32 +183,22 @@ async function cmdScan(chatId: number, arg: string) {
   const { address } = parsed;
   const placeholder = await send(
     chatId,
-    `🔍 Scanning <code>${short(address)}</code> · ${range}\n<i>Running AI categorization…</i>`,
+    `🔍 Scanning <code>${short(address)}</code> · ${range}…`,
   );
   const msgId = placeholder.result?.message_id;
 
   try {
     const scan = await buildLedgerScan({ wallet: address, range, persist: true });
 
-    // AI categorization — falls back to rule-based silently if Claude fails
-    let aiProvider = "rules";
-    const categorized =
-      scan.transactions.length > 0
-        ? await categorizeWithAi(scan.transactions)
-        : { provider: "rules", transactions: scan.transactions };
-    aiProvider = categorized.provider;
-
-    const categories = getCategorySummary(categorized.transactions);
     const s = scan.summary;
-    const top = categories.slice(0, 3);
-    const aiLabel = aiProvider === "claude" ? "🤖 AI" : "📋 Rules";
+    const top = scan.categories.slice(0, 3);
 
     const catBlock = top.length
       ? top.map((c) => `  • ${c.label.padEnd(16)} <b>${fmt(c.totalUsdc)}</b>  ${c.count} tx`).join("\n")
       : "  No categories yet";
 
     const text = [
-      `🔍 <b>Wallet Scan · ${range}</b>  ${aiLabel}`,
+      `🔍 <b>Wallet Scan · ${range}</b>`,
       `<code>${address}</code>`,
       ``,
       `💰 Income     <b>${sign(s.totalIncome)}${fmt(s.totalIncome)} USDC</b>`,

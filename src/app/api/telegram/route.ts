@@ -11,11 +11,11 @@ const BOT_COMMANDS = [
 
 // Webhook receiver — Telegram POSTs every update here
 export async function POST(request: Request) {
-  try {
-    const update = await request.json();
-    await handleUpdate(update);
-  } catch {
-    // Always return 200 so Telegram doesn't retry
+  const update = await request.json().catch(() => null);
+  if (update) {
+    // Fire-and-forget: respond 200 immediately so Telegram doesn't retry,
+    // giving the function the full execution budget for the scan.
+    handleUpdate(update).catch(() => {});
   }
   return NextResponse.json({ ok: true });
 }
