@@ -1,5 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { Logo } from "@/components/logo";
-import { FadeContent, TextType } from "@/components/effects";
+import { FadeContent, TextType, ThemeToggle } from "@/components/effects";
 import { ScrollLink } from "@/components/scroll-link";
 import Link from "next/link";
 
@@ -21,10 +24,60 @@ const STEPS = [
 
 const TRUST_ITEMS = [
   { label: "Base USDC", sub: "Native chain support" },
+  { label: "x402", sub: "Protocol native" },
   { label: "AI-Powered", sub: "Claude Haiku engine" },
   { label: "4 Ranges", sub: "7d · 14d · 30d · 90d" },
   { label: "PDF + CSV", sub: "One-click exports" },
   { label: "Open Access", sub: "No login to view reports" },
+];
+
+const INFRA = [
+  {
+    name: "Base",
+    logo: (
+      <img src="/logos/base.png" alt="Base" width={22} height={22} style={{ objectFit: "contain" }} />
+    ),
+  },
+  {
+    name: "Privy",
+    logo: (
+      <img src="/logos/privy.png" alt="Privy" width={22} height={22} style={{ objectFit: "contain", filter: "var(--lp-infra-filter)" }} />
+    ),
+  },
+  {
+    name: "Anthropic",
+    logo: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M13.827 3.52h3.603L24 20h-3.603l-6.57-16.48zm-6.994 0H10.437l6.57 16.48H13.403l-1.28-3.282H5.247L3.967 20H.364l6.47-16.48zm3.364 4.823L8.197 13.49h3.985l-2.09-5.147z"/>
+      </svg>
+    ),
+  },
+  {
+    name: "Supabase",
+    logo: (
+      <svg width="22" height="22" viewBox="0 0 109 113" fill="none" aria-hidden="true">
+        <path d="M63.708 110.284c-2.86 3.601-8.658 1.628-8.727-2.97l-1.007-67.251h45.22c8.19 0 12.758 9.46 7.665 15.874L63.708 110.284z" fill="url(#sb1)"/>
+        <path d="M63.708 110.284c-2.86 3.601-8.658 1.628-8.727-2.97l-1.007-67.251h45.22c8.19 0 12.758 9.46 7.665 15.874L63.708 110.284z" fill="url(#sb2)" fillOpacity=".2"/>
+        <path d="M45.317 2.071C48.176-1.53 53.974.443 54.044 5.041l.652 67.251H9.475c-8.19 0-12.758-9.46-7.665-15.875L45.317 2.071z" fill="#3ECF8E"/>
+        <defs>
+          <linearGradient id="sb1" x1="53.974" y1="54.974" x2="94.163" y2="71.829" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#249361"/><stop offset="1" stopColor="#3ECF8E"/>
+          </linearGradient>
+          <linearGradient id="sb2" x1="36.156" y1="30.578" x2="54.484" y2="65.081" gradientUnits="userSpaceOnUse">
+            <stop/><stop offset="1" stopOpacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    ),
+  },
+  {
+    name: "Vercel",
+    logo: (
+      <svg width="22" height="22" viewBox="0 0 116 100" fill="currentColor" aria-hidden="true">
+        <path d="M57.5 0L115 100H0L57.5 0z"/>
+      </svg>
+    ),
+  },
 ];
 
 const SOCIAL = [
@@ -32,7 +85,7 @@ const SOCIAL = [
     href: "https://x.com/x402Books",
     label: "X (Twitter)",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.255 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z" />
       </svg>
     ),
@@ -41,7 +94,7 @@ const SOCIAL = [
     href: "https://t.me/x402books",
     label: "Telegram",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
       </svg>
     ),
@@ -50,12 +103,48 @@ const SOCIAL = [
     href: "https://github.com/danbuildss/x402books-ai",
     label: "GitHub",
     icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
       </svg>
     ),
   },
 ];
+
+const FAQ_ITEMS = [
+  {
+    q: "What is x402Books AI?",
+    a: "x402Books AI is a financial intelligence tool for the agent economy. It scans Base wallet activity and turns raw USDC transactions into readable reports, categories, summaries, and exports.",
+  },
+  {
+    q: "Who is x402Books AI built for?",
+    a: "x402Books AI is built for AI agent developers, onchain builders, teams managing agent wallets, and anyone experimenting with x402 or Base payments who needs better visibility into wallet activity.",
+  },
+  {
+    q: "What can I do with x402Books AI V1?",
+    a: "In V1, you can scan any Base wallet, view spend and income, analyze transactions, categorize activity with AI, export PDF/CSV reports, generate agent-ready JSON output, and share public wallet reports.",
+  },
+  {
+    q: "Does x402Books AI control my wallet or funds?",
+    a: "No. x402Books AI is read-only. It analyzes public onchain wallet activity and does not custody funds, request private keys, or move assets from your wallet.",
+  },
+  {
+    q: "What role does $XBOOKS play?",
+    a: "$XBOOKS is the utility token for the x402Books ecosystem. It is designed to unlock premium features, discounted API usage, advanced reports, deep scans, and future agent-facing financial intelligence services.",
+  },
+];
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className={`lp-faq-item${open ? " open" : ""}`}>
+      <button type="button" className="lp-faq-q" onClick={() => setOpen((v) => !v)}>
+        <span>{q}</span>
+        <span className="lp-faq-icon" aria-hidden="true">{open ? "−" : "+"}</span>
+      </button>
+      {open && <p className="lp-faq-a">{a}</p>}
+    </div>
+  );
+}
 
 export default function HomePage() {
   return (
@@ -69,7 +158,8 @@ export default function HomePage() {
         <nav className="lp-nav" aria-label="Main navigation">
           <ScrollLink targetId="how">How it works</ScrollLink>
           <ScrollLink targetId="features">Features</ScrollLink>
-          <ScrollLink targetId="preview">Preview</ScrollLink>
+          <ScrollLink targetId="faq">FAQ</ScrollLink>
+          <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
           <div className="lp-social-icons">
@@ -79,6 +169,7 @@ export default function HomePage() {
               </a>
             ))}
           </div>
+          <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost">Sign In</Link>
           <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
         </div>
@@ -88,6 +179,10 @@ export default function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
+            <div className="lp-v1-badge">
+              <span className="lp-v1-dot" />
+              v1 is live
+            </div>
             <p className="lp-eyebrow">Onchain Financial Intelligence · Base USDC</p>
             <h1 className="lp-h1">
               Your onchain ledger,{" "}
@@ -130,10 +225,22 @@ export default function HomePage() {
             <strong className="lp-card-addr">0x7d3f…42f1</strong>
           </div>
           <div className="lp-card-stats">
-            <div><span>Total Income</span><strong className="green">+$91.20</strong></div>
-            <div><span>Total Spend</span><strong className="red">−$42.80</strong></div>
-            <div><span>Net Flow</span><strong className="green">+$48.40</strong></div>
-            <div><span>Transactions</span><strong>128</strong></div>
+            <div>
+              <span>Total Income</span>
+              <strong className="green">+$91.20</strong>
+            </div>
+            <div>
+              <span>Total Spend</span>
+              <strong className="red">−$42.80</strong>
+            </div>
+            <div>
+              <span>Net Flow</span>
+              <strong className="green">+$48.40</strong>
+            </div>
+            <div>
+              <span>Transactions</span>
+              <strong>128</strong>
+            </div>
           </div>
           <div className="lp-card-chart">
             {[38, 62, 44, 78, 50, 70, 55, 82].map((h, i) => (
@@ -163,6 +270,21 @@ export default function HomePage() {
             <span>{t.sub}</span>
           </div>
         ))}
+      </div>
+
+      {/* ── Infrastructure marquee ── */}
+      <div className="lp-infra-strip">
+        <span className="lp-infra-label">Built on</span>
+        <div className="lp-infra-track">
+          <div className="lp-infra-reel">
+            {[...INFRA, ...INFRA].map((item, i) => (
+              <div key={i} className="lp-infra-item">
+                <span className="lp-infra-logo">{item.logo}</span>
+                <span className="lp-infra-name">{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ── How it works ── */}
@@ -259,22 +381,17 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Community ── */}
-      <section className="lp-section lp-section-alt">
+      {/* ── FAQ ── */}
+      <section className="lp-section lp-section-alt" id="faq">
         <FadeContent delay={60}>
           <div className="lp-section-head">
-            <p className="lp-section-label">Community</p>
-            <h2 className="lp-h2">Join the x402Books community.</h2>
-            <p className="lp-section-sub">Follow updates, ask questions, and contribute on GitHub.</p>
+            <p className="lp-section-label">FAQ</p>
+            <h2 className="lp-h2">Common questions.</h2>
           </div>
         </FadeContent>
-        <div className="lp-community-grid">
-          {SOCIAL.map((s) => (
-            <a key={s.href} href={s.href} target="_blank" rel="noreferrer" className="lp-community-card">
-              <span className="lp-community-icon">{s.icon}</span>
-              <strong>{s.label}</strong>
-              <span>{s.href.replace("https://", "")}</span>
-            </a>
+        <div className="lp-faq-list">
+          {FAQ_ITEMS.map((item) => (
+            <FaqItem key={item.q} q={item.q} a={item.a} />
           ))}
         </div>
       </section>
@@ -282,8 +399,12 @@ export default function HomePage() {
       {/* ── CTA ── */}
       <section className="lp-cta-section">
         <FadeContent>
+          <div className="lp-v1-badge" style={{ margin: "0 auto 20px" }}>
+            <span className="lp-v1-dot" />
+            v1 is live
+          </div>
           <h2 className="lp-h2">Ready to read your onchain ledger?</h2>
-          <p>Paste your Base wallet address and get your first report in under 10 seconds.</p>
+          <p>Paste your Base wallet address and get your first report in under 10 seconds. Free, no sign-in required.</p>
           <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Open App — It&apos;s Free</Link>
         </FadeContent>
       </section>
@@ -292,11 +413,15 @@ export default function HomePage() {
       <footer className="lp-footer">
         <div className="lp-footer-top">
           <div className="lp-footer-brand">
-            <a href="/" className="lp-brand">
+            <a href="/" className="lp-brand lp-brand-sm">
               <Logo />
               <span>x402Books AI</span>
             </a>
             <p>Onchain financial intelligence for Base USDC.</p>
+            <p className="lp-footer-builder">
+              Built by{" "}
+              <a href="https://x.com/danbuildss" target="_blank" rel="noreferrer">@danbuildss</a>
+            </p>
             <div className="lp-footer-social">
               {SOCIAL.map((s) => (
                 <a key={s.href} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="lp-social-icon">
@@ -310,14 +435,8 @@ export default function HomePage() {
               <h4>Product</h4>
               <ScrollLink targetId="how">How it works</ScrollLink>
               <ScrollLink targetId="features">Features</ScrollLink>
-              <ScrollLink targetId="preview">Preview</ScrollLink>
-              <Link href="/dashboard">Dashboard</Link>
-            </div>
-            <div>
-              <h4>Connect</h4>
-              <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X @x402Books</a>
-              <a href="https://t.me/x402books" target="_blank" rel="noreferrer">Telegram</a>
-              <a href="https://github.com/danbuildss/x402books-ai" target="_blank" rel="noreferrer">GitHub</a>
+              <ScrollLink targetId="faq">FAQ</ScrollLink>
+              <Link href="/docs">Docs</Link>
             </div>
             <div>
               <h4>App</h4>
@@ -326,11 +445,18 @@ export default function HomePage() {
               <Link href="/categories">Categories</Link>
               <Link href="/reports">Reports</Link>
             </div>
+            <div>
+              <h4>Docs</h4>
+              <Link href="/docs">Overview</Link>
+              <Link href="/docs">API Reference</Link>
+              <Link href="/docs">Agent JSON</Link>
+              <Link href="/docs">Changelog</Link>
+            </div>
           </div>
         </div>
         <div className="lp-footer-bottom">
           <span>© 2026 x402Books AI. All rights reserved.</span>
-          <span>Built on Base · Powered by Claude AI</span>
+          <span>Built on Base · Powered by Claude AI · v1</span>
         </div>
       </footer>
     </div>
