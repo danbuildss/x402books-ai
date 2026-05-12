@@ -6,6 +6,7 @@ import {
   StitchDonut,
   StitchEmpty,
   StitchHeader,
+  StitchIcon,
   StitchLineChart,
   StitchRange,
   StitchScanBar,
@@ -17,9 +18,14 @@ import {
 import { formatUsdc, relativeTime, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
+const RANGE_LABELS: Record<string, string> = {
+  "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days",
+};
+
 export default function DashboardPage() {
   const ledger = useLedgerState();
   const recent = ledger.transactions.slice(0, 6);
+  const hasWallet = Boolean(ledger.wallet);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,7 +36,7 @@ export default function DashboardPage() {
     <StitchShell>
       <StitchHeader
         title="Overview"
-        description={`Financial overview · Last ${{ "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days" }[ledger.range]}`}
+        description={`Financial overview · Last ${RANGE_LABELS[ledger.range] ?? ledger.range}`}
         actions={
           <>
             <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
@@ -52,6 +58,24 @@ export default function DashboardPage() {
         status={ledger.status}
         hasTransactions={ledger.transactions.length > 0}
       />
+
+      {!hasWallet && !ledger.isLoading && (
+        <div className="stitch-onboard">
+          <div className="stitch-onboard-icon">
+            <StitchIcon name="account_balance_wallet" />
+          </div>
+          <h2>Connect your Base wallet to get started.</h2>
+          <p>
+            Paste any Base wallet address above and hit Scan to see your USDC activity,
+            AI-generated insights, category breakdowns, and exportable reports.
+          </p>
+          <div className="stitch-onboard-steps">
+            <span className="stitch-onboard-step"><strong>1</strong> Paste wallet address</span>
+            <span className="stitch-onboard-step"><strong>2</strong> Hit Scan Wallet</span>
+            <span className="stitch-onboard-step"><strong>3</strong> Get your report</span>
+          </div>
+        </div>
+      )}
 
       <section className="stitch-stats-grid">
         <StitchStat
@@ -85,11 +109,13 @@ export default function DashboardPage() {
         />
       </section>
 
-      <StitchAiSummary
-        summary={ledger.aiSummary}
-        isLoading={ledger.isGeneratingSummary}
-        onRefresh={ledger.generateAiSummary}
-      />
+      {hasWallet && (
+        <StitchAiSummary
+          summary={ledger.aiSummary}
+          isLoading={ledger.isGeneratingSummary}
+          onRefresh={ledger.generateAiSummary}
+        />
+      )}
 
       <section className="stitch-two-grid">
         <StitchLineChart flows={ledger.dailyFlows} />
@@ -139,4 +165,3 @@ export default function DashboardPage() {
     </StitchShell>
   );
 }
-

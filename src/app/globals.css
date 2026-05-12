@@ -7183,3 +7183,413 @@ html, body {
 .stitch-flow-dot.income { background: var(--st-green, #6DB874); }
 .stitch-flow-dot.spend  { background: #B85450; }
 
+
+/* ================================================================
+   PUBLIC SHAREABLE REPORT PAGE  (/report/[wallet])
+   ================================================================ */
+
+.pub-report-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0E0F0E;
+  color: #E8E6E1;
+  font-family: var(--font-sans, 'DM Sans', sans-serif);
+}
+
+.pub-report-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 32px;
+  height: 56px;
+  background: rgba(14, 15, 14, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(109, 184, 116, 0.1);
+  flex-wrap: wrap;
+}
+
+.pub-report-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #E8E6E1;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.pub-report-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pub-report-range {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 6px;
+  padding: 2px;
+  border: 1px solid rgba(109,184,116,0.12);
+}
+
+.pub-report-range button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: #6B6960;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pub-report-range button.active {
+  background: #6DB874;
+  color: #0E0F0E;
+  font-weight: 600;
+}
+
+.pub-report-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(109,184,116,0.25);
+  background: transparent;
+  color: #E8E6E1;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pub-report-btn:hover { border-color: #6DB874; color: #6DB874; }
+
+.pub-report-btn.primary {
+  background: #6DB874;
+  border-color: #6DB874;
+  color: #0E0F0E;
+  font-weight: 600;
+}
+
+.pub-report-btn.primary:hover { background: #7fcf87; }
+
+.pub-report-body {
+  flex: 1;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.pub-report-loading,
+.pub-report-error {
+  text-align: center;
+  padding: 60px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #6B6960;
+}
+
+.pub-report-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.pub-report-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6DB874;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
+}
+
+.pub-report-hero h1 {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 10px;
+  font-family: var(--font-serif, Georgia, serif);
+  font-style: italic;
+  color: #E8E6E1;
+}
+
+.pub-report-narrative {
+  font-size: 14px;
+  color: #9CA6A0;
+  line-height: 1.65;
+  margin: 0;
+  max-width: 520px;
+}
+
+.pub-report-wallet-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  background: rgba(21,23,22,0.7);
+  border: 1px solid rgba(109,184,116,0.15);
+  border-radius: 10px;
+  min-width: 200px;
+  flex-shrink: 0;
+}
+
+.pub-report-wallet-badge span { font-size: 11px; color: #6B6960; }
+.pub-report-wallet-badge strong { font-size: 13px; color: #E8E6E1; }
+
+.pub-report-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.pub-report-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  background: rgba(21,23,22,0.7);
+  border: 1px solid rgba(109,184,116,0.12);
+  border-radius: 10px;
+}
+
+.pub-report-stat span {
+  font-size: 11px;
+  color: #6B6960;
+  font-weight: 500;
+}
+
+.pub-report-stat strong {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: monospace;
+  line-height: 1.2;
+}
+
+.pub-report-section {
+  background: rgba(21,23,22,0.7);
+  border: 1px solid rgba(109,184,116,0.12);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.pub-report-section h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: #9CA6A0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 16px;
+}
+
+.pub-report-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pub-report-cat-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 140px;
+  align-items: center;
+  gap: 12px;
+}
+
+.pub-report-cat-label {
+  font-size: 12px;
+  color: #E8E6E1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pub-report-cat-bar-track {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pub-report-cat-bar-fill {
+  height: 100%;
+  background: #6DB874;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.pub-report-cat-amount {
+  font-size: 12px;
+  font-family: monospace;
+  color: #9CA6A0;
+  text-align: right;
+}
+
+.pub-report-footer-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.pub-report-footer-info > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pub-report-footer-info span { font-size: 11px; color: #6B6960; }
+.pub-report-footer-info strong { font-size: 13px; color: #E8E6E1; }
+
+.pub-report-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  border-top: 1px solid rgba(109,184,116,0.08);
+  font-size: 12px;
+  color: #6B6960;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pub-report-footer a { color: #6DB874; text-decoration: none; }
+
+@media (max-width: 640px) {
+  .pub-report-header { padding: 0 16px; height: auto; padding-top: 10px; padding-bottom: 10px; }
+  .pub-report-stats { grid-template-columns: repeat(2, 1fr); }
+  .pub-report-cat-row { grid-template-columns: 120px 1fr 90px; }
+  .pub-report-footer-info { grid-template-columns: 1fr; }
+  .pub-report-body { padding: 24px 16px 40px; }
+}
+
+/* ================================================================
+   MOBILE POLISH — additional rules on top of 768px block
+   ================================================================ */
+
+@media (max-width: 768px) {
+  /* Flags: chips wrap neatly, rows slightly more compact */
+  .stitch-flag-summary { gap: 4px; }
+  .stitch-flag-row { padding: 7px 12px; gap: 8px; }
+
+  /* Categories: single column on mobile */
+  .stitch-cat-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--st-line);
+  }
+  .stitch-cat-amount-col { justify-content: flex-start; }
+
+  /* Reports flow bar legend: wrap */
+  .stitch-flow-bar-legend { flex-wrap: wrap; gap: 8px; }
+
+  /* Public report: cats single col */
+  .pub-report-cat-row { grid-template-columns: 1fr; gap: 4px; }
+  .pub-report-cat-amount { text-align: left; }
+
+  /* Wallet cards: tighter */
+  .stitch-wallet-card { padding: 14px; }
+
+  /* Topbar actions: hide wallet pill text, keep icon */
+  .stitch-wallet-pill-label { display: none; }
+}
+
+/* ================================================================
+   ONBOARDING EMPTY STATE  (dashboard when no wallet scanned)
+   ================================================================ */
+
+.stitch-onboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 24px;
+  gap: 16px;
+  border: 1px dashed rgba(109,184,116,0.2);
+  border-radius: 12px;
+  background: rgba(109,184,116,0.03);
+  margin-bottom: 8px;
+}
+
+.stitch-onboard-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(109,184,116,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #6DB874;
+}
+
+.stitch-onboard h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--st-text);
+  margin: 0;
+  font-family: var(--st-serif);
+  font-style: italic;
+}
+
+.stitch-onboard p {
+  font-size: 13px;
+  color: var(--st-muted);
+  max-width: 380px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.stitch-onboard-steps {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.stitch-onboard-step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: var(--st-surface);
+  border: 1px solid var(--st-line);
+  font-size: 12px;
+  color: var(--st-muted);
+}
+
+.stitch-onboard-step strong {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #6DB874;
+  color: #0E0F0E;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
