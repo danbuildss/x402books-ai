@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Logo } from "@/components/logo";
 import { FadeContent, TextType, ThemeToggle } from "@/components/effects";
 import { ScrollLink } from "@/components/scroll-link";
@@ -152,6 +152,17 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
   return (
     <div className="lp-root">
       {/* ── Header ── */}
@@ -166,7 +177,7 @@ export default function HomePage() {
           <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
-          <div className="lp-social-icons">
+          <div className="lp-social-icons lp-social-icons-desktop">
             {SOCIAL.map((s) => (
               <a key={s.href} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="lp-social-icon">
                 {s.icon}
@@ -174,10 +185,55 @@ export default function HomePage() {
             ))}
           </div>
           <ThemeToggle />
-          <Link href="/access" className="lp-btn-ghost">Sign In</Link>
+          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
           <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+          <button
+            type="button"
+            className="lp-hamburger"
+            aria-label="Open menu"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
         </div>
       </header>
+
+      {/* ── Mobile menu overlay ── */}
+      {mobileMenuOpen && (
+        <div className="lp-mobile-menu" role="dialog" aria-modal="true">
+          <div className="lp-mobile-menu-head">
+            <a href="/" className="lp-brand" onClick={() => setMobileMenuOpen(false)}>
+              <Logo />
+            </a>
+            <button type="button" className="lp-mobile-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <nav className="lp-mobile-nav">
+            <ScrollLink targetId="how" onClick={() => setMobileMenuOpen(false)}>How it works</ScrollLink>
+            <ScrollLink targetId="features" onClick={() => setMobileMenuOpen(false)}>Features</ScrollLink>
+            <ScrollLink targetId="faq" onClick={() => setMobileMenuOpen(false)}>FAQ</ScrollLink>
+            <Link href="/docs" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
+          </nav>
+          <div className="lp-mobile-menu-footer">
+            <div className="lp-social-icons">
+              {SOCIAL.map((s) => (
+                <a key={s.href} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="lp-social-icon">
+                  {s.icon}
+                </a>
+              ))}
+            </div>
+            <div className="lp-mobile-ctas">
+              <Link href="/access" className="lp-btn-ghost" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+              <Link href="/dashboard" className="lp-btn-primary" onClick={() => setMobileMenuOpen(false)}>Open App</Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <section className="lp-hero">
