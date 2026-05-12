@@ -25,9 +25,28 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.x402books.xyz"),
   title: "x402Books AI",
   description:
     "Readable books for the x402 economy. Turn Base USDC microtransactions into clean reports, categories, and agent-readable summaries.",
+  icons: {
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+  },
+  openGraph: {
+    title: "x402Books AI",
+    description: "The financial intelligence layer for the agent economy.",
+    url: "https://www.x402books.xyz",
+    siteName: "x402Books AI",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "x402Books AI",
+    description: "The financial intelligence layer for the agent economy.",
+    site: "@x402Books",
+    creator: "@x402Books",
+  },
 };
 
 export default function RootLayout({
