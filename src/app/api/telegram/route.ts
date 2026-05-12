@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { handleUpdate } from "@/lib/telegram-bot";
 
 const BOT_COMMANDS = [
-  { command: "scan",    description: "Full wallet scan — spend, income, categories, x402" },
-  { command: "summary", description: "Quick 3-line financial snapshot" },
-  { command: "report",  description: "Get public shareable report link" },
+  { command: "scan",    description: "Full AI wallet scan — /scan 0x... [7d|14d|30d|90d]" },
+  { command: "summary", description: "Quick stats — /summary 0x... [7d|14d|30d|90d]" },
+  { command: "report",  description: "Get public report link — /report 0x..." },
   { command: "help",    description: "Command list and usage guide" },
   { command: "start",   description: "Introduction and onboarding" },
 ];
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   const [webhookResult, commandsResult] = await Promise.all([
     tgSetup("setWebhook", {
       url: webhookUrl,
-      allowed_updates: ["message"],
+      allowed_updates: ["message", "inline_query"],
       drop_pending_updates: true,
     }),
     tgSetup("setMyCommands", { commands: BOT_COMMANDS }),
