@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "open-design": {
+      "type": "stdio",
+      "command": "/root/.nvm/versions/node/v24.15.0/bin/node",
+      "args": ["/home/user/open-design/apps/daemon/dist/cli.js", "mcp"],
+      "env": {
+        "OD_DATA_DIR": "/home/user/open-design/.od",
+        "OD_DAEMON_URL": "http://127.0.0.1:17456"
+      }
+    }
+  }
+}
