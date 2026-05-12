@@ -1,7 +1,7 @@
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress } from "@/lib/ledger";
 
-const APP_URL = "https://www.x402books.xyz";
+const APP_URL = "https://x402books.xyz";
 
 // ── Telegram API helpers ──────────────────────────────────────────────────────
 

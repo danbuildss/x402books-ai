@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 import { handleUpdate } from "@/lib/telegram-bot";
 
+const BOT_COMMANDS = [
+  { command: "scan",    description: "Full wallet scan — spend, income, categories, x402" },
+  { command: "summary", description: "Quick 3-line financial snapshot" },
+  { command: "report",  description: "Get public shareable report link" },
+  { command: "help",    description: "Command list and usage guide" },
+  { command: "start",   description: "Introduction and onboarding" },
+];
+
 // Webhook receiver — Telegram POSTs every update here
 export async function POST(request: Request) {
   try {
@@ -12,7 +20,8 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true });
 }
 
-// One-time webhook registration — GET /api/telegram?setup=1
+// One-time setup — GET /api/telegram?setup=1
+// Registers webhook + sets bot commands in Telegram
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   if (searchParams.get("setup") !== "1") {
@@ -24,17 +33,26 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "TELEGRAM_BOT_TOKEN not set" }, { status: 500 });
   }
 
-  const webhookUrl = "https://www.x402books.xyz/api/telegram";
-  const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
+  async function tgSetup(method: string, body: object) {
+    const res = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  }
+
+  // Use the canonical domain (no www — matches what Vercel serves)
+  const webhookUrl = "https://x402books.xyz/api/telegram";
+
+  const [webhookResult, commandsResult] = await Promise.all([
+    tgSetup("setWebhook", {
       url: webhookUrl,
       allowed_updates: ["message"],
       drop_pending_updates: true,
     }),
-  });
+    tgSetup("setMyCommands", { commands: BOT_COMMANDS }),
+  ]);
 
-  const data = await res.json();
-  return NextResponse.json(data);
+  return NextResponse.json({ webhook: webhookResult, commands: commandsResult });
 }
