@@ -92,7 +92,7 @@ async function fetchVirtualsTokens(): Promise<EcosystemRegistry> {
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
     let page = 1;
-    const maxPages = 5; // cap at 250 agents
+    const maxPages = 2; // cap at 100 agents — keeps cold-start under 4s budget
 
     while (page <= maxPages) {
       const url =

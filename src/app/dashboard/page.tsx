@@ -54,8 +54,8 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
   }, []);
 
   function pick(agent: AgentResult) {
-    const addr = agent.walletAddress || agent.tokenAddress;
-    onSelect(addr);
+    if (!agent.walletAddress) return; // token contracts can't be scanned
+    onSelect(agent.walletAddress);
     setQuery(agent.name || agent.symbol);
     setOpen(false);
   }
@@ -78,38 +78,49 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
 
       {open && results.length > 0 && (
         <div className="stitch-agent-results">
-          {results.map((agent, i) => (
-            <button key={i} type="button" className="stitch-agent-result" onClick={() => pick(agent)}>
-              {agent.imageUrl && (
-                <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
-              )}
-              <div className="stitch-agent-info">
-                <span className="stitch-agent-name">{agent.name}</span>
-                <span className="stitch-agent-sym">
-                  {agent.symbol}
-                  {agent.xHandle && (
-                    <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
-                      · @{agent.xHandle.replace(/^@/, "")}
+          {results.map((agent, i) => {
+            const canScan = Boolean(agent.walletAddress);
+            return (
+              <button
+                key={i}
+                type="button"
+                className="stitch-agent-result"
+                onClick={() => pick(agent)}
+                disabled={!canScan}
+                title={canScan ? undefined : "No wallet address available — only the token contract is known for this agent"}
+                style={canScan ? undefined : { opacity: 0.55, cursor: "not-allowed" }}
+              >
+                {agent.imageUrl && (
+                  <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
+                )}
+                <div className="stitch-agent-info">
+                  <span className="stitch-agent-name">{agent.name}</span>
+                  <span className="stitch-agent-sym">
+                    {agent.symbol}
+                    {agent.xHandle && (
+                      <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
+                        · @{agent.xHandle.replace(/^@/, "")}
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
+                  {agent.ecosystem}
+                </span>
+                <div className="stitch-agent-addr-wrap">
+                  {canScan ? (
+                    <span className="stitch-agent-addr-pill wallet">
+                      Wallet · {agent.walletAddress!.slice(0, 6)}…{agent.walletAddress!.slice(-4)}
+                    </span>
+                  ) : (
+                    <span className="stitch-agent-addr-pill token" title="Token contract — no wallet to scan">
+                      No wallet found
                     </span>
                   )}
-                </span>
-              </div>
-              <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
-                {agent.ecosystem}
-              </span>
-              <div className="stitch-agent-addr-wrap">
-                {agent.walletAddress ? (
-                  <span className="stitch-agent-addr-pill wallet">
-                    Wallet · {agent.walletAddress.slice(0, 6)}…{agent.walletAddress.slice(-4)}
-                  </span>
-                ) : (
-                  <span className="stitch-agent-addr-pill token">
-                    Token contract
-                  </span>
-                )}
-              </div>
-            </button>
-          ))}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 

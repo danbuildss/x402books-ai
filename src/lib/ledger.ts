@@ -456,8 +456,15 @@ export function getPortfolioBreakdown(
   }
 
   return Array.from(map.values())
-    .filter((e) => e.usdInflow + e.usdOutflow > 0) // hide zero-value entries
-    .sort((a, b) => (b.usdInflow + b.usdOutflow) - (a.usdInflow + a.usdOutflow));
+    // Use native token amounts as filter — tokens with unknown price ($0 USD) still appear
+    .filter((e) => e.totalInflow + e.totalOutflow > 0)
+    .sort((a, b) => {
+      // Sort by USD value when available, fall back to native amounts
+      const aUsd = a.usdInflow + a.usdOutflow;
+      const bUsd = b.usdInflow + b.usdOutflow;
+      if (aUsd > 0 || bUsd > 0) return bUsd - aUsd;
+      return (b.totalInflow + b.totalOutflow) - (a.totalInflow + a.totalOutflow);
+    });
 }
 
 const STABLECOIN_ADDRESSES_SET = new Set([
