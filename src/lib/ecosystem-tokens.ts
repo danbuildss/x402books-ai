@@ -91,7 +91,7 @@ async function fetchVirtualsTokens(): Promise<EcosystemRegistry> {
 
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
-    const pageSize = 50;
+    const pageSize = 100;
 
     // Fetch page 1 first to learn the total page count
     const firstUrl = `${base}/virtuals?sort[0]=mcapInVirtual:desc&pagination[page]=1&pagination[pageSize]=${pageSize}`;

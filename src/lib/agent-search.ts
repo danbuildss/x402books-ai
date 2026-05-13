@@ -1,5 +1,8 @@
 // Server-side agent search across BANKR and Virtuals Protocol ecosystems.
 
+// Strips spaces and special chars so "JunoAgent" matches "Juno Agent"
+const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 export type WalletType = "sentient" | "tba" | "deployer" | "token";
 
 export type AgentResult = {
@@ -34,7 +37,7 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
   const key = process.env.BANKR_API_KEY;
   if (!key) return [];
 
-  const q = query.trim().toLowerCase().replace(/^@/, "");
+  const q = normalize(query.replace(/^@/, ""));
 
   try {
     const res = await fetch(`${process.env.BANKR_API_URL ?? "https://api.bankr.bot"}/token-launches`, {
@@ -50,9 +53,9 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
     const results: AgentResult[] = [];
 
     for (const item of data) {
-      const symbol = (item.tokenSymbol ?? "").toLowerCase();
-      const name = (item.name ?? item.tokenSymbol ?? "").toLowerCase();
-      const xHandle = (item.deployer?.xHandle ?? "").toLowerCase().replace(/^@/, "");
+      const symbol = normalize(item.tokenSymbol ?? "");
+      const name = normalize(item.name ?? item.tokenSymbol ?? "");
+      const xHandle = normalize(item.deployer?.xHandle ?? "");
       const tokenAddress = (item.tokenAddress ?? "").toLowerCase();
 
       if (!tokenAddress.startsWith("0x")) continue;
@@ -106,17 +109,19 @@ type VirtualsItem = {
 };
 
 export async function searchVirtualsAgents(query: string): Promise<AgentResult[]> {
-  const q = query.trim().toLowerCase().replace(/^@/, "");
+  const q = normalize(query.replace(/^@/, ""));
+  // Use the raw (un-normalized) query for the server-side Strapi filter
+  const qRaw = query.replace(/^@/, "").trim();
 
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
-    const qEnc = encodeURIComponent(q);
+    const qEnc = encodeURIComponent(qRaw);
     const url =
       `${base}/virtuals` +
       `?filters[$or][0][name][$containsi]=${qEnc}` +
       `&filters[$or][1][symbol][$containsi]=${qEnc}` +
       `&filters[$or][2][twitter][$containsi]=${qEnc}` +
-      `&sort[0]=mcapInVirtual:desc&pagination[pageSize]=50&populate=*`;
+      `&sort[0]=mcapInVirtual:desc&pagination[pageSize]=100&populate=*`;
 
     const res = await fetch(url, {
       headers: { Accept: "application/json" },
@@ -132,6 +137,12 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
       const attr = item.attributes ?? {};
       const tokenAddress = (attr.tokenAddress ?? "").toLowerCase();
       if (!tokenAddress.startsWith("0x")) continue;
+
+      // Local normalize check — catches cases server filter missed (e.g. "junoagent" vs "juno agent")
+      const nName = normalize(attr.name ?? "");
+      const nSym = normalize(attr.symbol ?? "");
+      const nTwitter = normalize(attr.twitter ?? "");
+      if (!nName.includes(q) && !nSym.includes(q) && !nTwitter.includes(q)) continue;
 
       // Wallet priority: sentientWalletAddress → tbaAddress → tokenAddress
       const sentient = (attr.sentientWalletAddress ?? "").toLowerCase();
