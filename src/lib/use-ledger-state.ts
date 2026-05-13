@@ -92,6 +92,14 @@ function readRecentWallets() {
   }
 }
 
+function deleteRecentWalletFromStorage(address: string) {
+  const next = readRecentWallets().filter(
+    (w) => w.address.toLowerCase() !== address.toLowerCase(),
+  );
+  window.localStorage.setItem(recentWalletsKey, JSON.stringify(next));
+  return next;
+}
+
 function saveRecentWallet(wallet: string, ledger: StoredLedger) {
   const nextWallets = [
     {
@@ -434,6 +442,18 @@ export function useLedgerState() {
     }
   }
 
+  function removeRecentWallet(address: string) {
+    const next = deleteRecentWalletFromStorage(address);
+    setRecentWallets(next);
+    // If deleting the active wallet, clear ledger state
+    if (activeLedger.wallet.toLowerCase() === address.toLowerCase()) {
+      const empty = emptyLedger(range);
+      setLedger(empty);
+      setWalletInput("");
+      writeStoredLedger({ ...empty, wallet: "" });
+    }
+  }
+
   async function copyText(value: string, label = value) {
     if (!value || value.includes("0x...")) {
       setError("Scan a wallet before copying this value.");
@@ -468,6 +488,7 @@ export function useLedgerState() {
     generatedAt: activeLedger.generatedAt,
     endpoints,
     recentWallets,
+    removeRecentWallet,
     isLoading,
     isCategorizing,
     error,

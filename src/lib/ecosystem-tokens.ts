@@ -27,12 +27,10 @@ const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
 // ── BANKR ─────────────────────────────────────────────────────────────────────
 
+// Confirmed shape: array of { tokenAddress, tokenSymbol, deployer: { xHandle } }
 type BankrToken = {
-  address?: string;
-  contractAddress?: string;
   tokenAddress?: string;
-  symbol?: string;
-  ticker?: string;
+  tokenSymbol?: string;
 };
 
 async function fetchBankrTokens(): Promise<EcosystemRegistry> {
@@ -45,20 +43,19 @@ async function fetchBankrTokens(): Promise<EcosystemRegistry> {
   if (!key) return { addresses, symbols };
 
   try {
-    const res = await fetch("https://api.bankr.bot/token-launches", {
+    const base = process.env.BANKR_API_URL ?? "https://api.bankr.bot";
+    const res = await fetch(`${base}/token-launches`, {
       headers: { "X-API-Key": key, "Accept": "application/json" },
       signal: AbortSignal.timeout(8_000),
     });
     if (!res.ok) return { addresses, symbols };
 
-    const data = await res.json() as { data?: BankrToken[]; tokens?: BankrToken[] } | BankrToken[];
-    const tokens: BankrToken[] = Array.isArray(data)
-      ? data
-      : (data.data ?? data.tokens ?? []);
+    const data = await res.json() as BankrToken[];
+    if (!Array.isArray(data)) return { addresses, symbols };
 
-    for (const t of tokens) {
-      const addr = (t.address ?? t.contractAddress ?? t.tokenAddress ?? "").toLowerCase();
-      const sym = (t.symbol ?? t.ticker ?? "").toUpperCase();
+    for (const t of data) {
+      const addr = (t.tokenAddress ?? "").toLowerCase();
+      const sym = (t.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase();
       if (addr.startsWith("0x")) addresses.add(addr);
       if (sym) symbols.add(sym);
     }
@@ -71,15 +68,15 @@ async function fetchBankrTokens(): Promise<EcosystemRegistry> {
 
 // ── Virtuals Protocol ─────────────────────────────────────────────────────────
 
+// Confirmed shape: { data: [{ id, attributes: { name, symbol, tokenAddress, mcapInVirtual, twitter } }] }
 type VirtualsItem = {
   id?: number;
-  tokenAddress?: string;
-  symbol?: string;
-  status?: string;
   attributes?: {
-    tokenAddress?: string;
+    name?: string;
     symbol?: string;
-    status?: string;
+    tokenAddress?: string;
+    mcapInVirtual?: number;
+    twitter?: string;
   };
 };
 
@@ -93,22 +90,18 @@ async function fetchVirtualsTokens(): Promise<EcosystemRegistry> {
   const symbols = new Set<string>([...FALLBACK_VIRTUALS_SYMBOLS]);
 
   try {
+    const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
     let page = 1;
     const maxPages = 5; // cap at 250 agents
 
     while (page <= maxPages) {
       const url =
-        `https://api.virtuals.io/api/virtuals` +
-        `?filters[status][$eq]=LAUNCHED` +
-        `&pagination[page]=${page}&pagination[pageSize]=50` +
-        `&sort=mcap:desc`;
+        `${base}/virtuals` +
+        `?sort[0]=mcapInVirtual:desc` +
+        `&pagination[page]=${page}&pagination[pageSize]=50`;
 
       const res = await fetch(url, {
-        headers: {
-          "Accept": "application/json",
-          "Referer": "https://app.virtuals.io",
-          "Origin": "https://app.virtuals.io",
-        },
+        headers: { "Accept": "application/json" },
         signal: AbortSignal.timeout(10_000),
       });
       if (!res.ok) break;
@@ -117,14 +110,9 @@ async function fetchVirtualsTokens(): Promise<EcosystemRegistry> {
       const items: VirtualsItem[] = body.data ?? [];
 
       for (const item of items) {
-        // Handle both Strapi v4 (nested attributes) and v5 (flat)
-        const addr = (
-          item.tokenAddress ?? item.attributes?.tokenAddress ?? ""
-        ).toLowerCase();
-        const sym = (
-          item.symbol ?? item.attributes?.symbol ?? ""
-        ).toUpperCase();
-
+        const attr = item.attributes ?? {};
+        const addr = (attr.tokenAddress ?? "").toLowerCase();
+        const sym = (attr.symbol ?? "").toUpperCase();
         if (addr.startsWith("0x")) addresses.add(addr);
         if (sym) symbols.add(sym);
       }

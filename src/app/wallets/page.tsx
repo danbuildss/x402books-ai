@@ -85,18 +85,29 @@ export default function WalletsPage() {
                 </div>
               </div>
 
-              {index === 0 ? (
-                <em>Active</em>
-              ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {index === 0 ? (
+                  <em>Active</em>
+                ) : (
+                  <button
+                    type="button"
+                    className="stitch-button"
+                    style={{ fontSize: "12px", minHeight: "30px", padding: "0 10px" }}
+                    onClick={() => ledger.scanWallet(wallet.address)}
+                  >
+                    <StitchIcon name="refresh" /> Switch
+                  </button>
+                )}
                 <button
                   type="button"
                   className="stitch-button"
-                  style={{ fontSize: "12px", minHeight: "30px", padding: "0 10px" }}
-                  onClick={() => ledger.scanWallet(wallet.address)}
+                  title="Remove wallet"
+                  style={{ fontSize: "12px", minHeight: "30px", padding: "0 8px", color: "var(--st-red)", borderColor: "rgba(239,68,68,0.3)" }}
+                  onClick={() => ledger.removeRecentWallet(wallet.address)}
                 >
-                  <StitchIcon name="refresh" /> Switch
+                  <StitchIcon name="delete" />
                 </button>
-              )}
+              </div>
 
               <dl>
                 <div>

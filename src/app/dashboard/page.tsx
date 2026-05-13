@@ -68,7 +68,7 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
         </span>
         <input
           className="stitch-agent-search-input"
-          placeholder="Search agent name or symbol…"
+          placeholder="Search agent name, symbol or @handle…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           autoComplete="off"
@@ -85,7 +85,14 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
               )}
               <div className="stitch-agent-info">
                 <span className="stitch-agent-name">{agent.name}</span>
-                <span className="stitch-agent-sym">{agent.symbol}</span>
+                <span className="stitch-agent-sym">
+                  {agent.symbol}
+                  {agent.xHandle && (
+                    <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
+                      · @{agent.xHandle.replace(/^@/, "")}
+                    </span>
+                  )}
+                </span>
               </div>
               <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
                 {agent.ecosystem}

@@ -4,204 +4,158 @@ export type AgentResult = {
   name: string;
   symbol: string;
   ecosystem: "BANKR" | "VIRTUALS";
-  tokenAddress: string;    // ERC-20 token contract
-  walletAddress?: string;  // Agent's operational wallet (if available)
+  tokenAddress: string;
+  walletAddress?: string;
   imageUrl?: string;
   mcap?: number;
+  xHandle?: string;
 };
-
-// ── Virtuals ──────────────────────────────────────────────────────────────────
-
-type VirtualsRaw = {
-  id?: number;
-  name?: string;
-  symbol?: string;
-  tokenAddress?: string;
-  image?: { url?: string };
-  mcap?: number;
-  coreContribAddress?: string;
-  virtualWalletAddress?: string;
-  agentWallet?: string;
-  protoWallet?: string;
-  attributes?: {
-    name?: string;
-    symbol?: string;
-    tokenAddress?: string;
-    coreContribAddress?: string;
-    virtualWalletAddress?: string;
-    agentWallet?: string;
-    protoWallet?: string;
-    image?: { data?: { attributes?: { url?: string } } };
-    mcap?: number;
-  };
-};
-
-function parseVirtual(item: VirtualsRaw): AgentResult | null {
-  const flat = item.attributes ?? item;
-  const name = flat.name ?? item.name ?? "";
-  const symbol = (flat.symbol ?? item.symbol ?? "").toUpperCase();
-  const tokenAddress = (flat.tokenAddress ?? item.tokenAddress ?? "").toLowerCase();
-
-  if (!tokenAddress.startsWith("0x")) return null;
-
-  const walletAddress = (
-    flat.coreContribAddress ??
-    flat.virtualWalletAddress ??
-    flat.agentWallet ??
-    flat.protoWallet ??
-    item.coreContribAddress ??
-    item.virtualWalletAddress ??
-    item.agentWallet ??
-    item.protoWallet
-  )?.toLowerCase();
-
-  const rawImage =
-    (flat as { image?: { url?: string } }).image?.url ??
-    (item.attributes?.image as { data?: { attributes?: { url?: string } } } | undefined)
-      ?.data?.attributes?.url;
-  const imageUrl = rawImage?.startsWith("http") ? rawImage : undefined;
-
-  return {
-    name,
-    symbol,
-    ecosystem: "VIRTUALS",
-    tokenAddress,
-    walletAddress: walletAddress?.startsWith("0x") ? walletAddress : undefined,
-    imageUrl,
-    mcap: flat.mcap ?? item.mcap,
-  };
-}
-
-export async function searchVirtualsAgents(query: string): Promise<AgentResult[]> {
-  const results: AgentResult[] = [];
-  const q = query.trim().toLowerCase();
-
-  try {
-    const nameFilter = `filters[$or][0][name][$containsi]=${encodeURIComponent(query)}`;
-    const symFilter = `filters[$or][1][symbol][$containsi]=${encodeURIComponent(query)}`;
-    const url =
-      `https://api.virtuals.io/api/virtuals` +
-      `?${nameFilter}&${symFilter}` +
-      `&filters[status][$eq]=LAUNCHED` +
-      `&pagination[pageSize]=8&sort=mcap:desc&populate=*`;
-
-    const res = await fetch(url, {
-      headers: {
-        Accept: "application/json",
-        Referer: "https://app.virtuals.io",
-        Origin: "https://app.virtuals.io",
-      },
-      signal: AbortSignal.timeout(8_000),
-    });
-    if (!res.ok) return results;
-
-    const body = await res.json() as { data?: VirtualsRaw[] };
-    for (const item of body.data ?? []) {
-      // Also match by symbol exactly if the filter is loose
-      const sym = (item.symbol ?? item.attributes?.symbol ?? "").toLowerCase();
-      const name = (item.name ?? item.attributes?.name ?? "").toLowerCase();
-      if (!sym.includes(q) && !name.includes(q)) continue;
-
-      const parsed = parseVirtual(item);
-      if (parsed) results.push(parsed);
-    }
-  } catch {
-    // non-fatal
-  }
-
-  return results;
-}
 
 // ── BANKR ─────────────────────────────────────────────────────────────────────
+// Endpoint: GET /token-launches
+// Auth: X-API-Key header
+// Shape: array of { tokenAddress, tokenSymbol, deployer: { xHandle } }
 
-type BankrSearchItem = {
-  address?: string;
-  walletAddress?: string;
-  wallet?: string;
-  symbol?: string;
-  ticker?: string;
-  name?: string;
-  username?: string;
-  handle?: string;
-  image?: string;
-  imageUrl?: string;
+type BankrLaunch = {
   tokenAddress?: string;
-  contractAddress?: string;
+  tokenSymbol?: string;
+  name?: string;
+  deployer?: {
+    xHandle?: string;
+    walletAddress?: string;
+  };
+  imageUrl?: string;
+  image?: string;
 };
-
-async function tryBankrSearch(url: string, key: string): Promise<BankrSearchItem[]> {
-  try {
-    const res = await fetch(url, {
-      headers: { "X-API-Key": key, Accept: "application/json" },
-      signal: AbortSignal.timeout(6_000),
-    });
-    if (!res.ok) return [];
-    const data = await res.json() as
-      | BankrSearchItem[]
-      | { data?: BankrSearchItem[]; users?: BankrSearchItem[]; results?: BankrSearchItem[] };
-    return Array.isArray(data) ? data : (data.data ?? data.users ?? data.results ?? []);
-  } catch {
-    return [];
-  }
-}
 
 export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
   const key = process.env.BANKR_API_KEY;
   if (!key) return [];
 
-  const q = encodeURIComponent(query.replace(/^@/, ""));
-  const results: AgentResult[] = [];
+  const q = query.trim().toLowerCase().replace(/^@/, "");
 
-  const [searchItems, resolveItems, launchItems] = await Promise.all([
-    tryBankrSearch(`https://api.bankr.bot/users/search?q=${q}`, key),
-    tryBankrSearch(`https://api.bankr.bot/addresses/resolve?handle=${q}`, key),
-    tryBankrSearch(`https://api.bankr.bot/token-launches`, key),
-  ]);
-
-  // Filter token-launches by name/symbol
-  const ql = query.toLowerCase().replace(/^@/, "");
-  const filteredLaunches = launchItems.filter((item) => {
-    const sym = (item.symbol ?? item.ticker ?? "").toLowerCase();
-    const name = (item.name ?? item.username ?? item.handle ?? "").toLowerCase();
-    return sym.includes(ql) || name.includes(ql);
-  });
-
-  for (const item of [...searchItems, ...resolveItems, ...filteredLaunches]) {
-    const symbol = (item.symbol ?? item.ticker ?? "").toUpperCase();
-    const name = item.name ?? item.username ?? item.handle ?? symbol;
-    const tokenAddress = (
-      item.tokenAddress ?? item.contractAddress ?? item.address ?? ""
-    ).toLowerCase();
-    const walletAddress = (
-      item.walletAddress ?? item.wallet ?? ""
-    ).toLowerCase();
-
-    if (!tokenAddress.startsWith("0x") && !walletAddress.startsWith("0x")) continue;
-    if (results.some((r) => r.tokenAddress === tokenAddress)) continue;
-
-    results.push({
-      name,
-      symbol,
-      ecosystem: "BANKR",
-      tokenAddress: tokenAddress.startsWith("0x") ? tokenAddress : "",
-      walletAddress: walletAddress.startsWith("0x") ? walletAddress : undefined,
-      imageUrl: item.image ?? item.imageUrl,
+  try {
+    const res = await fetch(`${process.env.BANKR_API_URL ?? "https://api.bankr.bot"}/token-launches`, {
+      headers: { "X-API-Key": key, Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: 300 }, // 5min cache
     });
-  }
+    if (!res.ok) return [];
 
-  return results.slice(0, 8);
+    const data = await res.json() as BankrLaunch[];
+    if (!Array.isArray(data)) return [];
+
+    const results: AgentResult[] = [];
+
+    for (const item of data) {
+      const symbol = (item.tokenSymbol ?? "").toLowerCase();
+      const name = (item.name ?? item.tokenSymbol ?? "").toLowerCase();
+      const xHandle = (item.deployer?.xHandle ?? "").toLowerCase().replace(/^@/, "");
+      const tokenAddress = (item.tokenAddress ?? "").toLowerCase();
+
+      if (!tokenAddress.startsWith("0x")) continue;
+
+      // Match by symbol, name, or X handle
+      if (!symbol.includes(q) && !name.includes(q) && !xHandle.includes(q)) continue;
+
+      results.push({
+        name: item.name ?? item.tokenSymbol ?? "",
+        symbol: (item.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase(),
+        ecosystem: "BANKR",
+        tokenAddress,
+        walletAddress: item.deployer?.walletAddress?.toLowerCase(),
+        imageUrl: item.imageUrl ?? item.image,
+        xHandle: item.deployer?.xHandle,
+      });
+    }
+
+    return results.slice(0, 8);
+  } catch {
+    return [];
+  }
 }
 
-// ── Combined search ───────────────────────────────────────────────────────────
+// ── Virtuals ──────────────────────────────────────────────────────────────────
+// Endpoint: GET /api/virtuals?sort[0]=mcapInVirtual:desc
+// Auth: none (public)
+// Shape: { data: [{ id, attributes: { name, symbol, tokenAddress, mcapInVirtual, twitter } }] }
+
+type VirtualsItem = {
+  id?: number;
+  attributes?: {
+    name?: string;
+    symbol?: string;
+    tokenAddress?: string;
+    mcapInVirtual?: number;
+    twitter?: string;
+    image?: { data?: { attributes?: { url?: string } } };
+    // Some responses have image directly on attributes
+    imageUrl?: string;
+  };
+};
+
+export async function searchVirtualsAgents(query: string): Promise<AgentResult[]> {
+  const q = query.trim().toLowerCase().replace(/^@/, "");
+
+  try {
+    const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
+    // Use server-side filter to narrow results, then match locally for accuracy
+    const nameFilter = `filters[$or][0][name][$containsi]=${encodeURIComponent(query.replace(/^@/, ""))}`;
+    const symFilter = `filters[$or][1][symbol][$containsi]=${encodeURIComponent(query.replace(/^@/, ""))}`;
+    const url = `${base}/virtuals?${nameFilter}&${symFilter}&sort[0]=mcapInVirtual:desc&pagination[pageSize]=20&populate=*`;
+
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return [];
+
+    const body = await res.json() as { data?: VirtualsItem[] };
+    const items = body.data ?? [];
+    const results: AgentResult[] = [];
+
+    for (const item of items) {
+      const attr = item.attributes ?? {};
+      const name = (attr.name ?? "").toLowerCase();
+      const symbol = (attr.symbol ?? "").toLowerCase();
+      const twitter = (attr.twitter ?? "").toLowerCase().replace(/^@/, "");
+      const tokenAddress = (attr.tokenAddress ?? "").toLowerCase();
+
+      if (!tokenAddress.startsWith("0x")) continue;
+      if (!name.includes(q) && !symbol.includes(q) && !twitter.includes(q)) continue;
+
+      const rawImageUrl =
+        attr.imageUrl ??
+        attr.image?.data?.attributes?.url;
+
+      results.push({
+        name: attr.name ?? "",
+        symbol: (attr.symbol ?? "").toUpperCase(),
+        ecosystem: "VIRTUALS",
+        tokenAddress,
+        mcap: attr.mcapInVirtual,
+        imageUrl: rawImageUrl?.startsWith("http") ? rawImageUrl : undefined,
+        xHandle: attr.twitter,
+      });
+    }
+
+    return results.slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+// ── Combined ──────────────────────────────────────────────────────────────────
 
 export async function searchAgents(query: string): Promise<AgentResult[]> {
-  const [virtuals, bankr] = await Promise.allSettled([
-    searchVirtualsAgents(query),
+  const [bankr, virtuals] = await Promise.allSettled([
     searchBankrAgents(query),
+    searchVirtualsAgents(query),
   ]);
 
   return [
-    ...(virtuals.status === "fulfilled" ? virtuals.value : []),
     ...(bankr.status === "fulfilled" ? bankr.value : []),
+    ...(virtuals.status === "fulfilled" ? virtuals.value : []),
   ].slice(0, 10);
 }
