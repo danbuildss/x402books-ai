@@ -1,15 +1,16 @@
 import {
-  BASE_USDC_ADDRESS,
   LedgerTransaction,
   TimeRange,
   getRangeStart,
 } from "@/lib/ledger";
+import { isStablecoin, isAgentToken } from "@/lib/tokens";
 
 type AlchemyTransfer = {
   hash: string;
   from: string;
   to: string;
   value?: number;
+  asset?: string;
   metadata?: {
     blockTimestamp?: string;
   };
@@ -71,7 +72,6 @@ async function fetchAlchemyTransfers(params: {
         {
           ...addressParam,
           category: ["erc20"],
-          contractAddresses: [BASE_USDC_ADDRESS],
           excludeZeroValue: true,
           fromBlock: "0x0",
           maxCount: "0x3e8",
@@ -119,7 +119,7 @@ async function fetchDirection(params: {
   return transfers;
 }
 
-export async function fetchBaseUsdcTransfers(params: {
+export async function fetchBaseErc20Transfers(params: {
   apiKey: string;
   wallet: string;
   range: TimeRange;
@@ -141,10 +141,16 @@ export async function fetchBaseUsdcTransfers(params: {
         from === wallet && to === wallet ? "internal" : to === wallet ? "income" : "expense";
       const timestamp = transfer.metadata?.blockTimestamp || new Date().toISOString();
 
+      const tokenAddress = (transfer.rawContract?.address || "").toLowerCase();
+      const tokenSymbol = transfer.asset || "UNKNOWN";
       return {
         txHash: transfer.hash,
         timestamp,
         amountUsdc: parseTokenAmount(transfer),
+        tokenSymbol,
+        tokenAddress,
+        usdValue: isStablecoin(tokenAddress) ? parseTokenAmount(transfer) : 0,
+        isAgentToken: isAgentToken(tokenSymbol),
         direction,
         counterparty: direction === "income" ? from : to,
         from,

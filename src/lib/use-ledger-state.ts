@@ -15,6 +15,7 @@ import type {
   LedgerReport,
   LedgerSummary,
   LedgerTransaction,
+  PortfolioEntry,
   TimeRange,
 } from "@/lib/ledger";
 
@@ -54,6 +55,7 @@ type StoredLedger = {
   report: LedgerReport;
   categories: CategorySummary[];
   dailyFlows: DailyFlow[];
+  portfolio: PortfolioEntry[];
   transactions: LedgerTransaction[];
 };
 
@@ -122,6 +124,7 @@ function emptyLedger(range: TimeRange): StoredLedger {
     report,
     categories: [],
     dailyFlows: getDailyFlows(transactions, range),
+    portfolio: [],
     transactions,
   };
 }
@@ -213,6 +216,7 @@ export function useLedgerState() {
                 report: body.report,
                 categories: body.categories ?? getCategorySummary(body.transactions ?? []),
                 dailyFlows: body.dailyFlows ?? getDailyFlows(body.transactions ?? [], body.range),
+                portfolio: body.portfolio ?? [],
                 transactions: body.transactions ?? [],
               };
               setLedger(next);
@@ -293,6 +297,7 @@ export function useLedgerState() {
         report: body.report,
         categories: body.categories || getCategorySummary(body.transactions || []),
         dailyFlows: body.dailyFlows || getDailyFlows(body.transactions || [], body.range),
+        portfolio: body.portfolio || [],
         transactions: body.transactions || [],
       };
 
@@ -371,6 +376,7 @@ export function useLedgerState() {
         report: body.report,
         categories: getCategorySummary(body.transactions || []),
         dailyFlows: getDailyFlows(body.transactions || [], range),
+        portfolio: body.portfolio || activeLedger.portfolio,
         transactions: body.transactions || [],
       };
 
@@ -457,6 +463,7 @@ export function useLedgerState() {
     summary,
     categories,
     dailyFlows,
+    portfolio: activeLedger.portfolio ?? [],
     report,
     generatedAt: activeLedger.generatedAt,
     endpoints,

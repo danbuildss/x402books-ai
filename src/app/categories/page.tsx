@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   StitchEmpty,
   StitchHeader,
@@ -7,12 +8,26 @@ import {
   StitchShell,
   StitchWalletPill,
 } from "@/components/stitch-app";
-import { formatUsdc } from "@/lib/ledger";
+import { formatUsdc, getCategorySummary } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 export default function CategoriesPage() {
   const ledger = useLedgerState();
-  const maxUsdc = Math.max(...ledger.categories.map((c) => c.totalUsdc), 0.01);
+  const [tokenFilter, setTokenFilter] = useState<string>("all");
+
+  // Build unique token list from portfolio
+  const availableTokens = ledger.portfolio.map((e) => e.tokenSymbol);
+
+  // Filter transactions by selected token then derive categories
+  const filteredTransactions =
+    tokenFilter === "all"
+      ? ledger.transactions
+      : ledger.transactions.filter((tx) => (tx.tokenSymbol || "USDC") === tokenFilter);
+
+  const displayCategories =
+    tokenFilter === "all" ? ledger.categories : getCategorySummary(filteredTransactions);
+
+  const maxUsdc = Math.max(...displayCategories.map((c) => c.totalUsdc), 0.01);
 
   return (
     <StitchShell>
@@ -28,10 +43,37 @@ export default function CategoriesPage() {
         }
       />
 
+      {/* Token filter pills */}
+      {availableTokens.length > 1 && (
+        <div className="stitch-token-filter">
+          <button
+            type="button"
+            className={`stitch-token-pill${tokenFilter === "all" ? " active" : ""}`}
+            onClick={() => setTokenFilter("all")}
+          >
+            All tokens
+          </button>
+          {availableTokens.map((sym) => {
+            const entry = ledger.portfolio.find((e) => e.tokenSymbol === sym);
+            return (
+              <button
+                key={sym}
+                type="button"
+                className={`stitch-token-pill${tokenFilter === sym ? " active" : ""}${entry?.isAgentToken ? " agent" : ""}`}
+                onClick={() => setTokenFilter(sym)}
+              >
+                {sym}
+                {entry?.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <section className="stitch-card">
-        {ledger.categories.length ? (
+        {displayCategories.length ? (
           <div className="stitch-cat-list">
-            {ledger.categories.map((cat) => {
+            {displayCategories.map((cat) => {
               const spendShare = ledger.summary.totalSpend
                 ? (cat.totalUsdc / ledger.summary.totalSpend) * 100
                 : 0;
@@ -48,7 +90,7 @@ export default function CategoriesPage() {
                     </div>
                   </div>
                   <div className="stitch-cat-amount-col">
-                    <strong style={{ fontFamily: "var(--st-mono)" }}>{formatUsdc(cat.totalUsdc)} USDC</strong>
+                    <strong style={{ fontFamily: "var(--st-mono)" }}>${formatUsdc(cat.totalUsdc)} USD</strong>
                     <span style={{ color: "var(--st-muted)", fontSize: "11px" }}>{spendShare.toFixed(1)}%</span>
                   </div>
                 </div>

@@ -80,23 +80,23 @@ export default function DashboardPage() {
       <section className="stitch-stats-grid">
         <StitchStat
           label="Total Spend"
-          value={`${formatUsdc(ledger.summary.totalSpend)} USDC`}
-          usd={`≈ $${formatUsdc(ledger.summary.totalSpend)} USD`}
-          helper="Base USDC outflow"
+          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
+          usd="USD equivalent across all tokens"
+          helper="Base ERC-20 outflow"
           icon="south_east"
           tone="red"
         />
         <StitchStat
           label="Total Income"
-          value={`${formatUsdc(ledger.summary.totalIncome)} USDC`}
-          usd={`≈ $${formatUsdc(ledger.summary.totalIncome)} USD`}
-          helper="Base USDC inflow"
+          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
+          usd="USD equivalent across all tokens"
+          helper="Base ERC-20 inflow"
           icon="north_east"
         />
         <StitchStat
           label="Net Flow"
-          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}${formatUsdc(Math.abs(ledger.summary.netFlow))} USDC`}
-          usd={`≈ ${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))} USD`}
+          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
+          usd="USD net across all tokens"
           helper={ledger.report.budgetStatus}
           icon="monitoring"
         />
@@ -108,6 +108,37 @@ export default function DashboardPage() {
           tone="blue"
         />
       </section>
+
+      {/* Portfolio breakdown */}
+      {ledger.hasLedger && ledger.portfolio.length > 0 && (
+        <section className="stitch-card stitch-portfolio">
+          <div className="stitch-card-head">
+            <h3>Portfolio Breakdown</h3>
+            <span className="stitch-portfolio-total">
+              {ledger.portfolio.length} token{ledger.portfolio.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="stitch-portfolio-list">
+            {ledger.portfolio.map((entry) => (
+              <div key={entry.tokenAddress} className="stitch-portfolio-row">
+                <div className="stitch-portfolio-token">
+                  <span className="stitch-token-symbol">{entry.tokenSymbol}</span>
+                  {entry.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
+                  {entry.isStablecoin && <span className="stitch-stable-badge">STABLE</span>}
+                </div>
+                <div className="stitch-portfolio-flows">
+                  <span className="stitch-portfolio-inflow">+${entry.usdInflow.toFixed(2)}</span>
+                  <span className="stitch-portfolio-outflow">-${entry.usdOutflow.toFixed(2)}</span>
+                </div>
+                <span className={`stitch-portfolio-net ${entry.usdNetFlow >= 0 ? "positive" : "negative"}`}>
+                  {entry.usdNetFlow >= 0 ? "+" : ""}{entry.usdNetFlow.toFixed(2)} USD
+                </span>
+                <span className="stitch-portfolio-txcount">{entry.txCount} tx</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {hasWallet && (
         <StitchAiSummary

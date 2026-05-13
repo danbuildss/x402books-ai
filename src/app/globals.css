@@ -6897,3 +6897,173 @@ html, body {
     border-right-color: rgba(0,0,0,0.1);
   }
 }
+
+/* ── Portfolio Breakdown ─────────────────────────────────────────────────── */
+
+.stitch-portfolio {
+  padding: 0;
+  overflow: hidden;
+}
+
+.stitch-portfolio .stitch-card-head {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--st-border);
+}
+
+.stitch-portfolio-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.stitch-portfolio-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--st-border);
+  transition: background 0.15s;
+}
+
+.stitch-portfolio-row:last-child {
+  border-bottom: none;
+}
+
+.stitch-portfolio-row:hover {
+  background: var(--st-hover);
+}
+
+.stitch-portfolio-token {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.stitch-token-symbol {
+  font-family: var(--st-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--st-text);
+}
+
+.stitch-agent-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(45,112,80,0.15);
+  color: var(--st-primary);
+  border: 1px solid rgba(45,112,80,0.3);
+  line-height: 1.4;
+}
+
+.stitch-stable-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(59,130,246,0.1);
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.2);
+  line-height: 1.4;
+}
+
+.stitch-portfolio-flows {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.stitch-portfolio-inflow {
+  font-family: var(--st-mono);
+  font-size: 12px;
+  color: var(--st-green);
+}
+
+.stitch-portfolio-outflow {
+  font-family: var(--st-mono);
+  font-size: 12px;
+  color: var(--st-red);
+}
+
+.stitch-portfolio-net {
+  font-family: var(--st-mono);
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 100px;
+  text-align: right;
+}
+
+.stitch-portfolio-net.positive { color: var(--st-green); }
+.stitch-portfolio-net.negative { color: var(--st-red); }
+
+.stitch-portfolio-txcount {
+  font-size: 12px;
+  color: var(--st-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+.stitch-portfolio-total {
+  font-size: 13px;
+  color: var(--st-muted);
+  font-family: var(--st-mono);
+}
+
+@media (max-width: 600px) {
+  .stitch-portfolio-row {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 6px 12px;
+  }
+  .stitch-portfolio-flows { grid-column: 2; grid-row: 1; }
+  .stitch-portfolio-net { grid-column: 1; grid-row: 2; font-size: 12px; text-align: left; }
+  .stitch-portfolio-txcount { grid-column: 2; grid-row: 2; }
+}
+
+/* ── Token filter pills ──────────────────────────────────────────────────── */
+
+.stitch-token-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 8px;
+}
+
+.stitch-token-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--st-border);
+  background: var(--st-card);
+  color: var(--st-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  font-family: var(--st-mono);
+}
+
+.stitch-token-pill:hover {
+  border-color: var(--st-primary);
+  color: var(--st-primary);
+}
+
+.stitch-token-pill.active {
+  border-color: var(--st-primary);
+  background: rgba(45,112,80,0.12);
+  color: var(--st-primary);
+  font-weight: 600;
+}
+
+.stitch-token-pill.agent {
+  border-color: rgba(45,112,80,0.4);
+}

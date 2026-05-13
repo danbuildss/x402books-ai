@@ -3,7 +3,11 @@ export type TimeRange = "7d" | "14d" | "30d" | "90d";
 export type LedgerTransaction = {
   txHash: string;
   timestamp: string;
-  amountUsdc: number;
+  amountUsdc: number;       // native token amount (kept for backward compat)
+  tokenSymbol: string;      // e.g. "USDC", "NOOK", "VIRTUAL"
+  tokenAddress: string;     // ERC-20 contract address (lowercase)
+  usdValue: number;         // USD equivalent (amountUsdc * price; =amountUsdc for stables)
+  isAgentToken: boolean;
   direction: "income" | "expense" | "internal";
   counterparty: string;
   from: string;
@@ -63,6 +67,20 @@ export type DailyFlow = {
   income: number;
 };
 
+export type PortfolioEntry = {
+  tokenSymbol: string;
+  tokenAddress: string;
+  isAgentToken: boolean;
+  isStablecoin: boolean;
+  totalInflow: number;   // native units
+  totalOutflow: number;  // native units
+  usdInflow: number;
+  usdOutflow: number;
+  usdNetFlow: number;
+  txCount: number;
+  currentPrice?: number;
+};
+
 export type LedgerReport = {
   title: string;
   rangeLabel: string;
@@ -102,11 +120,11 @@ export function getRangeStart(range: TimeRange) {
 export function getLedgerSummary(transactions: LedgerTransaction[]): LedgerSummary {
   const totalSpend = transactions
     .filter((transaction) => transaction.direction === "expense")
-    .reduce((sum, transaction) => sum + transaction.amountUsdc, 0);
+    .reduce((sum, transaction) => sum + (transaction.usdValue ?? transaction.amountUsdc), 0);
 
   const totalIncome = transactions
     .filter((transaction) => transaction.direction === "income")
-    .reduce((sum, transaction) => sum + transaction.amountUsdc, 0);
+    .reduce((sum, transaction) => sum + (transaction.usdValue ?? transaction.amountUsdc), 0);
 
   const categoryTotals = getCategorySummary(transactions);
 
@@ -150,7 +168,8 @@ export function relativeTime(timestamp: string) {
 
 export function signedAmount(transaction: LedgerTransaction) {
   const sign = transaction.direction === "income" ? "+" : "-";
-  return `${sign}${transaction.amountUsdc.toFixed(2)} USDC`;
+  const symbol = transaction.tokenSymbol || "USDC";
+  return `${sign}${transaction.amountUsdc.toFixed(2)} ${symbol}`;
 }
 
 function getCounterpartyStats(transactions: LedgerTransaction[]) {
@@ -191,8 +210,9 @@ export function enrichLedgerTransactions(transactions: LedgerTransaction[]) {
   return transactions.map((transaction) => {
     const stats = counterpartyStats.get(transaction.counterparty);
     const repeatedCounterparty = (stats?.count || 0) >= 2;
-    const smallPayment = transaction.amountUsdc > 0 && transaction.amountUsdc <= 5;
-    const tinyPayment = transaction.amountUsdc > 0 && transaction.amountUsdc < 1;
+    const usd = transaction.usdValue ?? transaction.amountUsdc;
+    const smallPayment = usd > 0 && usd <= 5;
+    const tinyPayment = usd > 0 && usd < 1;
     const isLikelyX402 =
       transaction.direction === "expense" &&
       smallPayment &&
@@ -233,26 +253,28 @@ function getRuleCategory(
     return "internal_transfer";
   }
 
+  const usd = transaction.usdValue ?? transaction.amountUsdc;
+
   if (transaction.direction === "income") {
-    if (transaction.amountUsdc <= 5 && signals.repeatedCounterparty) {
+    if (usd <= 5 && signals.repeatedCounterparty) {
       return "agent_service";
     }
     return "income";
   }
 
-  if (transaction.amountUsdc < 1) {
+  if (usd < 1) {
     return "api_call";
   }
 
-  if (signals.isLikelyX402 && transaction.amountUsdc <= 5) {
+  if (signals.isLikelyX402 && usd <= 5) {
     return "data_access";
   }
 
-  if (transaction.amountUsdc >= 5 && transaction.amountUsdc <= 25 && signals.repeatedCounterparty) {
+  if (usd >= 5 && usd <= 25 && signals.repeatedCounterparty) {
     return "subscription";
   }
 
-  if (transaction.amountUsdc > 25) {
+  if (usd > 25) {
     return "compute";
   }
 
@@ -312,11 +334,12 @@ function getRiskFlag(
     return "duplicate";
   }
 
-  if (transaction.direction === "expense" && transaction.amountUsdc > 100) {
+  const usd = transaction.usdValue ?? transaction.amountUsdc;
+  if (transaction.direction === "expense" && usd > 100) {
     return "unusual_amount";
   }
 
-  if (signals.repeatedCounterparty && transaction.amountUsdc < 1) {
+  if (signals.repeatedCounterparty && usd < 1) {
     return "high_frequency";
   }
 
@@ -340,7 +363,7 @@ export function getCategorySummary(transactions: LedgerTransaction[]) {
     };
 
     current.count += 1;
-    current.totalUsdc += transaction.amountUsdc;
+    current.totalUsdc += transaction.usdValue ?? transaction.amountUsdc;
     totals.set(category, current);
   });
 
@@ -368,16 +391,64 @@ export function getDailyFlows(transactions: LedgerTransaction[], range: TimeRang
     }
 
     if (transaction.direction === "expense") {
-      flow.spend += transaction.amountUsdc;
+      flow.spend += transaction.usdValue ?? transaction.amountUsdc;
     }
 
     if (transaction.direction === "income") {
-      flow.income += transaction.amountUsdc;
+      flow.income += transaction.usdValue ?? transaction.amountUsdc;
     }
   });
 
   return Array.from(flows.values());
 }
+
+export function getPortfolioBreakdown(
+  transactions: LedgerTransaction[],
+  prices: Map<string, number>,
+): PortfolioEntry[] {
+  const map = new Map<string, PortfolioEntry>();
+
+  for (const tx of transactions) {
+    const addr = tx.tokenAddress || "unknown";
+    const symbol = tx.tokenSymbol || "UNKNOWN";
+    const entry = map.get(addr) ?? {
+      tokenSymbol: symbol,
+      tokenAddress: addr,
+      isAgentToken: tx.isAgentToken ?? false,
+      isStablecoin: STABLECOIN_ADDRESSES_SET.has(addr),
+      totalInflow: 0,
+      totalOutflow: 0,
+      usdInflow: 0,
+      usdOutflow: 0,
+      usdNetFlow: 0,
+      txCount: 0,
+      currentPrice: prices.get(addr),
+    };
+
+    const usd = tx.usdValue ?? tx.amountUsdc;
+    entry.txCount += 1;
+    if (tx.direction === "income") {
+      entry.totalInflow += tx.amountUsdc;
+      entry.usdInflow += usd;
+    } else if (tx.direction === "expense") {
+      entry.totalOutflow += tx.amountUsdc;
+      entry.usdOutflow += usd;
+    }
+    entry.usdNetFlow = entry.usdInflow - entry.usdOutflow;
+    map.set(addr, entry);
+  }
+
+  return Array.from(map.values()).sort(
+    (a, b) => (b.usdInflow + b.usdOutflow) - (a.usdInflow + a.usdOutflow),
+  );
+}
+
+const STABLECOIN_ADDRESSES_SET = new Set([
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+  "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
+  "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+]);
 
 export function getLedgerReport(params: {
   transactions: LedgerTransaction[];
