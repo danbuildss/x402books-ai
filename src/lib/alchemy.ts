@@ -35,7 +35,8 @@ const BASE_ALCHEMY_URL = "https://base-mainnet.g.alchemy.com/v2";
 
 function parseTokenAmount(transfer: AlchemyTransfer) {
   const rawValue = transfer.rawContract?.value;
-  const decimals = Number(transfer.rawContract?.decimal || 6);
+  // Default to 18 decimals (ERC-20 standard). USDC/USDT are exceptions at 6.
+  const decimals = Number(transfer.rawContract?.decimal ?? 18);
 
   if (!rawValue) {
     return Number(transfer.value || 0);
