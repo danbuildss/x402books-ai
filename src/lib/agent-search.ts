@@ -1,26 +1,28 @@
 // Server-side agent search across BANKR and Virtuals Protocol ecosystems.
 
+export type WalletType = "sentient" | "tba" | "deployer" | "token";
+
 export type AgentResult = {
   name: string;
   symbol: string;
   ecosystem: "BANKR" | "VIRTUALS";
   tokenAddress: string;
-  walletAddress?: string;
+  walletAddress: string;   // always populated — never undefined
+  walletType: WalletType;
   imageUrl?: string;
   mcap?: number;
   xHandle?: string;
 };
 
 // ── BANKR ─────────────────────────────────────────────────────────────────────
-// Endpoint: GET /token-launches
-// Auth: X-API-Key header
-// Shape: array of { tokenAddress, tokenSymbol, deployer: { xHandle } }
+// Shape: array of { tokenAddress, tokenSymbol, deployer: { address, xHandle } }
 
 type BankrLaunch = {
   tokenAddress?: string;
   tokenSymbol?: string;
   name?: string;
   deployer?: {
+    address?: string;      // EOA that launched — the operational wallet
     xHandle?: string;
     walletAddress?: string;
   };
@@ -38,7 +40,7 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
     const res = await fetch(`${process.env.BANKR_API_URL ?? "https://api.bankr.bot"}/token-launches`, {
       headers: { "X-API-Key": key, Accept: "application/json" },
       signal: AbortSignal.timeout(8_000),
-      next: { revalidate: 300 }, // 5min cache
+      next: { revalidate: 300 },
     });
     if (!res.ok) return [];
 
@@ -54,16 +56,25 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
       const tokenAddress = (item.tokenAddress ?? "").toLowerCase();
 
       if (!tokenAddress.startsWith("0x")) continue;
-
-      // Match by symbol, name, or X handle
       if (!symbol.includes(q) && !name.includes(q) && !xHandle.includes(q)) continue;
+
+      // deployer.address is the operational EOA for BANKR agents
+      const deployerAddr = (
+        item.deployer?.address ??
+        item.deployer?.walletAddress ??
+        ""
+      ).toLowerCase();
+
+      const walletAddress = deployerAddr.startsWith("0x") ? deployerAddr : tokenAddress;
+      const walletType: WalletType = deployerAddr.startsWith("0x") ? "deployer" : "token";
 
       results.push({
         name: item.name ?? item.tokenSymbol ?? "",
         symbol: (item.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase(),
         ecosystem: "BANKR",
         tokenAddress,
-        walletAddress: item.deployer?.walletAddress?.toLowerCase(),
+        walletAddress,
+        walletType,
         imageUrl: item.imageUrl ?? item.image,
         xHandle: item.deployer?.xHandle,
       });
@@ -76,9 +87,8 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
 }
 
 // ── Virtuals ──────────────────────────────────────────────────────────────────
-// Endpoint: GET /api/virtuals?sort[0]=mcapInVirtual:desc
-// Auth: none (public)
-// Shape: { data: [{ id, attributes: { name, symbol, tokenAddress, mcapInVirtual, twitter } }] }
+// Shape: { data: [{ id, attributes: { name, symbol, tokenAddress,
+//   sentientWalletAddress, tbaAddress, mcapInVirtual, twitter } }] }
 
 type VirtualsItem = {
   id?: number;
@@ -86,10 +96,11 @@ type VirtualsItem = {
     name?: string;
     symbol?: string;
     tokenAddress?: string;
+    sentientWalletAddress?: string;  // primary: autonomous agent brain wallet
+    tbaAddress?: string;             // fallback: ERC-6551 token-bound account
     mcapInVirtual?: number;
     twitter?: string;
     image?: { data?: { attributes?: { url?: string } } };
-    // Some responses have image directly on attributes
     imageUrl?: string;
   };
 };
@@ -99,7 +110,6 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
 
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
-    // Server-side filter across name, symbol, and twitter handle
     const qEnc = encodeURIComponent(q);
     const url =
       `${base}/virtuals` +
@@ -123,6 +133,24 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
       const tokenAddress = (attr.tokenAddress ?? "").toLowerCase();
       if (!tokenAddress.startsWith("0x")) continue;
 
+      // Wallet priority: sentientWalletAddress → tbaAddress → tokenAddress
+      const sentient = (attr.sentientWalletAddress ?? "").toLowerCase();
+      const tba = (attr.tbaAddress ?? "").toLowerCase();
+
+      let walletAddress: string;
+      let walletType: WalletType;
+
+      if (sentient.startsWith("0x")) {
+        walletAddress = sentient;
+        walletType = "sentient";
+      } else if (tba.startsWith("0x")) {
+        walletAddress = tba;
+        walletType = "tba";
+      } else {
+        walletAddress = tokenAddress;
+        walletType = "token";
+      }
+
       const rawImageUrl = attr.imageUrl ?? attr.image?.data?.attributes?.url;
 
       results.push({
@@ -130,6 +158,8 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
         symbol: (attr.symbol ?? "").toUpperCase(),
         ecosystem: "VIRTUALS",
         tokenAddress,
+        walletAddress,
+        walletType,
         mcap: attr.mcapInVirtual,
         imageUrl: rawImageUrl?.startsWith("http") ? rawImageUrl : undefined,
         xHandle: attr.twitter,

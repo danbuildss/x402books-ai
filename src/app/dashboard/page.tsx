@@ -17,7 +17,21 @@ import {
 } from "@/components/stitch-app";
 import { formatUsdc, relativeTime, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
-import type { AgentResult } from "@/lib/agent-search";
+import type { AgentResult, WalletType } from "@/lib/agent-search";
+
+const WALLET_TYPE_LABEL: Record<WalletType, string> = {
+  sentient: "Sentient Wallet",
+  tba:      "Token-Bound Wallet",
+  deployer: "Deployer Wallet",
+  token:    "Token Contract",
+};
+
+const WALLET_TYPE_STYLE: Record<WalletType, string> = {
+  sentient: "wallet",
+  tba:      "wallet",
+  deployer: "wallet",
+  token:    "token",
+};
 
 const RANGE_LABELS: Record<string, string> = {
   "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days",
@@ -54,7 +68,6 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
   }, []);
 
   function pick(agent: AgentResult) {
-    if (!agent.walletAddress) return; // token contracts can't be scanned
     onSelect(agent.walletAddress);
     setQuery(agent.name || agent.symbol);
     setOpen(false);
@@ -78,49 +91,37 @@ function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
 
       {open && results.length > 0 && (
         <div className="stitch-agent-results">
-          {results.map((agent, i) => {
-            const canScan = Boolean(agent.walletAddress);
-            return (
-              <button
-                key={i}
-                type="button"
-                className="stitch-agent-result"
-                onClick={() => pick(agent)}
-                disabled={!canScan}
-                title={canScan ? undefined : "No wallet address available — only the token contract is known for this agent"}
-                style={canScan ? undefined : { opacity: 0.55, cursor: "not-allowed" }}
-              >
-                {agent.imageUrl && (
-                  <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
-                )}
-                <div className="stitch-agent-info">
-                  <span className="stitch-agent-name">{agent.name}</span>
-                  <span className="stitch-agent-sym">
-                    {agent.symbol}
-                    {agent.xHandle && (
-                      <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
-                        · @{agent.xHandle.replace(/^@/, "")}
-                      </span>
-                    )}
-                  </span>
-                </div>
-                <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
-                  {agent.ecosystem}
-                </span>
-                <div className="stitch-agent-addr-wrap">
-                  {canScan ? (
-                    <span className="stitch-agent-addr-pill wallet">
-                      Wallet · {agent.walletAddress!.slice(0, 6)}…{agent.walletAddress!.slice(-4)}
-                    </span>
-                  ) : (
-                    <span className="stitch-agent-addr-pill token" title="Token contract — no wallet to scan">
-                      No wallet found
+          {results.map((agent, i) => (
+            <button
+              key={i}
+              type="button"
+              className="stitch-agent-result"
+              onClick={() => pick(agent)}
+            >
+              {agent.imageUrl && (
+                <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
+              )}
+              <div className="stitch-agent-info">
+                <span className="stitch-agent-name">{agent.name}</span>
+                <span className="stitch-agent-sym">
+                  {agent.symbol}
+                  {agent.xHandle && (
+                    <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
+                      · @{agent.xHandle.replace(/^@/, "")}
                     </span>
                   )}
-                </div>
-              </button>
-            );
-          })}
+                </span>
+              </div>
+              <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
+                {agent.ecosystem}
+              </span>
+              <div className="stitch-agent-addr-wrap">
+                <span className={`stitch-agent-addr-pill ${WALLET_TYPE_STYLE[agent.walletType]}`}>
+                  {WALLET_TYPE_LABEL[agent.walletType]} · {agent.walletAddress.slice(0, 6)}…{agent.walletAddress.slice(-4)}
+                </span>
+              </div>
+            </button>
+          ))}
         </div>
       )}
 
