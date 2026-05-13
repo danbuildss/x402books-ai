@@ -7223,3 +7223,197 @@ html, body {
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* ── Mode tabs (Wallet / Find Agent) ─────────────────────────────────────── */
+
+.stitch-mode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.stitch-mode-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--st-border);
+  background: transparent;
+  color: var(--st-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.stitch-mode-tab:hover {
+  border-color: var(--st-primary);
+  color: var(--st-primary);
+}
+
+.stitch-mode-tab.active {
+  border-color: var(--st-primary);
+  background: rgba(45,112,80,0.1);
+  color: var(--st-primary);
+  font-weight: 600;
+}
+
+/* ── Agent search ────────────────────────────────────────────────────────── */
+
+.stitch-agent-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.stitch-agent-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--st-border);
+  background: var(--st-card);
+  transition: border-color 0.15s;
+}
+
+.stitch-agent-search-bar:focus-within {
+  border-color: var(--st-primary);
+}
+
+.stitch-agent-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--st-text);
+  font-size: 14px;
+}
+
+.stitch-agent-search-input::placeholder {
+  color: var(--st-muted);
+}
+
+.stitch-agent-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--st-border);
+  border-top-color: var(--st-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.stitch-agent-results {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: var(--st-card);
+  border: 1px solid var(--st-border);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.22);
+  overflow: hidden;
+}
+
+.stitch-agent-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid var(--st-border);
+  transition: background 0.12s;
+}
+
+.stitch-agent-result:last-child { border-bottom: none; }
+.stitch-agent-result:hover { background: var(--st-hover); }
+
+.stitch-agent-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--st-hover);
+}
+
+.stitch-agent-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.stitch-agent-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--st-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stitch-agent-sym {
+  font-size: 11px;
+  font-family: var(--st-mono);
+  color: var(--st-muted);
+}
+
+.stitch-ecosystem-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.stitch-ecosystem-badge.virtuals {
+  background: rgba(139,92,246,0.15);
+  color: #a78bfa;
+  border: 1px solid rgba(139,92,246,0.25);
+}
+
+.stitch-ecosystem-badge.bankr {
+  background: rgba(45,112,80,0.15);
+  color: var(--st-primary);
+  border: 1px solid rgba(45,112,80,0.25);
+}
+
+.stitch-agent-addr-wrap { flex-shrink: 0; }
+
+.stitch-agent-addr-pill {
+  font-size: 10px;
+  font-family: var(--st-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.stitch-agent-addr-pill.wallet {
+  background: rgba(34,197,94,0.12);
+  color: var(--st-green);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+
+.stitch-agent-addr-pill.token {
+  background: var(--st-hover);
+  color: var(--st-muted);
+  border: 1px solid var(--st-border);
+}
+
+.stitch-agent-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--st-muted);
+  font-size: 13px;
+}

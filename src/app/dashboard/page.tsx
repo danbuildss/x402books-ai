@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import {
   StitchAiSummary,
   StitchDonut,
@@ -17,13 +17,107 @@ import {
 } from "@/components/stitch-app";
 import { formatUsdc, relativeTime, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
+import type { AgentResult } from "@/lib/agent-search";
 
 const RANGE_LABELS: Record<string, string> = {
   "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days",
 };
 
+function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<AgentResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (timer.current) clearTimeout(timer.current);
+    if (query.length < 2) { setResults([]); setOpen(false); return; }
+    timer.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/agent/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json() as { results: AgentResult[] };
+        setResults(data.results ?? []);
+        setOpen(true);
+      } catch { /* silent */ } finally { setLoading(false); }
+    }, 380);
+  }, [query]);
+
+  useEffect(() => {
+    function onOutside(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onOutside);
+    return () => document.removeEventListener("mousedown", onOutside);
+  }, []);
+
+  function pick(agent: AgentResult) {
+    const addr = agent.walletAddress || agent.tokenAddress;
+    onSelect(addr);
+    setQuery(agent.name || agent.symbol);
+    setOpen(false);
+  }
+
+  return (
+    <div className="stitch-agent-search" ref={wrapRef}>
+      <div className="stitch-agent-search-bar">
+        <span className="material-symbols-outlined" style={{ fontSize: 17, color: "var(--st-muted)" }}>
+          manage_search
+        </span>
+        <input
+          className="stitch-agent-search-input"
+          placeholder="Search agent name or symbol…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          autoComplete="off"
+        />
+        {loading && <span className="stitch-agent-spinner" />}
+      </div>
+
+      {open && results.length > 0 && (
+        <div className="stitch-agent-results">
+          {results.map((agent, i) => (
+            <button key={i} type="button" className="stitch-agent-result" onClick={() => pick(agent)}>
+              {agent.imageUrl && (
+                <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
+              )}
+              <div className="stitch-agent-info">
+                <span className="stitch-agent-name">{agent.name}</span>
+                <span className="stitch-agent-sym">{agent.symbol}</span>
+              </div>
+              <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
+                {agent.ecosystem}
+              </span>
+              <div className="stitch-agent-addr-wrap">
+                {agent.walletAddress ? (
+                  <span className="stitch-agent-addr-pill wallet">
+                    Wallet · {agent.walletAddress.slice(0, 6)}…{agent.walletAddress.slice(-4)}
+                  </span>
+                ) : (
+                  <span className="stitch-agent-addr-pill token">
+                    Token contract
+                  </span>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {open && results.length === 0 && !loading && query.length >= 2 && (
+        <div className="stitch-agent-results">
+          <div className="stitch-agent-empty">No agents found for &quot;{query}&quot;</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const ledger = useLedgerState();
+  const [mode, setMode] = useState<"wallet" | "agent">("wallet");
   const recent = ledger.transactions.slice(0, 6);
   const hasWallet = Boolean(ledger.wallet);
 
@@ -45,19 +139,49 @@ export default function DashboardPage() {
         }
       />
 
-      <StitchScanBar
-        value={ledger.walletInput}
-        onChange={ledger.setWalletInput}
-        onSubmit={onSubmit}
-        onCategorize={ledger.categorizeTransactions}
-        onExport={ledger.exportCsv}
-        onExportPdf={ledger.exportPdf}
-        loading={ledger.isLoading}
-        categorizing={ledger.isCategorizing}
-        error={ledger.error}
-        status={ledger.status}
-        hasTransactions={ledger.transactions.length > 0}
-      />
+      {/* Mode toggle */}
+      <div className="stitch-mode-tabs">
+        <button
+          type="button"
+          className={`stitch-mode-tab${mode === "wallet" ? " active" : ""}`}
+          onClick={() => setMode("wallet")}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>account_balance_wallet</span>
+          Wallet
+        </button>
+        <button
+          type="button"
+          className={`stitch-mode-tab${mode === "agent" ? " active" : ""}`}
+          onClick={() => setMode("agent")}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>smart_toy</span>
+          Find Agent
+        </button>
+      </div>
+
+      {mode === "wallet" ? (
+        <StitchScanBar
+          value={ledger.walletInput}
+          onChange={ledger.setWalletInput}
+          onSubmit={onSubmit}
+          onCategorize={ledger.categorizeTransactions}
+          onExport={ledger.exportCsv}
+          onExportPdf={ledger.exportPdf}
+          loading={ledger.isLoading}
+          categorizing={ledger.isCategorizing}
+          error={ledger.error}
+          status={ledger.status}
+          hasTransactions={ledger.transactions.length > 0}
+        />
+      ) : (
+        <AgentSearch
+          onSelect={(addr) => {
+            ledger.setWalletInput(addr);
+            setMode("wallet");
+            ledger.scanWallet(addr, ledger.range);
+          }}
+        />
+      )}
 
       {!hasWallet && !ledger.isLoading && (
         <div className="stitch-onboard">
