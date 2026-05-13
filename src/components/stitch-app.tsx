@@ -19,6 +19,7 @@ const navGroups = [
     label: "Analytics",
     items: [
       { href: "/dashboard",    label: "Overview",      icon: "dashboard" },
+      { href: "/portfolio",    label: "Portfolio",     icon: "donut_small" },
       { href: "/transactions", label: "Transactions",  icon: "receipt_long" },
       { href: "/categories",   label: "Categories",    icon: "category" },
       { href: "/flags",        label: "Flags",         icon: "flag" },
@@ -42,6 +43,7 @@ const navGroups = [
 
 const pageNames: Record<string, string> = {
   "/dashboard":    "Overview",
+  "/portfolio":    "Portfolio",
   "/transactions": "Transactions",
   "/categories":   "Categories",
   "/flags":        "Flags",

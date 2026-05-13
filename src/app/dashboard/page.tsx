@@ -109,22 +109,19 @@ export default function DashboardPage() {
         />
       </section>
 
-      {/* Portfolio breakdown */}
+      {/* Portfolio breakdown — top 5 */}
       {ledger.hasLedger && ledger.portfolio.length > 0 && (
         <section className="stitch-card stitch-portfolio">
           <div className="stitch-card-head">
-            <h3>Portfolio Breakdown</h3>
-            <span className="stitch-portfolio-total">
-              {ledger.portfolio.length} token{ledger.portfolio.length !== 1 ? "s" : ""}
-            </span>
+            <h3>Portfolio</h3>
+            <a href="/portfolio">View all →</a>
           </div>
           <div className="stitch-portfolio-list">
-            {ledger.portfolio.map((entry) => (
+            {ledger.portfolio.slice(0, 5).map((entry) => (
               <div key={entry.tokenAddress} className="stitch-portfolio-row">
                 <div className="stitch-portfolio-token">
                   <span className="stitch-token-symbol">{entry.tokenSymbol}</span>
                   {entry.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
-                  {entry.isStablecoin && <span className="stitch-stable-badge">STABLE</span>}
                 </div>
                 <div className="stitch-portfolio-flows">
                   <span className="stitch-portfolio-inflow">+${entry.usdInflow.toFixed(2)}</span>

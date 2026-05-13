@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   StitchEmpty,
   StitchHeader,
@@ -14,11 +14,12 @@ import { useLedgerState } from "@/lib/use-ledger-state";
 export default function CategoriesPage() {
   const ledger = useLedgerState();
   const [tokenFilter, setTokenFilter] = useState<string>("all");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Build unique token list from portfolio
+  // Only ecosystem tokens that appear in the portfolio
   const availableTokens = ledger.portfolio.map((e) => e.tokenSymbol);
 
-  // Filter transactions by selected token then derive categories
   const filteredTransactions =
     tokenFilter === "all"
       ? ledger.transactions
@@ -28,6 +29,9 @@ export default function CategoriesPage() {
     tokenFilter === "all" ? ledger.categories : getCategorySummary(filteredTransactions);
 
   const maxUsdc = Math.max(...displayCategories.map((c) => c.totalUsdc), 0.01);
+
+  const activeLabel =
+    tokenFilter === "all" ? "All tokens" : tokenFilter;
 
   return (
     <StitchShell>
@@ -43,30 +47,45 @@ export default function CategoriesPage() {
         }
       />
 
-      {/* Token filter pills */}
-      {availableTokens.length > 1 && (
-        <div className="stitch-token-filter">
+      {/* Token filter — compact dropdown */}
+      {availableTokens.length > 0 && (
+        <div className="stitch-token-dropdown-wrap" ref={dropdownRef}>
           <button
             type="button"
-            className={`stitch-token-pill${tokenFilter === "all" ? " active" : ""}`}
-            onClick={() => setTokenFilter("all")}
+            className="stitch-token-dropdown-btn"
+            onClick={() => setDropdownOpen((v) => !v)}
           >
-            All tokens
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>filter_list</span>
+            {activeLabel}
+            <span className="material-symbols-outlined" style={{ fontSize: 14, marginLeft: "auto" }}>
+              {dropdownOpen ? "expand_less" : "expand_more"}
+            </span>
           </button>
-          {availableTokens.map((sym) => {
-            const entry = ledger.portfolio.find((e) => e.tokenSymbol === sym);
-            return (
+          {dropdownOpen && (
+            <div className="stitch-token-dropdown">
               <button
-                key={sym}
                 type="button"
-                className={`stitch-token-pill${tokenFilter === sym ? " active" : ""}${entry?.isAgentToken ? " agent" : ""}`}
-                onClick={() => setTokenFilter(sym)}
+                className={`stitch-token-option${tokenFilter === "all" ? " active" : ""}`}
+                onClick={() => { setTokenFilter("all"); setDropdownOpen(false); }}
               >
-                {sym}
-                {entry?.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
+                All tokens
               </button>
-            );
-          })}
+              {availableTokens.map((sym) => {
+                const entry = ledger.portfolio.find((e) => e.tokenSymbol === sym);
+                return (
+                  <button
+                    key={sym}
+                    type="button"
+                    className={`stitch-token-option${tokenFilter === sym ? " active" : ""}`}
+                    onClick={() => { setTokenFilter(sym); setDropdownOpen(false); }}
+                  >
+                    <span style={{ fontFamily: "var(--st-mono)", fontWeight: 600 }}>{sym}</span>
+                    {entry?.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

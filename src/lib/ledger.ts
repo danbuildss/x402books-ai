@@ -402,6 +402,8 @@ export function getDailyFlows(transactions: LedgerTransaction[], range: TimeRang
   return Array.from(flows.values());
 }
 
+import { isEcosystemToken } from "@/lib/tokens";
+
 export function getPortfolioBreakdown(
   transactions: LedgerTransaction[],
   prices: Map<string, number>,
@@ -411,6 +413,10 @@ export function getPortfolioBreakdown(
   for (const tx of transactions) {
     const addr = tx.tokenAddress || "unknown";
     const symbol = tx.tokenSymbol || "UNKNOWN";
+
+    // Only surface ecosystem tokens (BANKR + VIRTUALS + Base natives)
+    if (!isEcosystemToken(symbol)) continue;
+
     const entry = map.get(addr) ?? {
       tokenSymbol: symbol,
       tokenAddress: addr,
@@ -438,9 +444,9 @@ export function getPortfolioBreakdown(
     map.set(addr, entry);
   }
 
-  return Array.from(map.values()).sort(
-    (a, b) => (b.usdInflow + b.usdOutflow) - (a.usdInflow + a.usdOutflow),
-  );
+  return Array.from(map.values())
+    .filter((e) => e.usdInflow + e.usdOutflow > 0) // hide zero-value entries
+    .sort((a, b) => (b.usdInflow + b.usdOutflow) - (a.usdInflow + a.usdOutflow));
 }
 
 const STABLECOIN_ADDRESSES_SET = new Set([
