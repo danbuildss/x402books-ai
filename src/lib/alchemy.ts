@@ -5,6 +5,56 @@ import {
 } from "@/lib/ledger";
 import { isStablecoin, isAgentToken } from "@/lib/tokens";
 
+// Resolve a token contract to its deployer wallet via Alchemy.
+// If the address is already an EOA (code === "0x"), returns it unchanged.
+export async function resolveToWallet(
+  address: string,
+  apiKey: string,
+): Promise<string> {
+  const addr = address.toLowerCase();
+  try {
+    // Check if it's a contract
+    const codeRes = await fetch(`${BASE_ALCHEMY_URL}/${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 1, jsonrpc: "2.0", method: "eth_getCode",
+        params: [addr, "latest"],
+      }),
+      signal: AbortSignal.timeout(5_000),
+    });
+    const codeBody = await codeRes.json() as { result?: string };
+    // "0x" means no contract code — it's a plain wallet
+    if (!codeBody.result || codeBody.result === "0x") return addr;
+
+    // It's a contract — find the deploying transaction (first external transfer to it)
+    const deployRes = await fetch(`${BASE_ALCHEMY_URL}/${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: 2, jsonrpc: "2.0",
+        method: "alchemy_getAssetTransfers",
+        params: [{
+          toAddress: addr,
+          category: ["external"],
+          fromBlock: "0x0",
+          maxCount: "0x1",
+          order: "asc",
+          withMetadata: false,
+        }],
+      }),
+      signal: AbortSignal.timeout(5_000),
+    });
+    const deployBody = await deployRes.json() as {
+      result?: { transfers?: Array<{ from?: string }> };
+    };
+    const deployer = deployBody.result?.transfers?.[0]?.from?.toLowerCase();
+    return deployer ?? addr;
+  } catch {
+    return addr;
+  }
+}
+
 type AlchemyTransfer = {
   hash: string;
   from: string;

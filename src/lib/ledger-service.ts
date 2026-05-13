@@ -81,13 +81,18 @@ export async function buildLedgerScan(params: {
   const priceEnriched = rawTransactions.map((tx) => {
     const addr = tx.tokenAddress.toLowerCase();
     const price = isStablecoin(addr) ? 1 : (metrics.get(addr)?.price ?? 0);
-    return {
-      ...tx,
-      usdValue: tx.amountUsdc * price,
-      isAgentToken:
-        isAgentToken(tx.tokenSymbol) ||
-        ecosystem.symbols.has(tx.tokenSymbol.toUpperCase()),
-    };
+    const isAgent =
+      isAgentToken(tx.tokenSymbol) ||
+      ecosystem.symbols.has(tx.tokenSymbol.toUpperCase()) ||
+      ecosystem.addresses.has(addr);
+    // For known agent tokens with no price data, preserve native amount so
+    // they remain visible in the portfolio rather than being filtered as $0
+    const usdValue = price > 0
+      ? tx.amountUsdc * price
+      : isAgent
+        ? tx.amountUsdc // native amount as USD proxy — better than hiding it
+        : 0;
+    return { ...tx, usdValue, isAgentToken: isAgent };
   });
 
   const transactions = enrichLedgerTransactions(priceEnriched);
