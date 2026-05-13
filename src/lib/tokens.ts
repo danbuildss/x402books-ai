@@ -25,15 +25,28 @@ export function isAgentToken(symbol: string): boolean {
 type DexScreenerPair = {
   baseToken?: { address?: string };
   priceUsd?: string;
+  priceChange?: { h24?: number; h6?: number; h1?: number };
+  volume?: { h24?: number };
 };
 
-export async function fetchTokenPrices(
+export type TokenMetrics = {
+  price: number;
+  priceChange24h?: number;
+  volume24h?: number;
+};
+
+export async function fetchTokenMetrics(
   addresses: string[],
-): Promise<Map<string, number>> {
-  const prices = new Map<string, number>();
+): Promise<Map<string, TokenMetrics>> {
+  const metrics = new Map<string, TokenMetrics>();
   const toFetch = addresses.filter((a) => !isStablecoin(a));
 
-  if (toFetch.length === 0) return prices;
+  // Stablecoins always $1, no change
+  for (const addr of addresses) {
+    if (isStablecoin(addr)) metrics.set(addr.toLowerCase(), { price: 1, priceChange24h: 0 });
+  }
+
+  if (toFetch.length === 0) return metrics;
 
   try {
     const chunks: string[][] = [];
@@ -52,15 +65,27 @@ export async function fetchTokenPrices(
         for (const pair of data.pairs ?? []) {
           const addr = pair.baseToken?.address?.toLowerCase();
           const price = parseFloat(pair.priceUsd ?? "0");
-          if (addr && price > 0 && !prices.has(addr)) {
-            prices.set(addr, price);
+          if (addr && price > 0 && !metrics.has(addr)) {
+            metrics.set(addr, {
+              price,
+              priceChange24h: pair.priceChange?.h24,
+              volume24h: pair.volume?.h24,
+            });
           }
         }
       }),
     );
   } catch {
-    // price failures are non-fatal
+    // non-fatal
   }
 
-  return prices;
+  return metrics;
+}
+
+// Backward-compat wrapper
+export async function fetchTokenPrices(
+  addresses: string[],
+): Promise<Map<string, number>> {
+  const metrics = await fetchTokenMetrics(addresses);
+  return new Map([...metrics.entries()].map(([a, m]) => [a, m.price]));
 }

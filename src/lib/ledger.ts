@@ -79,6 +79,8 @@ export type PortfolioEntry = {
   usdNetFlow: number;
   txCount: number;
   currentPrice?: number;
+  priceChange24h?: number;  // % change in last 24h
+  volume24h?: number;       // USD volume last 24h
 };
 
 export type LedgerReport = {
@@ -403,11 +405,13 @@ export function getDailyFlows(transactions: LedgerTransaction[], range: TimeRang
 }
 
 import type { EcosystemRegistry } from "@/lib/ecosystem-tokens";
+import type { TokenMetrics } from "@/lib/tokens";
 
 export function getPortfolioBreakdown(
   transactions: LedgerTransaction[],
   prices: Map<string, number>,
   ecosystem: EcosystemRegistry,
+  metrics?: Map<string, TokenMetrics>,
 ): PortfolioEntry[] {
   const map = new Map<string, PortfolioEntry>();
 
@@ -421,6 +425,7 @@ export function getPortfolioBreakdown(
       ecosystem.symbols.has(symbol.toUpperCase());
     if (!inEcosystem) continue;
 
+    const m = metrics?.get(addr);
     const entry = map.get(addr) ?? {
       tokenSymbol: symbol,
       tokenAddress: addr,
@@ -432,7 +437,9 @@ export function getPortfolioBreakdown(
       usdOutflow: 0,
       usdNetFlow: 0,
       txCount: 0,
-      currentPrice: prices.get(addr),
+      currentPrice: m?.price ?? prices.get(addr),
+      priceChange24h: m?.priceChange24h,
+      volume24h: m?.volume24h,
     };
 
     const usd = tx.usdValue ?? tx.amountUsdc;

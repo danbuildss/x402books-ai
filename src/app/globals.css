@@ -7417,3 +7417,114 @@ html, body {
   color: var(--st-muted);
   font-size: 13px;
 }
+
+/* ── Portfolio Phase 2b: rich row layout ─────────────────────────────────── */
+
+.stitch-portfolio-row-rich {
+  display: grid;
+  grid-template-columns: 1fr 110px 90px 1fr 1fr 60px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--st-border);
+  transition: background 0.12s;
+}
+
+.stitch-portfolio-row-rich:last-child {
+  border-bottom: none;
+}
+
+.stitch-portfolio-row-rich:hover {
+  background: var(--st-hover);
+}
+
+/* Price column */
+.stitch-portfolio-price-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.stitch-portfolio-price-col .stitch-portfolio-price {
+  font-family: var(--st-mono);
+  font-size: 11px;
+  color: var(--st-text);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* Price change badge */
+.stitch-price-change {
+  font-size: 10px;
+  font-family: var(--st-mono);
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.stitch-price-change.up {
+  color: var(--st-green);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.stitch-price-change.down {
+  color: var(--st-red);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* Chart column */
+.stitch-portfolio-chart-col {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Sparkline SVG */
+.stitch-sparkline {
+  display: block;
+  overflow: visible;
+}
+
+.stitch-sparkline-empty {
+  font-size: 11px;
+  color: var(--st-muted);
+  font-family: var(--st-mono);
+}
+
+/* Column header row */
+.stitch-portfolio-header-row {
+  display: grid;
+  grid-template-columns: 1fr 110px 90px 1fr 1fr 60px;
+  gap: 8px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--st-border);
+  background: var(--st-hover);
+}
+
+.stitch-portfolio-header-row span {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--st-muted);
+}
+
+/* Responsive: collapse rich layout on small screens */
+@media (max-width: 640px) {
+  .stitch-portfolio-row-rich {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .stitch-portfolio-token { grid-column: 1; grid-row: 1; }
+  .stitch-portfolio-price-col { grid-column: 2; grid-row: 1; align-items: flex-end; }
+  .stitch-portfolio-chart-col { grid-column: 1; grid-row: 2; }
+  .stitch-portfolio-flows { grid-column: 2; grid-row: 2; }
+  .stitch-portfolio-net { grid-column: 1; grid-row: 3; }
+  .stitch-portfolio-txcount { grid-column: 2; grid-row: 3; text-align: right; }
+
+  .stitch-portfolio-header-row { display: none; }
+}

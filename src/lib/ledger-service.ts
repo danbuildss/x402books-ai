@@ -9,7 +9,7 @@ import {
   getLedgerSummary,
   getPortfolioBreakdown,
 } from "@/lib/ledger";
-import { fetchTokenPrices, isStablecoin, isAgentToken } from "@/lib/tokens";
+import { fetchTokenMetrics, isStablecoin, isAgentToken } from "@/lib/tokens";
 import { getEcosystemRegistry } from "@/lib/ecosystem-tokens";
 
 export async function buildLedgerScan(params: {
@@ -41,12 +41,12 @@ export async function buildLedgerScan(params: {
     ),
   ];
 
-  const prices = await fetchTokenPrices(nonStableAddresses);
+  const metrics = await fetchTokenMetrics(nonStableAddresses);
 
   // Enrich each transaction with its USD value and agent token flag
   const priceEnriched = rawTransactions.map((tx) => {
     const addr = tx.tokenAddress.toLowerCase();
-    const price = isStablecoin(addr) ? 1 : (prices.get(addr) ?? 0);
+    const price = isStablecoin(addr) ? 1 : (metrics.get(addr)?.price ?? 0);
     return {
       ...tx,
       usdValue: tx.amountUsdc * price,
@@ -57,7 +57,10 @@ export async function buildLedgerScan(params: {
   });
 
   const transactions = enrichLedgerTransactions(priceEnriched);
-  const portfolio = getPortfolioBreakdown(transactions, prices, ecosystem);
+
+  // Build price map for portfolio breakdown, add 24h change + volume
+  const prices = new Map([...metrics.entries()].map(([a, m]) => [a, m.price]));
+  const portfolio = getPortfolioBreakdown(transactions, prices, ecosystem, metrics);
 
   const summary = getLedgerSummary(transactions);
   const report = getLedgerReport({
