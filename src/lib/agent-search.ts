@@ -69,7 +69,7 @@ export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
       });
     }
 
-    return results.slice(0, 8);
+    return results.slice(0, 10);
   } catch {
     return [];
   }
@@ -99,10 +99,14 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
 
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
-    // Use server-side filter to narrow results, then match locally for accuracy
-    const nameFilter = `filters[$or][0][name][$containsi]=${encodeURIComponent(query.replace(/^@/, ""))}`;
-    const symFilter = `filters[$or][1][symbol][$containsi]=${encodeURIComponent(query.replace(/^@/, ""))}`;
-    const url = `${base}/virtuals?${nameFilter}&${symFilter}&sort[0]=mcapInVirtual:desc&pagination[pageSize]=20&populate=*`;
+    // Server-side filter across name, symbol, and twitter handle
+    const qEnc = encodeURIComponent(q);
+    const url =
+      `${base}/virtuals` +
+      `?filters[$or][0][name][$containsi]=${qEnc}` +
+      `&filters[$or][1][symbol][$containsi]=${qEnc}` +
+      `&filters[$or][2][twitter][$containsi]=${qEnc}` +
+      `&sort[0]=mcapInVirtual:desc&pagination[pageSize]=50&populate=*`;
 
     const res = await fetch(url, {
       headers: { Accept: "application/json" },
@@ -112,22 +116,14 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
     if (!res.ok) return [];
 
     const body = await res.json() as { data?: VirtualsItem[] };
-    const items = body.data ?? [];
     const results: AgentResult[] = [];
 
-    for (const item of items) {
+    for (const item of body.data ?? []) {
       const attr = item.attributes ?? {};
-      const name = (attr.name ?? "").toLowerCase();
-      const symbol = (attr.symbol ?? "").toLowerCase();
-      const twitter = (attr.twitter ?? "").toLowerCase().replace(/^@/, "");
       const tokenAddress = (attr.tokenAddress ?? "").toLowerCase();
-
       if (!tokenAddress.startsWith("0x")) continue;
-      if (!name.includes(q) && !symbol.includes(q) && !twitter.includes(q)) continue;
 
-      const rawImageUrl =
-        attr.imageUrl ??
-        attr.image?.data?.attributes?.url;
+      const rawImageUrl = attr.imageUrl ?? attr.image?.data?.attributes?.url;
 
       results.push({
         name: attr.name ?? "",
@@ -140,7 +136,7 @@ export async function searchVirtualsAgents(query: string): Promise<AgentResult[]
       });
     }
 
-    return results.slice(0, 8);
+    return results.slice(0, 10);
   } catch {
     return [];
   }

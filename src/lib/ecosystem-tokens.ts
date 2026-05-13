@@ -91,35 +91,44 @@ async function fetchVirtualsTokens(): Promise<EcosystemRegistry> {
 
   try {
     const base = process.env.VIRTUALS_API_URL ?? "https://api.virtuals.io/api";
-    let page = 1;
-    const maxPages = 2; // cap at 100 agents — keeps cold-start under 4s budget
+    const pageSize = 50;
 
-    while (page <= maxPages) {
-      const url =
-        `${base}/virtuals` +
-        `?sort[0]=mcapInVirtual:desc` +
-        `&pagination[page]=${page}&pagination[pageSize]=50`;
+    // Fetch page 1 first to learn the total page count
+    const firstUrl = `${base}/virtuals?sort[0]=mcapInVirtual:desc&pagination[page]=1&pagination[pageSize]=${pageSize}`;
+    const firstRes = await fetch(firstUrl, {
+      headers: { "Accept": "application/json" },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!firstRes.ok) return { addresses, symbols };
 
-      const res = await fetch(url, {
-        headers: { "Accept": "application/json" },
-        signal: AbortSignal.timeout(10_000),
-      });
-      if (!res.ok) break;
+    const firstBody = await firstRes.json() as VirtualsResponse;
+    const totalPages = firstBody.meta?.pagination?.pageCount ?? 1;
 
-      const body = await res.json() as VirtualsResponse;
-      const items: VirtualsItem[] = body.data ?? [];
+    // Collect all items from page 1
+    const allItems: VirtualsItem[] = [...(firstBody.data ?? [])];
 
-      for (const item of items) {
-        const attr = item.attributes ?? {};
-        const addr = (attr.tokenAddress ?? "").toLowerCase();
-        const sym = (attr.symbol ?? "").toUpperCase();
-        if (addr.startsWith("0x")) addresses.add(addr);
-        if (sym) symbols.add(sym);
-      }
+    // Fetch all remaining pages in parallel (no more sequential loop)
+    if (totalPages > 1) {
+      const remaining = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+      const pages = await Promise.all(
+        remaining.map((page) =>
+          fetch(
+            `${base}/virtuals?sort[0]=mcapInVirtual:desc&pagination[page]=${page}&pagination[pageSize]=${pageSize}`,
+            { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(8_000) },
+          )
+            .then((r) => r.ok ? r.json() as Promise<VirtualsResponse> : Promise.resolve({ data: [] }))
+            .catch(() => ({ data: [] } as VirtualsResponse)),
+        ),
+      );
+      for (const body of pages) allItems.push(...(body.data ?? []));
+    }
 
-      const pageCount = body.meta?.pagination?.pageCount ?? 1;
-      if (page >= pageCount || items.length === 0) break;
-      page += 1;
+    for (const item of allItems) {
+      const attr = item.attributes ?? {};
+      const addr = (attr.tokenAddress ?? "").toLowerCase();
+      const sym = (attr.symbol ?? "").toUpperCase();
+      if (addr.startsWith("0x")) addresses.add(addr);
+      if (sym) symbols.add(sym);
     }
   } catch {
     // fall back to hardcoded list
