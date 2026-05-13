@@ -10,6 +10,7 @@ import {
   getPortfolioBreakdown,
 } from "@/lib/ledger";
 import { fetchTokenPrices, isStablecoin, isAgentToken } from "@/lib/tokens";
+import { getEcosystemRegistry } from "@/lib/ecosystem-tokens";
 
 export async function buildLedgerScan(params: {
   wallet: string;
@@ -22,11 +23,14 @@ export async function buildLedgerScan(params: {
     throw new Error("Alchemy API key is not configured.");
   }
 
-  const rawTransactions = await fetchBaseErc20Transfers({
-    apiKey,
-    wallet: params.wallet,
-    range: params.range,
-  });
+  const [rawTransactions, ecosystem] = await Promise.all([
+    fetchBaseErc20Transfers({
+      apiKey,
+      wallet: params.wallet,
+      range: params.range,
+    }),
+    getEcosystemRegistry(),
+  ]);
 
   // Collect unique non-stablecoin addresses for price lookup
   const nonStableAddresses = [
@@ -39,19 +43,21 @@ export async function buildLedgerScan(params: {
 
   const prices = await fetchTokenPrices(nonStableAddresses);
 
-  // Enrich each transaction with its USD value
+  // Enrich each transaction with its USD value and agent token flag
   const priceEnriched = rawTransactions.map((tx) => {
     const addr = tx.tokenAddress.toLowerCase();
     const price = isStablecoin(addr) ? 1 : (prices.get(addr) ?? 0);
     return {
       ...tx,
       usdValue: tx.amountUsdc * price,
-      isAgentToken: isAgentToken(tx.tokenSymbol),
+      isAgentToken:
+        isAgentToken(tx.tokenSymbol) ||
+        ecosystem.symbols.has(tx.tokenSymbol.toUpperCase()),
     };
   });
 
   const transactions = enrichLedgerTransactions(priceEnriched);
-  const portfolio = getPortfolioBreakdown(transactions, prices);
+  const portfolio = getPortfolioBreakdown(transactions, prices, ecosystem);
 
   const summary = getLedgerSummary(transactions);
   const report = getLedgerReport({

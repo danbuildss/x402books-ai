@@ -402,11 +402,12 @@ export function getDailyFlows(transactions: LedgerTransaction[], range: TimeRang
   return Array.from(flows.values());
 }
 
-import { isEcosystemToken } from "@/lib/tokens";
+import type { EcosystemRegistry } from "@/lib/ecosystem-tokens";
 
 export function getPortfolioBreakdown(
   transactions: LedgerTransaction[],
   prices: Map<string, number>,
+  ecosystem: EcosystemRegistry,
 ): PortfolioEntry[] {
   const map = new Map<string, PortfolioEntry>();
 
@@ -414,8 +415,11 @@ export function getPortfolioBreakdown(
     const addr = tx.tokenAddress || "unknown";
     const symbol = tx.tokenSymbol || "UNKNOWN";
 
-    // Only surface ecosystem tokens (BANKR + VIRTUALS + Base natives)
-    if (!isEcosystemToken(symbol)) continue;
+    // Only surface tokens from BANKR + Virtuals ecosystem registries
+    const inEcosystem =
+      ecosystem.addresses.has(addr.toLowerCase()) ||
+      ecosystem.symbols.has(symbol.toUpperCase());
+    if (!inEcosystem) continue;
 
     const entry = map.get(addr) ?? {
       tokenSymbol: symbol,

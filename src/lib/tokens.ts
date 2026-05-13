@@ -1,7 +1,3 @@
-// ── Ecosystem token registry ──────────────────────────────────────────────────
-// Only tokens from BANKR and VIRTUALS ecosystems are surfaced in the UI.
-// Everything else is still fetched for data completeness but hidden from display.
-
 export const STABLECOIN_ADDRESSES = new Set([
   "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC on Base
   "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2", // USDT on Base
@@ -9,46 +5,13 @@ export const STABLECOIN_ADDRESSES = new Set([
   "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC on Base
 ]);
 
-// Base-native assets always shown
-const BASE_NATIVE_SYMBOLS = new Set(["USDC", "USDT", "DAI", "EURC", "WETH", "cbBTC", "ETH"]);
-
-// BANKR ecosystem
-const BANKR_SYMBOLS = new Set(["BNKR", "BANKR"]);
-
-// VIRTUALS protocol token
-const VIRTUALS_PROTOCOL_SYMBOLS = new Set(["VIRTUAL", "VIRTUALS"]);
-
-// Known Virtuals agent tokens on Base
-const VIRTUALS_AGENT_SYMBOLS = new Set([
-  "LUNA",    // Luna by Virtuals
-  "AIXBT",   // AIXBT by Virtuals
-  "GAME",    // GAME by Virtuals
-  "VADER",   // Vader AI
-  "CLANKER", // Clanker
-  "SEKOIA",  // Sekoia
-  "ACOLYT",  // Acolyte
-  "SPORE",   // Spore
-  "MISATO",  // Misato
-  "LMAO",    // LMAO
-  "NOOK",    // Nook
-  "CRED",    // Cred
-  "XBOOKS",  // xBooks token
-  "DEGEN",   // Degen (Base native agent token)
-  "MOCA",    // Mocaverse
-]);
-
-// All ecosystem symbols combined
-export const ECOSYSTEM_SYMBOLS = new Set([
-  ...BASE_NATIVE_SYMBOLS,
-  ...BANKR_SYMBOLS,
-  ...VIRTUALS_PROTOCOL_SYMBOLS,
-  ...VIRTUALS_AGENT_SYMBOLS,
-]);
-
+// Fallback agent token symbols used before live registry loads
 export const AGENT_TOKEN_SYMBOLS = new Set([
-  ...BANKR_SYMBOLS,
-  ...VIRTUALS_PROTOCOL_SYMBOLS,
-  ...VIRTUALS_AGENT_SYMBOLS,
+  "BNKR", "BANKR",
+  "VIRTUAL", "VIRTUALS",
+  "LUNA", "AIXBT", "GAME", "VADER", "CLANKER",
+  "SEKOIA", "ACOLYT", "SPORE", "MISATO", "LMAO",
+  "NOOK", "CRED", "XBOOKS", "DEGEN", "MOCA",
 ]);
 
 export function isStablecoin(address: string): boolean {
@@ -57,10 +20,6 @@ export function isStablecoin(address: string): boolean {
 
 export function isAgentToken(symbol: string): boolean {
   return AGENT_TOKEN_SYMBOLS.has(symbol.toUpperCase());
-}
-
-export function isEcosystemToken(symbol: string): boolean {
-  return ECOSYSTEM_SYMBOLS.has(symbol.toUpperCase());
 }
 
 type DexScreenerPair = {
