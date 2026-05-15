@@ -8020,40 +8020,21 @@ html, body {
    LUCA SECTION
    ================================================================ */
 
-.lp-luca-section {
-  background: #080908;
-  border-top: 1px solid rgba(201, 168, 76, 0.12);
-  border-bottom: 1px solid rgba(201, 168, 76, 0.12);
-  padding: 80px 24px;
-}
-
-[data-theme="light"] .lp-luca-section {
-  background: #faf8f2;
-  border-top-color: rgba(180, 140, 40, 0.15);
-  border-bottom-color: rgba(180, 140, 40, 0.15);
-}
-
 .lp-luca-inner {
-  max-width: 640px;
-  margin: 0 auto;
-  text-align: center;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0;
+  gap: 40px;
+  max-width: 860px;
+  margin: 0 auto;
 }
 
-/* Avatar */
 .lp-luca-avatar-wrap {
-  width: 148px;
-  height: 148px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid rgba(201, 168, 76, 0.35);
-  box-shadow:
-    0 0 0 6px rgba(201, 168, 76, 0.06),
-    0 16px 48px rgba(0, 0, 0, 0.55);
-  margin-bottom: 28px;
+  border: 1px solid rgba(109, 184, 116, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   flex-shrink: 0;
 }
 
@@ -8064,107 +8045,58 @@ html, body {
   display: block;
 }
 
-/* Eyebrow */
-.lp-luca-eyebrow {
-  display: inline-block;
-  padding: 4px 14px;
-  border-radius: 20px;
-  background: rgba(201, 168, 76, 0.08);
-  border: 1px solid rgba(201, 168, 76, 0.22);
-  color: #C9A84C;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 20px;
+.lp-luca-text {
+  flex: 1;
+  min-width: 0;
 }
 
-/* Headline */
-.lp-luca-headline {
-  font-family: "Libre Baskerville", Georgia, serif;
-  font-size: clamp(24px, 3.5vw, 38px);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-  color: #F4F2ED;
-  margin: 0 0 18px;
-}
-
-[data-theme="light"] .lp-luca-headline { color: #1A1C1A; }
-
-/* Sub */
 .lp-luca-sub {
-  font-size: 15px;
-  line-height: 1.65;
+  font-size: 14px;
+  line-height: 1.6;
   color: rgba(232, 230, 225, 0.5);
-  margin: 0 0 28px;
-  max-width: 520px;
+  margin: 0 0 18px;
 }
 
 [data-theme="light"] .lp-luca-sub { color: rgba(14, 15, 14, 0.5); }
 
-/* Capability chips */
 .lp-luca-caps {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-bottom: 36px;
+  gap: 6px;
+  margin-bottom: 20px;
 }
 
 .lp-luca-cap {
   display: inline-block;
-  padding: 5px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
-  background: rgba(201, 168, 76, 0.06);
-  border: 1px solid rgba(201, 168, 76, 0.16);
-  color: rgba(201, 168, 76, 0.75);
+  background: var(--accent-soft);
+  border: 1px solid rgba(109, 184, 116, 0.18);
+  color: var(--accent);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
 }
 
 [data-theme="light"] .lp-luca-cap {
-  background: rgba(180, 140, 40, 0.06);
-  border-color: rgba(180, 140, 40, 0.18);
-  color: rgba(140, 100, 20, 0.8);
+  background: rgba(58, 150, 65, 0.06);
+  border-color: rgba(58, 150, 65, 0.15);
+  color: #3A9641;
 }
 
-/* CTA button — gold */
 .lp-luca-btn {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 13px 28px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #C9A84C 0%, #A8883A 100%);
-  color: #0a0b0a;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  transition: opacity 0.15s, transform 0.15s;
-  box-shadow: 0 4px 20px rgba(201, 168, 76, 0.25);
-  margin-bottom: 18px;
+  gap: 8px;
 }
-
-.lp-luca-btn:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-/* Handle line */
-.lp-luca-handle {
-  font-size: 11px;
-  color: rgba(232, 230, 225, 0.25);
-  margin: 0;
-}
-
-[data-theme="light"] .lp-luca-handle { color: rgba(14, 15, 14, 0.3); }
 
 /* Mobile */
-@media (max-width: 480px) {
-  .lp-luca-section { padding: 56px 16px; }
-  .lp-luca-avatar-wrap { width: 120px; height: 120px; }
-  .lp-luca-caps { gap: 6px; }
-  .lp-luca-btn { padding: 12px 22px; font-size: 13px; width: 100%; justify-content: center; }
+@media (max-width: 640px) {
+  .lp-luca-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+  }
+  .lp-luca-caps { justify-content: center; }
+  .lp-luca-btn { width: 100%; justify-content: center; }
 }
