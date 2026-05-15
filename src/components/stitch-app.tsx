@@ -28,9 +28,10 @@ const navGroups = [
   {
     label: "Tools",
     items: [
-      { href: "/reports", label: "Reports", icon: "description" },
-      { href: "/wallets", label: "Wallets", icon: "account_balance_wallet" },
-      { href: "/api",     label: "API",     icon: "api" },
+      { href: "/reports",    label: "Reports",    icon: "description" },
+      { href: "/wallets",    label: "Wallets",    icon: "account_balance_wallet" },
+      { href: "/developer",  label: "Developer",  icon: "code" },
+      { href: "/api",        label: "API",        icon: "api" },
     ],
   },
   {
@@ -49,6 +50,7 @@ const pageNames: Record<string, string> = {
   "/flags":        "Flags",
   "/reports":      "Reports",
   "/wallets":      "Wallets",
+  "/developer":    "Developer",
   "/api":          "API",
   "/settings":     "Settings",
 };

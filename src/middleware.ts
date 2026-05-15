@@ -8,6 +8,7 @@ const protectedRoutes = [
   "/categories",
   "/reports",
   "/wallets",
+  "/developer",
   "/api",
   "/settings",
   "/report",
