@@ -126,7 +126,20 @@ export function CopyBtn({
 export function StitchShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const page = pageNames[pathname] || allNavItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
-  const { logout: privyLogout } = usePrivy();
+  const { logout: privyLogout, user } = usePrivy();
+
+  const displayName = (() => {
+    const email =
+      user?.email?.address ||
+      (user?.linkedAccounts?.find((a) => a.type === "email") as { address?: string } | undefined)?.address;
+    if (email) {
+      const name = email.split("@")[0].replace(/[._-]/g, " ").split(" ")[0];
+      return name.charAt(0).toUpperCase() + name.slice(1);
+    }
+    const twitter = (user?.linkedAccounts?.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username;
+    if (twitter) return `@${twitter.replace(/^@/, "")}`;
+    return "Account";
+  })();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(navGroups.map((g) => [g.label, true]))
@@ -210,7 +223,7 @@ export function StitchShell({ children }: { children: ReactNode }) {
 
         <div className="stitch-sidebar-panel">
           <div className="stitch-sidebar-panel-row">
-            <span className="stitch-beta-badge">Private Beta · Stage 1</span>
+            <span className="stitch-user-name">{displayName}</span>
             <button type="button" className="stitch-signout" onClick={handleSignOut}>
               <StitchIcon name="logout" /> Sign out
             </button>

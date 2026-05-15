@@ -522,6 +522,7 @@ export default function HomePage() {
         <nav className="lp-nav" aria-label="Main navigation">
           <ScrollLink targetId="how">How it works</ScrollLink>
           <ScrollLink targetId="features">Features</ScrollLink>
+          <ScrollLink targetId="luca">Luca</ScrollLink>
           <ScrollLink targetId="faq">FAQ</ScrollLink>
           <Link href="/docs">Docs</Link>
         </nav>
@@ -565,6 +566,7 @@ export default function HomePage() {
           <nav className="lp-mobile-nav">
             <ScrollLink targetId="how" onClick={() => setMobileMenuOpen(false)}>How it works</ScrollLink>
             <ScrollLink targetId="features" onClick={() => setMobileMenuOpen(false)}>Features</ScrollLink>
+            <ScrollLink targetId="luca" onClick={() => setMobileMenuOpen(false)}>Luca</ScrollLink>
             <ScrollLink targetId="faq" onClick={() => setMobileMenuOpen(false)}>FAQ</ScrollLink>
             <Link href="/docs" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
           </nav>
@@ -884,22 +886,22 @@ export default function HomePage() {
               <h4>Product</h4>
               <ScrollLink targetId="how">How it works</ScrollLink>
               <ScrollLink targetId="features">Features</ScrollLink>
+              <ScrollLink targetId="luca">Meet Luca</ScrollLink>
               <ScrollLink targetId="faq">FAQ</ScrollLink>
-              <Link href="/docs">Docs</Link>
             </div>
             <div>
               <h4>App</h4>
               <Link href="/dashboard">Dashboard</Link>
               <Link href="/transactions">Transactions</Link>
               <Link href="/categories">Categories</Link>
-              <Link href="/reports">Reports</Link>
+              <Link href="/developer">Developer</Link>
             </div>
             <div>
               <h4>Docs</h4>
               <Link href="/docs">Overview</Link>
-              <Link href="/docs">API Reference</Link>
-              <Link href="/docs">Agent JSON</Link>
-              <Link href="/docs">Changelog</Link>
+              <Link href="/docs#api">API Reference</Link>
+              <Link href="/docs#agent">Agent JSON</Link>
+              <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
             </div>
           </div>
         </div>

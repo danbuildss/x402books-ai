@@ -3150,12 +3150,14 @@ iframe[src*="privy"] { display: none !important; }
   gap: 8px;
 }
 
-.stitch-beta-badge {
-  font-size: 10px !important;
+.stitch-user-name {
+  font-size: 13px !important;
   font-weight: 600;
-  color: var(--st-muted) !important;
-  letter-spacing: 0.04em;
+  color: var(--st-text) !important;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .stitch-sidebar-panel span,
