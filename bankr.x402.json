@@ -1,0 +1,157 @@
+{
+  "network": "base",
+  "currency": "USDC",
+  "payTo": "0xb98f0de777eea8c481b64e33d3e0066cea38fa91",
+  "services": {
+    "ledger-summary": {
+      "description": "Financial summary for any Base wallet — total income, spend, net flow, budget status, and top counterparties.",
+      "price": "0.02",
+      "methods": ["GET"],
+      "category": "finance",
+      "tags": ["wallet", "defi", "base", "usdc", "agents"],
+      "schema": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "wallet": { "type": "string", "description": "Base wallet address (0x...)" },
+            "range": { "type": "string", "description": "Time range", "enum": ["7d", "14d", "30d", "90d"] }
+          },
+          "required": ["wallet"]
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "wallet":              { "type": "string" },
+            "range":               { "type": "string" },
+            "generated_at":        { "type": "string" },
+            "summary": {
+              "type": "object",
+              "properties": {
+                "total_income":       { "type": "number", "description": "Total USD inflow" },
+                "total_spend":        { "type": "number", "description": "Total USD outflow" },
+                "net_flow":           { "type": "number", "description": "Net USD flow (income - spend)" },
+                "transaction_count":  { "type": "integer" },
+                "likely_x402_count":  { "type": "integer", "description": "Estimated x402 micropayments" },
+                "top_category":       { "type": "string" },
+                "budget_status":      { "type": "string", "enum": ["healthy", "watch", "negative"] }
+              }
+            },
+            "top_counterparties": { "type": "array" }
+          }
+        }
+      }
+    },
+    "transactions": {
+      "description": "Paginated transaction history for any Base wallet with USD values, categories, and x402 detection.",
+      "price": "0.02",
+      "methods": ["GET"],
+      "category": "finance",
+      "tags": ["wallet", "transactions", "base", "history"],
+      "schema": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "wallet": { "type": "string", "description": "Base wallet address (0x...)" },
+            "range":  { "type": "string", "description": "Time range", "enum": ["7d", "14d", "30d", "90d"] },
+            "page":   { "type": "integer", "description": "Page number (default 1)" },
+            "limit":  { "type": "integer", "description": "Results per page (max 200, default 50)" }
+          },
+          "required": ["wallet"]
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "wallet":       { "type": "string" },
+            "range":        { "type": "string" },
+            "pagination":   { "type": "object" },
+            "transactions": { "type": "array" }
+          }
+        }
+      }
+    },
+    "full-report": {
+      "description": "Complete financial report for any Base wallet — portfolio breakdown, daily flows, category analysis, and all transactions.",
+      "price": "0.05",
+      "methods": ["GET"],
+      "category": "finance",
+      "tags": ["wallet", "report", "portfolio", "base", "agents"],
+      "schema": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "wallet": { "type": "string", "description": "Base wallet address (0x...)" },
+            "range":  { "type": "string", "description": "Time range", "enum": ["7d", "14d", "30d", "90d"] }
+          },
+          "required": ["wallet"]
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "wallet":              { "type": "string" },
+            "range":               { "type": "string" },
+            "summary":             { "type": "object" },
+            "report":              { "type": "object" },
+            "categories":          { "type": "array" },
+            "daily_flows":         { "type": "array" },
+            "portfolio":           { "type": "array" },
+            "top_counterparties":  { "type": "array" }
+          }
+        }
+      }
+    },
+    "categorize": {
+      "description": "AI-powered transaction categorization using Claude — classifies every transfer into api_call, compute, data_access, agent_service, subscription, and more.",
+      "price": "0.15",
+      "methods": ["POST"],
+      "category": "ai",
+      "tags": ["ai", "categorize", "claude", "wallet", "base"],
+      "schema": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "wallet": { "type": "string", "description": "Base wallet address (0x...)" },
+            "range":  { "type": "string", "description": "Time range", "enum": ["7d", "14d", "30d", "90d"] }
+          },
+          "required": ["wallet"]
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "wallet":            { "type": "string" },
+            "provider":          { "type": "string", "description": "AI provider used (claude or rules)" },
+            "transaction_count": { "type": "integer" },
+            "transactions":      { "type": "array" }
+          }
+        }
+      }
+    },
+    "agent-financial-state": {
+      "description": "Agent-optimized financial snapshot — detects BANKR/Virtuals ecosystem membership, token portfolio, x402 payment count, and recent activity. Built for AI agents querying their own wallet.",
+      "price": "0.05",
+      "methods": ["GET"],
+      "category": "agents",
+      "tags": ["agents", "bankr", "virtuals", "x402", "portfolio", "base"],
+      "schema": {
+        "input": {
+          "type": "object",
+          "properties": {
+            "wallet": { "type": "string", "description": "Agent wallet address (0x...)" },
+            "range":  { "type": "string", "description": "Time range", "enum": ["7d", "14d", "30d", "90d"] }
+          },
+          "required": ["wallet"]
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "wallet":               { "type": "string" },
+            "ecosystem":            { "type": "string", "description": "BANKR, VIRTUALS, or null" },
+            "financial_health":     { "type": "object" },
+            "token_portfolio":      { "type": "array" },
+            "top_counterparties":   { "type": "array" },
+            "recent_transactions":  { "type": "array" }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,5 @@
 // Shared auth helper for all /api/v1/* routes.
-// Extracts the API key from Authorization: Bearer <key> or X-API-Key header,
-// validates it, and returns either a ValidatedKey or an error Response.
+// Accepts: Authorization: Bearer <key>, X-API-Key header, or X-Internal-Secret (BANKR x402 handlers).
 
 import { NextResponse } from "next/server";
 import { validateApiKey, recordUsage } from "@/lib/api-keys";
@@ -17,8 +16,18 @@ export type V1AuthFail = {
 };
 
 export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
-  const authHeader = request.headers.get("authorization") ?? "";
-  const apiKeyHeader = request.headers.get("x-api-key") ?? "";
+  // BANKR x402 Cloud handlers authenticate with a shared internal secret
+  const internalSecret = request.headers.get("x-internal-secret");
+  if (internalSecret && process.env.XBOOKS_INTERNAL_SECRET && internalSecret === process.env.XBOOKS_INTERNAL_SECRET) {
+    return {
+      ok: true,
+      keyId: "bankr-x402",
+      finish() { /* x402 payments tracked by BANKR dashboard, not our DB */ },
+    };
+  }
+
+  const authHeader   = request.headers.get("authorization") ?? "";
+  const apiKeyHeader = request.headers.get("x-api-key")     ?? "";
 
   const raw = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
