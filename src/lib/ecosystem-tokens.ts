@@ -2,6 +2,7 @@
 // Results are cached in memory for 10 minutes (best-effort across warm instances).
 
 import { STABLECOIN_ADDRESSES } from "@/lib/tokens";
+import { fetchBankrTopTokens } from "@/lib/dune";
 
 const BASE_NATIVE = new Set(["USDC", "USDT", "DAI", "EURC", "WETH", "cbBTC", "ETH"]);
 
@@ -25,13 +26,7 @@ export type EcosystemRegistry = {
 let cache: (EcosystemRegistry & { ts: number }) | null = null;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-// ── BANKR ─────────────────────────────────────────────────────────────────────
-
-// Confirmed shape: array of { tokenAddress, tokenSymbol, deployer: { xHandle } }
-type BankrToken = {
-  tokenAddress?: string;
-  tokenSymbol?: string;
-};
+// ── BANKR (via Dune query 6900376) ────────────────────────────────────────────
 
 async function fetchBankrTokens(): Promise<EcosystemRegistry> {
   const addresses = new Set<string>(
@@ -39,23 +34,11 @@ async function fetchBankrTokens(): Promise<EcosystemRegistry> {
   );
   const symbols = new Set<string>(["BNKR", "BANKR"]);
 
-  const key = process.env.BANKR_API_KEY;
-  if (!key) return { addresses, symbols };
-
   try {
-    const base = process.env.BANKR_API_URL ?? "https://api.bankr.bot";
-    const res = await fetch(`${base}/token-launches`, {
-      headers: { "X-API-Key": key, "Accept": "application/json" },
-      signal: AbortSignal.timeout(8_000),
-    });
-    if (!res.ok) return { addresses, symbols };
-
-    const data = await res.json() as BankrToken[];
-    if (!Array.isArray(data)) return { addresses, symbols };
-
-    for (const t of data) {
-      const addr = (t.tokenAddress ?? "").toLowerCase();
-      const sym = (t.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase();
+    const tokens = await fetchBankrTopTokens();
+    for (const t of tokens) {
+      const addr = t.ca.toLowerCase();
+      const sym = (t.ticker ?? "").replace(/^\$/, "").toUpperCase();
       if (addr.startsWith("0x")) addresses.add(addr);
       if (sym) symbols.add(sym);
     }

@@ -1,5 +1,7 @@
 // Server-side agent search across BANKR and Virtuals Protocol ecosystems.
 
+import { fetchBankrTopTokens } from "@/lib/dune";
+
 // Strips spaces and special chars so "JunoAgent" matches "Juno Agent"
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -34,52 +36,82 @@ type BankrLaunch = {
 };
 
 export async function searchBankrAgents(query: string): Promise<AgentResult[]> {
-  const key = process.env.BANKR_API_KEY;
-  if (!key) return [];
-
   const q = normalize(query.replace(/^@/, ""));
+  const key = process.env.BANKR_API_KEY;
 
+  // ── Primary: BANKR REST API (has deployer wallet addresses) ──────────────────
+  if (key) {
+    try {
+      const res = await fetch(`${process.env.BANKR_API_URL ?? "https://api.bankr.bot"}/token-launches`, {
+        headers: { "X-API-Key": key, Accept: "application/json" },
+        signal: AbortSignal.timeout(8_000),
+        next: { revalidate: 300 },
+      });
+
+      if (res.ok) {
+        const data = await res.json() as BankrLaunch[];
+        if (Array.isArray(data)) {
+          const results: AgentResult[] = [];
+
+          for (const item of data) {
+            const symbol = normalize(item.tokenSymbol ?? "");
+            const name = normalize(item.name ?? item.tokenSymbol ?? "");
+            const xHandle = normalize(item.deployer?.xHandle ?? "");
+            const tokenAddress = (item.tokenAddress ?? "").toLowerCase();
+
+            if (!tokenAddress.startsWith("0x")) continue;
+            if (!symbol.includes(q) && !name.includes(q) && !xHandle.includes(q)) continue;
+
+            const deployerAddr = (
+              item.deployer?.address ??
+              item.deployer?.walletAddress ??
+              ""
+            ).toLowerCase();
+
+            const walletAddress = deployerAddr.startsWith("0x") ? deployerAddr : tokenAddress;
+            const walletType: WalletType = deployerAddr.startsWith("0x") ? "deployer" : "token";
+
+            results.push({
+              name: item.name ?? item.tokenSymbol ?? "",
+              symbol: (item.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase(),
+              ecosystem: "BANKR",
+              tokenAddress,
+              walletAddress,
+              walletType,
+              imageUrl: item.imageUrl ?? item.image,
+              xHandle: item.deployer?.xHandle,
+            });
+          }
+
+          if (results.length > 0) return results.slice(0, 10);
+        }
+      }
+    } catch {
+      // fall through to Dune fallback
+    }
+  }
+
+  // ── Fallback: Dune query 6900376 (top 331 BANKR tokens, no deployer addr) ────
   try {
-    const res = await fetch(`${process.env.BANKR_API_URL ?? "https://api.bankr.bot"}/token-launches`, {
-      headers: { "X-API-Key": key, Accept: "application/json" },
-      signal: AbortSignal.timeout(8_000),
-      next: { revalidate: 300 },
-    });
-    if (!res.ok) return [];
-
-    const data = await res.json() as BankrLaunch[];
-    if (!Array.isArray(data)) return [];
-
+    const tokens = await fetchBankrTopTokens();
     const results: AgentResult[] = [];
 
-    for (const item of data) {
-      const symbol = normalize(item.tokenSymbol ?? "");
-      const name = normalize(item.name ?? item.tokenSymbol ?? "");
-      const xHandle = normalize(item.deployer?.xHandle ?? "");
-      const tokenAddress = (item.tokenAddress ?? "").toLowerCase();
+    for (const t of tokens) {
+      const sym = normalize(t.ticker ?? "");
+      const name = normalize(t.name ?? "");
+      if (!sym.includes(q) && !name.includes(q)) continue;
 
+      const tokenAddress = t.ca.toLowerCase();
       if (!tokenAddress.startsWith("0x")) continue;
-      if (!symbol.includes(q) && !name.includes(q) && !xHandle.includes(q)) continue;
-
-      // deployer.address is the operational EOA for BANKR agents
-      const deployerAddr = (
-        item.deployer?.address ??
-        item.deployer?.walletAddress ??
-        ""
-      ).toLowerCase();
-
-      const walletAddress = deployerAddr.startsWith("0x") ? deployerAddr : tokenAddress;
-      const walletType: WalletType = deployerAddr.startsWith("0x") ? "deployer" : "token";
 
       results.push({
-        name: item.name ?? item.tokenSymbol ?? "",
-        symbol: (item.tokenSymbol ?? "").replace(/^\$/, "").toUpperCase(),
+        name: t.name ?? t.ticker ?? "",
+        symbol: (t.ticker ?? "").replace(/^\$/, "").toUpperCase(),
         ecosystem: "BANKR",
         tokenAddress,
-        walletAddress,
-        walletType,
-        imageUrl: item.imageUrl ?? item.image,
-        xHandle: item.deployer?.xHandle,
+        walletAddress: tokenAddress,
+        walletType: "token",
+        mcap: t.market_cap,
       });
     }
 

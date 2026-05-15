@@ -11,6 +11,7 @@ import {
 } from "@/lib/ledger";
 import { fetchTokenMetrics, isStablecoin, isAgentToken } from "@/lib/tokens";
 import { getEcosystemRegistry, type EcosystemRegistry } from "@/lib/ecosystem-tokens";
+import { fetchBankrTokenMap } from "@/lib/dune";
 
 // Fallback registry used when live fetch times out or fails
 const FALLBACK_REGISTRY: EcosystemRegistry = {
@@ -75,7 +76,21 @@ export async function buildLedgerScan(params: {
     ),
   ];
 
-  const metrics = await fetchTokenMetrics(nonStableAddresses);
+  const [metrics, bankrMap] = await Promise.all([
+    fetchTokenMetrics(nonStableAddresses),
+    fetchBankrTokenMap().catch(() => new Map()),
+  ]);
+
+  // Overlay Dune prices for BANKR tokens where DexScreener has no data
+  for (const [addr, dune] of bankrMap) {
+    if (dune.current_price > 0 && (!metrics.has(addr) || metrics.get(addr)!.price === 0)) {
+      metrics.set(addr, {
+        price: dune.current_price,
+        priceChange24h: dune.price_change_24h,
+        volume24h: dune.volume_24h,
+      });
+    }
+  }
 
   // Enrich each transaction with its USD value and agent token flag
   const priceEnriched = rawTransactions.map((tx) => {
