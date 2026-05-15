@@ -138,7 +138,142 @@ const FAQ_ITEMS = [
   },
 ];
 
-const XBOOKS_CA = "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+const XBOOKS_CA      = "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+const BANKR_WALLET   = "0xb98f0de777eea8c481b64e33d3e0066cea38fa91";
+const BANKR_BASE_URL = `https://x402.bankr.bot/${BANKR_WALLET}`;
+
+const XBOOKS_UTILITIES = [
+  { icon: "speed",        title: "Higher API Limits",      body: "Hold ≥1,000 $XBOOKS → 500 req/day. Hold ≥10,000 → 2,000 req/day. Free tier stays at 100." },
+  { icon: "picture_as_pdf", title: "Premium Reports",     body: "Unlock PDF exports, full history exports, and deep wallet scans with $XBOOKS." },
+  { icon: "vpn_key",      title: "30% API Discount",       body: "Pay for API calls in $XBOOKS and get 30% off every request versus USDC pricing." },
+  { icon: "smart_toy",    title: "Agent Payments",         body: "AI agents pay $XBOOKS directly to access financial intelligence — no human in the loop." },
+];
+
+const X402_ENDPOINTS = [
+  { name: "ledger-summary",        method: "GET",  usdc: "$0.02", xbooks: "$0.014", desc: "Income, spend, net flow, budget status" },
+  { name: "transactions",          method: "GET",  usdc: "$0.02", xbooks: "$0.014", desc: "Paginated transaction history with USD values" },
+  { name: "full-report",           method: "GET",  usdc: "$0.05", xbooks: "$0.035", desc: "Complete portfolio, daily flows, categories" },
+  { name: "categorize",            method: "POST", usdc: "$0.15", xbooks: "$0.105", desc: "Claude AI transaction categorization" },
+  { name: "agent-financial-state", method: "GET",  usdc: "$0.05", xbooks: "$0.035", desc: "Agent snapshot with ecosystem detection" },
+];
+
+function XBooksUtilities() {
+  return (
+    <section className="lp-section lp-section-alt" id="xbooks-utility">
+      <FadeContent delay={60}>
+        <div className="lp-section-head">
+          <p className="lp-section-label">$XBOOKS Utility</p>
+          <h2 className="lp-h2">Hold $XBOOKS. Pay less. Do more.</h2>
+          <p className="lp-section-sub">$XBOOKS is not speculative — it is the economic layer of x402Books AI. Every feature, every discount, every limit upgrade is powered by the token.</p>
+        </div>
+      </FadeContent>
+      <div className="lp-features-grid">
+        {XBOOKS_UTILITIES.map((u, i) => (
+          <FadeContent key={u.title} delay={i * 60}>
+            <div className="lp-feature-card">
+              <span className="lp-feature-icon">
+                <span className="material-symbols-outlined">{u.icon}</span>
+              </span>
+              <h3>{u.title}</h3>
+              <p>{u.body}</p>
+            </div>
+          </FadeContent>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function X402ApiSection() {
+  return (
+    <section className="lp-section" id="api">
+      <FadeContent delay={60}>
+        <div className="lp-section-head">
+          <p className="lp-section-label">x402 API</p>
+          <h2 className="lp-h2">Pay per query. No subscriptions.</h2>
+          <p className="lp-section-sub">Every endpoint is live on BANKR x402 Cloud — discoverable by any AI agent, paid in USDC on Base, settled on-chain.</p>
+        </div>
+      </FadeContent>
+
+      <div className="lp-x402-grid">
+        {/* Endpoint table */}
+        <div className="lp-x402-table-wrap">
+          <div className="lp-x402-table-head">
+            <span>Endpoint</span>
+            <span>USDC</span>
+            <span>$XBOOKS</span>
+          </div>
+          {X402_ENDPOINTS.map((ep) => (
+            <a
+              key={ep.name}
+              href={`${BANKR_BASE_URL}/${ep.name}`}
+              target="_blank"
+              rel="noreferrer"
+              className="lp-x402-row"
+            >
+              <div className="lp-x402-endpoint">
+                <span className={`lp-x402-method ${ep.method === "POST" ? "post" : "get"}`}>{ep.method}</span>
+                <div>
+                  <code className="lp-x402-name">/{ep.name}</code>
+                  <span className="lp-x402-desc">{ep.desc}</span>
+                </div>
+              </div>
+              <span className="lp-x402-price">{ep.usdc}</span>
+              <span className="lp-x402-price xbooks">{ep.xbooks}</span>
+            </a>
+          ))}
+          <div className="lp-x402-table-foot">
+            <span>30% discount when paying with $XBOOKS</span>
+            <a href={`https://bankr.bot/x402`} target="_blank" rel="noreferrer" className="lp-x402-bankr-link">
+              View on BANKR ↗
+            </a>
+          </div>
+        </div>
+
+        {/* Code snippet */}
+        <div className="lp-x402-code-wrap">
+          <div className="lp-x402-code-head">
+            <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
+            <span style={{ fontSize: 12, color: "rgba(232,230,225,0.35)", marginLeft: 8 }}>agent.ts</span>
+          </div>
+          <pre className="lp-x402-code">{`import { wrapFetchWithPayment } from "x402-fetch";
+import { createWalletClient, http } from "viem";
+import { base } from "viem/chains";
+
+const wallet = createWalletClient({
+  account, chain: base, transport: http()
+});
+
+const paidFetch = wrapFetchWithPayment(fetch, wallet);
+
+// Agent queries its own financial state
+const res = await paidFetch(
+  "${BANKR_BASE_URL}/agent-financial-state" +
+  "?wallet=0xYourAgentWallet&range=30d"
+);
+
+const data = await res.json();
+// {
+//   ecosystem: "BANKR",
+//   financial_health: { net_flow_usd: 42.5 },
+//   x402_payment_count: 128,
+//   token_portfolio: [...]
+// }`}</pre>
+        </div>
+      </div>
+
+      {/* Trust strip */}
+      <div className="lp-x402-trust">
+        {["USDC on Base", "Settled on-chain", "Agent-discoverable", "No subscription", "Revenue to your wallet"].map((t) => (
+          <span key={t} className="lp-x402-trust-item">
+            <span className="lp-token-live-dot" style={{ width: 5, height: 5 }} />
+            {t}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 type TokenData = {
   price: number;
@@ -157,9 +292,10 @@ function formatUsd(n: number): string {
 }
 
 function formatPrice(n: number): string {
-  if (n >= 1) return `$${n.toFixed(4)}`;
-  if (n >= 0.001) return `$${n.toFixed(5)}`;
-  return `$${n.toExponential(3)}`;
+  if (n >= 1)        return `$${n.toFixed(4)}`;
+  if (n >= 0.001)    return `$${n.toFixed(5)}`;
+  if (n >= 0.000001) return `$${n.toFixed(8)}`;
+  return `$${n.toFixed(10)}`;
 }
 
 function Sparkline({ points }: { points: SparkPoint[] }) {
@@ -545,9 +681,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* ── $XBOOKS token ── */}
-      <XBooksTokenSection />
-
       {/* ── Infrastructure marquee ── */}
       <div className="lp-infra-strip">
         <span className="lp-infra-label">Built on</span>
@@ -562,6 +695,15 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ── $XBOOKS utilities ── */}
+      <XBooksUtilities />
+
+      {/* ── $XBOOKS token ── */}
+      <XBooksTokenSection />
+
+      {/* ── x402 API endpoints ── */}
+      <X402ApiSection />
 
       {/* ── How it works ── */}
       <section className="lp-section" id="how">
