@@ -10,6 +10,7 @@ const BASE_NATIVE = new Set(["USDC", "USDT", "DAI", "EURC", "WETH", "cbBTC", "ET
 const FALLBACK_BANKR_ADDRESSES = new Set([
   "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b", // BNKR
   "0x9f86db9fc6f7c9408e8fda3ff8ce4e78ac7a6b07", // CLAWD
+  "0x031d1a44785ef5e0bef61e226199122c5e1e4f02", // XBOOKS
 ]);
 
 const FALLBACK_VIRTUALS_SYMBOLS = new Set([

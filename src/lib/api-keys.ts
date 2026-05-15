@@ -1,9 +1,9 @@
 // API key management: generation, validation, rate limiting, usage logging.
 
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { type XBooksTier, TIER_LIMITS, getWalletTier } from "@/lib/xbooks-token";
 
 const KEY_PREFIX = "xb_live_";
-const RATE_LIMIT_PER_DAY = 100;
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -30,19 +30,23 @@ export type ApiKeyRecord = {
   key_prefix: string;
   name: string;
   is_active: boolean;
+  tier: XBooksTier;
   rate_limit_per_day: number;
   requests_today: number;
   requests_total: number;
+  wallet_address: string | null;
   created_at: string;
   last_used_at: string | null;
 };
+
+const SELECT_FIELDS = "id, key_prefix, name, is_active, tier, rate_limit_per_day, requests_today, requests_total, wallet_address, created_at, last_used_at";
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
 export async function createApiKey(name = "Default"): Promise<{ key: string; record: ApiKeyRecord } | null> {
   if (!hasSupabaseAdminEnv()) return null;
 
-  const raw = KEY_PREFIX + randomHex(20); // xb_live_ + 40 hex = 48 chars
+  const raw = KEY_PREFIX + randomHex(20); // xb_live_ + 40 hex = 48 chars total
   const hash = await sha256hex(raw);
   const prefix = raw.slice(0, 16); // "xb_live_XXXXXXXX"
 
@@ -53,9 +57,10 @@ export async function createApiKey(name = "Default"): Promise<{ key: string; rec
       key_hash: hash,
       key_prefix: prefix,
       name,
-      rate_limit_per_day: RATE_LIMIT_PER_DAY,
+      tier: "free",
+      rate_limit_per_day: TIER_LIMITS.free,
     })
-    .select("id, key_prefix, name, is_active, rate_limit_per_day, requests_today, requests_total, created_at, last_used_at")
+    .select(SELECT_FIELDS)
     .single();
 
   if (error || !data) return null;
@@ -67,6 +72,7 @@ export async function createApiKey(name = "Default"): Promise<{ key: string; rec
 export type ValidatedKey = {
   id: string;
   name: string;
+  tier: XBooksTier;
   rate_limit_per_day: number;
 };
 
@@ -84,7 +90,7 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
 
   const { data, error } = await supabase
     .from("api_keys")
-    .select("id, name, is_active, rate_limit_per_day, requests_today, requests_today_date")
+    .select("id, name, is_active, tier, rate_limit_per_day, requests_today, requests_today_date")
     .eq("key_hash", hash)
     .single();
 
@@ -93,16 +99,31 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
 
   const today = todayUtc();
   const count: number = data.requests_today_date === today ? data.requests_today : 0;
+  const limit: number = data.rate_limit_per_day;
 
-  if (count >= data.rate_limit_per_day) {
+  if (count >= limit) {
+    const tier = (data.tier ?? "free") as XBooksTier;
+    const upgradeHint = tier === "free"
+      ? " Hold ≥1,000 $XBOOKS and link your wallet on /developer to upgrade to 500/day."
+      : tier === "holder"
+        ? " Hold ≥10,000 $XBOOKS to upgrade to 2,000/day."
+        : "";
     return {
       ok: false,
       status: 429,
-      message: `Rate limit reached (${data.rate_limit_per_day} requests/day). Resets at midnight UTC.`,
+      message: `Rate limit reached (${limit} requests/day). Resets at midnight UTC.${upgradeHint}`,
     };
   }
 
-  return { ok: true, key: { id: data.id, name: data.name, rate_limit_per_day: data.rate_limit_per_day } };
+  return {
+    ok: true,
+    key: {
+      id: data.id,
+      name: data.name,
+      tier: (data.tier ?? "free") as XBooksTier,
+      rate_limit_per_day: limit,
+    },
+  };
 }
 
 // ── Usage logging + counter increment (fire-and-forget) ──────────────────────
@@ -119,7 +140,6 @@ export function recordUsage(params: {
   const supabase = getSupabaseAdminClient();
   const today = todayUtc();
 
-  // Log the request
   supabase.from("api_usage").insert({
     key_id: params.keyId,
     endpoint: params.endpoint,
@@ -128,14 +148,13 @@ export function recordUsage(params: {
     duration_ms: params.durationMs,
   }).then(() => {/* fire-and-forget */});
 
-  // Increment counters (reset daily)
   supabase.rpc("increment_api_key_usage", {
     p_key_id: params.keyId,
     p_today: today,
   }).then(() => {/* fire-and-forget */});
 }
 
-// ── List keys (for developer dashboard) ──────────────────────────────────────
+// ── List keys ─────────────────────────────────────────────────────────────────
 
 export async function listApiKeys(): Promise<ApiKeyRecord[]> {
   if (!hasSupabaseAdminEnv()) return [];
@@ -143,7 +162,7 @@ export async function listApiKeys(): Promise<ApiKeyRecord[]> {
   const supabase = getSupabaseAdminClient();
   const { data } = await supabase
     .from("api_keys")
-    .select("id, key_prefix, name, is_active, rate_limit_per_day, requests_today, requests_total, created_at, last_used_at")
+    .select(SELECT_FIELDS)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
@@ -162,6 +181,32 @@ export async function revokeApiKey(id: string): Promise<boolean> {
     .eq("id", id);
 
   return !error;
+}
+
+// ── Link wallet + refresh tier ────────────────────────────────────────────────
+
+export async function linkWalletToKey(
+  keyId: string,
+  walletAddress: string,
+): Promise<{ tier: XBooksTier; balance: number } | null> {
+  if (!hasSupabaseAdminEnv()) return null;
+
+  const { tier, balance } = await getWalletTier(walletAddress);
+  const limit = TIER_LIMITS[tier];
+
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("api_keys")
+    .update({
+      wallet_address: walletAddress.toLowerCase(),
+      tier,
+      rate_limit_per_day: limit,
+      tier_checked_at: new Date().toISOString(),
+    })
+    .eq("id", keyId);
+
+  if (error) return null;
+  return { tier, balance };
 }
 
 // ── Recent usage for a key ────────────────────────────────────────────────────

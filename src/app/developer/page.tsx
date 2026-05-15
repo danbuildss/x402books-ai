@@ -2,29 +2,119 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StitchHeader, StitchShell, StitchEmpty } from "@/components/stitch-app";
+import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type XBooksTier } from "@/lib/xbooks-token";
 
 type ApiKeyRecord = {
   id: string;
   key_prefix: string;
   name: string;
   is_active: boolean;
+  tier: XBooksTier;
   rate_limit_per_day: number;
   requests_today: number;
   requests_total: number;
+  wallet_address: string | null;
   created_at: string;
   last_used_at: string | null;
 };
 
+const TIER_COLORS: Record<XBooksTier, string> = {
+  free:   "var(--st-muted)",
+  holder: "var(--st-blue)",
+  whale:  "var(--st-green)",
+};
+
 function relDate(iso: string | null) {
   if (!iso) return "Never";
-  const d = new Date(iso);
-  const diff = Date.now() - d.getTime();
+  const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60_000);
   if (mins < 1) return "Just now";
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function TierBadge({ tier }: { tier: XBooksTier }) {
+  return (
+    <span style={{
+      fontSize: 11, padding: "2px 8px", borderRadius: 99, fontWeight: 600,
+      background: `color-mix(in srgb, ${TIER_COLORS[tier]} 15%, transparent)`,
+      color: TIER_COLORS[tier],
+    }}>
+      {TIER_LABELS[tier]}
+    </span>
+  );
+}
+
+function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
+  keyId: string;
+  currentWallet: string | null;
+  currentTier: XBooksTier;
+  onLinked: (wallet: string, tier: XBooksTier, balance: number) => void;
+}) {
+  const [wallet, setWallet] = useState(currentWallet ?? "");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<{ tier: XBooksTier; balance: number } | null>(null);
+
+  async function handleLink() {
+    if (!wallet.trim().startsWith("0x")) { setError("Enter a valid 0x wallet address."); return; }
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/developer/verify-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyId, walletAddress: wallet.trim() }),
+      });
+      const data = await res.json() as { tier: XBooksTier; xbooks_balance: number; error?: string };
+      if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
+      setResult({ tier: data.tier, balance: data.xbooks_balance });
+      onLinked(wallet.trim(), data.tier, data.xbooks_balance);
+    } catch {
+      setError("Network error — please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
+      <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
+        Link wallet to check $XBOOKS balance and upgrade tier
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <input
+          style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-surface)", color: "var(--st-text)", fontSize: 12, fontFamily: "var(--st-mono)" }}
+          placeholder="0x…"
+          value={wallet}
+          onChange={(e) => setWallet(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleLink()}
+        />
+        <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
+          {loading ? "Checking…" : "Verify"}
+        </button>
+      </div>
+      {error && <p style={{ color: "var(--st-red)", fontSize: 12, marginTop: 6 }}>{error}</p>}
+      {result && (
+        <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--st-green)" }}>check_circle</span>
+          <span style={{ color: "var(--st-muted)" }}>
+            {result.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })} $XBOOKS detected →
+          </span>
+          <TierBadge tier={result.tier} />
+          <span style={{ color: "var(--st-muted)" }}>{TIER_LIMITS[result.tier].toLocaleString()} req/day</span>
+        </div>
+      )}
+      {!result && currentTier === "free" && (
+        <div style={{ marginTop: 8, fontSize: 11, color: "var(--st-muted)" }}>
+          Hold ≥{TIER_THRESHOLDS.holder.toLocaleString()} $XBOOKS → 500 req/day &nbsp;·&nbsp;
+          Hold ≥{TIER_THRESHOLDS.whale.toLocaleString()} $XBOOKS → 2,000 req/day
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function DeveloperPage() {
@@ -35,6 +125,7 @@ export default function DeveloperPage() {
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { fetchKeys(); }, []);
@@ -45,9 +136,7 @@ export default function DeveloperPage() {
       const res = await fetch("/api/developer/keys");
       const data = await res.json() as { keys: ApiKeyRecord[] };
       setKeys(data.keys ?? []);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }
 
   async function handleCreate() {
@@ -64,9 +153,7 @@ export default function DeveloperPage() {
       setKeys((prev) => [data.record, ...prev]);
       setShowForm(false);
       setNewName("");
-    } finally {
-      setCreating(false);
-    }
+    } finally { setCreating(false); }
   }
 
   async function handleRevoke(id: string) {
@@ -82,50 +169,61 @@ export default function DeveloperPage() {
     });
   }
 
+  function handleWalletLinked(keyId: string, wallet: string, tier: XBooksTier) {
+    setKeys((prev) => prev.map((k) =>
+      k.id === keyId
+        ? { ...k, wallet_address: wallet.toLowerCase(), tier, rate_limit_per_day: TIER_LIMITS[tier] }
+        : k,
+    ));
+    setExpandedWallet(null);
+  }
+
   return (
     <StitchShell>
       <StitchHeader
         title="Developer API"
-        description="Manage API keys and monitor usage."
+        description="Manage API keys · Upgrade tier with $XBOOKS"
       />
 
-      {/* New key banner — shown once after creation */}
+      {/* Tier overview */}
+      <div className="stitch-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        {(["free", "holder", "whale"] as XBooksTier[]).map((tier) => (
+          <div key={tier} className="stitch-card" style={{ padding: "14px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <TierBadge tier={tier} />
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: TIER_COLORS[tier] }}>
+              {TIER_LIMITS[tier].toLocaleString()}
+              <span style={{ fontSize: 12, fontWeight: 400, color: "var(--st-muted)", marginLeft: 4 }}>req/day</span>
+            </div>
+            <div style={{ fontSize: 11, color: "var(--st-muted)", marginTop: 4 }}>
+              {tier === "free" && "No $XBOOKS required"}
+              {tier === "holder" && `≥ ${TIER_THRESHOLDS.holder.toLocaleString()} $XBOOKS`}
+              {tier === "whale" && `≥ ${TIER_THRESHOLDS.whale.toLocaleString()} $XBOOKS`}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* New key banner */}
       {newKey && (
         <div className="stitch-card" style={{ borderColor: "var(--st-green)", background: "color-mix(in srgb, var(--st-green) 8%, var(--st-surface))" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span className="material-symbols-outlined" style={{ color: "var(--st-green)", fontSize: 18 }}>check_circle</span>
             <strong style={{ color: "var(--st-green)" }}>API key created — copy it now</strong>
           </div>
           <p style={{ color: "var(--st-muted)", fontSize: 12, marginBottom: 10 }}>
-            This key will not be shown again. Store it somewhere safe.
+            This key will not be shown again. Store it in a safe place.
           </p>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <code style={{
-              flex: 1, background: "var(--st-bg)", padding: "8px 12px",
-              borderRadius: 6, fontFamily: "var(--st-mono)", fontSize: 13,
-              border: "1px solid var(--st-border)", wordBreak: "break-all",
-            }}>
+            <code style={{ flex: 1, background: "var(--st-bg)", padding: "8px 12px", borderRadius: 6, fontFamily: "var(--st-mono)", fontSize: 13, border: "1px solid var(--st-border)", wordBreak: "break-all" }}>
               {newKey}
             </code>
-            <button
-              type="button"
-              className="stitch-btn"
-              onClick={() => copyKey(newKey)}
-              style={{ whiteSpace: "nowrap" }}
-            >
-              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
-                {copied ? "check" : "content_copy"}
-              </span>
+            <button type="button" className="stitch-btn" onClick={() => copyKey(newKey)} style={{ whiteSpace: "nowrap" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>{copied ? "check" : "content_copy"}</span>
               {copied ? "Copied!" : "Copy"}
             </button>
-            <button
-              type="button"
-              className="stitch-btn"
-              onClick={() => setNewKey(null)}
-              style={{ color: "var(--st-muted)" }}
-            >
-              Dismiss
-            </button>
+            <button type="button" className="stitch-btn" onClick={() => setNewKey(null)} style={{ color: "var(--st-muted)" }}>Dismiss</button>
           </div>
         </div>
       )}
@@ -134,22 +232,16 @@ export default function DeveloperPage() {
       <div className="stitch-card">
         <div className="stitch-card-head">
           <h3>API Keys</h3>
-          <button
-            type="button"
-            className="stitch-btn"
-            onClick={() => { setShowForm(true); setTimeout(() => inputRef.current?.focus(), 50); }}
-          >
+          <button type="button" className="stitch-btn" onClick={() => { setShowForm(true); setTimeout(() => inputRef.current?.focus(), 50); }}>
             <span className="material-symbols-outlined" style={{ fontSize: 15 }}>add</span>
             New Key
           </button>
         </div>
 
-        {/* Create form */}
         {showForm && (
           <div style={{ display: "flex", gap: 8, marginBottom: 16, padding: "12px 0", borderBottom: "1px solid var(--st-border)" }}>
             <input
               ref={inputRef}
-              className="stitch-agent-search-input"
               style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-bg)", color: "var(--st-text)", fontSize: 13 }}
               placeholder="Key name (e.g. My Agent)"
               value={newName}
@@ -157,17 +249,10 @@ export default function DeveloperPage() {
               onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") setShowForm(false); }}
               maxLength={64}
             />
-            <button
-              type="button"
-              className="stitch-btn"
-              onClick={handleCreate}
-              disabled={creating || !newName.trim()}
-            >
+            <button type="button" className="stitch-btn" onClick={handleCreate} disabled={creating || !newName.trim()}>
               {creating ? "Creating…" : "Create"}
             </button>
-            <button type="button" className="stitch-btn" onClick={() => setShowForm(false)} style={{ color: "var(--st-muted)" }}>
-              Cancel
-            </button>
+            <button type="button" className="stitch-btn" onClick={() => setShowForm(false)} style={{ color: "var(--st-muted)" }}>Cancel</button>
           </div>
         )}
 
@@ -176,80 +261,103 @@ export default function DeveloperPage() {
         ) : keys.length === 0 ? (
           <StitchEmpty compact>No API keys yet. Create one to get started.</StitchEmpty>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
             {keys.map((key) => (
-              <div key={key.id} style={{
-                display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12,
-                alignItems: "center", padding: "12px 0",
-                borderBottom: "1px solid var(--st-border)",
-              }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                    <strong style={{ fontSize: 14 }}>{key.name}</strong>
-                    <code style={{ fontSize: 11, color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>
-                      {key.key_prefix}…
-                    </code>
+              <div key={key.id} style={{ padding: "14px 0", borderBottom: "1px solid var(--st-border)" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", gap: 12, alignItems: "center" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                      <strong style={{ fontSize: 14 }}>{key.name}</strong>
+                      <code style={{ fontSize: 11, color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>{key.key_prefix}…</code>
+                      <TierBadge tier={key.tier ?? "free"} />
+                    </div>
+                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--st-muted)" }}>
+                      <span>Created {relDate(key.created_at)}</span>
+                      <span>Last used: {relDate(key.last_used_at)}</span>
+                      <span>{key.requests_total.toLocaleString()} total</span>
+                      {key.wallet_address && (
+                        <span style={{ fontFamily: "var(--st-mono)", fontSize: 11 }}>
+                          {key.wallet_address.slice(0, 6)}…{key.wallet_address.slice(-4)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--st-muted)" }}>
-                    <span>Created {relDate(key.created_at)}</span>
-                    <span>Last used: {relDate(key.last_used_at)}</span>
-                    <span>{key.requests_total.toLocaleString()} total requests</span>
+
+                  {/* Daily usage bar */}
+                  <div style={{ width: 110, textAlign: "right" }}>
+                    <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 3 }}>
+                      {key.requests_today} / {key.rate_limit_per_day} today
+                    </div>
+                    <div style={{ height: 4, background: "var(--st-border)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{
+                        height: "100%", borderRadius: 2,
+                        width: `${Math.min(100, (key.requests_today / key.rate_limit_per_day) * 100)}%`,
+                        background: key.requests_today >= key.rate_limit_per_day ? "var(--st-red)" : TIER_COLORS[key.tier ?? "free"],
+                        transition: "width 0.3s",
+                      }} />
+                    </div>
                   </div>
+
+                  {/* Upgrade / wallet button */}
+                  <button
+                    type="button"
+                    className="stitch-btn"
+                    style={{ fontSize: 11, whiteSpace: "nowrap" }}
+                    onClick={() => setExpandedWallet(expandedWallet === key.id ? null : key.id)}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 13 }}>toll</span>
+                    {key.wallet_address ? "Re-verify" : "Link Wallet"}
+                  </button>
+
+                  <span style={{
+                    fontSize: 11, padding: "2px 8px", borderRadius: 99,
+                    background: "color-mix(in srgb, var(--st-green) 15%, transparent)",
+                    color: "var(--st-green)",
+                  }}>Active</span>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRevoke(key.id)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--st-red)", padding: 4 }}
+                    title="Revoke key"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 17 }}>delete</span>
+                  </button>
                 </div>
 
-                {/* Daily usage bar */}
-                <div style={{ width: 100, textAlign: "right" }}>
-                  <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 3 }}>
-                    {key.requests_today} / {key.rate_limit_per_day} today
-                  </div>
-                  <div style={{ height: 4, background: "var(--st-border)", borderRadius: 2, overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%", borderRadius: 2,
-                      width: `${Math.min(100, (key.requests_today / key.rate_limit_per_day) * 100)}%`,
-                      background: key.requests_today >= key.rate_limit_per_day ? "var(--st-red)" : "var(--st-blue)",
-                    }} />
-                  </div>
-                </div>
-
-                <span style={{
-                  fontSize: 11, padding: "2px 8px", borderRadius: 99,
-                  background: key.is_active ? "color-mix(in srgb, var(--st-green) 15%, transparent)" : "color-mix(in srgb, var(--st-red) 15%, transparent)",
-                  color: key.is_active ? "var(--st-green)" : "var(--st-red)",
-                }}>
-                  {key.is_active ? "Active" : "Revoked"}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => handleRevoke(key.id)}
-                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--st-red)", padding: 4 }}
-                  title="Revoke key"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 17 }}>delete</span>
-                </button>
+                {expandedWallet === key.id && (
+                  <WalletLinker
+                    keyId={key.id}
+                    currentWallet={key.wallet_address}
+                    currentTier={key.tier ?? "free"}
+                    onLinked={(wallet, tier) => handleWalletLinked(key.id, wallet, tier)}
+                  />
+                )}
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* API reference card */}
+      {/* Endpoint reference */}
       <div className="stitch-card">
         <div className="stitch-card-head">
           <h3>Endpoints</h3>
-          <span style={{ fontSize: 12, color: "var(--st-muted)" }}>Base URL: <code style={{ fontFamily: "var(--st-mono)" }}>https://x402books.ai/api/v1</code></span>
+          <span style={{ fontSize: 12, color: "var(--st-muted)" }}>
+            Base URL: <code style={{ fontFamily: "var(--st-mono)" }}>https://x402books.ai/api/v1</code>
+          </span>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
           {[
-            { method: "GET", path: "/ledger-summary", desc: "Financial summary: total income, spend, net flow, budget status", params: "wallet, range" },
-            { method: "GET", path: "/transactions", desc: "Paginated transaction list with USD values and categories", params: "wallet, range, page, limit" },
-            { method: "GET", path: "/full-report", desc: "Complete scan: summary, portfolio, daily flows, categories", params: "wallet, range" },
-            { method: "POST", path: "/categorize", desc: "AI-powered transaction categorization (uses Claude)", params: '{ wallet, range }' },
-            { method: "GET", path: "/agent-financial-state", desc: "Agent-optimized financial snapshot with ecosystem detection", params: "wallet, range" },
+            { method: "GET",  path: "/ledger-summary",       desc: "Income, spend, net flow, budget status",                params: "wallet, range" },
+            { method: "GET",  path: "/transactions",          desc: "Paginated transactions with USD values + categories",   params: "wallet, range, page, limit" },
+            { method: "GET",  path: "/full-report",           desc: "Complete scan: portfolio, daily flows, categories",     params: "wallet, range" },
+            { method: "POST", path: "/categorize",            desc: "AI-powered transaction categorization (Claude)",        params: "{ wallet, range }" },
+            { method: "GET",  path: "/agent-financial-state", desc: "Agent snapshot: ecosystem, portfolio, x402 activity",  params: "wallet, range" },
           ].map((ep) => (
             <div key={ep.path} style={{
-              display: "grid", gridTemplateColumns: "60px 200px 1fr auto",
+              display: "grid", gridTemplateColumns: "60px 220px 1fr auto",
               gap: 12, alignItems: "baseline", padding: "10px 0",
               borderBottom: "1px solid var(--st-border)", fontSize: 13,
             }}>
@@ -267,19 +375,15 @@ export default function DeveloperPage() {
           ))}
         </div>
 
-        <div style={{ marginTop: 16, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
-          <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 6 }}>Authentication</div>
-          <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>
-            Authorization: Bearer xb_live_…
-          </code>
-          <span style={{ fontSize: 12, color: "var(--st-muted)", marginLeft: 16 }}>or</span>
-          <code style={{ fontFamily: "var(--st-mono)", fontSize: 12, marginLeft: 16 }}>
-            X-API-Key: xb_live_…
-          </code>
-        </div>
-
-        <div style={{ marginTop: 8, fontSize: 12, color: "var(--st-muted)" }}>
-          Rate limit: <strong>100 requests / day</strong> per key. Resets at midnight UTC.
+        <div style={{ marginTop: 16, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)", display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 4 }}>Authentication</div>
+            <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>Authorization: Bearer xb_live_…</code>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 4 }}>Or</div>
+            <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>X-API-Key: xb_live_…</code>
+          </div>
         </div>
       </div>
     </StitchShell>
