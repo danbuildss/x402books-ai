@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Logo } from "@/components/logo";
 import { FadeContent, TextType, ThemeToggle } from "@/components/effects";
 import { ScrollLink } from "@/components/scroll-link";
@@ -137,6 +137,219 @@ const FAQ_ITEMS = [
     a: "$XBOOKS is the utility token for the x402Books ecosystem. It is designed to unlock premium features, discounted API usage, advanced reports, deep scans, and future agent-facing financial intelligence services.",
   },
 ];
+
+const XBOOKS_CA = "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+
+type TokenData = {
+  price: number;
+  change24h: number;
+  mcap: number;
+  volume24h: number;
+  dexUrl: string;
+};
+
+type SparkPoint = { ts: number; price: number };
+
+function formatUsd(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${n.toFixed(2)}`;
+}
+
+function formatPrice(n: number): string {
+  if (n >= 1) return `$${n.toFixed(4)}`;
+  if (n >= 0.001) return `$${n.toFixed(5)}`;
+  return `$${n.toExponential(3)}`;
+}
+
+function Sparkline({ points }: { points: SparkPoint[] }) {
+  if (points.length < 2) return null;
+  const prices = points.map((p) => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const W = 400, H = 56, PAD = 2;
+  const coords = points.map((p, i) => {
+    const x = PAD + (i / (points.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((p.price - min) / range) * (H - PAD * 2);
+    return `${x},${y}`;
+  });
+  const isUp = prices[prices.length - 1] >= prices[0];
+  const color = isUp ? "#6DB874" : "#e05252";
+  const firstX = PAD;
+  const lastX = W - PAD;
+  const fill = `${coords[0]} L ${coords.join(" L ")} L ${lastX},${H} L ${firstX},${H} Z`;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="lp-token-sparkline" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`M ${fill}`} fill="url(#spark-fill)" />
+      <polyline points={coords.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function XBooksTokenSection() {
+  const [token, setToken] = useState<TokenData | null>(null);
+  const [spark, setSpark] = useState<SparkPoint[]>([]);
+  const [copied, setCopied] = useState(false);
+  const [flashClass, setFlashClass] = useState("");
+  const prevPrice = useRef<number | null>(null);
+
+  const fetchToken = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${XBOOKS_CA}`,
+        { signal: AbortSignal.timeout(6_000) },
+      );
+      if (!res.ok) return;
+      type DexPair = {
+        priceUsd?: string;
+        priceChange?: { h24?: number };
+        volume?: { h24?: number };
+        fdv?: number;
+        marketCap?: number;
+        url?: string;
+      };
+      const data = await res.json() as { pairs?: DexPair[] };
+      const pair = data.pairs?.[0];
+      if (!pair) return;
+
+      const price = parseFloat(pair.priceUsd ?? "0");
+      if (price > 0 && prevPrice.current !== null && price !== prevPrice.current) {
+        const cls = price > prevPrice.current ? "flash-up" : "flash-down";
+        setFlashClass(cls);
+        setTimeout(() => setFlashClass(""), 800);
+      }
+      prevPrice.current = price;
+
+      setToken({
+        price,
+        change24h: pair.priceChange?.h24 ?? 0,
+        mcap: pair.marketCap ?? pair.fdv ?? 0,
+        volume24h: pair.volume?.h24 ?? 0,
+        dexUrl: pair.url ?? `https://dexscreener.com/base/${XBOOKS_CA}`,
+      });
+    } catch { /* silent — live data, not critical */ }
+  }, []);
+
+  useEffect(() => {
+    fetchToken();
+    const iv = setInterval(fetchToken, 30_000);
+    return () => clearInterval(iv);
+  }, [fetchToken]);
+
+  useEffect(() => {
+    fetch(`/api/token/chart?address=${XBOOKS_CA}`)
+      .then((r) => r.json())
+      .then((d: { prices?: SparkPoint[] }) => { if (d.prices?.length) setSpark(d.prices); })
+      .catch(() => { /* silent */ });
+  }, []);
+
+  function copy() {
+    navigator.clipboard.writeText(XBOOKS_CA).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  const changeDir = !token ? "flat" : token.change24h > 0 ? "up" : token.change24h < 0 ? "down" : "flat";
+
+  return (
+    <section className="lp-token-section">
+      <div className="lp-token-card">
+        {/* Left — identity */}
+        <div className="lp-token-left">
+          <p className="lp-token-eyebrow">Utility Token · Base</p>
+          <h2 className="lp-token-name">$XBOOKS</h2>
+          <p className="lp-token-desc">
+            The economic layer of x402Books AI. Hold $XBOOKS to unlock higher API limits,
+            premium reports, and agent-facing financial intelligence.
+          </p>
+
+          <div className="lp-token-ca">
+            <span className="lp-token-ca-label">CA</span>
+            <span className="lp-token-ca-addr">{XBOOKS_CA}</span>
+            <button type="button" className="lp-token-ca-copy" onClick={copy} title="Copy contract address">
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+                {copied ? "check" : "content_copy"}
+              </span>
+            </button>
+          </div>
+
+          <div className="lp-token-links">
+            <a
+              href={token?.dexUrl ?? `https://dexscreener.com/base/${XBOOKS_CA}`}
+              target="_blank"
+              rel="noreferrer"
+              className="lp-token-link lp-token-link-primary"
+            >
+              Buy $XBOOKS
+            </a>
+            <a
+              href={token?.dexUrl ?? `https://dexscreener.com/base/${XBOOKS_CA}`}
+              target="_blank"
+              rel="noreferrer"
+              className="lp-token-link lp-token-link-ghost"
+            >
+              DexScreener ↗
+            </a>
+          </div>
+        </div>
+
+        {/* Right — live data */}
+        <div className="lp-token-right">
+          {!token ? (
+            <div className="lp-token-loading">
+              <span className="lp-token-live-dot" />
+              Fetching live data…
+            </div>
+          ) : (
+            <>
+              <div>
+                <div className="lp-token-price-row">
+                  <span className={`lp-token-price ${flashClass}`}>{formatPrice(token.price)}</span>
+                  <span className={`lp-token-change ${changeDir}`}>
+                    {changeDir === "up" ? "▲" : changeDir === "down" ? "▼" : ""}
+                    {Math.abs(token.change24h).toFixed(2)}%
+                  </span>
+                </div>
+
+                {spark.length > 1 && (
+                  <>
+                    <Sparkline points={spark} />
+                    <p className="lp-token-spark-label">7-day price chart</p>
+                  </>
+                )}
+
+                <div className="lp-token-stats">
+                  <div className="lp-token-stat">
+                    <div className="lp-token-stat-label">Market Cap</div>
+                    <div className="lp-token-stat-value">{token.mcap > 0 ? formatUsd(token.mcap) : "—"}</div>
+                  </div>
+                  <div className="lp-token-stat">
+                    <div className="lp-token-stat-label">24h Volume</div>
+                    <div className="lp-token-stat-value">{token.volume24h > 0 ? formatUsd(token.volume24h) : "—"}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lp-token-live">
+                <span className="lp-token-live-dot" />
+                Live · updates every 30s
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -331,6 +544,9 @@ export default function HomePage() {
           </div>
         ))}
       </div>
+
+      {/* ── $XBOOKS token ── */}
+      <XBooksTokenSection />
 
       {/* ── Infrastructure marquee ── */}
       <div className="lp-infra-strip">

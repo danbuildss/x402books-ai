@@ -941,6 +941,266 @@ iframe[src*="privy"] { display: none !important; }
   color: rgba(232, 230, 225, 0.4);
 }
 
+/* ---------- $XBOOKS token section ---------- */
+.lp-token-section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 40px 56px;
+}
+
+.lp-token-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border: 1px solid rgba(109, 184, 116, 0.14);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(109, 184, 116, 0.025);
+}
+
+.lp-token-left {
+  padding: 36px 40px;
+  border-right: 1px solid rgba(109, 184, 116, 0.1);
+}
+
+.lp-token-right {
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.lp-token-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(109, 184, 116, 0.7);
+  margin-bottom: 12px;
+}
+
+.lp-token-name {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--lp-text);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.lp-token-desc {
+  font-size: 14px;
+  color: rgba(232, 230, 225, 0.45);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.lp-token-ca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.lp-token-ca-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232, 230, 225, 0.3);
+  flex-shrink: 0;
+}
+
+.lp-token-ca-addr {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: rgba(232, 230, 225, 0.6);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lp-token-ca-copy {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(232, 230, 225, 0.4);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.lp-token-ca-copy:hover { color: #6DB874; }
+
+.lp-token-links {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.lp-token-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.lp-token-link-primary {
+  background: #6DB874;
+  color: #0b0e0b;
+}
+.lp-token-link-primary:hover { opacity: 0.88; }
+
+.lp-token-link-ghost {
+  border: 1px solid rgba(109, 184, 116, 0.25);
+  color: rgba(232, 230, 225, 0.7);
+  background: transparent;
+}
+.lp-token-link-ghost:hover { border-color: rgba(109, 184, 116, 0.5); color: #6DB874; }
+
+/* price stats */
+.lp-token-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.lp-token-price {
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+
+.lp-token-price.flash-up   { color: #6DB874; }
+.lp-token-price.flash-down { color: #e05252; }
+
+.lp-token-change {
+  font-size: 14px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.lp-token-change.up   { background: rgba(109, 184, 116, 0.15); color: #6DB874; }
+.lp-token-change.down { background: rgba(224, 82, 82, 0.15);   color: #e05252; }
+.lp-token-change.flat { background: rgba(232, 230, 225, 0.08); color: rgba(232, 230, 225, 0.5); }
+
+.lp-token-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.lp-token-stat {
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.lp-token-stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(232, 230, 225, 0.35);
+  margin-bottom: 4px;
+}
+
+.lp-token-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--lp-text);
+}
+
+/* sparkline */
+.lp-token-sparkline {
+  width: 100%;
+  height: 56px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.lp-token-spark-label {
+  font-size: 11px;
+  color: rgba(232, 230, 225, 0.25);
+  margin-bottom: 20px;
+}
+
+.lp-token-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(232, 230, 225, 0.3);
+  font-size: 13px;
+  padding: 20px 0;
+}
+
+/* live dot */
+.lp-token-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: rgba(109, 184, 116, 0.6);
+  margin-top: 4px;
+}
+.lp-token-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6DB874;
+  animation: lp-pulse 2s ease-in-out infinite;
+}
+@keyframes lp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* light mode overrides */
+[data-theme="light"] .lp-token-card {
+  background: rgba(109, 184, 116, 0.03);
+  border-color: rgba(58, 150, 65, 0.12);
+}
+[data-theme="light"] .lp-token-left  { border-right-color: rgba(58, 150, 65, 0.1); }
+[data-theme="light"] .lp-token-desc  { color: rgba(14, 15, 14, 0.45); }
+[data-theme="light"] .lp-token-ca    { background: rgba(14, 15, 14, 0.04); border-color: rgba(14, 15, 14, 0.08); }
+[data-theme="light"] .lp-token-ca-label { color: rgba(14, 15, 14, 0.35); }
+[data-theme="light"] .lp-token-ca-addr  { color: rgba(14, 15, 14, 0.55); }
+[data-theme="light"] .lp-token-ca-copy  { color: rgba(14, 15, 14, 0.35); }
+[data-theme="light"] .lp-token-stat { background: rgba(14, 15, 14, 0.03); border-color: rgba(14, 15, 14, 0.06); }
+[data-theme="light"] .lp-token-stat-label { color: rgba(14, 15, 14, 0.4); }
+[data-theme="light"] .lp-token-spark-label { color: rgba(14, 15, 14, 0.3); }
+[data-theme="light"] .lp-token-live  { color: rgba(58, 150, 65, 0.7); }
+[data-theme="light"] .lp-token-price { color: rgba(14, 15, 14, 0.9); }
+[data-theme="light"] .lp-token-link-ghost { border-color: rgba(58, 150, 65, 0.22); color: rgba(14, 15, 14, 0.65); }
+[data-theme="light"] .lp-token-link-ghost:hover { color: #3A9641; border-color: rgba(58, 150, 65, 0.45); }
+
+/* responsive */
+@media (max-width: 760px) {
+  .lp-token-section { padding: 40px 16px 32px; }
+  .lp-token-card { grid-template-columns: 1fr; }
+  .lp-token-left { border-right: none; border-bottom: 1px solid rgba(109, 184, 116, 0.1); padding: 24px 20px; }
+  .lp-token-right { padding: 24px 20px; }
+  .lp-token-name { font-size: 28px; }
+  .lp-token-price { font-size: 30px; }
+}
+
 /* ---------- Sections ---------- */
 .lp-section {
   max-width: 1180px;
