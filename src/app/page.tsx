@@ -696,15 +696,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── $XBOOKS utilities ── */}
-      <XBooksUtilities />
-
-      {/* ── $XBOOKS token ── */}
-      <XBooksTokenSection />
-
-      {/* ── x402 API endpoints ── */}
-      <X402ApiSection />
-
       {/* ── How it works ── */}
       <section className="lp-section" id="how">
         <FadeContent delay={60}>
@@ -749,6 +740,15 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ── $XBOOKS utilities ── */}
+      <XBooksUtilities />
+
+      {/* ── $XBOOKS token ── */}
+      <XBooksTokenSection />
+
+      {/* ── x402 API endpoints ── */}
+      <X402ApiSection />
 
       {/* ── Product Preview ── */}
       <section className="lp-section" id="preview">

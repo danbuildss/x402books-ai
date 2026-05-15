@@ -186,7 +186,7 @@ export default function DeveloperPage() {
       />
 
       {/* Tier overview */}
-      <div className="stitch-stats-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+      <div className="stitch-stats-grid stitch-tier-grid">
         {(["free", "holder", "whale"] as XBooksTier[]).map((tier) => (
           <div key={tier} className="stitch-card" style={{ padding: "14px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>

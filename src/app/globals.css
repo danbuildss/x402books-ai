@@ -1102,6 +1102,14 @@ iframe[src*="privy"] { display: none !important; }
   .lp-x402-grid { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 560px) {
+  /* Compress the 3-col endpoint table to show method + name only; hide XBOOKS price col */
+  .lp-x402-table-head,
+  .lp-x402-row { grid-template-columns: 1fr 72px; }
+  .lp-x402-table-head span:last-child,
+  .lp-x402-row .lp-x402-price:last-child { display: none; }
+}
+
 /* ---------- $XBOOKS token section ---------- */
 .lp-token-section {
   max-width: 1180px;
@@ -7948,4 +7956,61 @@ html, body {
   .stitch-portfolio-txcount { grid-column: 2; grid-row: 3; text-align: right; }
 
   .stitch-portfolio-header-row { display: none; }
+}
+
+/* ================================================================
+   MOBILE — landing page supplemental fixes
+   ================================================================ */
+
+/* Developer page: tier overview grid — 3 cols on desktop, 1 col on mobile */
+.stitch-tier-grid {
+  grid-template-columns: repeat(3, 1fr) !important;
+}
+
+@media (max-width: 640px) {
+  .stitch-tier-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Landing: contract address never overflows its container */
+.lp-token-ca-addr {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Landing: x402 code font shrinks on small phones */
+@media (max-width: 480px) {
+  .lp-x402-code { font-size: 10px; padding: 14px; }
+  .lp-x402-grid { gap: 16px; }
+
+  /* Token section */
+  .lp-token-section { padding: 32px 14px 28px; }
+  .lp-token-left,
+  .lp-token-right { padding: 20px 16px; }
+  .lp-token-price { font-size: 26px; }
+  .lp-token-name  { font-size: 22px; }
+  .lp-token-links { flex-direction: column; }
+  .lp-token-link  { justify-content: center; text-align: center; }
+  .lp-token-ca    { flex-wrap: wrap; gap: 8px; }
+
+  /* Section headings */
+  .lp-section-head { margin-bottom: 28px; }
+  .lp-h2 { font-size: 18px; }
+
+  /* CTA */
+  .lp-cta-section h2.lp-h2 { font-size: 20px; }
+
+  /* Features / steps single column already done at 600px */
+  /* Extra breathing room */
+  .lp-section { padding: 36px 14px; }
+}
+
+@media (max-width: 360px) {
+  .lp-token-price { font-size: 22px; }
+  .lp-x402-code { font-size: 9px; }
+  .lp-h1 { font-size: 22px; }
+  .lp-h2 { font-size: 16px; }
 }
