@@ -419,11 +419,12 @@ export function getPortfolioBreakdown(
     const addr = tx.tokenAddress || "unknown";
     const symbol = tx.tokenSymbol || "UNKNOWN";
 
-    // Only surface tokens from BANKR + Virtuals ecosystem registries
+    // Surface BANKR + Virtuals ecosystem tokens AND stablecoins
+    const isStable = STABLECOIN_ADDRESSES_SET.has(addr.toLowerCase());
     const inEcosystem =
       ecosystem.addresses.has(addr.toLowerCase()) ||
       ecosystem.symbols.has(symbol.toUpperCase());
-    if (!inEcosystem) continue;
+    if (!inEcosystem && !isStable) continue;
 
     const m = metrics?.get(addr);
     const entry = map.get(addr) ?? {

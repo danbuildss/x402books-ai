@@ -7692,6 +7692,7 @@ html, body {
 
 .stitch-agent-search {
   position: relative;
+  z-index: 10;
   margin-bottom: 16px;
 }
 
