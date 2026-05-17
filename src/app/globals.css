@@ -8114,46 +8114,26 @@ html, body {
   font-family: var(--font-sans), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
 }
 
-/* ── Header ── */
-.luca-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+/* ── Hero topbar (back link + theme toggle) ── */
+.luca-hero-topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
-  height: 60px;
-  background: var(--surface-glass);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--line);
+  margin-bottom: 40px;
 }
 
-.luca-header-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--ink);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.luca-header-cta {
+.luca-back-link {
   display: inline-flex;
   align-items: center;
-  padding: 7px 18px;
-  border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
   text-decoration: none;
-  transition: background 0.15s;
+  transition: color 0.15s;
 }
 
-.luca-header-cta:hover { background: var(--accent-dark); }
+.luca-back-link:hover { color: var(--ink); }
 
 /* ── Hero ── */
 .luca-hero {

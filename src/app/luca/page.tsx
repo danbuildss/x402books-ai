@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/effects";
 
 const LUCA_CA = "0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3";
 const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
@@ -114,19 +114,15 @@ function CopyButton({ text }: { text: string }) {
 export default function LucaPage() {
   return (
     <div className="luca-page">
-      {/* ── Sticky header ── */}
-      <header className="luca-header">
-        <Link href="/" className="luca-header-logo">
-          <Logo />
-          <span>x402Books AI</span>
-        </Link>
-        <a href={TELEGRAM} target="_blank" rel="noreferrer" className="luca-header-cta">
-          Talk to Luca
-        </a>
-      </header>
-
       {/* ── Hero ── */}
       <section className="luca-hero">
+        <div className="luca-hero-topbar">
+          <Link href="/" className="luca-back-link">
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>arrow_back</span>
+            x402books.xyz
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="luca-hero-inner">
           <div className="luca-avatar-wrap">
             {/* eslint-disable-next-line @next/next/no-img-element */}
