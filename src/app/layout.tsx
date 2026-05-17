@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Libre_Baskerville, IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "@/components/privy-provider";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -64,6 +65,7 @@ export default function RootLayout({
       </head>
       <body className={`${dmSans.variable} ${libreBaskerville.variable} ${ibmPlexMono.variable} ${dmSans.className}`}>
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
