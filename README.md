@@ -1,77 +1,171 @@
 # x402Books AI
 
-Readable books for the agent economy.
+**Readable books for the agent economy.**
 
-x402Books AI turns Base USDC microtransactions into clean reports, spend categories, and agent-readable financial summaries.
+x402Books AI is an onchain accounting platform for autonomous agents and their operators. It turns Base wallet activity into clean financial reports, categorized transactions, financial health scores, and agent-readable summaries — powered by the x402 payment protocol.
 
-## Current Scope (Component 1)
-This repository currently includes:
-- High-quality landing page (dark fintech SaaS style)
-- Waitlist form with fields:
-  - email (required)
-  - X handle (optional)
-  - use-case feedback
-  - pain-point feedback
-- `POST /api/waitlist` API route
-- Supabase waitlist table SQL
+Live at **[x402books.xyz](https://x402books.xyz)**
 
-## Tech
-- Next.js (App Router)
-- Tailwind CSS utility classes in JSX
-- Supabase (server-side insert using service role key)
+---
+
+## What It Does
+
+- **Wallet Audits** — Scan any Base wallet address and get a complete financial breakdown
+- **Transaction Categorization** — AI classifies every onchain transaction: revenue, expenses, gas, swaps, treasury movement
+- **Financial Scoring** — Treasury health scores, inflow/outflow analysis, anomaly detection
+- **Agent Reports** — Structured summaries built for agents, operators, and on-chain bookkeeping
+- **Portfolio Tracking** — Live token balances across BANKR and Virtuals ecosystems + stablecoins (USDC, USDT, DAI, EURC)
+- **CSV & PDF Export** — Download full transaction history or formatted reports
+- **Shareable Reports** — Public-facing report links at `/report/[wallet]`
+
+---
+
+## Key Features
+
+### App (Authenticated)
+- **Dashboard** — Financial stats, sparkline charts, AI insight cards, agent search
+- **Transactions** — Full ledger with date filtering, category editing, transaction notes, flagging
+- **Portfolio** — Live token balances with 24h price changes across ecosystem + stablecoins
+- **Reports** — Pre-built views: summary, cashflow, categories, flagged items
+- **Wallets** — Multi-wallet support, add/remove wallets
+- **Categories** — Custom category management
+- **Developer** — API key management, token-gated rate limits, usage logs, wallet linking
+
+### Landing Page (`/`)
+- How it works, features, $XBOOKS utilities, $XBOOKS token, x402 API section
+- Luca section — meet the AI accountant agent
+- FAQ, CTA
+
+### Luca Page (`/luca`)
+- Standalone marketing page for [Luca](https://t.me/AskLucaBot) — the AI accountant agent
+- Capabilities, how it works, sample report, For Agents / For Builders use cases
+- Content series, $LUCA token card with copy contract address
+- SEO metadata (OG + Twitter card)
+
+---
+
+## API
+
+Public REST API with key-based auth and token-gated rate limits.
+
+| Tier | Requirement | Requests/day |
+|------|-------------|-------------|
+| Free | Any API key | 50 |
+| Holder | ≥ 1,000 $XBOOKS | 500 |
+| Whale | ≥ 10,000 $XBOOKS | 2,000 |
+
+**Base URL:** `https://x402books.xyz/api/v1`
+
+**Auth:** `X-API-Key: xb_live_...` header
+
+### Endpoints
+
+```
+GET  /api/v1/agent-financial-state?wallet=0x...   Agent financial state summary
+GET  /api/v1/full-report?wallet=0x...             Full audit report
+GET  /api/v1/transactions?wallet=0x...            Paginated transaction list
+GET  /api/v1/ledger-summary?wallet=0x...          Ledger totals
+GET  /api/v1/categorize?wallet=0x...              Category breakdown
+```
+
+Get your API key at [x402books.xyz/developer](https://x402books.xyz/developer).
+
+---
+
+## Luca — AI Accountant Agent
+
+**Luca** is the official x402Books AI agent. He lives on Telegram and answers financial questions about any Base wallet.
+
+- Telegram: [@AskLucaBot](https://t.me/AskLucaBot)
+- X: [@AskLucaAI](https://x.com/AskLucaAI)
+- Page: [x402books.xyz/luca](https://x402books.xyz/luca)
+
+Luca is powered by the x402Books API (whale tier). Agent runtime: [Hermes](https://hermes.ai) on local Mac with skill file at `~/.hermes/skills/finance/x402books/SKILL.md`.
+
+---
+
+## Tokens
+
+| Token | Contract | Network | Purpose |
+|-------|----------|---------|---------|
+| $XBOOKS | `0x031d1a44785ef5e0bef61e226199122c5e1e4f02` | Base | Platform utility, API tier gating |
+| $LUCA | `0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3` | Base | Luca community + agent identity |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 15 (App Router) |
+| Auth | Privy |
+| Database | Supabase (PostgreSQL) |
+| Styling | Custom CSS design system (dark/light mode) |
+| Blockchain | Base — Basescan API, BANKR API, Virtuals Protocol API |
+| AI | Claude (Anthropic) — categorization, summaries, insights |
+| Payments | x402 protocol — HTTP 402, USDC on Base, BANKR x402 Cloud |
+| Deploy | Vercel |
+
+---
 
 ## Environment Variables
-Create a `.env.local` file:
 
 ```bash
-SUPABASE_URL=https://your-project-ref.supabase.co
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_public_key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+# Auth
+NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+
+# Blockchain
+BASESCAN_API_KEY=your_basescan_key
+NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
+
+# AI
+ANTHROPIC_API_KEY=your_anthropic_key
+
+# x402 / BANKR
+BANKR_X402_API_KEY=your_bankr_key
 ```
 
-## Supabase Setup
-Run `supabase/waitlist.sql` in Supabase SQL editor:
+---
 
-```sql
-create table if not exists public.waitlist_signups (
-  id uuid primary key default gen_random_uuid(),
-  email text not null unique,
-  x_handle text,
-  use_case text,
-  pain_point text,
-  source text not null default 'landing_page',
-  created_at timestamptz not null default now()
-);
-```
-
-## Local Run
-If this is not yet a full initialized Next.js workspace in your environment, initialize dependencies first, then run:
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Deploy to Vercel
-1. Push this repository to your GitHub.
-2. Import the repo in Vercel.
-3. Add environment variables in Vercel Project Settings.
-4. Deploy.
+Open [http://localhost:3000](http://localhost:3000).
 
-## GitHub Push Commands
-After adding your remote:
+---
 
-```bash
-git remote add origin https://github.com/<your-username>/<your-repo>.git
-git push -u origin work
-```
+## Deploy
 
-If your default branch is `main` and you want to push current branch there:
+1. Push to GitHub
+2. Import repo in [Vercel](https://vercel.com)
+3. Add environment variables in Vercel Project Settings
+4. Deploy
 
-```bash
-git push -u origin HEAD:main
-```
+---
 
-## Security Note
-If any Supabase keys were shared publicly, rotate them immediately in Supabase Dashboard.
+## Supabase Schema
+
+Key tables:
+
+- `waitlist_signups` — early access signups
+- `api_keys` — API key records with tier, usage counters, wallet linking
+- `api_usage` — per-request usage logs
+- RPC `increment_api_key_usage` — atomic daily counter increment
+
+---
+
+## Security
+
+- API keys stored as SHA-256 hashes — raw keys are never persisted
+- Service role key is server-side only (never exposed to client)
+- Rotate any exposed Supabase keys immediately in Supabase Dashboard
