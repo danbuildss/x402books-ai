@@ -8786,11 +8786,42 @@ html, body {
 }
 
 .luca-lp-token-card .lp-token-name {
-  font-size: 26px;
+  font-size: 24px;
+}
+
+.luca-lp-token-card .lp-token-left,
+.luca-lp-token-card .lp-token-right {
+  padding: 28px 32px;
+  justify-content: center;
+}
+
+.luca-lp-token-card .lp-token-price-row {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .luca-lp-token-card .lp-token-price {
-  font-size: 28px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.luca-lp-token-card .lp-token-change {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.luca-lp-token-card .lp-token-stats {
+  margin-bottom: 12px;
+}
+
+.luca-lp-token-card .lp-token-stat {
+  padding: 10px 12px;
+}
+
+.luca-lp-token-card .lp-token-stat-value {
+  font-size: 15px;
 }
 
 /* Sparkline in luca context */
