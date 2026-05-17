@@ -8260,20 +8260,42 @@ html, body {
 }
 
 /* ── Trust Bar ── */
-.luca-trust-bar {
+/* ── Trust marquee ── */
+.luca-trust-strip {
+  border-top: 1px solid rgba(109, 184, 116, 0.08);
+  border-bottom: 1px solid rgba(109, 184, 116, 0.08);
+  background: rgba(109, 184, 116, 0.02);
+  overflow: hidden;
+  padding: 0;
+}
+
+.luca-trust-track {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.luca-trust-reel {
+  display: flex;
+  width: max-content;
+  animation: luca-scroll 32s linear infinite;
+}
+
+.luca-trust-reel:hover { animation-play-state: paused; }
+
+@keyframes luca-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.luca-trust-item {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 14px 24px;
-  background: var(--accent-soft);
-  border-top: 1px solid rgba(109, 184, 116, 0.12);
-  border-bottom: 1px solid rgba(109, 184, 116, 0.12);
-  font-size: 13px;
+  gap: 8px;
+  padding: 12px 24px;
+  white-space: nowrap;
+  font-size: 12px;
   font-weight: 500;
-  color: var(--accent);
-  text-align: center;
+  color: var(--muted);
 }
 
 .luca-trust-dot {
@@ -8281,13 +8303,13 @@ html, body {
   height: 4px;
   border-radius: 50%;
   background: var(--accent);
-  opacity: 0.4;
+  opacity: 0.5;
   flex-shrink: 0;
 }
 
 /* ── Sections ── */
 .luca-section {
-  padding: 72px 24px;
+  padding: 56px 24px;
   max-width: 1100px;
   margin: 0 auto;
 }
@@ -8295,7 +8317,7 @@ html, body {
 .luca-section-alt {
   max-width: 100%;
   background: var(--surface-soft);
-  padding: 72px 24px;
+  padding: 56px 24px;
 }
 
 .luca-section-alt > * {
@@ -8757,6 +8779,41 @@ html, body {
   margin-right: auto;
 }
 
+/* ── $LUCA live token card (reuses lp-token-card system from main page) ── */
+.luca-lp-token-card {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* Sparkline in luca context */
+.luca-token-sparkline {
+  display: block;
+  width: 100%;
+  height: 56px;
+  margin: 8px 0 4px;
+}
+
+/* Loading skeleton bars */
+.lp-token-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.lp-token-loading-bar {
+  height: 14px;
+  width: 100%;
+  border-radius: 4px;
+  background: var(--surface-soft);
+  animation: luca-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes luca-shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
 /* ── Responsive: /luca page ── */
 @media (max-width: 900px) {
   .luca-steps { grid-template-columns: repeat(3, 1fr); }
@@ -8765,20 +8822,21 @@ html, body {
 }
 
 @media (max-width: 640px) {
-  .luca-header { padding: 0 16px; }
-  .luca-hero { padding: 48px 16px 40px; }
+  .luca-hero { padding: 32px 16px 36px; }
   .luca-hero-inner { flex-direction: column; gap: 24px; }
   .luca-hero-btns { flex-direction: column; }
   .luca-hero-btns .luca-btn-ghost,
   .luca-hero-btns .luca-btn-primary { width: 100%; justify-content: center; }
-  .luca-section { padding: 48px 16px; }
-  .luca-section-alt { padding: 48px 16px; }
+  .luca-section { padding: 40px 16px; }
+  .luca-section-alt { padding: 40px 16px; }
   .luca-caps-grid { grid-template-columns: 1fr; }
   .luca-steps { grid-template-columns: 1fr 1fr; }
   .luca-two-col { grid-template-columns: 1fr; }
   .luca-series-grid { grid-template-columns: 1fr 1fr; }
   .luca-footer { padding: 24px 16px 16px; }
   .luca-footer-inner { flex-direction: column; align-items: flex-start; }
+  .luca-lp-token-card { flex-direction: column; }
+  .luca-lp-token-card .lp-token-left { border-right: none; border-bottom: 1px solid var(--line); }
 }
 
 @media (max-width: 400px) {

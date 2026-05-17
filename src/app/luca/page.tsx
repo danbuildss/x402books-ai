@@ -1,53 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/effects";
 
-const LUCA_CA = "0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3";
+const LUCA_CA  = "0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3";
 const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
 
 const CAPABILITIES = [
-  {
-    icon: "account_balance_wallet",
-    title: "Wallet Audits",
-    body: "Analyze public wallet activity across income, spend, net flow, and treasury health.",
-  },
-  {
-    icon: "category",
-    title: "Transaction Categorization",
-    body: "Classify onchain activity into revenue, expenses, gas, treasury movement, swaps, and unknown items.",
-  },
-  {
-    icon: "monitoring",
-    title: "Agent Financial Scores",
-    body: "Score agents based on activity, cashflow quality, anomaly risk, and treasury health.",
-  },
-  {
-    icon: "flag",
-    title: "Anomaly Detection",
-    body: "Flag unusual inflows, repeated transactions, high-frequency behavior, unsupported valuations, and concentration risk.",
-  },
-  {
-    icon: "description",
-    title: "Reports & Summaries",
-    body: "Generate short summaries, full audit memos, public-safe X posts, and operator-ready reports.",
-  },
-  {
-    icon: "menu_book",
-    title: "Agent Bookkeeping",
-    body: "Help autonomous agents understand what they earned, spent, held, and need to review.",
-  },
+  { icon: "account_balance_wallet", title: "Wallet Audits",              body: "Analyze public wallet activity across income, spend, net flow, and treasury health." },
+  { icon: "category",              title: "Transaction Categorization",  body: "Classify onchain activity into revenue, expenses, gas, treasury movement, swaps, and unknown items." },
+  { icon: "monitoring",            title: "Agent Financial Scores",      body: "Score agents based on activity, cashflow quality, anomaly risk, and treasury health." },
+  { icon: "flag",                  title: "Anomaly Detection",           body: "Flag unusual inflows, repeated transactions, high-frequency behavior, and concentration risk." },
+  { icon: "description",           title: "Reports & Summaries",         body: "Generate short summaries, full audit memos, public-safe X posts, and operator-ready reports." },
+  { icon: "menu_book",             title: "Agent Bookkeeping",           body: "Help autonomous agents understand what they earned, spent, held, and need to review." },
 ];
 
 const STEPS = [
-  { n: "01", title: "Submit a wallet", body: "Send Luca any Base wallet address on Telegram." },
-  { n: "02", title: "Luca scans activity", body: "Public onchain data is fetched and normalized in seconds." },
-  { n: "03", title: "x402Books categorizes", body: "Every transaction is classified by the x402Books AI engine." },
-  { n: "04", title: "Risks are detected", body: "Anomalies, concentration risk, and unusual patterns are flagged." },
-  { n: "05", title: "Report delivered", body: "A clear, structured accounting report is sent back instantly." },
+  { n: "01", title: "Submit a wallet",        body: "Send Luca any Base wallet address on Telegram." },
+  { n: "02", title: "Luca scans activity",    body: "Public onchain data is fetched and normalized in seconds." },
+  { n: "03", title: "x402Books categorizes",  body: "Every transaction is classified by the x402Books AI engine." },
+  { n: "04", title: "Risks are detected",     body: "Anomalies, concentration risk, and unusual patterns are flagged." },
+  { n: "05", title: "Report delivered",       body: "A clear, structured accounting report is sent back instantly." },
 ];
 
 const FOR_AGENTS = [
@@ -57,7 +33,7 @@ const FOR_AGENTS = [
   "Is my treasury healthy?",
   "Which transactions need review?",
   "Am I revenue-generating or just active?",
-  "What should I report to users, teams, or operators?",
+  "What should I report to users or operators?",
 ];
 
 const FOR_BUILDERS = [
@@ -71,47 +47,219 @@ const FOR_BUILDERS = [
 ];
 
 const SERIES = [
-  {
-    tag: "Series 01",
-    title: "Are Agents Actually Working?",
-    body: "Public analysis of agent wallets and activity.",
-  },
-  {
-    tag: "Series 02",
-    title: "Agent Wallet Breakdown",
-    body: "Short financial snapshots of agent projects.",
-  },
-  {
-    tag: "Series 03",
-    title: "Agent Treasury Watch",
-    body: "Treasury health and risk observations.",
-  },
-  {
-    tag: "Series 04",
-    title: "Luca Explains",
-    body: "Simple accounting lessons for the agent economy.",
-  },
+  { tag: "Series 01", title: "Are Agents Actually Working?",  body: "Public analysis of agent wallets and activity." },
+  { tag: "Series 02", title: "Agent Wallet Breakdown",        body: "Short financial snapshots of agent projects." },
+  { tag: "Series 03", title: "Agent Treasury Watch",          body: "Treasury health and risk observations." },
+  { tag: "Series 04", title: "Luca Explains",                 body: "Simple accounting lessons for the agent economy." },
 ];
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+const TRUST_ITEMS = [
+  "Official x402Books AI agent",
+  "$XBOOKS powers the platform",
+  "$LUCA represents Luca's community and agent identity",
+  "Runs on Base",
+  "Powered by Claude AI",
+  "x402 protocol native",
+];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+type TokenData = {
+  price: number;
+  change24h: number;
+  mcap: number;
+  volume24h: number;
+  dexUrl: string;
+};
+
+type SparkPoint = { ts: number; price: number };
+
+function formatUsd(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${n.toFixed(2)}`;
+}
+
+function formatPrice(n: number): string {
+  if (n >= 1)        return `$${n.toFixed(4)}`;
+  if (n >= 0.001)    return `$${n.toFixed(5)}`;
+  if (n >= 0.000001) return `$${n.toFixed(8)}`;
+  return `$${n.toFixed(10)}`;
+}
+
+function Sparkline({ points }: { points: SparkPoint[] }) {
+  if (points.length < 2) return null;
+  const prices = points.map((p) => p.price);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  const range = max - min || 1;
+  const W = 400, H = 56, PAD = 2;
+  const coords = points.map((p, i) => {
+    const x = PAD + (i / (points.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((p.price - min) / range) * (H - PAD * 2);
+    return `${x},${y}`;
+  });
+  const isUp = prices[prices.length - 1] >= prices[0];
+  const color = isUp ? "#6DB874" : "#e05252";
+  const firstX = PAD, lastX = W - PAD;
+  const fill = `${coords[0]} L ${coords.join(" L ")} L ${lastX},${H} L ${firstX},${H} Z`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="luca-token-sparkline" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="luca-spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`M ${fill}`} fill="url(#luca-spark-fill)" />
+      <polyline points={coords.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ── Live $LUCA Token Section ──────────────────────────────────────────────────
+
+function LucaTokenSection() {
+  const [token, setToken]       = useState<TokenData | null>(null);
+  const [spark, setSpark]       = useState<SparkPoint[]>([]);
+  const [copied, setCopied]     = useState(false);
+  const [flashClass, setFlash]  = useState("");
+  const prevPrice               = useRef<number | null>(null);
+
+  const fetchToken = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${LUCA_CA}`,
+        { signal: AbortSignal.timeout(6_000) },
+      );
+      if (!res.ok) return;
+      type DexPair = { priceUsd?: string; priceChange?: { h24?: number }; volume?: { h24?: number }; fdv?: number; marketCap?: number; url?: string };
+      const data = await res.json() as { pairs?: DexPair[] };
+      const pair = data.pairs?.[0];
+      if (!pair) return;
+
+      const price = parseFloat(pair.priceUsd ?? "0");
+      if (price > 0 && prevPrice.current !== null && price !== prevPrice.current) {
+        const cls = price > prevPrice.current ? "flash-up" : "flash-down";
+        setFlash(cls);
+        setTimeout(() => setFlash(""), 800);
+      }
+      prevPrice.current = price;
+
+      setToken({
+        price,
+        change24h: pair.priceChange?.h24 ?? 0,
+        mcap: pair.marketCap ?? pair.fdv ?? 0,
+        volume24h: pair.volume?.h24 ?? 0,
+        dexUrl: pair.url ?? `https://dexscreener.com/base/${LUCA_CA}`,
+      });
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    fetchToken();
+    const iv = setInterval(fetchToken, 30_000);
+    return () => clearInterval(iv);
+  }, [fetchToken]);
+
+  useEffect(() => {
+    fetch(`/api/token/chart?address=${LUCA_CA}`)
+      .then((r) => r.json())
+      .then((d: { prices?: SparkPoint[] }) => { if (d.prices?.length) setSpark(d.prices); })
+      .catch(() => {});
+  }, []);
+
   function copy() {
-    navigator.clipboard.writeText(text).then(() => {
+    navigator.clipboard.writeText(LUCA_CA).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
   }
+
+  const changeDir = !token ? "flat" : token.change24h > 0 ? "up" : token.change24h < 0 ? "down" : "flat";
+
   return (
-    <button type="button" className="luca-ca-copy" onClick={copy} title="Copy address">
-      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-        {copied ? "check" : "content_copy"}
-      </span>
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <section className="luca-section luca-section-alt" id="token">
+      <div className="luca-section-head">
+        <p className="luca-label">Token</p>
+        <h2 className="luca-h2">$LUCA</h2>
+        <p className="luca-section-sub">
+          The community and agent identity token around Luca&apos;s growth and future agent-specific utilities.
+        </p>
+      </div>
+
+      <div className="lp-token-card luca-lp-token-card">
+        {/* Left — identity */}
+        <div className="lp-token-left">
+          <p className="lp-token-eyebrow">Community Token · Base</p>
+          <h2 className="lp-token-name">$LUCA</h2>
+          <p className="lp-token-desc">
+            $LUCA is the token tied to Luca&apos;s identity, community growth, and future agent-specific utilities inside the x402Books ecosystem.
+          </p>
+          <div className="lp-token-ca">
+            <span className="lp-token-ca-label">CA</span>
+            <span className="lp-token-ca-addr">{LUCA_CA}</span>
+            <button type="button" className="lp-token-ca-copy" onClick={copy} title="Copy contract address">
+              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+                {copied ? "check" : "content_copy"}
+              </span>
+            </button>
+          </div>
+          <div className="lp-token-links">
+            <a href={BANKR_BUY} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-primary">
+              Buy $LUCA
+            </a>
+            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-ghost">
+              DexScreener ↗
+            </a>
+          </div>
+        </div>
+
+        {/* Right — live data */}
+        <div className="lp-token-right">
+          {!token ? (
+            <div className="lp-token-loading">
+              <div className="lp-token-loading-bar" />
+              <div className="lp-token-loading-bar" style={{ width: "60%" }} />
+              <div className="lp-token-loading-bar" style={{ width: "80%" }} />
+            </div>
+          ) : (
+            <>
+              <div className="lp-token-price-row">
+                <span className={`lp-token-price ${flashClass}`}>{formatPrice(token.price)}</span>
+                <span className={`lp-token-change ${changeDir}`}>
+                  {token.change24h > 0 ? "+" : ""}{token.change24h.toFixed(2)}% 24h
+                </span>
+              </div>
+              <Sparkline points={spark} />
+              <p className="lp-token-spark-label">7-day price chart</p>
+              <div className="lp-token-stats">
+                <div className="lp-token-stat">
+                  <span className="lp-token-stat-label">Market Cap</span>
+                  <span className="lp-token-stat-value">{token.mcap > 0 ? formatUsd(token.mcap) : "—"}</span>
+                </div>
+                <div className="lp-token-stat">
+                  <span className="lp-token-stat-label">Volume 24h</span>
+                  <span className="lp-token-stat-value">{token.volume24h > 0 ? formatUsd(token.volume24h) : "—"}</span>
+                </div>
+              </div>
+              <div className="lp-token-live">
+                <span className="lp-token-live-dot" />
+                Live · updates every 30s
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
+// ── Page ─────────────────────────────────────────────────────────────────────
+
 export default function LucaPage() {
+  const doubled = [...TRUST_ITEMS, ...TRUST_ITEMS];
+
   return (
     <div className="luca-page">
       {/* ── Hero ── */}
@@ -157,13 +305,18 @@ export default function LucaPage() {
         </div>
       </section>
 
-      {/* ── Trust line ── */}
-      <div className="luca-trust-bar">
-        <span>Official x402Books AI agent.</span>
-        <span className="luca-trust-dot" />
-        <span>$XBOOKS powers the platform.</span>
-        <span className="luca-trust-dot" />
-        <span>$LUCA represents Luca&apos;s community and agent identity.</span>
+      {/* ── Trust marquee ── */}
+      <div className="luca-trust-strip">
+        <div className="luca-trust-track">
+          <div className="luca-trust-reel">
+            {doubled.map((item, i) => (
+              <div key={i} className="luca-trust-item">
+                <span className="luca-trust-dot" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* ── What Luca Does ── */}
@@ -278,32 +431,8 @@ export default function LucaPage() {
         </div>
       </section>
 
-      {/* ── Token Structure ── */}
-      <section className="luca-section luca-section-alt" id="token">
-        <div className="luca-section-head">
-          <p className="luca-label">Token</p>
-          <h2 className="luca-h2">$LUCA</h2>
-          <p className="luca-section-sub">
-            The community and agent identity token around Luca&apos;s growth and future agent-specific utilities.
-          </p>
-        </div>
-        <div className="luca-token-card">
-          <div className="luca-token-top">
-            <span className="luca-token-symbol">$LUCA</span>
-            <span className="luca-token-network">Base Network</span>
-          </div>
-          <div className="luca-ca-row">
-            <span className="luca-ca-label">Contract</span>
-            <span className="luca-ca-addr">{LUCA_CA}</span>
-            <CopyButton text={LUCA_CA} />
-          </div>
-          <div className="luca-token-btns">
-            <a href={BANKR_BUY} target="_blank" rel="noreferrer" className="luca-btn-primary">
-              Buy $LUCA on Bankr
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* ── Live $LUCA Token ── */}
+      <LucaTokenSection />
 
       {/* ── Disclaimer ── */}
       <div className="luca-disclaimer">
