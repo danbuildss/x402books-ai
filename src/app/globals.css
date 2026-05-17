@@ -8102,3 +8102,707 @@ html, body {
   .lp-luca-caps { justify-content: center; }
   .lp-luca-btn { width: 100%; justify-content: center; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   /luca PAGE — standalone marketing page
+   ═══════════════════════════════════════════════════════════════ */
+
+.luca-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans), 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Header ── */
+.luca-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 60px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+
+.luca-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.luca-header-cta {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 18px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.luca-header-cta:hover { background: var(--accent-dark); }
+
+/* ── Hero ── */
+.luca-hero {
+  padding: 80px 24px 64px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.luca-hero-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+}
+
+.luca-avatar-wrap {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(109, 184, 116, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.luca-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.luca-hero-text { flex: 1; min-width: 0; }
+
+.luca-powered-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.luca-h1 {
+  font-size: clamp(42px, 7vw, 72px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+
+.luca-tagline {
+  font-size: clamp(18px, 3vw, 24px);
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 16px;
+}
+
+.luca-hero-sub {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 0 28px;
+}
+
+.luca-hero-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ── Buttons ── */
+.luca-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.1s;
+  cursor: pointer;
+  border: none;
+}
+
+.luca-btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+.luca-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.luca-btn-ghost:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+.luca-btn-soon {
+  opacity: 0.45;
+  cursor: default;
+  pointer-events: none;
+}
+
+.luca-btn-lg {
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+/* ── Trust Bar ── */
+.luca-trust-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 24px;
+  background: var(--accent-soft);
+  border-top: 1px solid rgba(109, 184, 116, 0.12);
+  border-bottom: 1px solid rgba(109, 184, 116, 0.12);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  text-align: center;
+}
+
+.luca-trust-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.4;
+  flex-shrink: 0;
+}
+
+/* ── Sections ── */
+.luca-section {
+  padding: 72px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.luca-section-alt {
+  max-width: 100%;
+  background: var(--surface-soft);
+  padding: 72px 24px;
+}
+
+.luca-section-alt > * {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.luca-section-head {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.luca-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.luca-h2 {
+  font-size: clamp(26px, 4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.luca-section-sub {
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* ── Capabilities Grid ── */
+.luca-caps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.luca-cap-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 24px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.luca-cap-card:hover {
+  border-color: rgba(109, 184, 116, 0.3);
+  box-shadow: 0 4px 20px rgba(109, 184, 116, 0.08);
+}
+
+.luca-cap-icon {
+  font-size: 28px;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 12px;
+}
+
+.luca-cap-card h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--ink);
+}
+
+.luca-cap-card p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── How it Works Steps ── */
+.luca-steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.luca-step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+}
+
+.luca-step-n {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.luca-step h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.luca-step p {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Sample Report ── */
+.luca-report-wrap {
+  max-width: 520px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.luca-report-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--accent-soft);
+  border-bottom: 1px solid rgba(109, 184, 116, 0.15);
+}
+
+.luca-report-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.luca-report-by {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.luca-report-body { padding: 20px; }
+
+.luca-report-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 13px;
+}
+
+.luca-report-row span { color: var(--muted); }
+.luca-report-row strong { font-weight: 600; color: var(--ink); }
+
+.luca-positive { color: var(--accent) !important; }
+.luca-warn { color: #C9A84C !important; }
+
+.luca-report-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 12px 0;
+}
+
+.luca-report-read {
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.luca-report-read-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.luca-report-read p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+}
+
+/* ── Two Column Use Cases ── */
+.luca-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.luca-use-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 28px;
+}
+
+.luca-use-card h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 8px 0 20px;
+}
+
+.luca-q-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.luca-q-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.luca-q-list li .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Content Series Grid ── */
+.luca-series-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.luca-series-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  transition: border-color 0.2s;
+}
+
+.luca-series-card:hover { border-color: rgba(109, 184, 116, 0.3); }
+
+.luca-series-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.luca-series-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+
+.luca-series-card p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ── Token Card ── */
+.luca-token-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.luca-token-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.luca-token-symbol {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.luca-token-network {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.luca-ca-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.luca-ca-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.luca-ca-addr {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+  color: var(--ink);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.luca-ca-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.luca-ca-copy:hover { color: var(--accent); border-color: var(--accent); }
+
+.luca-token-btns { display: flex; gap: 10px; }
+.luca-token-btns .luca-btn-primary { flex: 1; justify-content: center; }
+
+/* ── Disclaimer ── */
+.luca-disclaimer {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ── Final CTA ── */
+.luca-cta {
+  padding: 80px 24px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.luca-cta-line {
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.luca-cta-headline {
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  margin: 16px 0 32px;
+}
+
+/* ── Footer ── */
+.luca-footer {
+  border-top: 1px solid var(--line);
+  padding: 28px 32px 20px;
+}
+
+.luca-footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  max-width: 1100px;
+  margin: 0 auto 16px;
+}
+
+.luca-footer-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.luca-footer-brand strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.luca-footer-brand span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.luca-footer-links {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.luca-footer-links a {
+  font-size: 13px;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.luca-footer-links a:hover { color: var(--accent); }
+
+.luca-footer-copy {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Responsive: /luca page ── */
+@media (max-width: 900px) {
+  .luca-steps { grid-template-columns: repeat(3, 1fr); }
+  .luca-series-grid { grid-template-columns: repeat(2, 1fr); }
+  .luca-caps-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .luca-header { padding: 0 16px; }
+  .luca-hero { padding: 48px 16px 40px; }
+  .luca-hero-inner { flex-direction: column; gap: 24px; }
+  .luca-hero-btns { flex-direction: column; }
+  .luca-hero-btns .luca-btn-ghost,
+  .luca-hero-btns .luca-btn-primary { width: 100%; justify-content: center; }
+  .luca-section { padding: 48px 16px; }
+  .luca-section-alt { padding: 48px 16px; }
+  .luca-caps-grid { grid-template-columns: 1fr; }
+  .luca-steps { grid-template-columns: 1fr 1fr; }
+  .luca-two-col { grid-template-columns: 1fr; }
+  .luca-series-grid { grid-template-columns: 1fr 1fr; }
+  .luca-footer { padding: 24px 16px 16px; }
+  .luca-footer-inner { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 400px) {
+  .luca-steps { grid-template-columns: 1fr; }
+  .luca-series-grid { grid-template-columns: 1fr; }
+  .luca-ca-addr { font-size: 9px; }
+}
