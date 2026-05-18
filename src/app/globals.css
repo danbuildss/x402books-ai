@@ -9197,6 +9197,10 @@ html, body {
   color: var(--accent);
   flex-shrink: 0;
 }
+.reg-agent-avatar-img {
+  object-fit: cover;
+  background: var(--surface-2);
+}
 
 .reg-agent-name {
   font-size: 13px;
@@ -9552,6 +9556,194 @@ html, body {
 .reg-role-fee-recipient  { background: rgba(91,143,168,0.08);  color: var(--blue);   border: 1px solid rgba(91,143,168,0.15); }
 
 .reg-health-pending { background: var(--surface-soft); color: var(--muted); }
+
+/* ── Gitlawb integration ── */
+
+/* Badge on agent name row */
+.reg-gitlawb-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: rgba(109,184,116,0.08);
+  border: 1px solid rgba(109,184,116,0.2);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: background 0.15s;
+  vertical-align: middle;
+}
+.reg-gitlawb-badge:hover { background: rgba(109,184,116,0.14); }
+
+/* Trust ladder */
+.reg-trust-ladder {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reg-trust-ladder-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+}
+.reg-trust-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.reg-trust-arrow {
+  font-size: 12px;
+  color: var(--line);
+  padding-left: 6px;
+}
+
+/* Verify tabs */
+.reg-verify-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0;
+}
+.reg-verify-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.reg-verify-tab:hover { color: var(--ink); }
+.reg-verify-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* Gitlawb panel */
+.reg-gitlawb-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.reg-gitlawb-intro {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Steps */
+.reg-gitlawb-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reg-gitlawb-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.reg-step-num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.reg-gitlawb-steps li strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 2px;
+}
+.reg-gitlawb-steps li p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Schema block */
+.reg-schema-wrap {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.reg-schema-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+}
+.reg-schema-filename {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: monospace;
+}
+.reg-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.reg-copy-btn:hover { color: var(--ink); border-color: var(--ink); }
+.reg-schema-code {
+  margin: 0;
+  padding: 12px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--ink);
+  background: var(--surface);
+  overflow-x: auto;
+  white-space: pre;
+  font-family: monospace;
+}
+.reg-code {
+  font-family: monospace;
+  font-size: 11px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--accent);
+}
 
 .reg-wallet-pending {
   font-size: 11px;

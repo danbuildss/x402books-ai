@@ -3,10 +3,11 @@ import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admi
 
 export async function POST(request: Request) {
   try {
-    const { agent_name, wallet_address, x_handle, notes } = await request.json();
+    const { agent_name, wallet_address, x_handle, notes, gitlawb_repo } = await request.json();
 
     const name = String(agent_name || "").trim();
     const wallet = String(wallet_address || "").trim().toLowerCase();
+    const repo = gitlawb_repo ? String(gitlawb_repo).trim().slice(0, 300) : null;
 
     if (!name || name.length < 2) {
       return NextResponse.json({ error: "Agent name is required." }, { status: 400 });
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
       wallet_address: wallet,
       x_handle: x_handle ? String(x_handle).trim().replace(/^@/, "") : null,
       notes: notes ? String(notes).trim().slice(0, 500) : null,
+      gitlawb_repo: repo,
     });
 
     if (error?.code === "23505") {
