@@ -5,30 +5,32 @@ import {
   StitchEmpty,
   StitchHeader,
   StitchIcon,
+  StitchJsonDrawer,
   StitchRange,
   StitchShell,
-  StitchTransactionsTable,
   StitchWalletPill,
 } from "@/components/stitch-app";
 import { formatUsdc, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  api_call:      "#47c78b",
-  data_access:   "#7aa2ff",
-  compute:       "#ffbdb3",
-  agent_service: "#c4a0ff",
-  subscription:  "#7aa2ff",
-  income:        "#47c78b",
-  unknown:       "#9ca69f",
+const RANGE_LABELS: Record<string, string> = {
+  "7d": "7-day", "14d": "14-day", "30d": "30-day", "90d": "90-day",
 };
 
 export default function ReportsPage() {
   const ledger = useLedgerState();
-  const [format, setFormat] = useState<"CSV" | "PDF">("CSV");
+  const [format, setFormat] = useState<"CSV" | "PDF">("PDF");
   const hasReport = ledger.hasLedger && ledger.transactions.length > 0;
-  const reportUrl = `/report?wallet=${encodeURIComponent(ledger.wallet)}&range=${ledger.range}`;
-  const previewTx = ledger.transactions.slice(0, 5);
+
+  function handleGenerate() {
+    if (format === "CSV") ledger.exportCsv();
+    else ledger.exportPdf();
+  }
+
+  const topCounterparties = ledger.summary.topCounterparties?.slice(0, 5) ?? [];
+  const incomeTotal = ledger.summary.totalIncome;
+  const spendTotal = ledger.summary.totalSpend;
+  const gross = incomeTotal + spendTotal;
 
   return (
     <StitchShell>
@@ -37,210 +39,220 @@ export default function ReportsPage() {
         description="Generate and export clean financial reports."
         actions={
           <>
-            <StitchWalletPill
-              wallet={ledger.wallet}
-              onCopy={() => ledger.copyText(ledger.wallet, "wallet")}
-            />
+            <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
+            <StitchRange value={ledger.range} onChange={ledger.setRange} />
           </>
         }
       />
 
       <section className="stitch-reports-grid">
-        {/* ---- Left: Generate form ---- */}
+        {/* Generate card */}
         <div className="stitch-card stitch-form-card">
           <h3>Generate Report</h3>
 
           <label>
-            <span>Reporting Period</span>
+            <span>Wallet</span>
             <input
-              readOnly
-              value={`Last ${ledger.range === "7d" ? "7" : "30"} days`}
-              style={{ cursor: "default" }}
+              value={ledger.walletInput}
+              onChange={(e) => ledger.setWalletInput(e.target.value)}
+              placeholder="0x..."
+              style={{ fontFamily: "var(--st-mono)", fontSize: "12px" }}
             />
           </label>
 
           <label>
-            <span>Export Format</span>
-            <div className="stitch-radio-row">
-              {(["CSV", "PDF"] as const).map((f) => (
-                <label key={f}>
-                  <input
-                    type="radio"
-                    name="format"
-                    checked={format === f}
-                    onChange={() => setFormat(f)}
-                  />
-                  {f}
-                </label>
-              ))}
-            </div>
+            <span>Date Range</span>
+            <StitchRange value={ledger.range} onChange={ledger.setRange} />
           </label>
 
-          <label>
-            <span>Report Scope</span>
-            <select defaultValue="Standard Financial Summary">
-              <option>Standard Financial Summary</option>
-              <option>Detailed Transactions</option>
-              <option>Income Only</option>
-              <option>Expense Only</option>
-            </select>
-          </label>
+          <div>
+            <span style={{ fontSize: "12px", color: "var(--st-muted)", display: "block", marginBottom: "8px" }}>
+              Export Format
+            </span>
+            <div className="stitch-segmented" style={{ gridTemplateColumns: "1fr 1fr" }}>
+              {(["PDF", "CSV"] as const).map((f) => (
+                <button key={f} type="button" className={format === f ? "active" : ""} onClick={() => setFormat(f)}>
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <button
             className="stitch-primary"
             type="button"
             disabled={!hasReport}
-            onClick={() =>
-              format === "CSV" ? ledger.exportCsv() : window.location.assign(reportUrl)
-            }
-            style={{ width: "100%", justifyContent: "center" }}
+            onClick={handleGenerate}
+            style={{ marginTop: "4px" }}
           >
-            <StitchIcon name="description" /> Generate Report
+            <StitchIcon name={format === "PDF" ? "picture_as_pdf" : "download"} />
+            Download {format}
           </button>
-
-          {hasReport && (
-            <button
-              className="stitch-button"
-              type="button"
-              onClick={ledger.exportCsv}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              <StitchIcon name="download" /> Download CSV
-            </button>
-          )}
         </div>
 
-        {/* ---- Right: Financial Intelligence ---- */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-          {/* Summary header */}
-          <div className="stitch-card">
-            <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--s-muted)", margin: "0 0 4px" }}>
-              Financial Intelligence
-            </p>
-            <p style={{ fontSize: "13px", color: "var(--s-muted)", margin: "0 0 16px" }}>
-              Onchain reconciliation and performance reporting for the current epoch.
-            </p>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-              {[
-                { label: "Total Income", value: `$${formatUsdc(ledger.summary.totalIncome)}`, color: "var(--s-primary)" },
-                { label: "Total Spend",  value: `$${formatUsdc(ledger.summary.totalSpend)}`,  color: "var(--s-negative)" },
-                { label: "Net Flow",     value: `${ledger.summary.netFlow >= 0 ? "+" : ""}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`,
-                  color: ledger.summary.netFlow >= 0 ? "var(--s-primary)" : "var(--s-negative)" },
-              ].map((item) => (
-                <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--s-muted)" }}>
-                    {item.label}
-                  </span>
-                  <span style={{ fontSize: "20px", fontWeight: 600, color: item.color, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums" }}>
-                    {item.value}
-                  </span>
+        {/* Recent reports */}
+        <div className="stitch-card">
+          <h3>Exports</h3>
+          {hasReport ? (
+            <div className="stitch-report-list">
+              <div>
+                <div>
+                  <strong>{RANGE_LABELS[ledger.range] ?? ledger.range} PDF Report</strong>
+                  <p>{new Date(ledger.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                 </div>
-              ))}
+                <button type="button" onClick={() => ledger.exportPdf()}>
+                  <StitchIcon name="picture_as_pdf" /> PDF
+                </button>
+              </div>
+              <div>
+                <div>
+                  <strong>{RANGE_LABELS[ledger.range] ?? ledger.range} CSV Export</strong>
+                  <p>{ledger.transactions.length} transactions</p>
+                </div>
+                <button type="button" onClick={() => ledger.exportCsv()}>
+                  <StitchIcon name="download" /> CSV
+                </button>
+              </div>
+              <div>
+                <div>
+                  <strong>Agent JSON</strong>
+                  <p>Structured ledger report</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => ledger.copyText(JSON.stringify(ledger.report, null, 2), "report-json")}
+                >
+                  {ledger.copied === "report-json" ? <><StitchIcon name="check" /> Copied</> : <><StitchIcon name="content_copy" /> Copy</>}
+                </button>
+              </div>
             </div>
+          ) : (
+            <StitchEmpty compact>Scan a wallet to create your first report.</StitchEmpty>
+          )}
+        </div>
+      </section>
+
+      {/* Summary stats preview */}
+      <section className="stitch-card">
+        <div className="stitch-card-head">
+          <h3>Summary Preview</h3>
+          <span style={{ fontSize: "11px", color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>
+            {RANGE_LABELS[ledger.range] ?? ledger.range} · {ledger.wallet ? shortenAddress(ledger.wallet) : "No wallet"}
+          </span>
+        </div>
+        <div className="stitch-preview-grid">
+          <div>
+            <span>Total Spend</span>
+            <strong style={{ fontFamily: "var(--st-mono)", color: "var(--st-red)" }}>
+              {formatUsdc(spendTotal)} USDC
+            </strong>
           </div>
-
-          {/* Category split + counterparties */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-            <div className="stitch-card">
-              <div className="stitch-card-head">
-                <h3>Category Split</h3>
-                <a href="/categories">View all</a>
-              </div>
-              {ledger.categories.length ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {ledger.categories.slice(0, 4).map((cat) => {
-                    const color = CATEGORY_COLORS[cat.category] ?? "#9ca69f";
-                    return (
-                      <div key={cat.category} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: color, flexShrink: 0 }} />
-                        <span style={{ flex: 1, fontSize: "12px", color: "var(--s-ink)" }}>{cat.label}</span>
-                        <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--s-muted)" }}>
-                          ${formatUsdc(cat.totalUsdc)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <StitchEmpty compact>Scan a wallet first.</StitchEmpty>
-              )}
-            </div>
-
-            <div className="stitch-card">
-              <div className="stitch-card-head">
-                <h3>Top Counterparties</h3>
-              </div>
-              {ledger.summary.topCounterparties.length ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {ledger.summary.topCounterparties.slice(0, 4).map((cp) => (
-                    <div key={cp.address} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--s-border)", flexShrink: 0 }} />
-                      <span style={{ flex: 1, fontSize: "11px", fontFamily: "ui-monospace, monospace", color: "var(--s-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {shortenAddress(cp.address)}
-                      </span>
-                      <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--s-ink)" }}>
-                        ${formatUsdc(cp.totalUsdc)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <StitchEmpty compact>No counterparty data.</StitchEmpty>
-              )}
-            </div>
+          <div>
+            <span>Total Income</span>
+            <strong style={{ fontFamily: "var(--st-mono)", color: "var(--st-green)" }}>
+              {formatUsdc(incomeTotal)} USDC
+            </strong>
+          </div>
+          <div>
+            <span>Net Flow</span>
+            <strong style={{ fontFamily: "var(--st-mono)", color: ledger.summary.netFlow >= 0 ? "var(--st-green)" : "var(--st-red)" }}>
+              {ledger.summary.netFlow >= 0 ? "+" : ""}{formatUsdc(ledger.summary.netFlow)} USDC
+            </strong>
+          </div>
+          <div>
+            <span>Transactions</span>
+            <strong style={{ fontFamily: "var(--st-mono)" }}>{ledger.transactions.length}</strong>
+          </div>
+          <div>
+            <span>Top Category</span>
+            <strong>{ledger.categories[0]?.label || "—"}</strong>
+          </div>
+          <div>
+            <span>Flagged</span>
+            <strong style={{ fontFamily: "var(--st-mono)", color: "var(--st-red)" }}>
+              {ledger.transactions.filter((tx) => tx.riskFlag && tx.riskFlag !== "none").length}
+            </strong>
           </div>
         </div>
       </section>
 
-      {/* ---- Ledger preview table ---- */}
-      <div className="stitch-card">
-        <div className="stitch-card-head">
-          <h3>Ledger Preview — Top Transactions</h3>
-          <StitchRange value={ledger.range} onChange={ledger.setRange} />
-        </div>
-        {previewTx.length ? (
-          <>
-            <StitchTransactionsTable compact transactions={previewTx} />
-            <a
-              href="/transactions"
-              style={{ display: "block", textAlign: "center", fontSize: "12px", color: "var(--s-primary)", marginTop: "12px" }}
-            >
-              Expand Full Ledger View →
-            </a>
-          </>
-        ) : (
-          <StitchEmpty>Scan a wallet to preview your ledger report.</StitchEmpty>
-        )}
-      </div>
+      {/* Income vs Spend breakdown */}
+      {hasReport && gross > 0 && (
+        <section className="stitch-card">
+          <div className="stitch-card-head"><h3>Income vs Spend</h3></div>
+          <div className="stitch-flow-bar-wrap">
+            <div
+              className="stitch-flow-bar-income"
+              style={{ width: `${(incomeTotal / gross) * 100}%` }}
+              title={`Income: ${formatUsdc(incomeTotal)} USDC`}
+            />
+            <div
+              className="stitch-flow-bar-spend"
+              style={{ width: `${(spendTotal / gross) * 100}%` }}
+              title={`Spend: ${formatUsdc(spendTotal)} USDC`}
+            />
+          </div>
+          <div className="stitch-flow-bar-legend">
+            <span style={{ color: "var(--st-green)" }}>
+              <span className="stitch-flow-dot income" />
+              Income {((incomeTotal / gross) * 100).toFixed(1)}%
+            </span>
+            <span style={{ color: "var(--st-red)" }}>
+              <span className="stitch-flow-dot spend" />
+              Spend {((spendTotal / gross) * 100).toFixed(1)}%
+            </span>
+          </div>
+        </section>
+      )}
 
-      {/* ---- Agent JSON export ---- */}
+      {/* Top counterparties */}
+      {topCounterparties.length > 0 && (
+        <section className="stitch-card">
+          <div className="stitch-card-head"><h3>Top Counterparties</h3></div>
+          <div className="stitch-table-wrap">
+            <table className="stitch-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Address</th>
+                  <th>Transactions</th>
+                  <th>Total USDC</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCounterparties.map((cp, i) => (
+                  <tr key={cp.address}>
+                    <td style={{ color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>{i + 1}</td>
+                    <td>
+                      <a
+                        href={`https://basescan.org/address/${cp.address}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ fontFamily: "var(--st-mono)", fontSize: "12px", color: "var(--st-primary)" }}
+                      >
+                        {shortenAddress(cp.address)}
+                      </a>
+                    </td>
+                    <td style={{ fontFamily: "var(--st-mono)" }}>{cp.count}</td>
+                    <td style={{ fontFamily: "var(--st-mono)", color: "var(--st-text)" }}>{formatUsdc(cp.totalUsdc)} USDC</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {/* Agent JSON drawer */}
       {hasReport && (
         <div className="stitch-card">
           <div className="stitch-card-head">
-            <h3>Agent-Readable JSON</h3>
-            <button
-              type="button"
-              onClick={() => ledger.copyText(JSON.stringify(ledger.report, null, 2), "report-json")}
-            >
-              {ledger.copied === "report-json" ? "Copied!" : "Copy JSON"}
-            </button>
+            <h3>Agent Output</h3>
+            <StitchJsonDrawer data={ledger.report} copied={ledger.copied} onCopy={ledger.copyText} />
           </div>
-          <pre style={{
-            background: "var(--s-surface-hover)",
-            border: "1px solid var(--s-border)",
-            borderRadius: "6px",
-            padding: "16px",
-            fontFamily: "ui-monospace, monospace",
-            fontSize: "12px",
-            color: "var(--s-api)",
-            overflow: "auto",
-            margin: 0,
-            maxHeight: "240px",
-            lineHeight: "1.7",
-          }}>
-            {JSON.stringify(ledger.report, null, 2)}
-          </pre>
+          <p style={{ fontSize: "13px", color: "var(--st-muted)", lineHeight: "1.6", margin: 0 }}>
+            {ledger.report.narrative}
+          </p>
         </div>
       )}
     </StitchShell>

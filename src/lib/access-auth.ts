@@ -26,3 +26,18 @@ export function createAccessToken(codeId: string) {
 
   return `${payload}.${signature}`;
 }
+
+// Returns the codeId (access_codes.id) if the token is valid, null otherwise.
+export function verifyAccessToken(token: string): string | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length < 3) return null;
+  const signature = parts[parts.length - 1];
+  const payload = parts.slice(0, -1).join(".");
+  const expiresAt = Number(parts[parts.length - 2]);
+  const codeId = parts.slice(0, -2).join(".");
+  if (!codeId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return null;
+  const expected = createHmac("sha256", getAccessSecret()).update(payload).digest("hex");
+  if (signature !== expected) return null;
+  return codeId;
+}

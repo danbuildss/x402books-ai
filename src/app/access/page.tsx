@@ -1,94 +1,105 @@
 "use client";
 
-import Link from "next/link";
-import { FormEvent, Suspense, useMemo, useState } from "react";
+import { usePrivy } from "@privy-io/react-auth";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/logo";
 
 function AccessForm() {
   const searchParams = useSearchParams();
   const nextPath = useMemo(() => searchParams.get("next") || "/dashboard", [searchParams]);
-  const [code, setCode] = useState("");
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
-  const [status, setStatus] = useState("");
+  const { ready, authenticated, user, login, logout } = usePrivy();
+
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError("");
-    setStatus("");
+  useEffect(() => {
+    if (!ready) return;
+    if (!authenticated || !user) return;
+
+    const email =
+      user.email?.address ||
+      (user.linkedAccounts.find((a) => a.type === "email") as { address?: string } | undefined)?.address ||
+      null;
+
+    const xHandle =
+      (user.linkedAccounts.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username ||
+      null;
+
     setIsLoading(true);
+    setError("");
 
-    try {
-      const response = await fetch("/api/access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, email }),
+    fetch("/api/access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ privy: true, userId: user.id, email, xHandle }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.ok) {
+          window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
+        } else {
+          setError(data.error || "Could not sign in right now.");
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        setError("Could not connect right now. Try again.");
+        setIsLoading(false);
       });
-      const data = await response.json();
+  }, [ready, authenticated, user, nextPath]);
 
-      if (!response.ok) {
-        setError(data.error || "Could not unlock access.");
-        return;
-      }
-
-      setStatus("Access unlocked. Opening the app...");
-      window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
-    } catch {
-      setError("Could not verify this code right now.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const showSpinner = !ready || (authenticated && isLoading);
 
   return (
     <main className="access-page" data-theme="dark">
       <section className="access-card">
         <div className="access-brand">
           <Logo />
-          <span>Private beta</span>
         </div>
 
-        <div className="access-copy">
-          <h1>Access x402Books</h1>
-          <p>
-            Enter your beta code to open the wallet scanner, reports, and agent ledger API.
-          </p>
-        </div>
+        {showSpinner && (
+          <>
+            <div className="access-copy">
+              <h1>Signing you in…</h1>
+              <p>Just a moment while we set up your account.</p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "center", padding: "24px 0" }}>
+              <span className="access-spinner" aria-label="Loading" />
+            </div>
+          </>
+        )}
 
-        <form className="access-form" onSubmit={onSubmit}>
-          <label>
-            <span>Access code</span>
-            <input
-              autoComplete="one-time-code"
-              autoFocus
-              placeholder="XBOOKS-..."
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-            />
-          </label>
-          <label>
-            <span>Email optional</span>
-            <input
-              autoComplete="email"
-              inputMode="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-          <button disabled={isLoading} type="submit">
-            {isLoading ? "Checking..." : "Unlock App"}
-          </button>
-          {error ? <p className="form-message error">{error}</p> : null}
-          {status ? <p className="form-message success">{status}</p> : null}
-        </form>
+        {!showSpinner && !authenticated && (
+          <>
+            <div className="access-copy">
+              <h1>Sign in to x402Books</h1>
+              <p>Track your Base USDC activity, categorize transactions, and generate financial reports.</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <button className="access-privy-btn" onClick={login} disabled={!ready}>
+                <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "5px" }} />
+                Continue with Email or X
+              </button>
+            </div>
+            {error && <p className="access-error">{error}</p>}
+            <div className="access-footer">
+              <a href="/">← Back to home</a>
+            </div>
+          </>
+        )}
 
-        <div className="access-footer">
-          <Link href="/#waitlist">Join waitlist</Link>
-          <Link href="/">Back to landing</Link>
-        </div>
+        {!showSpinner && authenticated && !isLoading && error && (
+          <>
+            <div className="access-copy">
+              <h1>Something went wrong</h1>
+              <p>{error}</p>
+            </div>
+            <button className="access-privy-btn" onClick={() => { logout(); setError(""); }}>
+              Try a different account
+            </button>
+          </>
+        )}
       </section>
     </main>
   );

@@ -9,13 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.0",
+    "@privy-io/react-auth": "^3.23.1",
     "@supabase/supabase-js": "^2.49.8",
+    "@types/pdfkit": "^0.17.6",
+    "@vercel/analytics": "^2.0.1",
     "next": "15.3.8",
+    "pdfkit": "^0.18.0",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
   "devDependencies": {
-    "@google/design.md": "^0.1.1",
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
