@@ -169,8 +169,9 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
     >
-      <span aria-hidden="true" />
-      {theme === "dark" ? "Light" : "Dark"}
+      <span className="material-symbols-outlined" aria-hidden="true">
+        {theme === "dark" ? "light_mode" : "dark_mode"}
+      </span>
     </button>
   );
 }

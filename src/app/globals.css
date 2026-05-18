@@ -3160,6 +3160,26 @@ iframe[src*="privy"] { display: none !important; }
   min-width: 0;
 }
 
+.stitch-user-badge {
+  flex-shrink: 0;
+}
+
+.stitch-user-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  font-family: var(--font-sans);
+}
+
 .stitch-sidebar-panel span,
 .stitch-page-header p,
 .stitch-topbar p,
