@@ -522,7 +522,8 @@ export default function HomePage() {
         <nav className="lp-nav" aria-label="Main navigation">
           <ScrollLink targetId="how">How it works</ScrollLink>
           <ScrollLink targetId="features">Features</ScrollLink>
-          <ScrollLink targetId="luca">Luca</ScrollLink>
+          <Link href="/luca">Luca</Link>
+          <Link href="/registry">Registry</Link>
           <ScrollLink targetId="faq">FAQ</ScrollLink>
           <Link href="/docs">Docs</Link>
         </nav>
@@ -566,7 +567,8 @@ export default function HomePage() {
           <nav className="lp-mobile-nav">
             <ScrollLink targetId="how" onClick={() => setMobileMenuOpen(false)}>How it works</ScrollLink>
             <ScrollLink targetId="features" onClick={() => setMobileMenuOpen(false)}>Features</ScrollLink>
-            <ScrollLink targetId="luca" onClick={() => setMobileMenuOpen(false)}>Luca</ScrollLink>
+            <Link href="/luca" onClick={() => setMobileMenuOpen(false)}>Luca</Link>
+            <Link href="/registry" onClick={() => setMobileMenuOpen(false)}>Registry</Link>
             <ScrollLink targetId="faq" onClick={() => setMobileMenuOpen(false)}>FAQ</ScrollLink>
             <Link href="/docs" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
           </nav>

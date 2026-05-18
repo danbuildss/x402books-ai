@@ -2,7 +2,7 @@
 // Results are cached in memory for 10 minutes (best-effort across warm instances).
 
 import { STABLECOIN_ADDRESSES } from "@/lib/tokens";
-import { fetchBankrTopTokens } from "@/lib/dune";
+import { fetchBankrTopTokens, fetchAllBankrTokens } from "@/lib/dune";
 
 const BASE_NATIVE = new Set(["USDC", "USDT", "DAI", "EURC", "WETH", "cbBTC", "ETH"]);
 
@@ -27,7 +27,9 @@ export type EcosystemRegistry = {
 let cache: (EcosystemRegistry & { ts: number }) | null = null;
 const CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
-// ── BANKR (via Dune query 6900376) ────────────────────────────────────────────
+// ── BANKR (queries 6900376 + 6899023) ────────────────────────────────────────
+// Runs both Dune queries in parallel: top-500 for price data, all tokens for
+// full address+symbol coverage. Either can fail independently.
 
 async function fetchBankrTokens(): Promise<EcosystemRegistry> {
   const addresses = new Set<string>(
@@ -35,16 +37,25 @@ async function fetchBankrTokens(): Promise<EcosystemRegistry> {
   );
   const symbols = new Set<string>(["BNKR", "BANKR"]);
 
-  try {
-    const tokens = await fetchBankrTopTokens();
-    for (const t of tokens) {
+  const [topTokens, allTokens] = await Promise.allSettled([
+    fetchBankrTopTokens(),
+    fetchAllBankrTokens(),
+  ]);
+
+  if (topTokens.status === "fulfilled") {
+    for (const t of topTokens.value) {
       const addr = t.ca.toLowerCase();
       const sym = (t.ticker ?? "").replace(/^\$/, "").toUpperCase();
       if (addr.startsWith("0x")) addresses.add(addr);
       if (sym) symbols.add(sym);
     }
-  } catch {
-    // fall back to hardcoded list
+  }
+
+  if (allTokens.status === "fulfilled") {
+    for (const t of allTokens.value) {
+      if (t.ca.startsWith("0x")) addresses.add(t.ca);
+      if (t.ticker) symbols.add(t.ticker);
+    }
   }
 
   return { addresses, symbols };

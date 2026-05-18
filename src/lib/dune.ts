@@ -1,6 +1,6 @@
 // Dune Analytics API client for BANKR ecosystem data.
-// Query 6900376: top 331 BANKR tokens by fees — includes live price, mcap, volume, 24h change.
-// Query 6899023: all 1.5M BANKR tokens — token address + symbol only.
+// Query 6900376: top ~500 BANKR tokens by fees — includes live price, mcap, volume, 24h change.
+// Query 6899023: all BANKR tokens — token address + symbol only (used for full ecosystem registry).
 
 const DUNE_API_BASE = "https://api.dune.com/api/v1";
 
@@ -19,22 +19,25 @@ export type DuneToken = {
   rank_fees: number;
 };
 
+type DuneMinToken = {
+  ca: string;
+  ticker: string;
+};
+
 type DuneResult<T> = {
   result?: { rows?: T[] };
 };
 
-// In-memory cache
-let cache: { tokens: DuneToken[]; ts: number } | null = null;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// ── Top tokens cache (query 6900376) ──────────────────────────────────────────
+
+let topCache: { tokens: DuneToken[]; ts: number } | null = null;
+const TOP_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 export async function fetchBankrTopTokens(): Promise<DuneToken[]> {
-  if (cache && Date.now() - cache.ts < CACHE_TTL) return cache.tokens;
+  if (topCache && Date.now() - topCache.ts < TOP_CACHE_TTL) return topCache.tokens;
 
   const key = process.env.DUNE_API_KEY;
-  if (!key) {
-    console.error("DUNE_API_KEY is not set — BANKR token data unavailable");
-    return [];
-  }
+  if (!key) return [];
 
   try {
     const res = await fetch(
@@ -53,7 +56,44 @@ export async function fetchBankrTopTokens(): Promise<DuneToken[]> {
       ca: (t.ca ?? "").toLowerCase(),
     }));
 
-    cache = { tokens, ts: Date.now() };
+    topCache = { tokens, ts: Date.now() };
+    return tokens;
+  } catch {
+    return [];
+  }
+}
+
+// ── Full registry cache (query 6899023) ───────────────────────────────────────
+// Returns all BANKR tokens as { ca, ticker } pairs — address + symbol only.
+// Cached for 30 minutes since this list is large and changes slowly.
+
+let allCache: { tokens: DuneMinToken[]; ts: number } | null = null;
+const ALL_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+export async function fetchAllBankrTokens(): Promise<DuneMinToken[]> {
+  if (allCache && Date.now() - allCache.ts < ALL_CACHE_TTL) return allCache.tokens;
+
+  const key = process.env.DUNE_API_KEY;
+  if (!key) return [];
+
+  try {
+    const res = await fetch(
+      `${DUNE_API_BASE}/query/6899023/results?limit=100000`,
+      {
+        headers: { "X-Dune-API-Key": key, Accept: "application/json" },
+        signal: AbortSignal.timeout(15_000),
+        next: { revalidate: 1800 },
+      },
+    );
+    if (!res.ok) return [];
+
+    const data = await res.json() as DuneResult<DuneMinToken>;
+    const tokens = (data.result?.rows ?? []).map((t) => ({
+      ca: (t.ca ?? "").toLowerCase(),
+      ticker: (t.ticker ?? "").replace(/^\$/, "").toUpperCase(),
+    }));
+
+    allCache = { tokens, ts: Date.now() };
     return tokens;
   } catch {
     return [];

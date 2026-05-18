@@ -129,17 +129,14 @@ export function StitchShell({ children }: { children: ReactNode }) {
   const page = pageNames[pathname] || allNavItems.find((i) => pathname.startsWith(i.href))?.label || "Overview";
   const { logout: privyLogout, user } = usePrivy();
 
-  const displayName = (() => {
+  const initials = (() => {
     const email =
       user?.email?.address ||
       (user?.linkedAccounts?.find((a) => a.type === "email") as { address?: string } | undefined)?.address;
-    if (email) {
-      const name = email.split("@")[0].replace(/[._-]/g, " ").split(" ")[0];
-      return name.charAt(0).toUpperCase() + name.slice(1);
-    }
+    if (email) return email.split("@")[0].replace(/[._-]/g, " ").trim().charAt(0).toUpperCase();
     const twitter = (user?.linkedAccounts?.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username;
-    if (twitter) return `@${twitter.replace(/^@/, "")}`;
-    return "Account";
+    if (twitter) return twitter.replace(/^@/, "").charAt(0).toUpperCase();
+    return "A";
   })();
 
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() =>
@@ -224,13 +221,13 @@ export function StitchShell({ children }: { children: ReactNode }) {
 
         <div className="stitch-sidebar-panel">
           <div className="stitch-sidebar-panel-row">
+            <div className="stitch-user-badge">
+              <span className="stitch-user-initials">{initials}</span>
+            </div>
             <ThemeToggle />
             <button type="button" className="stitch-signout" onClick={handleSignOut}>
               <StitchIcon name="logout" /> Sign out
             </button>
-          </div>
-          <div className="stitch-sidebar-panel-row" style={{ paddingTop: 0 }}>
-            <span className="stitch-user-name">{displayName}</span>
           </div>
         </div>
       </aside>
