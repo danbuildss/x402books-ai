@@ -2,180 +2,182 @@
 
 import { FormEvent } from "react";
 import {
+  CopyBtn,
   StitchEmpty,
   StitchHeader,
   StitchIcon,
+  StitchRange,
   StitchShell,
 } from "@/components/stitch-app";
-import { formatUsdc } from "@/lib/ledger";
+import { formatUsdc, shortenAddress } from "@/lib/ledger";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 export default function WalletsPage() {
   const ledger = useLedgerState();
 
-  async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     await ledger.scanWallet();
   }
+
+  const topCounterparties = ledger.summary.topCounterparties?.slice(0, 8) ?? [];
 
   return (
     <StitchShell>
       <StitchHeader
         title="Wallets"
-        description="Add and manage Base wallets for automated ledger tracking."
+        description="Manage and switch between scanned Base wallets."
+        actions={<StitchRange value={ledger.range} onChange={ledger.setRange} />}
       />
 
-      {/* ---- Top stats ---- */}
-      <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px" }}>
-        {[
-          {
-            label: "Total Consolidated Balance",
-            value: `$${formatUsdc(
-              ledger.recentWallets.reduce((s, w) => s + w.balance, 0),
-            )} USDC`,
-            sub: null,
-          },
-          {
-            label: "Active Wallets",
-            value: String(ledger.recentWallets.length || 0),
-            sub: ledger.recentWallets.length ? "All networks operational" : "No wallets added",
-          },
-          {
-            label: "Base Network Status",
-            value: "L2 Optimized",
-            sub: `Synced to block #—`,
-          },
-        ].map((card) => (
-          <div key={card.label} className="stitch-card">
-            <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--s-muted)", margin: "0 0 6px" }}>
-              {card.label}
-            </p>
-            <p style={{ fontSize: "20px", fontWeight: 600, color: "var(--s-ink)", margin: "0 0 4px", letterSpacing: "-0.01em" }}>
-              {card.value}
-            </p>
-            {card.sub && (
-              <p style={{ fontSize: "12px", color: "var(--s-primary)", margin: 0, display: "flex", alignItems: "center", gap: "4px" }}>
-                <span className="material-symbols-outlined" style={{ fontSize: "13px" }}>check_circle</span>
-                {card.sub}
-              </p>
-            )}
-          </div>
-        ))}
-      </section>
+      <form className="stitch-scanbar stitch-wallet-scan" onSubmit={onSubmit}>
+        <label>
+          <span>Add Base wallet</span>
+          <input
+            value={ledger.walletInput}
+            onChange={(e) => ledger.setWalletInput(e.target.value)}
+            placeholder="0x..."
+            style={{ fontFamily: "var(--st-mono)", fontSize: "13px" }}
+          />
+        </label>
+        <button className="stitch-primary" disabled={ledger.isLoading} type="submit">
+          {ledger.isLoading ? (
+            <>
+              <span style={{ display: "inline-block", animation: "spin 0.7s linear infinite" }}>
+                <StitchIcon name="sync" />
+              </span>
+              Scanning…
+            </>
+          ) : (
+            <><StitchIcon name="add" /> Add Wallet</>
+          )}
+        </button>
+        {ledger.error  && <p className="stitch-message error">{ledger.error}</p>}
+        {ledger.status && <p className="stitch-message success">{ledger.status}</p>}
+      </form>
 
-      {/* ---- Wallet grid ---- */}
       <section className="stitch-wallet-list">
-        {ledger.recentWallets.map((wallet, index) => (
-          <article key={wallet.address} className="stitch-wallet-card">
-            <div className="stitch-wallet-card-top">
-              <div className="stitch-wallet-card-id">
-                <div className="stitch-wallet-badge">
-                  <StitchIcon name="account_balance_wallet" />
-                </div>
-                <div className="stitch-wallet-label">
+        {ledger.recentWallets.length ? (
+          ledger.recentWallets.map((wallet, index) => (
+            <article className="stitch-wallet-card" key={wallet.address}>
+              <div>
+                <span><StitchIcon name="account_balance_wallet" /></span>
+                <div>
                   <strong>{wallet.label}</strong>
-                  <span>{wallet.address}</span>
+                  <div className="stitch-wallet-address-row">
+                    <span title={wallet.address}>{wallet.address}</span>
+                    <CopyBtn
+                      value={wallet.address}
+                      label={`addr-${wallet.address}`}
+                      onCopy={ledger.copyText}
+                      copied={ledger.copied}
+                    />
+                    <a
+                      href={`https://basescan.org/address/${wallet.address}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="View on Basescan"
+                      style={{ color: "var(--st-blue)", display: "inline-flex", alignItems: "center" }}
+                    >
+                      <StitchIcon name="open_in_new" />
+                    </a>
+                  </div>
                 </div>
               </div>
-              {index === 0 ? (
-                <span className="stitch-active-badge">Active</span>
-              ) : (
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {index === 0 ? (
+                  <em>Active</em>
+                ) : (
+                  <button
+                    type="button"
+                    className="stitch-button"
+                    style={{ fontSize: "12px", minHeight: "30px", padding: "0 10px" }}
+                    onClick={() => ledger.scanWallet(wallet.address)}
+                  >
+                    <StitchIcon name="refresh" /> Switch
+                  </button>
+                )}
                 <button
-                  className="stitch-button"
                   type="button"
-                  style={{ padding: "4px 10px", fontSize: "11px" }}
-                  onClick={() => ledger.scanWallet(wallet.address)}
+                  className="stitch-button"
+                  title="Remove wallet"
+                  style={{ fontSize: "12px", minHeight: "30px", padding: "0 8px", color: "var(--st-red)", borderColor: "rgba(239,68,68,0.3)" }}
+                  onClick={() => ledger.removeRecentWallet(wallet.address)}
                 >
-                  <StitchIcon name="refresh" /> Scan
+                  <StitchIcon name="delete" />
                 </button>
-              )}
-            </div>
-
-            <dl className="stitch-wallet-stats">
-              <div>
-                <dt>Net Flow</dt>
-                <dd style={{ color: wallet.balance >= 0 ? "var(--s-primary)" : "var(--s-negative)" }}>
-                  {wallet.balance >= 0 ? "+" : ""}${formatUsdc(wallet.balance)}
-                </dd>
               </div>
-              <div>
-                <dt>Transactions</dt>
-                <dd>{wallet.transactions.toLocaleString()}</dd>
-              </div>
-              <div>
-                <dt>Last Scanned</dt>
-                <dd style={{ fontSize: "12px" }}>{wallet.lastScanned}</dd>
-              </div>
-            </dl>
-          </article>
-        ))}
 
-        {/* ---- Add wallet card ---- */}
-        <article className="stitch-wallet-card" style={{ borderStyle: "dashed" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
-            <div className="stitch-wallet-badge" style={{ background: "rgba(156,166,159,0.08)" }}>
-              <StitchIcon name="add" />
-            </div>
-            <div>
-              <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--s-ink)", margin: "0 0 2px" }}>
-                Add New Wallet
-              </p>
-              <p style={{ fontSize: "12px", color: "var(--s-muted)", margin: 0 }}>
-                Import a Base address to begin ledger tracking.
-              </p>
-            </div>
-          </div>
-
-          <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <input
-              className="stitch-scanbar"
-              style={{ padding: "8px 12px", fontFamily: "ui-monospace, monospace", fontSize: "12px", background: "var(--s-surface-hover)", border: "1px solid var(--s-border)", borderRadius: "6px", color: "var(--s-ink)", outline: "none", width: "100%" }}
-              value={ledger.walletInput}
-              onChange={(e) => ledger.setWalletInput(e.target.value)}
-              placeholder="0x wallet address…"
-              spellCheck={false}
-            />
-            <button
-              className="stitch-primary"
-              type="submit"
-              disabled={ledger.isLoading}
-              style={{ width: "100%", justifyContent: "center" }}
-            >
-              {ledger.isLoading ? (
-                <><StitchIcon name="sync" /> Scanning…</>
-              ) : (
-                <><StitchIcon name="add" /> Register Asset</>
-              )}
-            </button>
-            {ledger.error  && <p className="stitch-message error">{ledger.error}</p>}
-            {ledger.status && <p className="stitch-message success">{ledger.status}</p>}
-          </form>
-        </article>
-
-        {!ledger.recentWallets.length && (
-          <div style={{ gridColumn: "1 / -1" }}>
-            <StitchEmpty>No wallets tracked yet. Add a Base address above to get started.</StitchEmpty>
-          </div>
+              <dl>
+                <div>
+                  <dt>Net Flow</dt>
+                  <dd style={{ fontFamily: "var(--st-mono)", color: wallet.balance >= 0 ? "var(--st-green)" : "var(--st-red)" }}>
+                    {wallet.balance >= 0 ? "+" : ""}{formatUsdc(wallet.balance)} USDC
+                  </dd>
+                </div>
+                <div>
+                  <dt>Transactions</dt>
+                  <dd style={{ fontFamily: "var(--st-mono)" }}>{wallet.transactions.toLocaleString()}</dd>
+                </div>
+                <div>
+                  <dt>Last Scanned</dt>
+                  <dd>{wallet.lastScanned}</dd>
+                </div>
+              </dl>
+            </article>
+          ))
+        ) : (
+          <StitchEmpty>Scan a Base wallet to save it here. Up to 5 wallets are remembered.</StitchEmpty>
         )}
       </section>
 
-      {/* ---- Feature strip ---- */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px" }}>
-        {[
-          { icon: "lock",         title: "End-to-End Encrypted",   sub: "Private keys never touch our servers." },
-          { icon: "verified",     title: "Base L2 Verified",       sub: "Real-time RPC indexing." },
-          { icon: "download",     title: "Export Ready",           sub: "CSV/JSON exports available." },
-          { icon: "history",      title: "Auditable History",      sub: "Immutable ledger snapshots." },
-        ].map((item) => (
-          <div key={item.title} className="stitch-card" style={{ padding: "16px 18px" }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "var(--s-primary)", display: "block", marginBottom: "8px", fontVariationSettings: "'FILL' 1" }}>
-              {item.icon}
-            </span>
-            <p style={{ fontSize: "12px", fontWeight: 700, color: "var(--s-ink)", margin: "0 0 3px" }}>{item.title}</p>
-            <p style={{ fontSize: "11px", color: "var(--s-muted)", margin: 0 }}>{item.sub}</p>
+      {/* Counterparty intelligence */}
+      {topCounterparties.length > 0 && (
+        <section className="stitch-card">
+          <div className="stitch-card-head">
+            <h3>Top Counterparties</h3>
+            <span style={{ fontSize: "11px", color: "var(--st-muted)" }}>by transaction volume</span>
           </div>
-        ))}
-      </div>
+          <div className="stitch-table-wrap">
+            <table className="stitch-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Address</th>
+                  <th>Tx Count</th>
+                  <th>Total USDC</th>
+                  <th>Basescan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topCounterparties.map((cp, i) => (
+                  <tr key={cp.address}>
+                    <td style={{ color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>{i + 1}</td>
+                    <td style={{ fontFamily: "var(--st-mono)", fontSize: "12px" }}>
+                      <span title={cp.address}>{shortenAddress(cp.address)}</span>
+                      <CopyBtn value={cp.address} label={`cp-${cp.address}`} onCopy={ledger.copyText} copied={ledger.copied} />
+                    </td>
+                    <td style={{ fontFamily: "var(--st-mono)" }}>{cp.count}</td>
+                    <td style={{ fontFamily: "var(--st-mono)" }}>{formatUsdc(cp.totalUsdc)} USDC</td>
+                    <td>
+                      <a
+                        href={`https://basescan.org/address/${cp.address}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="stitch-basescan-link"
+                        style={{ fontSize: "11px" }}
+                      >
+                        <StitchIcon name="open_in_new" />
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
     </StitchShell>
   );
 }

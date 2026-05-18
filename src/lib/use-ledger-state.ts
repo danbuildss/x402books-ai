@@ -11,14 +11,41 @@ import {
 import type {
   CategorySummary,
   DailyFlow,
+  LedgerCategory,
   LedgerReport,
   LedgerSummary,
   LedgerTransaction,
+  PortfolioEntry,
   TimeRange,
 } from "@/lib/ledger";
 
+async function resolveEns(name: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://api.ensideas.com/ens/resolve/${encodeURIComponent(name)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return typeof data?.address === "string" && isValidWalletAddress(data.address)
+      ? data.address
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 const storageKey = "x402books_active_ledger";
 const recentWalletsKey = "x402books_recent_wallets";
+const notesKey = "x402books_notes";
+
+function readNotes(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(window.localStorage.getItem(notesKey) || "{}");
+  } catch { return {}; }
+}
+
+function writeNotes(notes: Record<string, string>) {
+  window.localStorage.setItem(notesKey, JSON.stringify(notes));
+}
 
 type StoredLedger = {
   wallet: string;
@@ -28,6 +55,7 @@ type StoredLedger = {
   report: LedgerReport;
   categories: CategorySummary[];
   dailyFlows: DailyFlow[];
+  portfolio: PortfolioEntry[];
   transactions: LedgerTransaction[];
 };
 
@@ -64,6 +92,14 @@ function readRecentWallets() {
   }
 }
 
+function deleteRecentWalletFromStorage(address: string) {
+  const next = readRecentWallets().filter(
+    (w) => w.address.toLowerCase() !== address.toLowerCase(),
+  );
+  window.localStorage.setItem(recentWalletsKey, JSON.stringify(next));
+  return next;
+}
+
 function saveRecentWallet(wallet: string, ledger: StoredLedger) {
   const nextWallets = [
     {
@@ -96,6 +132,7 @@ function emptyLedger(range: TimeRange): StoredLedger {
     report,
     categories: [],
     dailyFlows: getDailyFlows(transactions, range),
+    portfolio: [],
     transactions,
   };
 }
@@ -150,6 +187,9 @@ export function useLedgerState() {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [copied, setCopied] = useState("");
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [aiSummary, setAiSummary] = useState("");
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   useEffect(() => {
     const stored = readStoredLedger();
@@ -161,6 +201,43 @@ export function useLedgerState() {
       setLedger(emptyLedger("30d"));
     }
     setRecentWallets(readRecentWallets());
+    setNotes(readNotes());
+
+    // Load wallet saved to this account on the server
+    fetch("/api/user/wallet")
+      .then((r) => r.json())
+      .then(({ wallet }) => {
+        if (!wallet) return;
+        if (stored?.wallet) return; // local data already present, don't clobber
+        setWalletInput(wallet);
+        // Auto-scan so the dashboard populates immediately on login
+        setIsLoading(true);
+        fetch(`/api/scan?wallet=${encodeURIComponent(wallet)}&range=30d`)
+          .then((r) => r.json())
+          .then((body) => {
+            if (!body.error) {
+              const next: StoredLedger = {
+                wallet: body.wallet,
+                range: body.range,
+                generatedAt: body.generatedAt,
+                summary: body.summary,
+                report: body.report,
+                categories: body.categories ?? getCategorySummary(body.transactions ?? []),
+                dailyFlows: body.dailyFlows ?? getDailyFlows(body.transactions ?? [], body.range),
+                portfolio: body.portfolio ?? [],
+                transactions: body.transactions ?? [],
+              };
+              setLedger(next);
+              setRangeValue(next.range);
+              writeStoredLedger(next);
+              setRecentWallets(saveRecentWallet(next.wallet, next));
+            }
+          })
+          .catch(() => {})
+          .finally(() => setIsLoading(false));
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const activeLedger = ledger || emptyLedger(range);
@@ -184,10 +261,26 @@ export function useLedgerState() {
   );
 
   async function scanWallet(nextWallet = walletInput, nextRange = range) {
-    const wallet = nextWallet.trim();
+    let wallet = nextWallet.trim();
+
     if (!isValidWalletAddress(wallet)) {
-      setError("Enter a valid Base wallet address.");
-      return null;
+      if (/\.eth$/i.test(wallet)) {
+        setIsLoading(true);
+        setError("");
+        setStatus("Resolving ENS name…");
+        const resolved = await resolveEns(wallet);
+        if (!resolved) {
+          setIsLoading(false);
+          setError("Could not resolve this ENS name. Try pasting the 0x address directly.");
+          setStatus("");
+          return null;
+        }
+        wallet = resolved;
+        setWalletInput(resolved);
+      } else {
+        setError("Enter a valid Base wallet address or ENS name.");
+        return null;
+      }
     }
 
     setIsLoading(true);
@@ -212,6 +305,7 @@ export function useLedgerState() {
         report: body.report,
         categories: body.categories || getCategorySummary(body.transactions || []),
         dailyFlows: body.dailyFlows || getDailyFlows(body.transactions || [], body.range),
+        portfolio: body.portfolio || [],
         transactions: body.transactions || [],
       };
 
@@ -220,11 +314,35 @@ export function useLedgerState() {
       setWalletInput(nextLedger.wallet);
       writeStoredLedger(nextLedger);
       setRecentWallets(saveRecentWallet(nextLedger.wallet, nextLedger));
+      // Persist wallet to server for this account
+      fetch("/api/user/wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: nextLedger.wallet }),
+      }).catch(() => {});
       setStatus(
         nextLedger.transactions.length
           ? `Scan complete: ${nextLedger.transactions.length} USDC transfers found.`
           : "Scan complete: no Base USDC transfers found in this range.",
       );
+      // Auto-generate AI summary if transactions found
+      if (nextLedger.transactions.length > 0) {
+        setIsGeneratingSummary(true);
+        fetch("/api/ai-summary", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wallet: nextLedger.wallet,
+            range: nextLedger.range,
+            summary: nextLedger.summary,
+            categories: nextLedger.categories,
+          }),
+        })
+          .then((r) => r.json())
+          .then((d) => { if (d.summary) setAiSummary(d.summary); })
+          .catch(() => {})
+          .finally(() => setIsGeneratingSummary(false));
+      }
       return nextLedger;
     } catch {
       setError("Could not scan this wallet right now.");
@@ -266,20 +384,73 @@ export function useLedgerState() {
         report: body.report,
         categories: getCategorySummary(body.transactions || []),
         dailyFlows: getDailyFlows(body.transactions || [], range),
+        portfolio: body.portfolio || activeLedger.portfolio,
         transactions: body.transactions || [],
       };
 
       setLedger(nextLedger);
       writeStoredLedger(nextLedger);
       setStatus(
-        body.provider === "openai"
-          ? "AI categorization complete."
-          : "Rule categorization refreshed. Add OpenAI key for live AI.",
+        body.provider === "claude"
+          ? "AI categorization complete (Claude)."
+          : "Rule-based categorization applied. Add ANTHROPIC_API_KEY for live AI.",
       );
     } catch {
       setError("Could not categorize transactions right now.");
     } finally {
       setIsCategorizing(false);
+    }
+  }
+
+  function updateCategory(txHash: string, category: string) {
+    const nextTransactions = transactions.map((tx) =>
+      tx.txHash === txHash ? { ...tx, category: category as LedgerCategory } : tx,
+    );
+    const nextLedger: StoredLedger = {
+      ...activeLedger,
+      transactions: nextTransactions,
+      categories: getCategorySummary(nextTransactions),
+    };
+    setLedger(nextLedger);
+    writeStoredLedger(nextLedger);
+  }
+
+  function updateNote(txHash: string, note: string) {
+    const next = { ...notes, [txHash]: note };
+    setNotes(next);
+    writeNotes(next);
+  }
+
+  async function generateAiSummary() {
+    if (!activeLedger.wallet || !activeLedger.transactions.length) return;
+    setIsGeneratingSummary(true);
+    try {
+      const res = await fetch("/api/ai-summary", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet: activeLedger.wallet,
+          range,
+          summary,
+          categories,
+        }),
+      });
+      const data = await res.json();
+      if (data.summary) setAiSummary(data.summary);
+    } catch { /* silent */ } finally {
+      setIsGeneratingSummary(false);
+    }
+  }
+
+  function removeRecentWallet(address: string) {
+    const next = deleteRecentWalletFromStorage(address);
+    setRecentWallets(next);
+    // If deleting the active wallet, clear ledger state
+    if (activeLedger.wallet.toLowerCase() === address.toLowerCase()) {
+      const empty = emptyLedger(range);
+      setLedger(empty);
+      setWalletInput("");
+      writeStoredLedger({ ...empty, wallet: "" });
     }
   }
 
@@ -312,19 +483,51 @@ export function useLedgerState() {
     summary,
     categories,
     dailyFlows,
+    portfolio: activeLedger.portfolio ?? [],
     report,
     generatedAt: activeLedger.generatedAt,
     endpoints,
     recentWallets,
+    removeRecentWallet,
     isLoading,
     isCategorizing,
     error,
     status,
     copied,
     hasLedger: Boolean(activeLedger.wallet),
+    notes,
+    aiSummary,
+    isGeneratingSummary,
     scanWallet,
     categorizeTransactions,
+    updateCategory,
+    updateNote,
+    generateAiSummary,
     exportCsv: () => exportCsv(transactions),
+    exportPdf: async () => {
+      if (!activeLedger.wallet) return;
+      const res = await fetch("/api/export/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet: activeLedger.wallet,
+          range,
+          summary,
+          categories,
+          transactions,
+          aiSummary,
+          generatedAt: activeLedger.generatedAt,
+        }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `x402books-${activeLedger.wallet.slice(0, 8)}-${range}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
     copyText,
   };
 }

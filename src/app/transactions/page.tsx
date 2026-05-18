@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
+  CopyBtn,
   StitchEmpty,
   StitchHeader,
   StitchIcon,
@@ -17,194 +18,204 @@ import type { LedgerTransaction } from "@/lib/ledger";
 export default function TransactionsPage() {
   const ledger = useLedgerState();
   const [selected, setSelected] = useState<LedgerTransaction | null>(null);
-  const [query, setQuery]         = useState("");
+  const [query, setQuery] = useState("");
   const [direction, setDirection] = useState("all");
-  const [category, setCategory]   = useState("all");
+  const [category, setCategory] = useState("all");
 
   const rows = useMemo(
     () =>
       ledger.transactions.filter((tx) => {
-        const hay = [tx.txHash, tx.counterparty, tx.category, tx.memo]
-          .join(" ")
-          .toLowerCase();
+        const hay = [tx.txHash, tx.counterparty, tx.category, tx.memo].join(" ").toLowerCase();
         return (
           (!query || hay.includes(query.toLowerCase())) &&
           (direction === "all" || tx.direction === direction) &&
-          (category  === "all" || tx.category  === category)
+          (category === "all" || tx.category === category)
         );
       }),
     [category, direction, ledger.transactions, query],
   );
 
-  const cycleDir = () =>
-    setDirection((d) => (d === "all" ? "expense" : d === "expense" ? "income" : "all"));
-
   return (
     <StitchShell>
       <StitchHeader
         title="Transactions"
-        description="Browse and analyse every scanned wallet transfer."
+        description={`Browse and analyze wallet transfers · ${ledger.range === "7d" ? "Last 7 days" : "Last 30 days"}`}
         actions={
           <>
-            <StitchWalletPill
-              wallet={ledger.wallet}
-              onCopy={() => ledger.copyText(ledger.wallet, "wallet")}
-            />
+            <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
             <StitchRange value={ledger.range} onChange={ledger.setRange} />
           </>
         }
       />
 
       <section className="stitch-transactions-layout">
-        {/* ---- Ledger table ---- */}
-        <div className="stitch-card" style={{ padding: "20px 24px" }}>
+        {/* ---- Transaction list ---- */}
+        <div className="stitch-card">
           <div className="stitch-toolbar">
             <input
-              placeholder="Search by hash, address, or category…"
+              placeholder="Search by hash, address, or category"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
-            <button
-              className="stitch-button"
-              type="button"
-              disabled={!ledger.transactions.length || ledger.isCategorizing}
-              onClick={ledger.categorizeTransactions}
-            >
-              {ledger.isCategorizing ? "Categorizing…" : "AI Categorize"}
+            <button type="button" className="stitch-button" onClick={ledger.exportCsv}>
+              <StitchIcon name="download" /> Export CSV
             </button>
             <button
-              className="stitch-button"
               type="button"
-              disabled={!ledger.transactions.length}
-              onClick={ledger.exportCsv}
+              className="stitch-button"
+              onClick={ledger.categorizeTransactions}
+              disabled={!ledger.transactions.length || ledger.isCategorizing}
             >
-              <StitchIcon name="download" /> CSV
+              {ledger.isCategorizing ? "Categorizing…" : "AI Categorize"}
             </button>
           </div>
 
           <div className="stitch-filters">
-            <button type="button">Date: {ledger.range}</button>
-            <button type="button" onClick={cycleDir}>
-              Type: {direction}
+            <button
+              type="button"
+              className={direction === "all" ? "active" : ""}
+              onClick={() => setDirection("all")}
+            >
+              All
             </button>
             <button
               type="button"
-              onClick={() => setCategory((c) => (c === "all" ? "api_call" : "all"))}
+              className={direction === "income" ? "active" : ""}
+              onClick={() => setDirection(direction === "income" ? "all" : "income")}
             >
-              Category: {category}
+              <StitchIcon name="north_east" /> Income
             </button>
             <button
               type="button"
-              onClick={() => {
-                setQuery("");
-                setDirection("all");
-                setCategory("all");
-              }}
+              className={direction === "expense" ? "active" : ""}
+              onClick={() => setDirection(direction === "expense" ? "all" : "expense")}
             >
-              Reset
+              <StitchIcon name="south_east" /> Spend
+            </button>
+            <button
+              type="button"
+              onClick={() => { setQuery(""); setDirection("all"); setCategory("all"); }}
+            >
+              <StitchIcon name="close" /> Reset
             </button>
           </div>
 
           {rows.length ? (
-            <StitchTransactionsTable transactions={rows} onSelect={setSelected} />
+            <StitchTransactionsTable
+              transactions={rows}
+              onSelect={setSelected}
+              onCategoryChange={ledger.updateCategory}
+              notes={ledger.notes}
+              onNoteChange={ledger.updateNote}
+            />
           ) : (
-            <StitchEmpty>No transactions found. Scan a Base wallet from Overview.</StitchEmpty>
-          )}
-
-          {rows.length > 0 && (
-            <p style={{ fontSize: "11px", color: "var(--s-muted)", marginTop: "12px", marginBottom: 0 }}>
-              Showing {rows.length} of {ledger.transactions.length} transactions
-            </p>
+            <StitchEmpty>
+              {ledger.transactions.length
+                ? "No transactions match your filters."
+                : "Scan a Base wallet from Overview to see transactions."}
+            </StitchEmpty>
           )}
         </div>
 
         {/* ---- Detail panel ---- */}
-        <aside className="stitch-card stitch-detail" style={{ padding: "18px 20px" }}>
+        <aside className="stitch-card stitch-detail">
           <div className="stitch-card-head">
             <h3>Transaction Details</h3>
             {selected && (
-              <button type="button" onClick={() => setSelected(null)}>
-                <StitchIcon name="close" />
+              <button type="button" className="stitch-button" style={{ fontSize: "12px", minHeight: "28px", padding: "0 10px" }} onClick={() => setSelected(null)}>
+                <StitchIcon name="close" /> Close
               </button>
             )}
           </div>
 
           {selected ? (
-            <div className="stitch-detail-body">
-              <div className="stitch-ai-badge">
-                <StitchIcon name="auto_awesome" /> AI Interpretation
-              </div>
-              <p style={{ fontSize: "13px", color: "var(--s-muted)", lineHeight: "1.6", margin: "0 0 8px" }}>
-                {selected.memo ?? "Rules-based classification."}
-              </p>
-
-              <div className="stitch-detail-row">
-                <span>Tx Hash</span>
-                <strong>{shortenAddress(selected.txHash)}</strong>
-              </div>
-              <div className="stitch-detail-row">
+            <div className="stitch-detail-list">
+              <div>
                 <span>Type</span>
-                <strong style={{ fontFamily: "inherit" }}>
+                <strong className={selected.direction === "income" ? "income" : "expense"}>
                   {selected.direction === "income" ? "Income" : "Spend"}
                 </strong>
               </div>
-              <div className="stitch-detail-row">
-                <span>Amount</span>
-                <strong style={{ fontFamily: "inherit" }}>
+
+              <div>
+                <span>Amount (USDC)</span>
+                <strong style={{ fontFamily: "var(--st-mono)", fontVariantNumeric: "tabular-nums" }}>
                   {formatUsdc(selected.amountUsdc)} USDC
                 </strong>
               </div>
-              <div className="stitch-detail-row">
+
+              <div>
                 <span>Counterparty</span>
-                <strong>{shortenAddress(selected.counterparty)}</strong>
-              </div>
-              <div className="stitch-detail-row">
-                <span>Timestamp</span>
-                <strong style={{ fontFamily: "inherit" }}>
-                  {relativeTime(selected.timestamp)}
+                <strong style={{ display: "flex", alignItems: "center", gap: "4px", fontFamily: "var(--st-mono)", fontSize: "12px" }}>
+                  {shortenAddress(selected.counterparty)}
+                  <CopyBtn value={selected.counterparty} label="counterparty" onCopy={ledger.copyText} copied={ledger.copied} />
                 </strong>
               </div>
-              <div className="stitch-detail-row">
+
+              <div>
+                <span>Tx Hash</span>
+                <strong style={{ display: "flex", alignItems: "center", gap: "4px", fontFamily: "var(--st-mono)", fontSize: "12px" }}>
+                  {shortenAddress(selected.txHash)}
+                  <CopyBtn value={selected.txHash} label="txhash" onCopy={ledger.copyText} copied={ledger.copied} />
+                </strong>
+              </div>
+
+              <div>
+                <span>Time</span>
+                <strong>{relativeTime(selected.timestamp)}</strong>
+              </div>
+
+              <div>
                 <span>Network</span>
-                <strong style={{ fontFamily: "inherit" }}>Base Mainnet</strong>
+                <strong>Base (L2)</strong>
               </div>
-              <div className="stitch-detail-row">
-                <span>Category</span>
-                <strong style={{ fontFamily: "inherit" }}>
-                  {formatCategory(selected.category ?? "unknown")}
-                </strong>
+
+              <div>
+                <span>AI Category</span>
+                <strong>{formatCategory(selected.category || "unknown")}</strong>
               </div>
-              <div className="stitch-detail-row">
+
+              <div>
                 <span>AI Confidence</span>
-                <strong style={{ fontFamily: "inherit" }}>
-                  {selected.confidenceScore ?? 0}%
-                </strong>
-                <div className="stitch-confidence">
-                  <div
-                    className="stitch-confidence-fill"
-                    style={{ width: `${selected.confidenceScore ?? 0}%` }}
-                  />
-                </div>
+                <strong>{selected.confidenceScore ?? 0}%</strong>
               </div>
-              {selected.x402Reason && (
-                <div className="stitch-detail-row">
-                  <span>Classification Logic</span>
-                  <p>{selected.x402Reason}</p>
+
+              {selected.isLikelyX402 && (
+                <div>
+                  <span>x402 Signal</span>
+                  <strong style={{ color: "var(--st-green)" }}>Likely agent micropayment</strong>
                 </div>
               )}
 
-              <a
-                className="stitch-detail-link"
-                href={`https://basescan.org/tx/${selected.txHash}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View on Basescan
-                <StitchIcon name="open_in_new" />
-              </a>
+              {(selected.x402Reason || selected.memo) && (
+                <div>
+                  <span>Classification note</span>
+                  <p>{selected.x402Reason || selected.memo}</p>
+                </div>
+              )}
+
+              {/* Action links */}
+              <div className="stitch-detail-actions">
+                <a
+                  href={`https://basescan.org/tx/${selected.txHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="stitch-detail-list a stitch-basescan-link"
+                >
+                  <StitchIcon name="open_in_new" /> View tx on Basescan
+                </a>
+                <a
+                  href={`https://basescan.org/address/${selected.counterparty}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="stitch-basescan-link"
+                >
+                  <StitchIcon name="open_in_new" /> View address on Basescan
+                </a>
+              </div>
             </div>
           ) : (
-            <StitchEmpty compact>Select a transaction to inspect AI analysis and details.</StitchEmpty>
+            <StitchEmpty compact>Click any transaction row to inspect details.</StitchEmpty>
           )}
         </aside>
       </section>
