@@ -10,9 +10,52 @@ import { getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function setAccessCookie(response: NextResponse, id: string) {
+  response.cookies.set({
+    name: ACCESS_COOKIE_NAME,
+    value: createAccessToken(id),
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: ACCESS_COOKIE_MAX_AGE,
+    path: "/",
+  });
+}
+
 export async function POST(request: Request) {
   try {
-    const { code, email } = await request.json();
+    const body = await request.json();
+
+    // Privy auth path — user already authenticated via Privy client SDK
+    if (body.privy === true) {
+      const userId = String(body.userId || "").trim();
+      if (!userId) {
+        return NextResponse.json({ error: "Missing user ID." }, { status: 400 });
+      }
+
+      // Optionally upsert user record for tracking
+      try {
+        const supabase = getSupabaseAdminClient();
+        await supabase.from("users").upsert(
+          {
+            privy_id: userId,
+            email: body.email || null,
+            x_handle: body.xHandle || null,
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: "privy_id", ignoreDuplicates: false },
+        );
+      } catch {
+        // Non-fatal: users table may not exist yet, session still works
+      }
+
+      const response = NextResponse.json({ ok: true });
+      setAccessCookie(response, `privy:${userId}`);
+      return response;
+    }
+
+    // Access code path — legacy code-based gate
+    const { code, email } = body;
     const normalizedCode = normalizeAccessCode(String(code || ""));
     const normalizedEmail = String(email || "").trim().toLowerCase();
 
@@ -63,21 +106,8 @@ export async function POST(request: Request) {
       .update({ use_count: Number(accessCode.use_count || 0) + 1, last_used_at: new Date().toISOString() })
       .eq("id", accessCode.id);
 
-    const response = NextResponse.json({
-      ok: true,
-      label: accessCode.label || "Private beta",
-    });
-
-    response.cookies.set({
-      name: ACCESS_COOKIE_NAME,
-      value: createAccessToken(accessCode.id),
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: ACCESS_COOKIE_MAX_AGE,
-      path: "/",
-    });
-
+    const response = NextResponse.json({ ok: true, label: accessCode.label || "Private beta" });
+    setAccessCookie(response, accessCode.id);
     return response;
   } catch (error) {
     if (error instanceof Error && error.message.includes("Missing Supabase")) {
