@@ -9473,3 +9473,60 @@ html, body {
   .reg-verify { padding: 36px 16px; }
   .reg-audit-footer { flex-direction: column; align-items: flex-start; }
 }
+
+/* ── Registry additions ── */
+.reg-eco-base { background: rgba(201,168,76,0.1); color: #C9A84C; border: 1px solid rgba(201,168,76,0.18); }
+
+.reg-role-token-contract { background: rgba(109,184,116,0.08); color: var(--accent); border: 1px solid rgba(109,184,116,0.15); }
+.reg-role-fee-recipient  { background: rgba(91,143,168,0.08);  color: var(--blue);   border: 1px solid rgba(91,143,168,0.15); }
+
+.reg-health-pending { background: var(--surface-soft); color: var(--muted); }
+
+.reg-wallet-pending {
+  font-size: 11px;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.reg-ext-link {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 5px;
+  color: var(--muted);
+  text-decoration: none;
+  vertical-align: middle;
+  transition: color 0.15s;
+}
+.reg-ext-link:hover { color: var(--accent); }
+
+.reg-note-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--muted);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+  display: inline-flex;
+  align-items: center;
+}
+.reg-note-btn:hover { color: var(--accent); background: var(--accent-soft); }
+
+.reg-note-popup {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  top: calc(100% + 4px);
+  width: 260px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--muted);
+  box-shadow: var(--shadow);
+  white-space: normal;
+}
+
+.reg-table tbody td:last-child { position: relative; }
