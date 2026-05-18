@@ -28,6 +28,7 @@ type Agent = {
   priority: number;            // Luca registry priority score
   lucaNote: string;
   pfp?: string;                // override avatar URL (defaults to unavatar.io)
+  gitlawbRepo?: string;        // repo URL if wallet declared via .x402books/wallets.json
 };
 
 const AGENTS: Agent[] = [
@@ -91,6 +92,7 @@ const AGENTS: Agent[] = [
     xHandle: "@gitlawb",
     priority: 86,
     lucaNote: "$GITLAWB token contract — strong public attribution on X (High). Not proof of treasury control. Treasury claims exist on X but no direct wallet proof. Missing: official treasury wallet, repo declaration file, DID-to-wallet mapping. Next step: inspect Gitlawb public repos/docs for .x402books/wallets.json or wallet declarations, then request signed proof for main treasury or operator wallet.",
+    gitlawbRepo: "https://github.com/gitlawb",
   },
 
   // ── Tier 2 ──
@@ -552,10 +554,31 @@ function HealthBadge({ h }: { h: Health }) {
 
 // ── Verify CTA ────────────────────────────────────────────────────────────────
 
+const WALLETS_JSON_EXAMPLE = `{
+  "agent": "Your Agent Name",
+  "xHandle": "@yourhandle",
+  "ecosystem": "Base",
+  "wallets": [
+    {
+      "address": "0x...",
+      "role": "treasury",
+      "chain": "base",
+      "notes": "Main protocol treasury"
+    },
+    {
+      "address": "0x...",
+      "role": "fee_recipient",
+      "chain": "base"
+    }
+  ]
+}`;
+
 function VerifyCTA() {
-  const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "" });
+  const [tab, setTab] = useState<"manual" | "gitlawb">("gitlawb");
+  const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "" });
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
+  const [copied, setCopied] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -580,24 +603,60 @@ function VerifyCTA() {
     }
   }
 
+  function copySchema() {
+    navigator.clipboard.writeText(WALLETS_JSON_EXAMPLE).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
   return (
     <section className="reg-verify" id="verify">
       <div className="reg-verify-inner">
+        {/* Left: copy */}
         <div className="reg-verify-text">
           <p className="reg-label">For Agent Teams</p>
           <h2 className="reg-h2">Verify your agent wallet.</h2>
           <p className="reg-verify-sub">
-            Submit your agent&apos;s wallet address for verification. We&apos;ll review it, run a Luca audit, and list it as Verified in the registry.
+            Submit your wallet for verification and get a Luca-powered audit and Verified badge in the registry.
           </p>
           <div className="reg-verify-perks">
-            {["Verified badge on your listing", "Luca-powered audit example", "Listed across x402Books platform"].map((p) => (
+            {[
+              "Verified badge on your listing",
+              "Luca-powered audit example",
+              "Listed across x402Books platform",
+            ].map((p) => (
               <div key={p} className="reg-verify-perk">
                 <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--accent)" }}>check_circle</span>
                 {p}
               </div>
             ))}
           </div>
+
+          {/* Trust ladder */}
+          <div className="reg-trust-ladder">
+            <p className="reg-trust-ladder-label">Trust levels</p>
+            <div className="reg-trust-step">
+              <span className="reg-badge reg-confidence reg-confidence-unverified">Unverified</span>
+              <span>Luca found candidate wallets from public data</span>
+            </div>
+            <div className="reg-trust-arrow">↓</div>
+            <div className="reg-trust-step">
+              <span className="reg-badge reg-confidence reg-confidence-community">Community</span>
+              <span>Team submitted or repo-declared wallets</span>
+            </div>
+            <div className="reg-trust-arrow">↓</div>
+            <div className="reg-trust-step">
+              <span className="reg-badge reg-confidence reg-confidence-verified">
+                <span className="material-symbols-outlined" style={{ fontSize: 11 }}>verified</span>
+                Verified
+              </span>
+              <span>DID-linked proof via Gitlawb</span>
+            </div>
+          </div>
         </div>
+
+        {/* Right: tabbed form */}
         <div className="reg-verify-form-wrap">
           {state === "done" ? (
             <div className="reg-submit-success">
@@ -605,32 +664,126 @@ function VerifyCTA() {
               <p>{msg}</p>
             </div>
           ) : (
-            <form className="reg-verify-form" onSubmit={submit}>
-              <div className="reg-field">
-                <label>Agent Name</label>
-                <input type="text" placeholder="e.g. Bankr" value={form.agent_name}
-                  onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))} required />
+            <>
+              {/* Tabs */}
+              <div className="reg-verify-tabs">
+                <button
+                  type="button"
+                  className={`reg-verify-tab${tab === "gitlawb" ? " active" : ""}`}
+                  onClick={() => setTab("gitlawb")}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  Verify via Gitlawb
+                </button>
+                <button
+                  type="button"
+                  className={`reg-verify-tab${tab === "manual" ? " active" : ""}`}
+                  onClick={() => setTab("manual")}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>edit</span>
+                  Manual Submit
+                </button>
               </div>
-              <div className="reg-field">
-                <label>Wallet Address</label>
-                <input type="text" placeholder="0x…" value={form.wallet_address}
-                  onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))} required />
-              </div>
-              <div className="reg-field">
-                <label>X / Twitter Handle <span className="reg-field-opt">(optional)</span></label>
-                <input type="text" placeholder="@handle" value={form.x_handle}
-                  onChange={(e) => setForm((f) => ({ ...f, x_handle: e.target.value }))} />
-              </div>
-              <div className="reg-field">
-                <label>Notes <span className="reg-field-opt">(optional)</span></label>
-                <textarea placeholder="Wallet role, ecosystem, anything we should know…" rows={3}
-                  value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
-              </div>
-              {state === "error" && <p className="reg-form-error">{msg}</p>}
-              <button type="submit" className="reg-submit-btn" disabled={state === "loading"}>
-                {state === "loading" ? "Submitting…" : "Submit for Verification"}
-              </button>
-            </form>
+
+              {tab === "gitlawb" ? (
+                <div className="reg-gitlawb-panel">
+                  <p className="reg-gitlawb-intro">
+                    Add a <code className="reg-code">.x402books/wallets.json</code> file to your Gitlawb or GitHub repo to declare your agent&apos;s wallets. Luca will detect it and upgrade your registry confidence level.
+                  </p>
+
+                  {/* Steps */}
+                  <ol className="reg-gitlawb-steps">
+                    <li>
+                      <span className="reg-step-num">1</span>
+                      <div>
+                        <strong>Create the file</strong>
+                        <p>Add <code className="reg-code">.x402books/wallets.json</code> to your repo root</p>
+                      </div>
+                    </li>
+                    <li>
+                      <span className="reg-step-num">2</span>
+                      <div>
+                        <strong>Declare your wallets</strong>
+                        <p>Use the schema below — treasury, revenue, expense, deployer</p>
+                      </div>
+                    </li>
+                    <li>
+                      <span className="reg-step-num">3</span>
+                      <div>
+                        <strong>Submit your repo URL</strong>
+                        <p>Luca will verify and upgrade your listing</p>
+                      </div>
+                    </li>
+                  </ol>
+
+                  {/* Schema */}
+                  <div className="reg-schema-wrap">
+                    <div className="reg-schema-header">
+                      <span className="reg-schema-filename">.x402books/wallets.json</span>
+                      <button type="button" className="reg-copy-btn" onClick={copySchema}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
+                          {copied ? "check" : "content_copy"}
+                        </span>
+                        {copied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <pre className="reg-schema-code">{WALLETS_JSON_EXAMPLE}</pre>
+                  </div>
+
+                  {/* Repo submit */}
+                  <form className="reg-verify-form" onSubmit={submit}>
+                    <div className="reg-field">
+                      <label>Agent Name</label>
+                      <input type="text" placeholder="e.g. Bankr" value={form.agent_name}
+                        onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))} required />
+                    </div>
+                    <div className="reg-field">
+                      <label>Wallet Address <span className="reg-field-opt">(primary wallet)</span></label>
+                      <input type="text" placeholder="0x…" value={form.wallet_address}
+                        onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))} required />
+                    </div>
+                    <div className="reg-field">
+                      <label>Gitlawb / GitHub Repo URL <span className="reg-field-opt">(where wallets.json lives)</span></label>
+                      <input type="text" placeholder="https://github.com/yourorg/yourrepo" value={form.gitlawb_repo}
+                        onChange={(e) => setForm((f) => ({ ...f, gitlawb_repo: e.target.value }))} />
+                    </div>
+                    {state === "error" && <p className="reg-form-error">{msg}</p>}
+                    <button type="submit" className="reg-submit-btn" disabled={state === "loading"}>
+                      {state === "loading" ? "Submitting…" : "Submit via Gitlawb"}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <form className="reg-verify-form" onSubmit={submit}>
+                  <div className="reg-field">
+                    <label>Agent Name</label>
+                    <input type="text" placeholder="e.g. Bankr" value={form.agent_name}
+                      onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))} required />
+                  </div>
+                  <div className="reg-field">
+                    <label>Wallet Address</label>
+                    <input type="text" placeholder="0x…" value={form.wallet_address}
+                      onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))} required />
+                  </div>
+                  <div className="reg-field">
+                    <label>X / Twitter Handle <span className="reg-field-opt">(optional)</span></label>
+                    <input type="text" placeholder="@handle" value={form.x_handle}
+                      onChange={(e) => setForm((f) => ({ ...f, x_handle: e.target.value }))} />
+                  </div>
+                  <div className="reg-field">
+                    <label>Notes <span className="reg-field-opt">(optional)</span></label>
+                    <textarea placeholder="Wallet role, ecosystem, anything we should know…" rows={3}
+                      value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+                  </div>
+                  {state === "error" && <p className="reg-form-error">{msg}</p>}
+                  <button type="submit" className="reg-submit-btn" disabled={state === "loading"}>
+                    {state === "loading" ? "Submitting…" : "Submit for Verification"}
+                  </button>
+                </form>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -801,6 +954,14 @@ export default function RegistryPage() {
                                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                               </svg>
                             </a>
+                            {a.gitlawbRepo && (
+                              <a href={a.gitlawbRepo} target="_blank" rel="noreferrer" className="reg-gitlawb-badge" title="Wallet declared via Gitlawb repo">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                                Gitlawb
+                              </a>
+                            )}
                           </div>
                           <div className="reg-agent-sym">{a.symbol}</div>
                         </div>
