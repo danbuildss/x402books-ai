@@ -1,35 +1,41 @@
-// $XBOOKS token balance checker and tier calculator.
-// Uses Alchemy alchemy_getTokenBalances — no ABI encoding needed.
+// $LUCA token balance checker and tier calculator.
+// $LUCA is the unified ecosystem token for Luca and x402Books AI.
+// Contract on Base: 0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
 
-export type XBooksTier = "free" | "holder" | "whale";
+export type LucaTier = "free" | "holder" | "whale";
 
-export const TIER_LIMITS: Record<XBooksTier, number> = {
+export const TIER_LIMITS: Record<LucaTier, number> = {
   free:   100,
   holder: 500,
   whale:  2_000,
 };
 
 export const TIER_THRESHOLDS = {
-  holder: 1_000,   // ≥1,000 XBOOKS
-  whale:  10_000,  // ≥10,000 XBOOKS
+  holder: 1_000,   // ≥1,000 $LUCA
+  whale:  10_000,  // ≥10,000 $LUCA
 };
 
-export const TIER_LABELS: Record<XBooksTier, string> = {
+export const TIER_LABELS: Record<LucaTier, string> = {
   free:   "Free",
-  holder: "Holder",
-  whale:  "Whale",
+  holder: "LUCA Holder",
+  whale:  "LUCA Whale",
 };
+
+export const LUCA_TOKEN_ADDRESS = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 
 // 1-hour in-memory balance cache keyed by wallet address
 const balanceCache = new Map<string, { balance: number; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1_000; // 1 hour
 
-export async function getXBooksBalance(walletAddress: string): Promise<number> {
+export async function getLucaBalance(walletAddress: string): Promise<number> {
   const addr = walletAddress.toLowerCase();
   const cached = balanceCache.get(addr);
   if (cached && Date.now() - cached.ts < CACHE_TTL) return cached.balance;
 
-  const tokenAddress = process.env.XBOOKS_TOKEN_ADDRESS ?? "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+  const tokenAddress =
+    process.env.LUCA_TOKEN_ADDRESS ??
+    process.env.XBOOKS_TOKEN_ADDRESS ?? // backward compat during env migration
+    LUCA_TOKEN_ADDRESS;
   const apiKey = process.env.ALCHEMY_API_KEY;
 
   if (!apiKey) return 0;
@@ -60,8 +66,7 @@ export async function getXBooksBalance(walletAddress: string): Promise<number> {
 
     const data = await res.json() as AlchemyBalanceResult;
     const hex = data.result?.tokenBalances?.[0]?.tokenBalance ?? "0x0";
-    // XBOOKS uses 18 decimals (standard ERC-20)
-    const decimals = parseInt(process.env.XBOOKS_TOKEN_DECIMALS ?? "18", 10);
+    const decimals = 18; // $LUCA is standard ERC-20 with 18 decimals
     const raw = BigInt(hex === "0x" ? "0x0" : hex);
     const balance = Number(raw) / 10 ** decimals;
 
@@ -72,13 +77,13 @@ export async function getXBooksBalance(walletAddress: string): Promise<number> {
   }
 }
 
-export function balanceToTier(balance: number): XBooksTier {
+export function balanceToTier(balance: number): LucaTier {
   if (balance >= TIER_THRESHOLDS.whale) return "whale";
   if (balance >= TIER_THRESHOLDS.holder) return "holder";
   return "free";
 }
 
-export async function getWalletTier(walletAddress: string): Promise<{ tier: XBooksTier; balance: number }> {
-  const balance = await getXBooksBalance(walletAddress);
+export async function getWalletTier(walletAddress: string): Promise<{ tier: LucaTier; balance: number }> {
+  const balance = await getLucaBalance(walletAddress);
   return { tier: balanceToTier(balance), balance };
 }

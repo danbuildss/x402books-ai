@@ -17,7 +17,7 @@ type EcosystemTab = (typeof ECOSYSTEM_TABS)[number];
 const BANKR_SYMBOLS = new Set(["BNKR", "BANKR"]);
 const VIRTUALS_SYMBOLS = new Set([
   "VIRTUAL", "VIRTUALS", "LUNA", "AIXBT", "GAME", "VADER", "CLANKER",
-  "SEKOIA", "ACOLYT", "SPORE", "MISATO", "LMAO", "NOOK", "CRED", "XBOOKS", "DEGEN", "MOCA",
+  "SEKOIA", "ACOLYT", "SPORE", "MISATO", "LMAO", "NOOK", "CRED", "LUCA", "DEGEN", "MOCA",
 ]);
 const STABLE_SYMBOLS = new Set(["USDC", "USDT", "DAI", "EURC"]);
 

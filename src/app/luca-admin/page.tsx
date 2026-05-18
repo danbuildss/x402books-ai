@@ -134,7 +134,7 @@ const queue = [
 const policies = [
   "Only Dan can publish to X or approve Bankr write actions.",
   "Public users can ask questions, request reports, and audit their own wallets.",
-  "$XBOOKS powers the platform. $LUCA represents Luca's community and agent identity.",
+  "$LUCA is the unified ecosystem token powering Luca and x402Books AI.",
   "Wallets are never called official unless verified by evidence.",
 ];
 

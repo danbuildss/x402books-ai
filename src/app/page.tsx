@@ -133,20 +133,20 @@ const FAQ_ITEMS = [
     a: "No. x402Books AI is read-only. It analyzes public onchain wallet activity and does not custody funds, request private keys, or move assets from your wallet.",
   },
   {
-    q: "What role does $XBOOKS play?",
-    a: "$XBOOKS is the utility token for the x402Books ecosystem. It is designed to unlock premium features, discounted API usage, advanced reports, deep scans, and future agent-facing financial intelligence services.",
+    q: "What role does $LUCA play?",
+    a: "$LUCA is the unified ecosystem token for Luca and x402Books AI. Hold $LUCA to unlock higher API limits, premium reports, agent financial registry access, and future agent intelligence credits.",
   },
 ];
 
-const XBOOKS_CA      = "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+const LUCA_CA        = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const BANKR_WALLET   = "0xb98f0de777eea8c481b64e33d3e0066cea38fa91";
 const BANKR_BASE_URL = `https://x402.bankr.bot/${BANKR_WALLET}`;
 
-const XBOOKS_UTILITIES = [
-  { icon: "speed",        title: "Higher API Limits",      body: "Hold ≥1,000 $XBOOKS → 500 req/day. Hold ≥10,000 → 2,000 req/day. Free tier stays at 100." },
-  { icon: "picture_as_pdf", title: "Premium Reports",     body: "Unlock PDF exports, full history exports, and deep wallet scans with $XBOOKS." },
-  { icon: "vpn_key",      title: "30% API Discount",       body: "Pay for API calls in $XBOOKS and get 30% off every request versus USDC pricing." },
-  { icon: "smart_toy",    title: "Agent Payments",         body: "AI agents pay $XBOOKS directly to access financial intelligence — no human in the loop." },
+const LUCA_UTILITIES = [
+  { icon: "speed",          title: "Higher API Limits",          body: "Hold ≥1,000 $LUCA → 500 req/day. Hold ≥10,000 $LUCA → 2,000 req/day. Free tier stays at 100." },
+  { icon: "picture_as_pdf", title: "Premium Reports",            body: "Unlock PDF exports, full history exports, and deep wallet scans with $LUCA." },
+  { icon: "manage_accounts", title: "Agent Financial Registry",  body: "Verify your agent, unlock profile features, and access premium registry intelligence with $LUCA." },
+  { icon: "smart_toy",      title: "Agent Intelligence Credits", body: "AI agents pay $LUCA directly to access financial intelligence endpoints — programmatic, no human in the loop." },
 ];
 
 const X402_ENDPOINTS = [
@@ -162,13 +162,13 @@ function XBooksUtilities() {
     <section className="lp-section lp-section-alt" id="xbooks-utility">
       <FadeContent delay={60}>
         <div className="lp-section-head">
-          <p className="lp-section-label">$XBOOKS Utility</p>
-          <h2 className="lp-h2">Hold $XBOOKS. Pay less. Do more.</h2>
-          <p className="lp-section-sub">$XBOOKS is not speculative — it is the economic layer of x402Books AI. Every feature, every discount, every limit upgrade is powered by the token.</p>
+          <p className="lp-section-label">$LUCA Utility</p>
+          <h2 className="lp-h2">Hold $LUCA. Pay less. Do more.</h2>
+          <p className="lp-section-sub">$LUCA powers Luca and x402Books AI. Every feature, every limit upgrade, and every agent intelligence credit is powered by $LUCA.</p>
         </div>
       </FadeContent>
       <div className="lp-features-grid">
-        {XBOOKS_UTILITIES.map((u, i) => (
+        {LUCA_UTILITIES.map((u, i) => (
           <FadeContent key={u.title} delay={i * 60}>
             <div className="lp-feature-card">
               <span className="lp-feature-icon">
@@ -201,7 +201,7 @@ function X402ApiSection() {
           <div className="lp-x402-table-head">
             <span>Endpoint</span>
             <span>USDC</span>
-            <span>$XBOOKS</span>
+            <span>$LUCA</span>
           </div>
           {X402_ENDPOINTS.map((ep) => (
             <a
@@ -223,7 +223,7 @@ function X402ApiSection() {
             </a>
           ))}
           <div className="lp-x402-table-foot">
-            <span>30% discount when paying with $XBOOKS</span>
+            <span>30% discount when paying with $LUCA</span>
             <a href={`https://bankr.bot/x402`} target="_blank" rel="noreferrer" className="lp-x402-bankr-link">
               View on BANKR ↗
             </a>
@@ -340,7 +340,7 @@ function XBooksTokenSection() {
   const fetchToken = useCallback(async () => {
     try {
       const res = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${XBOOKS_CA}`,
+        `https://api.dexscreener.com/latest/dex/tokens/${LUCA_CA}`,
         { signal: AbortSignal.timeout(6_000) },
       );
       if (!res.ok) return;
@@ -369,7 +369,7 @@ function XBooksTokenSection() {
         change24h: pair.priceChange?.h24 ?? 0,
         mcap: pair.marketCap ?? pair.fdv ?? 0,
         volume24h: pair.volume?.h24 ?? 0,
-        dexUrl: pair.url ?? `https://dexscreener.com/base/${XBOOKS_CA}`,
+        dexUrl: pair.url ?? `https://dexscreener.com/base/${LUCA_CA}`,
       });
     } catch { /* silent — live data, not critical */ }
   }, []);
@@ -381,14 +381,14 @@ function XBooksTokenSection() {
   }, [fetchToken]);
 
   useEffect(() => {
-    fetch(`/api/token/chart?address=${XBOOKS_CA}`)
+    fetch(`/api/token/chart?address=${LUCA_CA}`)
       .then((r) => r.json())
       .then((d: { prices?: SparkPoint[] }) => { if (d.prices?.length) setSpark(d.prices); })
       .catch(() => { /* silent */ });
   }, []);
 
   function copy() {
-    navigator.clipboard.writeText(XBOOKS_CA).then(() => {
+    navigator.clipboard.writeText(LUCA_CA).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -401,16 +401,16 @@ function XBooksTokenSection() {
       <div className="lp-token-card">
         {/* Left — identity */}
         <div className="lp-token-left">
-          <p className="lp-token-eyebrow">Utility Token · Base</p>
-          <h2 className="lp-token-name">$XBOOKS</h2>
+          <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
+          <h2 className="lp-token-name">$LUCA</h2>
           <p className="lp-token-desc">
-            The economic layer of x402Books AI. Hold $XBOOKS to unlock higher API limits,
-            premium reports, and agent-facing financial intelligence.
+            The unified ecosystem token for Luca and x402Books AI. Hold $LUCA to unlock higher API limits,
+            premium reports, Agent Financial Registry access, and agent intelligence credits.
           </p>
 
           <div className="lp-token-ca">
             <span className="lp-token-ca-label">CA</span>
-            <span className="lp-token-ca-addr">{XBOOKS_CA}</span>
+            <span className="lp-token-ca-addr">{LUCA_CA}</span>
             <button type="button" className="lp-token-ca-copy" onClick={copy} title="Copy contract address">
               <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
                 {copied ? "check" : "content_copy"}
@@ -420,15 +420,15 @@ function XBooksTokenSection() {
 
           <div className="lp-token-links">
             <a
-              href={token?.dexUrl ?? `https://dexscreener.com/base/${XBOOKS_CA}`}
+              href={token?.dexUrl ?? `https://dexscreener.com/base/${LUCA_CA}`}
               target="_blank"
               rel="noreferrer"
               className="lp-token-link lp-token-link-primary"
             >
-              Buy $XBOOKS
+              Buy $LUCA
             </a>
             <a
-              href={token?.dexUrl ?? `https://dexscreener.com/base/${XBOOKS_CA}`}
+              href={token?.dexUrl ?? `https://dexscreener.com/base/${LUCA_CA}`}
               target="_blank"
               rel="noreferrer"
               className="lp-token-link lp-token-link-ghost"
@@ -745,10 +745,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── $XBOOKS utilities ── */}
+      {/* ── $LUCA utilities ── */}
       <XBooksUtilities />
 
-      {/* ── $XBOOKS token ── */}
+      {/* ── $LUCA token ── */}
       <XBooksTokenSection />
 
       {/* ── x402 API endpoints ── */}

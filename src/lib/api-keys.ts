@@ -1,7 +1,7 @@
 // API key management: generation, validation, rate limiting, usage logging.
 
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-import { type XBooksTier, TIER_LIMITS, getWalletTier } from "@/lib/xbooks-token";
+import { type LucaTier, TIER_LIMITS, getWalletTier } from "@/lib/luca-token";
 
 const KEY_PREFIX = "xb_live_";
 
@@ -30,7 +30,7 @@ export type ApiKeyRecord = {
   key_prefix: string;
   name: string;
   is_active: boolean;
-  tier: XBooksTier;
+  tier: LucaTier;
   rate_limit_per_day: number;
   requests_today: number;
   requests_total: number;
@@ -72,7 +72,7 @@ export async function createApiKey(name = "Default"): Promise<{ key: string; rec
 export type ValidatedKey = {
   id: string;
   name: string;
-  tier: XBooksTier;
+  tier: LucaTier;
   rate_limit_per_day: number;
 };
 
@@ -102,11 +102,11 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
   const limit: number = data.rate_limit_per_day;
 
   if (count >= limit) {
-    const tier = (data.tier ?? "free") as XBooksTier;
+    const tier = (data.tier ?? "free") as LucaTier;
     const upgradeHint = tier === "free"
-      ? " Hold ≥1,000 $XBOOKS and link your wallet on /developer to upgrade to 500/day."
+      ? " Hold ≥1,000 $LUCA and link your wallet on /developer to upgrade to 500/day."
       : tier === "holder"
-        ? " Hold ≥10,000 $XBOOKS to upgrade to 2,000/day."
+        ? " Hold ≥10,000 $LUCA to upgrade to 2,000/day."
         : "";
     return {
       ok: false,
@@ -120,7 +120,7 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
     key: {
       id: data.id,
       name: data.name,
-      tier: (data.tier ?? "free") as XBooksTier,
+      tier: (data.tier ?? "free") as LucaTier,
       rate_limit_per_day: limit,
     },
   };
@@ -188,7 +188,7 @@ export async function revokeApiKey(id: string): Promise<boolean> {
 export async function linkWalletToKey(
   keyId: string,
   walletAddress: string,
-): Promise<{ tier: XBooksTier; balance: number } | null> {
+): Promise<{ tier: LucaTier; balance: number } | null> {
   if (!hasSupabaseAdminEnv()) return null;
 
   const { tier, balance } = await getWalletTier(walletAddress);

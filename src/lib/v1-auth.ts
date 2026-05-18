@@ -18,7 +18,8 @@ export type V1AuthFail = {
 export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
   // BANKR x402 Cloud handlers authenticate with a shared internal secret
   const internalSecret = request.headers.get("x-internal-secret");
-  if (internalSecret && process.env.XBOOKS_INTERNAL_SECRET && internalSecret === process.env.XBOOKS_INTERNAL_SECRET) {
+  const platformSecret = process.env.X402BOOKS_INTERNAL_SECRET ?? process.env.XBOOKS_INTERNAL_SECRET;
+  if (internalSecret && platformSecret && internalSecret === platformSecret) {
     return {
       ok: true,
       keyId: "bankr-x402",
