@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+import { ThemeToggle } from "@/components/effects";
 import {
   formatCategory,
   formatUsdc,
@@ -223,10 +224,13 @@ export function StitchShell({ children }: { children: ReactNode }) {
 
         <div className="stitch-sidebar-panel">
           <div className="stitch-sidebar-panel-row">
-            <span className="stitch-user-name">{displayName}</span>
+            <ThemeToggle />
             <button type="button" className="stitch-signout" onClick={handleSignOut}>
               <StitchIcon name="logout" /> Sign out
             </button>
+          </div>
+          <div className="stitch-sidebar-panel-row" style={{ paddingTop: 0 }}>
+            <span className="stitch-user-name">{displayName}</span>
           </div>
         </div>
       </aside>
