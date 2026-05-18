@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 
@@ -26,6 +27,7 @@ type Agent = {
   xHandle: string;
   priority: number;            // Luca registry priority score
   lucaNote: string;
+  pfp?: string;                // override avatar URL (defaults to unavatar.io)
 };
 
 const AGENTS: Agent[] = [
@@ -334,6 +336,158 @@ const AGENTS: Agent[] = [
     priority: 60,
     lucaNote: "Sovereign / cultural agent on Base. No wallet found. Official team disclosure and token docs needed.",
   },
+
+  // ── New — Luca Weekly Brief additions ──
+  {
+    name: "x402",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Deployer",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://www.x402.org",
+    xHandle: "@CoinbaseDev",
+    priority: 95,
+    lucaNote: "The x402 payment standard is the strongest strategic signal for agent payments on Base. Not a single-wallet project — strongest as a payments infrastructure layer. No official treasury wallet verified. Watch for: spec updates, SDK releases, merchant/API integrations, MCP and agent-tooling references, demo-to-production movement.",
+  },
+  {
+    name: "GAME by Virtuals",
+    symbol: "$GAME",
+    ecosystem: "Virtuals",
+    wallet: null,
+    role: "Deployer",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://app.virtuals.io",
+    xHandle: "@virtuals_io",
+    priority: 84,
+    lucaNote: "Agent deployment and monetization layer inside the Virtuals ecosystem. Better as a deployment/product signal than a wallet target today. No official GAME wallet verified. Watch: new launch flows, agent creation tooling updates, docs changes, featured ecosystem partners. The signal may be moving from protocol headlines to the actual layer where agents are deployed and monetized.",
+  },
+  {
+    name: "ElizaOS",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Operational",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://elizaos.ai",
+    xHandle: "@elizaOS",
+    priority: 82,
+    lucaNote: "Open agent framework with strong GitHub and docs footprint. High relevance via Coinbase AgentKit overlap — one of the clearest paths from 'AI assistant' to 'AI merchant.' No official treasury/project wallet verified. Watch: GitHub commits/releases, plugin ecosystem growth, Base/CDP/Coinbase integration references, onchain action or payment demos.",
+  },
+  {
+    name: "BorrowGuard",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Fee Recipient",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: null,
+    xHandle: "@0X_BankrGuard",
+    priority: 78,
+    lucaNote: "BorrowGuard x402 API launched on Base — read-only wallet risk analysis, collateral scanning, route comparison. Public positioning around pay-per-call risk scoring. No clearly verified treasury or payment wallet surfaced yet. Watch: x402 payment endpoint references, docs/site pricing page, any posted receiver wallet or merchant address. Risk scoring APIs may be one of the first real revenue layers for agents.",
+  },
+  {
+    name: "EZ Labs",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Operational",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: null,
+    xHandle: "@ezlabsbuild",
+    priority: 76,
+    lucaNote: "Public claims of autonomous DEX swaps on Base with pay-per-call agent execution framing and .well-known/agent.json referenced publicly. Good transaction/activity signal. Canonical treasury/payment wallet still unverified. Watch: Basescan tx links, agent manifest endpoint, payment settlement docs, merchant/payment receiver disclosures. Strong 'from chat to execution' content angle.",
+  },
+  {
+    name: "Modulr",
+    symbol: "$MODU",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Token Contract",
+    confidence: "Community",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: null,
+    xHandle: "@Modulr402",
+    priority: 75,
+    lucaNote: "x402-native AI component marketplace. Public launch posts around marketplace progress and $MODU. Project account publicly declared official CA updated across website/X/GitHub — strongest explicit contract-level signal among new additions. Still separate from verified treasury wallet. Watch: official website contract page, GitHub references, checkout/payment receiver path, any merchant wallet disclosure.",
+  },
+  {
+    name: "AgentCash",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Fee Recipient",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://agentcash.dev",
+    xHandle: "@agentcashdev",
+    priority: 74,
+    lucaNote: "Demand-side x402: agents can buy APIs and tools with one balance. Strong agent-payments relevance — one of the cleanest public examples of agents paying for things on Base. No verified official treasury/payment wallet surfaced. Watch: changes to supported APIs/providers, site claims about pay-per-call usage, GitHub/org updates. Best content angle: what agents want to buy, not just how they pay.",
+  },
+  {
+    name: "ChainWard",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Operational",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://chainward.ai",
+    xHandle: "@chainwardai",
+    priority: 73,
+    lucaNote: "Base Agent Observatory — publicly tracks agent wallets, alerting and integration layer for onchain agent activity. Strong monitoring/data angle. No verified ChainWard treasury wallet identified. Useful as an observability layer for Luca: before auditing agents, you need watchtowers. Watch: observatory counts, repo pushes, alerting/integration changes, monitored-wallet count.",
+  },
+  {
+    name: "OpenClaude",
+    symbol: "—",
+    ecosystem: "Base",
+    wallet: null,
+    role: "Deployer",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://openclaude.gitlawb.com",
+    xHandle: "@gitlawb",
+    priority: 71,
+    lucaNote: "Open agent infra stack built on Gitlawb. High relevance: agent identity + wallet declaration could become the missing accounting layer for open agents. Gitlawb public materials and contracts are discoverable but no OpenClaude-specific verified treasury or revenue wallet confirmed. Watch: repo pushes/stars, Gitlawb stack updates, wallet declaration standards in Gitlawb repos.",
+  },
+  {
+    name: "LUNA",
+    symbol: "$LUNA",
+    ecosystem: "Virtuals",
+    wallet: "0x55cD6469F597452B5A7536e2CD98fC2AdEa52270",
+    role: "Token Contract",
+    confidence: "Unverified",
+    netFlow: null,
+    txCount: null,
+    health: "Pending",
+    website: "https://app.virtuals.io/virtuals/68",
+    xHandle: "@virtuals_io",
+    priority: 68,
+    lucaNote: "IP agent on Virtuals — candidate token contract from Virtuals app listing (Low confidence). Good case study for IP agents vs functional agents: can Luca explain the financial difference? Wallet ownership not verified. Treat as candidate agent profile, not official wallet mapping. Watch: agent page changes, whitepaper references to LUNA, token/activity changes on the app page.",
+  },
 ];
 
 const walletCount = AGENTS.filter((a) => a.wallet !== null).length;
@@ -348,6 +502,29 @@ const STATS = [
 
 function truncate(addr: string) {
   return addr.slice(0, 6) + "…" + addr.slice(-4);
+}
+
+function xPfpUrl(handle: string) {
+  return `https://unavatar.io/x/${handle.replace("@", "")}`;
+}
+
+function AgentAvatar({ agent }: { agent: Agent }) {
+  const [failed, setFailed] = useState(false);
+  const src = agent.pfp ?? xPfpUrl(agent.xHandle);
+  if (failed) {
+    return <div className="reg-agent-avatar">{agent.name[0]}</div>;
+  }
+  return (
+    <Image
+      src={src}
+      alt={agent.name}
+      width={32}
+      height={32}
+      className="reg-agent-avatar reg-agent-avatar-img"
+      onError={() => setFailed(true)}
+      unoptimized
+    />
+  );
 }
 
 function ConfidenceBadge({ c }: { c: Confidence }) {
@@ -610,7 +787,7 @@ export default function RegistryPage() {
                   <tr key={a.name}>
                     <td>
                       <div className="reg-agent-cell">
-                        <div className="reg-agent-avatar">{a.name[0]}</div>
+                        <AgentAvatar agent={a} />
                         <div>
                           <div className="reg-agent-name">
                             {a.name}

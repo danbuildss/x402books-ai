@@ -9197,6 +9197,10 @@ html, body {
   color: var(--accent);
   flex-shrink: 0;
 }
+.reg-agent-avatar-img {
+  object-fit: cover;
+  background: var(--surface-2);
+}
 
 .reg-agent-name {
   font-size: 13px;
