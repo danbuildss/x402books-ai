@@ -9793,3 +9793,328 @@ html, body {
 }
 
 .reg-table tbody td:last-child { position: relative; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Agent Financial Registry v1 — Card UI
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Verification status badges */
+.reg-vstatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+.reg-vstatus-candidate     { background: rgba(107,105,96,0.12); color: var(--muted); }
+.reg-vstatus-needs-verify  { background: rgba(180,140,30,0.12); color: #a07f20; }
+.reg-vstatus-verified      { background: var(--accent-soft); color: var(--accent); }
+.reg-vstatus-luca-managed  { background: rgba(59,110,168,0.12); color: var(--blue); }
+
+[data-theme="dark"] .reg-vstatus-needs-verify { color: #c8a040; }
+
+/* Status filter row */
+.reg-status-filter { flex-wrap: wrap; }
+
+/* Cards container */
+.reg-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.reg-empty-cards {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Individual card */
+.reg-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.reg-card:hover { border-color: rgba(109,184,116,0.25); }
+.reg-card.expanded {
+  border-color: rgba(109,184,116,0.3);
+  box-shadow: 0 2px 12px rgba(109,184,116,0.06);
+}
+
+/* Card header — the clickable row */
+.reg-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--ink);
+  transition: background 0.1s;
+}
+.reg-card-header:hover { background: var(--surface-soft); }
+.reg-card.expanded .reg-card-header { background: var(--surface-soft); }
+
+.reg-card-name-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
+  flex: 0 0 auto;
+}
+.reg-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.reg-card-sym {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.reg-gitlawb-dot {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.reg-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.reg-card-score-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 36px;
+  flex-shrink: 0;
+}
+.reg-score-hint-val {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.reg-score-hint-label {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.reg-card-chevron {
+  font-size: 18px;
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.reg-card.expanded .reg-card-chevron { transform: rotate(180deg); }
+
+/* Expanded body */
+.reg-card-body {
+  border-top: 1px solid var(--line);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Links row */
+.reg-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.reg-card-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+}
+.reg-card-link:hover { border-color: var(--accent); color: var(--accent); }
+.reg-card-link-bankr { color: #e85d26; }
+.reg-card-link-bankr:hover { border-color: #e85d26; color: #e85d26; }
+.reg-card-link-gitlawb { color: var(--muted); }
+.reg-card-link-gitlawb:hover { border-color: var(--muted); color: var(--ink); }
+
+/* Sections within body */
+.reg-card-section { display: flex; flex-direction: column; gap: 6px; }
+.reg-card-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Wallet rows */
+.reg-card-wallet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.reg-wallet-label-pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.reg-wallet-candidate         { background: rgba(107,105,96,0.1); color: var(--muted); }
+.reg-wallet-verified-wallet   { background: var(--accent-soft); color: var(--accent); }
+.reg-wallet-likely-treasury   { background: rgba(59,110,168,0.1); color: var(--blue); }
+.reg-wallet-likely-revenue-wallet { background: rgba(90,158,96,0.1); color: var(--money); }
+.reg-wallet-likely-fee-recipient  { background: rgba(180,140,30,0.1); color: #a07f20; }
+.reg-wallet-likely-expense-wallet { background: rgba(138,58,56,0.1); color: var(--rose); }
+.reg-wallet-unknown-role      { background: rgba(107,105,96,0.1); color: var(--muted); }
+.reg-wallet-token-contract    { background: rgba(59,110,168,0.08); color: var(--blue); }
+
+[data-theme="dark"] .reg-wallet-likely-fee-recipient { color: #c8a040; }
+
+.reg-wallet-addr {
+  font-family: monospace;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.reg-wallet-addr:hover { opacity: 0.75; }
+.reg-wallet-note { font-size: 11px; color: var(--muted); }
+
+.reg-card-no-wallet {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Score bars */
+.reg-score-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.reg-score-label {
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 130px;
+  flex-shrink: 0;
+}
+.reg-score-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-soft);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.reg-score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.reg-score-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  min-width: 28px;
+  text-align: right;
+}
+.reg-card-last-checked {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Evidence sources */
+.reg-card-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.reg-source-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* Outreach status */
+.reg-outreach-pill {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.reg-outreach-not-started { background: rgba(107,105,96,0.1); color: var(--muted); }
+.reg-outreach-in-progress { background: rgba(180,140,30,0.1); color: #a07f20; }
+.reg-outreach-connected   { background: var(--accent-soft); color: var(--accent); }
+[data-theme="dark"] .reg-outreach-in-progress { color: #c8a040; }
+
+/* Luca's notes */
+.reg-card-notes {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Safe footer */
+.reg-card-footer-note {
+  font-size: 11px;
+  color: var(--muted);
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  line-height: 1.55;
+}
+.reg-card-footer-note a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.reg-card-footer-note a:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .reg-card-header { gap: 8px; padding: 10px 10px; }
+  .reg-card-name-group { min-width: 80px; }
+  .reg-card-badges { gap: 4px; }
+  .reg-card-score-hint { display: none; }
+  .reg-score-label { min-width: 110px; font-size: 11px; }
+  .reg-status-filter { display: none; }
+}

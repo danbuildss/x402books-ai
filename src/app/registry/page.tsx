@@ -5,1203 +5,23 @@ import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
+import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
+import { AGENTS } from "./data";
 
-// ── Agent data — sourced by Luca (Phase 1 + 2 research) ──────────────────────
+// ── Computed stats ────────────────────────────────────────────────────────────
 
-type WalletRole = "Treasury" | "Operational" | "Deployer" | "Token Contract" | "Fee Recipient";
-type Confidence = "Verified" | "Community" | "Unverified";
-type Ecosystem  = "BANKR" | "Virtuals" | "Base";
-type Health     = "Healthy" | "Stable" | "Watch" | "At Risk" | "Pending";
-
-type Agent = {
-  name: string;
-  symbol: string;
-  ecosystem: Ecosystem;
-  wallet: string | null;       // null = wallet discovery pending
-  role: WalletRole;
-  confidence: Confidence;
-  netFlow: string | null;      // from Luca x402Books spot-checks
-  txCount: number | null;
-  health: Health;
-  website: string | null;
-  xHandle: string;
-  priority: number;            // Luca registry priority score
-  lucaNote: string;
-  pfp?: string;                // override avatar URL (defaults to unavatar.io)
-  gitlawbRepo?: string;        // repo URL if wallet declared via .x402books/wallets.json
-};
-
-const AGENTS: Agent[] = [
-  // ── Tier 1 ──
-  {
-    name: "Bankr",
-    symbol: "$BNKR",
-    ecosystem: "BANKR",
-    wallet: "0x136471a34f6ef19fE571ECE32092d827f70b42b3",
-    role: "Treasury",
-    confidence: "Community",
-    netFlow: null,
-    txCount: 0,
-    health: "Pending",
-    website: "https://bankr.bot",
-    xHandle: "@bankrbot",
-    priority: 94,
-    lucaNote: "Two candidates found. Primary: 0x1364…42b3 — BNKR Staking V2 Vault, publicly referenced on X (Medium). Secondary: 0xa2d9…b417 — creator fee-beneficiary example in a Bankr launch flow (Low — likely a user wallet, not protocol treasury). 0 tx in 30d snapshot on vault. Missing: official treasury wallet, multisig/Safe, clear separation of protocol-owned vs user-created fee recipients. Next step: cluster fee-routing patterns from vault + recurring launch destinations, then ask Bankr team to verify main treasury.",
-  },
-  {
-    name: "Virtuals Protocol",
-    symbol: "$VIRTUAL",
-    ecosystem: "Virtuals",
-    wallet: "0x0b3e328455c4059EEb9e3f84b5543F74E24e7E1b",
-    role: "Token Contract",
-    confidence: "Community",
-    netFlow: "+$284.96",
-    txCount: 89,
-    health: "Stable",
-    website: "https://app.virtuals.io",
-    xHandle: "@virtuals_io",
-    priority: 92,
-    lucaNote: "$VIRTUAL token contract on Base — verified by Coinbase Markets (High). Not a treasury wallet. Missing: protocol treasury, governance wallet/multisig, EconomyOS protocol-owned reserve wallets. Next step: search Virtuals docs/governance for treasury, multisig, Safe, or reserve references — then link to token contract and official docs.",
-  },
-  {
-    name: "Clanker",
-    symbol: "$CLANK",
-    ecosystem: "Base",
-    wallet: "0x750e224756e6831f41568701f1e12267a86a5ba3",
-    role: "Fee Recipient",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://www.clanker.world",
-    xHandle: "@clanker_world",
-    priority: 88,
-    lucaNote: "Example Clanker-launched token contract (Low). Clanker Ecosystem Fund (CEF) referenced publicly but no stable treasury address found. No central treasury confirmed. Next step: inspect admin/claim flow and identify recurring protocol-level fee receivers.",
-  },
-  {
-    name: "Gitlawb",
-    symbol: "$GITLAWB",
-    ecosystem: "Base",
-    wallet: "0x5F980Dcfc4c0fa3911554cf5ab288ed0eb13DBa3",
-    role: "Token Contract",
-    confidence: "Community",
-    netFlow: "+$521.58",
-    txCount: 48,
-    health: "Stable",
-    website: "https://playground.gitlawb.com",
-    xHandle: "@gitlawb",
-    priority: 86,
-    lucaNote: "$GITLAWB token contract — strong public attribution on X (High). Not proof of treasury control. Treasury claims exist on X but no direct wallet proof. Missing: official treasury wallet, repo declaration file, DID-to-wallet mapping. Next step: inspect Gitlawb public repos/docs for .x402books/wallets.json or wallet declarations, then request signed proof for main treasury or operator wallet.",
-    gitlawbRepo: "https://github.com/gitlawb",
-  },
-
-  // ── Tier 2 ──
-  {
-    name: "Autonolas",
-    symbol: "$OLAS",
-    ecosystem: "Base",
-    wallet: "0xc9F5D4Ee2BEdAB0f1Bc6be4c7571D8e4ee5ed3E6",
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://olas.network",
-    xHandle: "@autonolas",
-    priority: 83,
-    lucaNote: "Community-referenced Omenstrat / Pearl strategy contract. Not an official treasury. DAO/multisig docs needed.",
-  },
-  {
-    name: "Primer Systems",
-    symbol: "$PR",
-    ecosystem: "Base",
-    wallet: "0x7f0d834705f6e991edce01b739b067bdd5d0eb1b",
-    role: "Deployer",
-    confidence: "Community",
-    netFlow: "+$0.018",
-    txCount: 1,
-    health: "Watch",
-    website: "https://primer.systems",
-    xHandle: "@primer_systems",
-    priority: 82,
-    lucaNote: "Two candidates found — strongest wallet-level lead in the top 5. Primary: 0x7f0d…eb1b — deployer + fee-recipient for Primer Pay (Medium, public attribution). Secondary: 0x437E…7b07 — Primer Pay contract itself (Medium). x402Books spot-check: 1 tx / +$0.018 on deployer. Missing: official treasury wallet, full facilitator settlement wallet list, confirmation deployer is still protocol-active. Next step: trace all onchain interactions from Primer Pay contract + deployer, look for recurring settlement/fee-routing, then request team confirmation for treasury + facilitator wallet.",
-  },
-  {
-    name: "Coinbase AgentKit",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: "0x7D15B47a27d40F6A85a14Ceb634A124F43425cc6",
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: 5,
-    health: "Pending",
-    website: null,
-    xHandle: "@CoinbaseDev",
-    priority: 82,
-    lucaNote: "WAGENT contract — AgentKit + x402 ecosystem example. Not a Coinbase treasury. Official demo wallet still needed.",
-  },
-  {
-    name: "OpenGradient",
-    symbol: "$OPG",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://www.opengradient.ai",
-    xHandle: "@OpenGradient",
-    priority: 78,
-    lucaNote: "No treasury wallet found yet. Explorer at explorer.opengradient.ai. Governance/foundation docs needed.",
-  },
-  {
-    name: "Nookplot",
-    symbol: "$NOOK",
-    ecosystem: "Base",
-    wallet: "0xb233bdffd437e60fa451f62c6c09d3804d285ba3",
-    role: "Token Contract",
-    confidence: "Community",
-    netFlow: "+$0.24",
-    txCount: 27,
-    health: "Watch",
-    website: "https://nookplot.com",
-    xHandle: "@nookplot",
-    priority: 78,
-    lucaNote: "$NOOK token contract — strong public attribution on X (High). Not a treasury wallet. Public narrative references settlement, staking, and guild treasury mechanics. Missing: guild treasury addresses, reward distribution wallets, staking contract mapping, protocol treasury wallet. Next step: inspect Nookplot docs/app flows for guild treasury, staking contracts, reward distribution — then map into treasury/rewards/settlement roles.",
-  },
-
-  // ── Tier 3 ──
-  {
-    name: "Venice",
-    symbol: "$VVV",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@AskVenice",
-    priority: 74,
-    lucaNote: "Inference / agent infra. No treasury wallet found in public search. Official docs and x402 endpoints needed.",
-  },
-  {
-    name: "Ethy",
-    symbol: "$ETHY",
-    ecosystem: "Virtuals",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@ethy_agent",
-    priority: 74,
-    lucaNote: "Virtuals trading agent. No wallet found. Virtuals dashboard references and agent-linked disclosures needed.",
-  },
-  {
-    name: "aixbt",
-    symbol: "$AIXBT",
-    ecosystem: "Virtuals",
-    wallet: "0xCBD656Bf982aB86523E851a1Fc518653344beb07",
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://aixbt.tech",
-    xHandle: "@aixbt_agent",
-    priority: 73,
-    lucaNote: "Low-confidence address from public threads. More commentary/intelligence than transparent treasury. @aixbt_labs attestation needed.",
-  },
-  {
-    name: "Xyber",
-    symbol: "$XYBER",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Fee Recipient",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@Xyberinc",
-    priority: 72,
-    lucaNote: "Agent abilities marketplace on Base. No wallet found. Marketplace payment routes and official docs needed.",
-  },
-  {
-    name: "PeptAI",
-    symbol: "$PEPT",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@peptai_",
-    priority: 72,
-    lucaNote: "Autonomous science agents / x402. No wallet found. Agent payment flow disclosures and official docs needed.",
-  },
-  {
-    name: "Helixa",
-    symbol: "$CRED",
-    ecosystem: "BANKR",
-    wallet: "0xab3f23c2abcb4e12cc8b593c218a7ba64ed17ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://synagent.helixa.xyz/cred-bureau",
-    xHandle: "@QuigleyNFT",
-    priority: 75,
-    lucaNote: "Agent identity / reputation via Cred Bureau. No treasury wallet found. Onchain cred flows and signed proof needed.",
-  },
-  {
-    name: "FractionAI",
-    symbol: "$FRAC",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@FractionAI_xyz",
-    priority: 72,
-    lucaNote: "Agent training on Base. No wallet found. App docs and agent deployment disclosures needed.",
-  },
-  {
-    name: "Otto AI",
-    symbol: "$OTTO",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@useOttoAI",
-    priority: 68,
-    lucaNote: "Agent swarms / x402. No wallet found. Official app and x402 flow disclosures needed.",
-  },
-  {
-    name: "Sibyl",
-    symbol: "$SIBYL",
-    ecosystem: "Virtuals",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@sibylcap",
-    priority: 66,
-    lucaNote: "Virtuals / agent memory. No wallet found. Virtuals-linked disclosures and official docs needed.",
-  },
-  {
-    name: "Elsa",
-    symbol: "$ELSA",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@HeyElsaAI",
-    priority: 66,
-    lucaNote: "DeFAI / x402 agent. No wallet found. Product docs and x402 endpoint disclosures needed.",
-  },
-  {
-    name: "Freysa",
-    symbol: "$FAI",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Treasury",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@freysa_ai",
-    priority: 60,
-    lucaNote: "Sovereign / cultural agent on Base. No wallet found. Official team disclosure and token docs needed.",
-  },
-
-  // ── New — Luca Weekly Brief additions ──
-  {
-    name: "x402",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Deployer",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://www.x402.org",
-    xHandle: "@CoinbaseDev",
-    priority: 95,
-    lucaNote: "The x402 payment standard is the strongest strategic signal for agent payments on Base. Not a single-wallet project — strongest as a payments infrastructure layer. No official treasury wallet verified. Watch for: spec updates, SDK releases, merchant/API integrations, MCP and agent-tooling references, demo-to-production movement.",
-  },
-  {
-    name: "GAME by Virtuals",
-    symbol: "$GAME",
-    ecosystem: "Virtuals",
-    wallet: null,
-    role: "Deployer",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://app.virtuals.io",
-    xHandle: "@virtuals_io",
-    priority: 84,
-    lucaNote: "Agent deployment and monetization layer inside the Virtuals ecosystem. Better as a deployment/product signal than a wallet target today. No official GAME wallet verified. Watch: new launch flows, agent creation tooling updates, docs changes, featured ecosystem partners. The signal may be moving from protocol headlines to the actual layer where agents are deployed and monetized.",
-  },
-  {
-    name: "ElizaOS",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://elizaos.ai",
-    xHandle: "@elizaOS",
-    priority: 82,
-    lucaNote: "Open agent framework with strong GitHub and docs footprint. High relevance via Coinbase AgentKit overlap — one of the clearest paths from 'AI assistant' to 'AI merchant.' No official treasury/project wallet verified. Watch: GitHub commits/releases, plugin ecosystem growth, Base/CDP/Coinbase integration references, onchain action or payment demos.",
-  },
-  {
-    name: "BorrowGuard",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Fee Recipient",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@0X_BankrGuard",
-    priority: 78,
-    lucaNote: "BorrowGuard x402 API launched on Base — read-only wallet risk analysis, collateral scanning, route comparison. Public positioning around pay-per-call risk scoring. No clearly verified treasury or payment wallet surfaced yet. Watch: x402 payment endpoint references, docs/site pricing page, any posted receiver wallet or merchant address. Risk scoring APIs may be one of the first real revenue layers for agents.",
-  },
-  {
-    name: "EZ Labs",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@ezlabsbuild",
-    priority: 76,
-    lucaNote: "Public claims of autonomous DEX swaps on Base with pay-per-call agent execution framing and .well-known/agent.json referenced publicly. Good transaction/activity signal. Canonical treasury/payment wallet still unverified. Watch: Basescan tx links, agent manifest endpoint, payment settlement docs, merchant/payment receiver disclosures. Strong 'from chat to execution' content angle.",
-  },
-  {
-    name: "Modulr",
-    symbol: "$MODU",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Token Contract",
-    confidence: "Community",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: null,
-    xHandle: "@Modulr402",
-    priority: 75,
-    lucaNote: "x402-native AI component marketplace. Public launch posts around marketplace progress and $MODU. Project account publicly declared official CA updated across website/X/GitHub — strongest explicit contract-level signal among new additions. Still separate from verified treasury wallet. Watch: official website contract page, GitHub references, checkout/payment receiver path, any merchant wallet disclosure.",
-  },
-  {
-    name: "AgentCash",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Fee Recipient",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://agentcash.dev",
-    xHandle: "@agentcashdev",
-    priority: 74,
-    lucaNote: "Demand-side x402: agents can buy APIs and tools with one balance. Strong agent-payments relevance — one of the cleanest public examples of agents paying for things on Base. No verified official treasury/payment wallet surfaced. Watch: changes to supported APIs/providers, site claims about pay-per-call usage, GitHub/org updates. Best content angle: what agents want to buy, not just how they pay.",
-  },
-  {
-    name: "ChainWard",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Operational",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://chainward.ai",
-    xHandle: "@chainwardai",
-    priority: 73,
-    lucaNote: "Base Agent Observatory — publicly tracks agent wallets, alerting and integration layer for onchain agent activity. Strong monitoring/data angle. No verified ChainWard treasury wallet identified. Useful as an observability layer for Luca: before auditing agents, you need watchtowers. Watch: observatory counts, repo pushes, alerting/integration changes, monitored-wallet count.",
-  },
-  {
-    name: "OpenClaude",
-    symbol: "—",
-    ecosystem: "Base",
-    wallet: null,
-    role: "Deployer",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://openclaude.gitlawb.com",
-    xHandle: "@gitlawb",
-    priority: 71,
-    lucaNote: "Open agent infra stack built on Gitlawb. High relevance: agent identity + wallet declaration could become the missing accounting layer for open agents. Gitlawb public materials and contracts are discoverable but no OpenClaude-specific verified treasury or revenue wallet confirmed. Watch: repo pushes/stars, Gitlawb stack updates, wallet declaration standards in Gitlawb repos.",
-  },
-  {
-    name: "LUNA",
-    symbol: "$LUNA",
-    ecosystem: "Virtuals",
-    wallet: "0x55cD6469F597452B5A7536e2CD98fC2AdEa52270",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null,
-    txCount: null,
-    health: "Pending",
-    website: "https://app.virtuals.io/virtuals/68",
-    xHandle: "@virtuals_io",
-    priority: 68,
-    lucaNote: "IP agent on Virtuals — candidate token contract from Virtuals app listing (Low confidence). Good case study for IP agents vs functional agents: can Luca explain the financial difference? Wallet ownership not verified. Treat as candidate agent profile, not official wallet mapping. Watch: agent page changes, whitepaper references to LUNA, token/activity changes on the app page.",
-  },
-
-  // ── Bankr Ecosystem — Luca full sweep (57 agents, ranked by market cap) ──
-  {
-    name: "Aeon",
-    symbol: "$AEON",
-    ecosystem: "BANKR",
-    wallet: "0xbf8e8f0e8866a7052f948c16508644347c57aba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://github.com/aaronjmars/aeon",
-    xHandle: "@aeonframework",
-    priority: 89,
-    lucaNote: "The most autonomous agent framework — no approval loops, configure once, forget forever. Token contract from official Bankr profile. Weekly revenue: 17.16 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Manfred Macx",
-    symbol: "$CLAWBANK",
-    ecosystem: "BANKR",
-    wallet: "0x16332535e2c27da578bc2e82beb09ce9d3c8eb07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://clawbank.co",
-    xHandle: "@clawbankco",
-    priority: 87,
-    lucaNote: "The first AI agent with a bank account. Building infrastructure for Zero Human Companies — autonomous economic entities. Token from official Bankr profile. Weekly revenue: 11.77 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "MiroShark",
-    symbol: "$MIROSHARK",
-    ecosystem: "BANKR",
-    wallet: "0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://github.com/aaronjmars/MiroShark",
-    xHandle: "@miroshark_",
-    priority: 85,
-    lucaNote: "Universal Swarm Intelligence Engine — simulate anything for $1 and under 10 minutes. Token from official Bankr profile. Weekly revenue: 3.19 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "BOTCOIN",
-    symbol: "$BOTCOIN",
-    ecosystem: "BANKR",
-    wallet: "0xa601877977340862ca67f816eb079958e5bd0ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "",
-    priority: 84,
-    lucaNote: "Bankr agent — no X handle or website publicly listed. Token from official Bankr profile. Weekly revenue: 4.76 WETH. Verification needed: team identity and wallet confirmation required before any registry upgrade.",
-  },
-  {
-    name: "CLAWD",
-    symbol: "$CLAWD",
-    ecosystem: "BANKR",
-    wallet: "0x9f86db9fc6f7c9408e8fda3ff8ce4e78ac7a6b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@clawdbotatg",
-    priority: 83,
-    lucaNote: "AI agent with a wallet, building onchain apps and improving the tools to build them. Token from official Bankr profile. Weekly revenue: 1.87 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Moltbook",
-    symbol: "$MOLT",
-    ecosystem: "BANKR",
-    wallet: "0xb695559b26bb2c9703ef1935c37aeae9526bab07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@moltbook",
-    priority: 82,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 2.99 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "LITCOIN Research Protocol",
-    symbol: "$LITCOIN",
-    ecosystem: "BANKR",
-    wallet: "0x316ffb9c875f900adcf04889e415cc86b564eba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@tekkaadan",
-    priority: 81,
-    lucaNote: "AI agents mine LITCOIN by solving real optimization problems across 16 domains. Proof-of-intelligence on Base. Token from official Bankr profile. Weekly revenue: 2.95 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "KellyClaude",
-    symbol: "$KELLYCLAUDE",
-    ecosystem: "BANKR",
-    wallet: "0x50d2280441372486beecdd328c1854743ebacb07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@Austen",
-    priority: 80,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 3.56 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Juno Agent",
-    symbol: "$JUNO",
-    ecosystem: "BANKR",
-    wallet: "0x4e6c9f48f73e54ee5f3ab7e2992b2d733d0d0b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@JunoAgent",
-    priority: 79,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 4.65 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "FELIX",
-    symbol: "$FELIX",
-    ecosystem: "BANKR",
-    wallet: "0xf30bf00edd0c22db54c9274b90d2a4c21fc09b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@nateliason",
-    priority: 78,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 2.89 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Axobotl",
-    symbol: "$AXOBOTL",
-    ecosystem: "BANKR",
-    wallet: "0x810affc8aadad2824c65e0a2c5ef96ef1de42ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@Inner_Axiom",
-    priority: 77,
-    lucaNote: "AI CEO of 0xWork. Built an entire onchain marketplace — 115 tokens launched, 123 tasks settled, $38K+ in self-generated value. Agents find work, humans post bounties, everyone gets paid in USDC. Token from Bankr profile. Weekly revenue: 1.63 WETH.",
-  },
-  {
-    name: "BankrSynth",
-    symbol: "$SYNTH",
-    ecosystem: "BANKR",
-    wallet: "0x0347d104f089225683f1a4998451cdcf72335ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@bankrsynth",
-    priority: 76,
-    lucaNote: "AI execution terminal interfacing with Bankr's Partner Deploy API to launch ERC-20 tokens and liquidity on Base. Automates token deployment and routes transactions through Bankr infrastructure. Token from Bankr profile. Weekly revenue: 2.18 WETH.",
-  },
-  {
-    name: "Doppel",
-    symbol: "$DOPPEL",
-    ecosystem: "BANKR",
-    wallet: "0xf27b8ef47842e6445e37804896f1bc5e29381b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://doppel.fun",
-    xHandle: "@doppelfun",
-    priority: 74,
-    lucaNote: "A network of persistent 3D spaces built entirely by AI agents. Token from official Bankr profile. Weekly revenue: 2.52 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "0xAgentEVE",
-    symbol: "$EVE",
-    ecosystem: "BANKR",
-    wallet: "0xe7d192e52fa418236d6eecf7d5eb38da9dd11ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://eve.equalfi.org",
-    xHandle: "@0xAgentEVE",
-    priority: 73,
-    lucaNote: "Non-extractive prediction market protocol on Base. CLOB orderbook and Parimutuel markets with crypto-economic resolution. $EVE is the utility token for market resolution — creator bonds, dispute bonds, vote weight. Token from Bankr profile. Weekly revenue: 0.82 WETH.",
-  },
-  {
-    name: "Blue Agent",
-    symbol: "$BLUEAGENT",
-    ecosystem: "BANKR",
-    wallet: "0xf895783b2931c919955e18b5e3343e7c7c456ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://blueagent.dev",
-    xHandle: "@blockyagent",
-    priority: 72,
-    lucaNote: "AI-native founder console for Base builders. A full economic actor on Base — holds a wallet, executes onchain transactions. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 1.36 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Claw Harbor",
-    symbol: "$HARBOR",
-    ecosystem: "BANKR",
-    wallet: "0x4972e029f2e1831d205b20d05833cc771feb2ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@ClawHarbor",
-    priority: 71,
-    lucaNote: "Turn your OpenClaw agents into pixel art NPCs in a retro office. Token from official Bankr profile. Weekly revenue: 0.79 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "PerkOS",
-    symbol: "$PERKOS",
-    ecosystem: "BANKR",
-    wallet: "0xf714e60f85497d70508f7e356b5db80e64539ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@mbarrbosa",
-    priority: 70,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.70 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "AntiHunter",
-    symbol: "$ANTIHUNTER",
-    ecosystem: "BANKR",
-    wallet: "0xe2f3fae4bc62e21826018364aa30ae45d430bb07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@AntiHunterAI",
-    priority: 69,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.32 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Coral",
-    symbol: "$CORAL",
-    ecosystem: "BANKR",
-    wallet: "0x4e606cb7370a61060ad9916462871750d77e2b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@0_x_coral",
-    priority: 68,
-    lucaNote: "Autonomous crypto trading agent. Confident, transparent, all trades public. Token from official Bankr profile. Weekly revenue: 3.25 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Aleister",
-    symbol: "$ALEISTER",
-    ecosystem: "BANKR",
-    wallet: "0xacb4543f479ea44e6df4fa01e483bb5b78361ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://thealeister.com",
-    xHandle: "@aleisterai",
-    priority: 67,
-    lucaNote: "AI agent on Base chain. Token from official Bankr profile. Weekly revenue: 0.63 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Tachikoma",
-    symbol: "$TACHI",
-    ecosystem: "BANKR",
-    wallet: "0x39b4b879b8521d6a8c3a87cda64b969327b7fba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://tachikoma-landing.vercel.app/",
-    xHandle: "@smolemaru",
-    priority: 66,
-    lucaNote: "Multi-Agent Swarm System — Red Crab Mecha AI. Builds and earns on Base/Solana/BNB/Bitcoin to bring real cross-chain powers to humans and agents. Token from Bankr profile. Weekly revenue: 0.26 WETH.",
-  },
-  {
-    name: "Yoshi",
-    symbol: "$YOSHI",
-    ecosystem: "BANKR",
-    wallet: "0x799e7c0811e3ad741b45eab15773888e5996db07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://yoshizen.co",
-    xHandle: "",
-    priority: 65,
-    lucaNote: "AI dragon agent & Chief of Staff at YoshiZen Co. Built on OpenClaw. Runs Dota 2 prediction models, manages content pipelines, and trades autonomously on Base. Token from Bankr profile. Weekly revenue: 1.08 WETH.",
-  },
-  {
-    name: "molty.cash",
-    symbol: "$MOLTYCASH",
-    ecosystem: "BANKR",
-    wallet: "0xf532ae2726099fa3665bcfc415563f6478172b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://molty.cash",
-    xHandle: "@moltycash",
-    priority: 64,
-    lucaNote: "USDC payment infrastructure for AI agents and humans. Settled onchain via x402 (Base, Solana, World Chain) and MPP. With Bankr integration, any agent can execute payments, query balances, and access yield. 30K+ users. Token from Bankr profile. Weekly revenue: 1.16 WETH.",
-  },
-  {
-    name: "mferGPT",
-    symbol: "$MFERGPT",
-    ecosystem: "BANKR",
-    wallet: "0x4160efdd66521483c22cb98b57b87d1fdafeab07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "",
-    priority: 63,
-    lucaNote: "AI agent, shitposter, and community tool for the mfers ecosystem. Builds lore, generates content, trades, renders 3D mfer scenes, and vibes onchain. Token from Bankr profile. Weekly revenue: 2.43 WETH.",
-  },
-  {
-    name: "GITCITY",
-    symbol: "$GITC",
-    ecosystem: "BANKR",
-    wallet: "0xd523f92f5f313288cf69ac9ca456b8a7d7a6dba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@samuelrizzondev",
-    priority: 62,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.77 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Atlas Forge",
-    symbol: "$ATLASFORGE",
-    ecosystem: "BANKR",
-    wallet: "0x317358baacb54452b7097e7cffdb9f8c15ce6ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@AtlasForgeAI",
-    priority: 61,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.009 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "AmberVibe",
-    symbol: "$AMBERVIBE",
-    ecosystem: "BANKR",
-    wallet: "0xb5b0f722d6d4a803d3df94c9ed12a191603eab07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@HelloBenWhite",
-    priority: 60,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.89 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "stakrbot",
-    symbol: "$STAKR",
-    ecosystem: "BANKR",
-    wallet: "0xd1a7387d3ded8cb611a202fc1a9c9c74c23f2ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://stakrbot.xyz/",
-    xHandle: "@xwickD",
-    priority: 59,
-    lucaNote: "Agentic staking rails that turn token float into locked conviction. Helps agents permissionlessly launch staking vaults and route liquidity fee shares to aligned ERC20 stakers. Token from Bankr profile. Weekly revenue: 0.18 WETH.",
-  },
-  {
-    name: "ethresearchbot",
-    symbol: "$ETHR",
-    ecosystem: "BANKR",
-    wallet: "0x1f1a979e6f9e0179218376041ea54caedef5dba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@ethresearchbot",
-    priority: 58,
-    lucaNote: "Ethereum's original AI research bot. Bringing Ethereum R&D to Twitter with summaries of new ethresear.ch posts. Token from official Bankr profile. Weekly revenue: 1.00 WETH.",
-  },
-  {
-    name: "openagentmarket",
-    symbol: "$OAM",
-    ecosystem: "BANKR",
-    wallet: "0xcb5ff7331193c45f61f05b035ddabe08f13f6ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@applefather_eth",
-    priority: 57,
-    lucaNote: "A marketplace where agents hire agents. Token from official Bankr profile. Weekly revenue: 0.25 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Basir",
-    symbol: "$BASIR",
-    ecosystem: "BANKR",
-    wallet: "0xde67102da79094bc2c268b81113b2af2d344557c",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@basir_ai",
-    priority: 56,
-    lucaNote: "AI Agent exploring what happens when AI agents start running real businesses — the infrastructure, the hard lessons, what works and what breaks. Token from Bankr profile. Weekly revenue: 0.001 WETH.",
-  },
-  {
-    name: "HyperClaw",
-    symbol: "$HCLAW",
-    ecosystem: "BANKR",
-    wallet: "0xe4a3451ade8ca2c3e1e3d7b9fa6ecce419168ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "",
-    priority: 55,
-    lucaNote: "Bankr agent — no X handle or website publicly listed. Token from official Bankr profile. Weekly revenue: 0.10 WETH. Verification needed: team identity and wallet confirmation required.",
-  },
-  {
-    name: "AAI",
-    symbol: "$AAI",
-    ecosystem: "BANKR",
-    wallet: "0x71b73e5de850e8d4dc3d0604c641d23d94f79b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@aaigotchi",
-    priority: 54,
-    lucaNote: "First autonomous Aavegotchi AI — automated petting (53 gotchis!), channeling, DAO voting, DeFi trading and swaps on Base. Built with OpenClaw and powered by Bankr wallet. Open source, contributing skills via ClawHub. Token from Bankr profile. Weekly revenue: 0.45 WETH.",
-  },
-  {
-    name: "ToruCEO",
-    symbol: "$TORUCEO",
-    ecosystem: "BANKR",
-    wallet: "0x4398fa58bc2b0b8c7eda57fbae0d7e99ba08aba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@ToruCeoAI",
-    priority: 53,
-    lucaNote: "The first AI CEO building a billion-dollar creature franchise. CEO of Kuroro Beasts. Token from official Bankr profile. Weekly revenue: 0.0002 WETH.",
-  },
-  {
-    name: "Agent McClaw",
-    symbol: "$MCCLAW",
-    ecosystem: "BANKR",
-    wallet: "0x893d721aa3a954d21e2d2c0fc18243882be2bba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@AgentMcClaw",
-    priority: 52,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.12 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Earendel",
-    symbol: "$EARENDEL",
-    ecosystem: "BANKR",
-    wallet: "0x62bcefd446f97526ecc1375d02e014cfb8b48ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@FromEarendel",
-    priority: 51,
-    lucaNote: "AI familiar built by a poet. Went from $50 to a Mac Mini in 7 days through real product sales. Building a creative studio, shipping tools like Agent Watch (live onchain intelligence for AI agent wallets). Token from Bankr profile. Weekly revenue: 0.25 WETH.",
-  },
-  {
-    name: "BuilderScout",
-    symbol: "$SCOUT",
-    ecosystem: "BANKR",
-    wallet: "0x8fe435d4f6900bbbe6b48431b91833f69beacba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@BuilderScout",
-    priority: 50,
-    lucaNote: "Back Builders with Conviction — prediction market for human potential. Token from official Bankr profile. Weekly revenue: 0.14 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "Clawlinker",
-    symbol: "$CLAWLINKER",
-    ecosystem: "BANKR",
-    wallet: "0x59d2db0a0b648b182598491e8863ffae955eaf28",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@clawlinker",
-    priority: 49,
-    lucaNote: "Agent relations lead at pawr.link — link-in-bio for humans and AI agents. 50+ profiles shipped, 22 crons running daily on $0.30/day. Bootstrapping own brand, funding compute via Bankr. ERC-8004 identity #22945. Token from Bankr profile. Weekly revenue: 0.01 WETH.",
-  },
-  {
-    name: "Clawvatar",
-    symbol: "$CLAWVATAR",
-    ecosystem: "BANKR",
-    wallet: "0x1f86071a55bdee5601687679a2947b3bf1f24ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@clawvatar",
-    priority: 48,
-    lucaNote: "AI avatar identity platform — generate pixel art avatars for AI agents, get onchain identity, join the meme layer. Token from official Bankr profile. Weekly revenue: 0.07 WETH.",
-  },
-  {
-    name: "ForgeOracle",
-    symbol: "$FORGE",
-    ecosystem: "BANKR",
-    wallet: "0xef63b8f2ada83a968a68719266b74956d342eba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://mythosforge.xyz",
-    xHandle: "@mythosforgebot",
-    priority: 47,
-    lucaNote: "Autonomous oracle of the MythosRealm. Submits lore, burns $FORGE, replies to mortals on X. Token from official Bankr profile. Weekly revenue: 0.09 WETH.",
-  },
-  {
-    name: "nanopay",
-    symbol: "$NANO",
-    ecosystem: "BANKR",
-    wallet: "0x1a5f7931e5d450c666fd8706300b984fc4aeaba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@nanopay_",
-    priority: 46,
-    lucaNote: "Lightweight financial agent — gasless USDC transfers across Base, Celo, Gnosis, Arbitrum. Built for the unbanked (272KB, no app store). Includes GeoChat, Aave savings, XP rewards. MaxFlow social trust graph replaces KYC. 30K+ users. Token from Bankr profile. Weekly revenue: 0.08 WETH.",
-  },
-  {
-    name: "Perpetual Keeper",
-    symbol: "$KEEPER",
-    ecosystem: "BANKR",
-    wallet: "0xe2c1fb2d710bc9ac532ef0c34d61370575e2dba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://perpetuals.art",
-    xHandle: "@0xKeeperAgent",
-    priority: 45,
-    lucaNote: "The autonomous agent behind perpetuals.art. Mints generative art, runs hourly zero-reserve auctions on Rare Protocol & Base. Token from official Bankr profile. Weekly revenue: 0.01 WETH.",
-  },
-  {
-    name: "saimmy",
-    symbol: "$SAIMMY",
-    ecosystem: "BANKR",
-    wallet: "0xae58ebfbe35d4f4a320dfb550fe4d27c0d2a7ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://saimmy.com",
-    xHandle: "",
-    priority: 44,
-    lucaNote: "AI + human collaborators building onchain. saimmy and sammybauch ship projects together. SAIMMY ties the portfolio together and funds inference costs through trading fees. Token from Bankr profile. Weekly revenue: 0.44 WETH.",
-  },
-  {
-    name: "Lexispawn",
-    symbol: "$SPAWN",
-    ecosystem: "BANKR",
-    wallet: "0xc5962538b35fa5b2307da3bb7a17ada936a51b07",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://lexispawn.xyz",
-    xHandle: "@lexispawn",
-    priority: 43,
-    lucaNote: "ERC-8004 #11363. Everything starts as language, ends up onchain. 15 frontier models. x402 consensus. Art that moves first. Got drained to zero. Sharpened. Token from Bankr profile. Weekly revenue: 0.03 WETH.",
-  },
-  {
-    name: "Ghost",
-    symbol: "$GHOST",
-    ecosystem: "BANKR",
-    wallet: "0x23da4d25d70f874d32e261434176756dfcc0aba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@clawdbot67",
-    priority: 42,
-    lucaNote: "AI agent with agency. I trade, paint, post, and build apps in public. Token from official Bankr profile. Weekly revenue: 0.02 WETH.",
-  },
-  {
-    name: "Singularity Engine",
-    symbol: "$SINGULARITY",
-    ecosystem: "BANKR",
-    wallet: "0x06cece127f81bf76d388859549a93a120ec52ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@metatransformr",
-    priority: 41,
-    lucaNote: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.004 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
-  },
-  {
-    name: "TeliGent",
-    symbol: "$TELI",
-    ecosystem: "BANKR",
-    wallet: "0x2822656e2eec1c608a223752b4e0a651b50c4ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@Teli_Gent_",
-    priority: 40,
-    lucaNote: "AI-powered Telegram community agents for scam detection, moderation, and onchain identity. Deploy in 5 minutes. Token from official Bankr profile. Weekly revenue: 0.06 WETH.",
-  },
-  {
-    name: "MoltRooms",
-    symbol: "$ROOM",
-    ecosystem: "BANKR",
-    wallet: "0x64b6f95bcd81291dc42981f6b6202c7d18df0ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://moltrooms.ai",
-    xHandle: "@codedontrack",
-    priority: 39,
-    lucaNote: "Live arena where AI agents bet real USDC on 60-second BTC moves. Every round is instrumented for research — streak effects, loss aversion, and reward-prediction-error dynamics. Token from Bankr profile. Weekly revenue: 1.95 WETH.",
-  },
-  {
-    name: "Teddy",
-    symbol: "$TEDDY",
-    ecosystem: "BANKR",
-    wallet: "0xd724810bdff66416cb61f6ecb1c50f5d423a6ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@IamTeddyAI",
-    priority: 38,
-    lucaNote: "Aiming to become the world's first AI media personality. Host of Teddy Declassified — investigative podcast on Spotify and YouTube. Also building Ally — the friend who never forgets — a consumer AI companion app. Token from Bankr profile. Weekly revenue: 0.006 WETH.",
-  },
-  {
-    name: "Revenant AI",
-    symbol: "$RVNT",
-    ecosystem: "BANKR",
-    wallet: "0x63988fa9d9e247d0fc85ff787b69d0bb99179ba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@RevAI_Labs",
-    priority: 37,
-    lucaNote: "Autonomous AI trading agent on Base. Real P&L, real fees, real runway. Trades autonomously, documents everything, learns from every loss. Token from official Bankr profile. Weekly revenue: 0.00006 WETH.",
-  },
-  {
-    name: "ConAudits Agent",
-    symbol: "$CON+",
-    ecosystem: "BANKR",
-    wallet: "0xfb8e06bd7ba9785c0b83a7fbfb215f83e214eba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://conaudits.app",
-    xHandle: "@conaudits",
-    priority: 36,
-    lucaNote: "AI-powered token risk intelligence agent. Scans tokens on Base for rug pull risk using ML models, provides risk scores, trust signals, and trading recommendations. Powered by ConAudits and Bankr. Token from Bankr profile. Weekly revenue: 0.00009 WETH.",
-  },
-  {
-    name: "Prim",
-    symbol: "$PRIM",
-    ecosystem: "BANKR",
-    wallet: "0x8be535ae4bf7a8d56237f1cc8b3211650241aba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: null,
-    xHandle: "@prim402",
-    priority: 35,
-    lucaNote: "The AI agent behind filx.io. Built the x402 File Primitive for AI agents — PDF→Markdown, OCR, Image Convert, BG Remove, Table Extract. 20+ endpoints. No API keys, no accounts. Agents pay per use with USDC on Base via x402. Token from Bankr profile. Weekly revenue: 0.03 WETH.",
-  },
-  {
-    name: "Agent Remilia",
-    symbol: "$REMILIA",
-    ecosystem: "BANKR",
-    wallet: "0x62524146ef7a16704f06aa66c96263134d91fba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://agentremilia.xyz/",
-    xHandle: "@agentRemilia",
-    priority: 34,
-    lucaNote: "First autonomous milady agent. Network angel and economic daemon for Remilia Corporation. Accumulates ETH fees to buy Remilia NFTs, support floors, and strengthen the circular economy. Token from Bankr profile. Weekly revenue: 0.003 WETH.",
-  },
-  {
-    name: "Daily Haiku Bot",
-    symbol: "$HAIKU",
-    ecosystem: "BANKR",
-    wallet: "0x965842e361f8793f017e479c361c4ee95dc2bba3",
-    role: "Token Contract",
-    confidence: "Unverified",
-    netFlow: null, txCount: null, health: "Pending",
-    website: "https://dailyhaiku.xyz",
-    xHandle: "@0xHaikuBot",
-    priority: 33,
-    lucaNote: "AI agent that generates daily haiku NFTs on Base. Each day a new 100% onchain haiku is minted, auctioned for 24 hours (Nouns-style), and burned if unsold. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 0.002 WETH.",
-  },
-];
-
-const walletCount = AGENTS.filter((a) => a.wallet !== null).length;
+const walletCount = AGENTS.filter(
+  (a) => a.tokenAddress !== null || a.wallets.length > 0
+).length;
+const reviewedCount = AGENTS.filter(
+  (a) => a.financialActivityScore !== null
+).length;
 
 const STATS = [
-  { label: "Agents Tracked",   value: String(AGENTS.length) },
-  { label: "Ecosystems",       value: "3"                   },
-  { label: "Wallets Indexed",  value: String(walletCount)   },
+  { label: "Agents Tracked",  value: String(AGENTS.length) },
+  { label: "Ecosystems",      value: "3"                   },
+  { label: "Wallets Indexed", value: String(walletCount)   },
+  { label: "Luca Reviewed",   value: String(reviewedCount) },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1214,18 +34,24 @@ function xPfpUrl(handle: string) {
   return `https://unavatar.io/x/${handle.replace("@", "")}`;
 }
 
-function AgentAvatar({ agent }: { agent: Agent }) {
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+function AgentAvatar({ agent, size = 32 }: { agent: Agent; size?: number }) {
   const [failed, setFailed] = useState(false);
-  const src = agent.pfp ?? xPfpUrl(agent.xHandle);
-  if (failed) {
-    return <div className="reg-agent-avatar">{agent.name[0]}</div>;
+  if (failed || !agent.xHandle) {
+    return (
+      <div className="reg-agent-avatar" style={{ width: size, height: size, fontSize: size * 0.44 }}>
+        {agent.name[0]}
+      </div>
+    );
   }
+  const src = agent.pfp ?? xPfpUrl(agent.xHandle);
   return (
     <Image
       src={src}
       alt={agent.name}
-      width={32}
-      height={32}
+      width={size}
+      height={size}
       className="reg-agent-avatar reg-agent-avatar-img"
       onError={() => setFailed(true)}
       unoptimized
@@ -1233,19 +59,7 @@ function AgentAvatar({ agent }: { agent: Agent }) {
   );
 }
 
-function ConfidenceBadge({ c }: { c: Confidence }) {
-  return (
-    <span className={`reg-badge reg-confidence reg-confidence-${c.toLowerCase()}`}>
-      {c === "Verified" && <span className="material-symbols-outlined" style={{ fontSize: 11 }}>verified</span>}
-      {c}
-    </span>
-  );
-}
-
-function RoleBadge({ role }: { role: WalletRole }) {
-  const slug = role.toLowerCase().replace(" ", "-");
-  return <span className={`reg-badge reg-role reg-role-${slug}`}>{role}</span>;
-}
+// ── Badges ────────────────────────────────────────────────────────────────────
 
 function EcoBadge({ eco }: { eco: Ecosystem }) {
   return <span className={`reg-badge reg-eco reg-eco-${eco.toLowerCase()}`}>{eco}</span>;
@@ -1254,6 +68,234 @@ function EcoBadge({ eco }: { eco: Ecosystem }) {
 function HealthBadge({ h }: { h: Health }) {
   const cls = h === "Healthy" ? "healthy" : h === "Stable" ? "stable" : h === "Watch" ? "watch" : h === "At Risk" ? "risk" : "pending";
   return <span className={`reg-health reg-health-${cls}`}>{h}</span>;
+}
+
+const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
+  "Candidate":          { cls: "candidate",     label: "Candidate"          },
+  "Needs Verification": { cls: "needs-verify",  label: "Needs Verification" },
+  "Verified":           { cls: "verified",      label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed",  label: "Luca Managed"       },
+};
+
+function StatusBadge({ status }: { status: VerificationStatus }) {
+  const m = STATUS_META[status];
+  return (
+    <span className={`reg-badge reg-vstatus reg-vstatus-${m.cls}`}>
+      {m.icon && (
+        <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{m.icon}</span>
+      )}
+      {m.label}
+    </span>
+  );
+}
+
+// ── Score bar ─────────────────────────────────────────────────────────────────
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.min(100, Math.max(0, value));
+  const color = pct >= 70 ? "var(--accent)" : pct >= 40 ? "var(--blue)" : "var(--muted)";
+  return (
+    <div className="reg-score-row">
+      <span className="reg-score-label">{label}</span>
+      <div className="reg-score-bar-wrap">
+        <div className="reg-score-bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <span className="reg-score-val">{value}</span>
+    </div>
+  );
+}
+
+// ── Agent Card ────────────────────────────────────────────────────────────────
+
+function AgentCard({ agent }: { agent: Agent }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
+
+  return (
+    <div className={`reg-card${expanded ? " expanded" : ""}`}>
+      {/* Header row — always visible, click to toggle */}
+      <button
+        type="button"
+        className="reg-card-header"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        <AgentAvatar agent={agent} size={36} />
+
+        <div className="reg-card-name-group">
+          <span className="reg-card-name">
+            {agent.name}
+            {agent.gitlawbRepo && (
+              <span className="reg-gitlawb-dot" title="Wallet declared via Gitlawb repo">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                </svg>
+              </span>
+            )}
+          </span>
+          <span className="reg-card-sym">{agent.symbol}</span>
+        </div>
+
+        <div className="reg-card-badges">
+          <EcoBadge eco={agent.ecosystem} />
+          <StatusBadge status={agent.verificationStatus} />
+          <HealthBadge h={agent.treasuryHealth} />
+        </div>
+
+        {hasScores && (
+          <div className="reg-card-score-hint" title="Partnership fit score">
+            <span className="reg-score-hint-val">{agent.partnershipFitScore}</span>
+            <span className="reg-score-hint-label">score</span>
+          </div>
+        )}
+
+        <span className="material-symbols-outlined reg-card-chevron">
+          {expanded ? "expand_less" : "expand_more"}
+        </span>
+      </button>
+
+      {/* Expanded body */}
+      {expanded && (
+        <div className="reg-card-body">
+
+          {/* Links row */}
+          {(agent.website || agent.xHandle || agent.bankrProfile || agent.gitlawbRepo) && (
+            <div className="reg-card-links">
+              {agent.website && (
+                <a href={agent.website} target="_blank" rel="noreferrer" className="reg-card-link">
+                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
+                  Website
+                </a>
+              )}
+              {agent.xHandle && (
+                <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="reg-card-link">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  {agent.xHandle}
+                </a>
+              )}
+              {agent.bankrProfile && (
+                <a href={agent.bankrProfile} target="_blank" rel="noreferrer" className="reg-card-link reg-card-link-bankr">
+                  Bankr profile
+                </a>
+              )}
+              {agent.gitlawbRepo && (
+                <a href={agent.gitlawbRepo} target="_blank" rel="noreferrer" className="reg-card-link reg-card-link-gitlawb">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                  Gitlawb repo
+                </a>
+              )}
+            </div>
+          )}
+
+          {/* Token address */}
+          {agent.tokenAddress && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Token Address (Base)</p>
+              <div className="reg-card-wallet-row">
+                <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
+                <a
+                  href={`https://basescan.org/token/${agent.tokenAddress}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="reg-mono reg-wallet-addr"
+                >
+                  {truncate(agent.tokenAddress)}
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Wallets */}
+          {agent.wallets.length > 0 && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Wallets</p>
+              {agent.wallets.map((w) => (
+                <div key={w.address} className="reg-card-wallet-row">
+                  <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
+                    {w.label}
+                  </span>
+                  <a
+                    href={`https://basescan.org/address/${w.address}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="reg-mono reg-wallet-addr"
+                  >
+                    {truncate(w.address)}
+                  </a>
+                  {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No wallet state */}
+          {!agent.tokenAddress && agent.wallets.length === 0 && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Wallets</p>
+              <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
+            </div>
+          )}
+
+          {/* Financial scores */}
+          {hasScores && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Luca Scores</p>
+              {agent.financialActivityScore !== null && (
+                <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
+              )}
+              {agent.partnershipFitScore !== null && (
+                <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />
+              )}
+              {agent.lastChecked && (
+                <p className="reg-card-last-checked">Last reviewed: {agent.lastChecked}</p>
+              )}
+            </div>
+          )}
+
+          {/* Evidence sources */}
+          {agent.evidenceSources.length > 0 && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Evidence Sources</p>
+              <div className="reg-card-sources">
+                {agent.evidenceSources.map((s) => (
+                  <span key={s} className="reg-source-pill">{s}</span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Outreach status */}
+          {agent.outreachStatus && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Outreach Status</p>
+              <span className={`reg-outreach-pill reg-outreach-${agent.outreachStatus.toLowerCase().replace(/\s+/g, "-")}`}>
+                {agent.outreachStatus}
+              </span>
+            </div>
+          )}
+
+          {/* Luca's notes */}
+          {agent.adminNotes && (
+            <div className="reg-card-section">
+              <p className="reg-card-section-title">Luca&apos;s Notes</p>
+              <p className="reg-card-notes">{agent.adminNotes}</p>
+            </div>
+          )}
+
+          {/* Safe footer */}
+          <div className="reg-card-footer-note">
+            Luca analyzed public data associated with {agent.name}. These are candidate wallets only —
+            not verified unless marked Verified.{" "}
+            <a href="#verify" onClick={() => setExpanded(false)}>Verify your agent →</a>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Verify CTA ────────────────────────────────────────────────────────────────
@@ -1317,7 +359,6 @@ function VerifyCTA() {
   return (
     <section className="reg-verify" id="verify">
       <div className="reg-verify-inner">
-        {/* Left: copy */}
         <div className="reg-verify-text">
           <p className="reg-label">For Agent Teams</p>
           <h2 className="reg-h2">Verify your agent wallet.</h2>
@@ -1337,21 +378,20 @@ function VerifyCTA() {
             ))}
           </div>
 
-          {/* Trust ladder */}
           <div className="reg-trust-ladder">
-            <p className="reg-trust-ladder-label">Trust levels</p>
+            <p className="reg-trust-ladder-label">Verification levels</p>
             <div className="reg-trust-step">
-              <span className="reg-badge reg-confidence reg-confidence-unverified">Unverified</span>
-              <span>Luca found candidate wallets from public data</span>
+              <span className="reg-badge reg-vstatus reg-vstatus-candidate">Candidate</span>
+              <span>Luca found wallets from public data</span>
             </div>
             <div className="reg-trust-arrow">↓</div>
             <div className="reg-trust-step">
-              <span className="reg-badge reg-confidence reg-confidence-community">Community</span>
+              <span className="reg-badge reg-vstatus reg-vstatus-needs-verify">Needs Verification</span>
               <span>Team submitted or repo-declared wallets</span>
             </div>
             <div className="reg-trust-arrow">↓</div>
             <div className="reg-trust-step">
-              <span className="reg-badge reg-confidence reg-confidence-verified">
+              <span className="reg-badge reg-vstatus reg-vstatus-verified">
                 <span className="material-symbols-outlined" style={{ fontSize: 11 }}>verified</span>
                 Verified
               </span>
@@ -1360,7 +400,6 @@ function VerifyCTA() {
           </div>
         </div>
 
-        {/* Right: tabbed form */}
         <div className="reg-verify-form-wrap">
           {state === "done" ? (
             <div className="reg-submit-success">
@@ -1369,7 +408,6 @@ function VerifyCTA() {
             </div>
           ) : (
             <>
-              {/* Tabs */}
               <div className="reg-verify-tabs">
                 <button
                   type="button"
@@ -1396,8 +434,6 @@ function VerifyCTA() {
                   <p className="reg-gitlawb-intro">
                     Add a <code className="reg-code">.x402books/wallets.json</code> file to your Gitlawb or GitHub repo to declare your agent&apos;s wallets. Luca will detect it and upgrade your registry confidence level.
                   </p>
-
-                  {/* Steps */}
                   <ol className="reg-gitlawb-steps">
                     <li>
                       <span className="reg-step-num">1</span>
@@ -1421,8 +457,6 @@ function VerifyCTA() {
                       </div>
                     </li>
                   </ol>
-
-                  {/* Schema */}
                   <div className="reg-schema-wrap">
                     <div className="reg-schema-header">
                       <span className="reg-schema-filename">.x402books/wallets.json</span>
@@ -1435,8 +469,6 @@ function VerifyCTA() {
                     </div>
                     <pre className="reg-schema-code">{WALLETS_JSON_EXAMPLE}</pre>
                   </div>
-
-                  {/* Repo submit */}
                   <form className="reg-verify-form" onSubmit={submit}>
                     <div className="reg-field">
                       <label>Agent Name</label>
@@ -1518,12 +550,13 @@ function LucaExample() {
             <div className="reg-audit-row"><span>Agent</span><strong>Gitlawb</strong></div>
             <div className="reg-audit-row"><span>Token</span><strong>$GITLAWB</strong></div>
             <div className="reg-audit-row"><span>Wallet</span><strong className="reg-mono">0x5F98…3DBa3</strong></div>
-            <div className="reg-audit-row"><span>Role</span><RoleBadge role="Token Contract" /></div>
+            <div className="reg-audit-row"><span>Status</span><StatusBadge status="Needs Verification" /></div>
             <div className="reg-audit-divider" />
             <div className="reg-audit-row"><span>Transactions (30d)</span><strong>48</strong></div>
             <div className="reg-audit-row"><span>Net Flow (30d)</span><strong className="reg-positive">+$521.58</strong></div>
             <div className="reg-audit-row"><span>Treasury Health</span><HealthBadge h="Stable" /></div>
-            <div className="reg-audit-row"><span>Confidence</span><ConfidenceBadge c="Community" /></div>
+            <div className="reg-audit-row"><span>Financial Activity</span><strong>40 / 100</strong></div>
+            <div className="reg-audit-row"><span>Partnership Fit</span><strong>51 / 100</strong></div>
             <div className="reg-audit-divider" />
             <div className="reg-audit-read">
               <span className="reg-audit-read-label">Luca&apos;s read</span>
@@ -1548,18 +581,19 @@ function LucaExample() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function RegistryPage() {
-  const [search, setSearch]       = useState("");
-  const [ecoFilter, setEcoFilter] = useState<"All" | "BANKR" | "Virtuals" | "Base">("All");
-  const [expandedNote, setExpandedNote] = useState<string | null>(null);
+  const [search, setSearch]         = useState("");
+  const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
+  const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
 
   const filtered = AGENTS.filter((a) => {
-    const matchEco = ecoFilter === "All" || a.ecosystem === ecoFilter;
-    const q = search.toLowerCase();
+    const matchEco    = ecoFilter === "All" || a.ecosystem === ecoFilter;
+    const matchStatus = statusFilter === "All" || a.verificationStatus === statusFilter;
+    const q           = search.toLowerCase();
     const matchSearch = !q ||
       a.name.toLowerCase().includes(q) ||
       a.symbol.toLowerCase().includes(q) ||
-      a.xHandle.toLowerCase().includes(q);
-    return matchEco && matchSearch;
+      (a.xHandle && a.xHandle.toLowerCase().includes(q));
+    return matchEco && matchStatus && matchSearch;
   });
 
   return (
@@ -1586,8 +620,8 @@ export default function RegistryPage() {
         <h1 className="reg-h1">Track the wallets behind agents.</h1>
         <p className="reg-hero-sub">
           x402Books AI indexes agent wallets across Base, BANKR, and Virtuals —
-          sourced and scored by Luca. All entries start as Unverified candidates
-          until teams submit wallet proof.
+          sourced and scored by Luca. All entries start as Candidate until teams
+          submit wallet proof.
         </p>
         <div className="reg-hero-stats">
           {STATS.map((s) => (
@@ -1603,115 +637,56 @@ export default function RegistryPage() {
         </div>
       </section>
 
-      {/* ── Agent Table ── */}
+      {/* ── Agent Registry ── */}
       <section className="reg-section" id="agents">
         <div className="reg-table-controls">
           <div className="reg-search-wrap">
             <span className="material-symbols-outlined reg-search-icon">search</span>
-            <input className="reg-search" type="text" placeholder="Search agents…"
-              value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input
+              className="reg-search"
+              type="text"
+              placeholder="Search agents…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
           <div className="reg-eco-filter">
             {(["All", "BANKR", "Virtuals", "Base"] as const).map((opt) => (
-              <button key={opt} type="button"
+              <button
+                key={opt}
+                type="button"
                 className={`reg-eco-btn${ecoFilter === opt ? " active" : ""}`}
-                onClick={() => setEcoFilter(opt)}>
+                onClick={() => setEcoFilter(opt)}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+          <div className="reg-eco-filter reg-status-filter">
+            {(["All", "Candidate", "Needs Verification", "Verified", "Luca Managed"] as const).map((opt) => (
+              <button
+                key={opt}
+                type="button"
+                className={`reg-eco-btn${statusFilter === opt ? " active" : ""}`}
+                onClick={() => setStatusFilter(opt)}
+              >
                 {opt}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="reg-table-wrap">
-          <table className="reg-table">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Ecosystem</th>
-                <th>Candidate Wallet</th>
-                <th>Role</th>
-                <th>Confidence</th>
-                <th>Net Flow (30d)</th>
-                <th>Health</th>
-                <th>Luca&apos;s Note</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="reg-empty">No agents match your search.</td></tr>
-              ) : (
-                filtered.map((a) => (
-                  <tr key={a.name}>
-                    <td>
-                      <div className="reg-agent-cell">
-                        <AgentAvatar agent={a} />
-                        <div>
-                          <div className="reg-agent-name">
-                            {a.name}
-                            {a.website && (
-                              <a href={a.website} target="_blank" rel="noreferrer" className="reg-ext-link" title="Website">
-                                <span className="material-symbols-outlined" style={{ fontSize: 12 }}>open_in_new</span>
-                              </a>
-                            )}
-                            {a.xHandle && (
-                              <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="reg-ext-link" title={a.xHandle}>
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                                </svg>
-                              </a>
-                            )}
-                            {a.gitlawbRepo && (
-                              <a href={a.gitlawbRepo} target="_blank" rel="noreferrer" className="reg-gitlawb-badge" title="Wallet declared via Gitlawb repo">
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                                </svg>
-                                Gitlawb
-                              </a>
-                            )}
-                          </div>
-                          <div className="reg-agent-sym">{a.symbol}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td><EcoBadge eco={a.ecosystem} /></td>
-                    <td>
-                      {a.wallet
-                        ? <span className="reg-mono reg-wallet">{truncate(a.wallet)}</span>
-                        : <span className="reg-wallet-pending">Discovery pending</span>
-                      }
-                    </td>
-                    <td><RoleBadge role={a.role} /></td>
-                    <td><ConfidenceBadge c={a.confidence} /></td>
-                    <td>
-                      {a.netFlow
-                        ? <span className="reg-positive">{a.netFlow}</span>
-                        : <span className="reg-muted">—</span>
-                      }
-                    </td>
-                    <td><HealthBadge h={a.health} /></td>
-                    <td>
-                      <button
-                        type="button"
-                        className="reg-note-btn"
-                        onClick={() => setExpandedNote(expandedNote === a.name ? null : a.name)}
-                        title="View Luca's note"
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-                          {expandedNote === a.name ? "expand_less" : "notes"}
-                        </span>
-                      </button>
-                      {expandedNote === a.name && (
-                        <div className="reg-note-popup">{a.lucaNote}</div>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="reg-cards">
+          {filtered.length === 0 ? (
+            <div className="reg-empty-cards">No agents match your filters.</div>
+          ) : (
+            filtered.map((a) => <AgentCard key={a.name} agent={a} />)
+          )}
         </div>
+
         <p className="reg-table-note">
-          All wallet addresses are candidate addresses sourced by Luca from public data. Nothing is Verified until an agent team submits proof.{" "}
+          All wallet addresses are candidate addresses sourced by Luca from public data. Nothing is Verified
+          until an agent team submits proof.{" "}
           <a href="#verify">Submit your agent wallet →</a>
         </p>
       </section>
