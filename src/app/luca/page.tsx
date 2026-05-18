@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/effects";
 
-const LUCA_CA  = "0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3";
+const LUCA_CA  = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
