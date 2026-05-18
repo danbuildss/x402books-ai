@@ -1,10 +1,10 @@
 // POST /api/developer/verify-wallet
-// Links a wallet address to an API key, checks $XBOOKS balance, and upgrades the tier.
+// Links a wallet address to an API key, checks $LUCA balance, and upgrades the tier.
 
 import { NextResponse } from "next/server";
 import { linkWalletToKey } from "@/lib/api-keys";
 import { isValidWalletAddress } from "@/lib/ledger";
-import { TIER_LABELS, TIER_LIMITS } from "@/lib/xbooks-token";
+import { TIER_LABELS, TIER_LIMITS } from "@/lib/luca-token";
 
 export async function POST(request: Request) {
   try {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       tier: result.tier,
       tier_label: TIER_LABELS[result.tier],
       rate_limit_per_day: TIER_LIMITS[result.tier],
-      xbooks_balance: result.balance,
+      luca_balance: result.balance,
       wallet_address: walletAddress.toLowerCase(),
     });
   } catch {

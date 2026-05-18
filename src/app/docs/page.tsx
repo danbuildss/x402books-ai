@@ -22,7 +22,7 @@ const NAV_GROUPS = [
   {
     label: "Token",
     items: [
-      { id: "xbooks", label: "$XBOOKS Utility" },
+      { id: "xbooks", label: "$LUCA Utility" },
       { id: "monetization", label: "Monetization" },
     ],
   },
@@ -87,7 +87,7 @@ const ROADMAP = [
   },
   {
     phase: "Phase 4",
-    title: "$XBOOKS Integration",
+    title: "$LUCA Integration",
     status: "planned",
     items: ["Token-gated premium features", "Discounted API usage", "Usage-based token sinks", "Agent payment flows"],
   },
@@ -123,8 +123,8 @@ const FAQ_ITEMS = [
     a: "Scan any Base wallet, view spend and income analytics, AI-categorize transactions, export PDF and CSV reports, generate agent-ready JSON, and share public wallet report links.",
   },
   {
-    q: "What is $XBOOKS used for?",
-    a: "$XBOOKS is the utility token for the x402Books ecosystem. It unlocks premium features, enables discounted API usage, powers agent financial queries, and provides access to advanced intelligence products.",
+    q: "What is $LUCA used for?",
+    a: "$LUCA is the utility token for the x402Books ecosystem. It unlocks premium features, enables discounted API usage, powers agent financial queries, and provides access to advanced intelligence products.",
   },
   {
     q: "Is there a free tier?",
@@ -498,25 +498,25 @@ Content-Type: application/json
             </div>
           </section>
 
-          {/* ── $XBOOKS ── */}
+          {/* ── $LUCA ── */}
           <section id="xbooks" className="docs-section">
             <span className="docs-tag">Token</span>
-            <h1 className="docs-h1">$XBOOKS Utility</h1>
+            <h1 className="docs-h1">$LUCA Utility</h1>
             <p className="docs-lead">The utility token powering access, usage, and agent financial intelligence.</p>
             <p className="docs-p">
-              $XBOOKS is not a speculative asset — it is a functional token designed to reduce the cost of accessing x402Books AI services, unlock premium capabilities, and power agent-to-platform payments.
+              $LUCA is not a speculative asset — it is a functional token designed to reduce the cost of accessing x402Books AI services, unlock premium capabilities, and power agent-to-platform payments.
             </p>
 
             <h2 className="docs-h2">Planned utilities</h2>
 
             <div className="docs-utility-grid">
               {[
-                { icon: "percent", title: "Discounted API Usage", desc: "Pay for API calls in $XBOOKS at a discounted rate versus USDC. The more you hold, the less you pay per query." },
-                { icon: "description", title: "Premium Reports", desc: "Deep wallet scans, full history exports, advanced AI summaries, and agent financial reports unlocked with $XBOOKS." },
-                { icon: "vpn_key", title: "Token-Gated Access", desc: "Hold or stake $XBOOKS to unlock Pro and Team tiers — advanced features without a monthly subscription." },
-                { icon: "smart_toy", title: "Agent Payments", desc: "AI agents pay $XBOOKS directly to access financial intelligence endpoints — programmatic, no human in the loop." },
-                { icon: "local_fire_department", title: "Usage Sinks", desc: "Specific actions consume $XBOOKS: deep scans, AI summaries, financial scores, and premium exports." },
-                { icon: "savings", title: "Intelligence Credits", desc: "Staking $XBOOKS generates credits that offset the cost of using x402Books services over time." },
+                { icon: "percent", title: "Discounted API Usage", desc: "Pay for API calls in $LUCA at a discounted rate versus USDC. The more you hold, the less you pay per query." },
+                { icon: "description", title: "Premium Reports", desc: "Deep wallet scans, full history exports, advanced AI summaries, and agent financial reports unlocked with $LUCA." },
+                { icon: "vpn_key", title: "Token-Gated Access", desc: "Hold or stake $LUCA to unlock Pro and Team tiers — advanced features without a monthly subscription." },
+                { icon: "smart_toy", title: "Agent Payments", desc: "AI agents pay $LUCA directly to access financial intelligence endpoints — programmatic, no human in the loop." },
+                { icon: "local_fire_department", title: "Usage Sinks", desc: "Specific actions consume $LUCA: deep scans, AI summaries, financial scores, and premium exports." },
+                { icon: "savings", title: "Intelligence Credits", desc: "Staking $LUCA generates credits that offset the cost of using x402Books services over time." },
               ].map((u) => (
                 <div key={u.title} className="docs-utility-card">
                   <span className="material-symbols-outlined docs-utility-icon">{u.icon}</span>
@@ -576,7 +576,7 @@ Content-Type: application/json
                 { n: "01", title: "SaaS Subscriptions", desc: "Monthly access to Pro and Team tiers with advanced features, exports, and multi-wallet support." },
                 { n: "02", title: "API Usage Fees", desc: "Pay-per-call pricing for developers and agents querying wallet financial data programmatically." },
                 { n: "03", title: "Premium Reports", desc: "On-demand deep scans, full history exports, and tax-style PDF reports for detailed financial analysis." },
-                { n: "04", title: "$XBOOKS Token", desc: "Token powers discounted access, feature unlocks, and future agent usage flows across the platform." },
+                { n: "04", title: "$LUCA Token", desc: "Token powers discounted access, feature unlocks, and future agent usage flows across the platform." },
                 { n: "05", title: "Agent Financial Score", desc: "A future scoring system assigning wallet-level financial reliability scores — useful for agents and protocols." },
                 { n: "06", title: "Intelligence Products", desc: "Aggregated ecosystem data, trend reports, and financial intelligence for protocols, researchers, and teams." },
                 { n: "07", title: "Enterprise Tools", desc: "Advanced analytics, bulk wallet reporting, and custom integrations for teams managing large agent fleets." },

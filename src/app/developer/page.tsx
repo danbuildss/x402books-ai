@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StitchHeader, StitchShell, StitchEmpty } from "@/components/stitch-app";
-import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type XBooksTier } from "@/lib/xbooks-token";
+import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type LucaTier } from "@/lib/luca-token";
 
 type ApiKeyRecord = {
   id: string;
   key_prefix: string;
   name: string;
   is_active: boolean;
-  tier: XBooksTier;
+  tier: LucaTier;
   rate_limit_per_day: number;
   requests_today: number;
   requests_total: number;
@@ -18,7 +18,7 @@ type ApiKeyRecord = {
   last_used_at: string | null;
 };
 
-const TIER_COLORS: Record<XBooksTier, string> = {
+const TIER_COLORS: Record<LucaTier, string> = {
   free:   "var(--st-muted)",
   holder: "var(--st-blue)",
   whale:  "var(--st-green)",
@@ -35,7 +35,7 @@ function relDate(iso: string | null) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-function TierBadge({ tier }: { tier: XBooksTier }) {
+function TierBadge({ tier }: { tier: LucaTier }) {
   return (
     <span style={{
       fontSize: 11, padding: "2px 8px", borderRadius: 99, fontWeight: 600,
@@ -50,13 +50,13 @@ function TierBadge({ tier }: { tier: XBooksTier }) {
 function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
   keyId: string;
   currentWallet: string | null;
-  currentTier: XBooksTier;
-  onLinked: (wallet: string, tier: XBooksTier, balance: number) => void;
+  currentTier: LucaTier;
+  onLinked: (wallet: string, tier: LucaTier, balance: number) => void;
 }) {
   const [wallet, setWallet] = useState(currentWallet ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ tier: XBooksTier; balance: number } | null>(null);
+  const [result, setResult] = useState<{ tier: LucaTier; balance: number } | null>(null);
 
   async function handleLink() {
     if (!wallet.trim().startsWith("0x")) { setError("Enter a valid 0x wallet address."); return; }
@@ -67,7 +67,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keyId, walletAddress: wallet.trim() }),
       });
-      const data = await res.json() as { tier: XBooksTier; xbooks_balance: number; error?: string };
+      const data = await res.json() as { tier: LucaTier; xbooks_balance: number; error?: string };
       if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
       setResult({ tier: data.tier, balance: data.xbooks_balance });
       onLinked(wallet.trim(), data.tier, data.xbooks_balance);
@@ -82,7 +82,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
     <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
       <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
-        Link wallet to check $XBOOKS balance and upgrade tier
+        Link wallet to check $LUCA balance and upgrade tier
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <input
@@ -101,7 +101,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
         <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--st-green)" }}>check_circle</span>
           <span style={{ color: "var(--st-muted)" }}>
-            {result.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })} $XBOOKS detected →
+            {result.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })} $LUCA detected →
           </span>
           <TierBadge tier={result.tier} />
           <span style={{ color: "var(--st-muted)" }}>{TIER_LIMITS[result.tier].toLocaleString()} req/day</span>
@@ -109,8 +109,8 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
       )}
       {!result && currentTier === "free" && (
         <div style={{ marginTop: 8, fontSize: 11, color: "var(--st-muted)" }}>
-          Hold ≥{TIER_THRESHOLDS.holder.toLocaleString()} $XBOOKS → 500 req/day &nbsp;·&nbsp;
-          Hold ≥{TIER_THRESHOLDS.whale.toLocaleString()} $XBOOKS → 2,000 req/day
+          Hold ≥{TIER_THRESHOLDS.holder.toLocaleString()} $LUCA → 500 req/day &nbsp;·&nbsp;
+          Hold ≥{TIER_THRESHOLDS.whale.toLocaleString()} $LUCA → 2,000 req/day
         </div>
       )}
     </div>
@@ -169,7 +169,7 @@ export default function DeveloperPage() {
     });
   }
 
-  function handleWalletLinked(keyId: string, wallet: string, tier: XBooksTier) {
+  function handleWalletLinked(keyId: string, wallet: string, tier: LucaTier) {
     setKeys((prev) => prev.map((k) =>
       k.id === keyId
         ? { ...k, wallet_address: wallet.toLowerCase(), tier, rate_limit_per_day: TIER_LIMITS[tier] }
@@ -182,12 +182,12 @@ export default function DeveloperPage() {
     <StitchShell>
       <StitchHeader
         title="Developer API"
-        description="Manage API keys · Upgrade tier with $XBOOKS"
+        description="Manage API keys · Upgrade tier with $LUCA · Powered by x402Books AI"
       />
 
       {/* Tier overview */}
       <div className="stitch-stats-grid stitch-tier-grid">
-        {(["free", "holder", "whale"] as XBooksTier[]).map((tier) => (
+        {(["free", "holder", "whale"] as LucaTier[]).map((tier) => (
           <div key={tier} className="stitch-card" style={{ padding: "14px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <TierBadge tier={tier} />
@@ -197,9 +197,9 @@ export default function DeveloperPage() {
               <span style={{ fontSize: 12, fontWeight: 400, color: "var(--st-muted)", marginLeft: 4 }}>req/day</span>
             </div>
             <div style={{ fontSize: 11, color: "var(--st-muted)", marginTop: 4 }}>
-              {tier === "free" && "No $XBOOKS required"}
-              {tier === "holder" && `≥ ${TIER_THRESHOLDS.holder.toLocaleString()} $XBOOKS`}
-              {tier === "whale" && `≥ ${TIER_THRESHOLDS.whale.toLocaleString()} $XBOOKS`}
+              {tier === "free" && "No $LUCA required"}
+              {tier === "holder" && `≥ ${TIER_THRESHOLDS.holder.toLocaleString()} $LUCA`}
+              {tier === "whale" && `≥ ${TIER_THRESHOLDS.whale.toLocaleString()} $LUCA`}
             </div>
           </div>
         ))}

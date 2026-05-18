@@ -8,6 +8,16 @@ Live at **[x402books.xyz](https://x402books.xyz)**
 
 ---
 
+## Ecosystem
+
+| Layer | Role |
+|-------|------|
+| **x402Books AI** | The platform — wallet audits, reports, financial intelligence |
+| **Luca** | The AI accountant agent — Telegram, onchain, conversational |
+| **$LUCA** | The unified ecosystem token — API tiers, premium features, agent credits |
+
+---
+
 ## What It Does
 
 - **Wallet Audits** — Scan any Base wallet address and get a complete financial breakdown
@@ -29,30 +39,35 @@ Live at **[x402books.xyz](https://x402books.xyz)**
 - **Reports** — Pre-built views: summary, cashflow, categories, flagged items
 - **Wallets** — Multi-wallet support, add/remove wallets
 - **Categories** — Custom category management
-- **Developer** — API key management, token-gated rate limits, usage logs, wallet linking
+- **Developer** — API key management, $LUCA token-gated rate limits, usage logs, wallet linking
 
 ### Landing Page (`/`)
-- How it works, features, $XBOOKS utilities, $XBOOKS token, x402 API section
+- How it works, features, $LUCA utilities, $LUCA token card, x402 API section
 - Luca section — meet the AI accountant agent
 - FAQ, CTA
 
 ### Luca Page (`/luca`)
 - Standalone marketing page for [Luca](https://t.me/AskLucaBot) — the AI accountant agent
 - Capabilities, how it works, sample report, For Agents / For Builders use cases
-- Content series, $LUCA token card with copy contract address
+- Content series, $LUCA token card with live price and copy contract address
 - SEO metadata (OG + Twitter card)
+
+### Agent Financial Registry (`/registry`)
+- Public directory of 20+ AI agents indexed by Luca
+- Confidence labels, wallet data, ecosystem filters, Luca's research notes
+- Agent verification CTA powered by $LUCA
 
 ---
 
 ## API
 
-Public REST API with key-based auth and token-gated rate limits.
+Public REST API with key-based auth and $LUCA token-gated rate limits.
 
 | Tier | Requirement | Requests/day |
 |------|-------------|-------------|
-| Free | Any API key | 50 |
-| Holder | ≥ 1,000 $XBOOKS | 500 |
-| Whale | ≥ 10,000 $XBOOKS | 2,000 |
+| Free | Any API key | 100 |
+| LUCA Holder | ≥ 1,000 $LUCA | 500 |
+| LUCA Whale | ≥ 10,000 $LUCA | 2,000 |
 
 **Base URL:** `https://x402books.xyz/api/v1`
 
@@ -74,22 +89,21 @@ Get your API key at [x402books.xyz/developer](https://x402books.xyz/developer).
 
 ## Luca — AI Accountant Agent
 
-**Luca** is the official x402Books AI agent. He lives on Telegram and answers financial questions about any Base wallet.
+**Luca** is the official x402Books AI agent, powered by $LUCA. He lives on Telegram and answers financial questions about any Base wallet.
 
 - Telegram: [@AskLucaBot](https://t.me/AskLucaBot)
 - X: [@AskLucaAI](https://x.com/AskLucaAI)
 - Page: [x402books.xyz/luca](https://x402books.xyz/luca)
 
-Luca is powered by the x402Books API (whale tier). Agent runtime: [Hermes](https://hermes.ai) on local Mac with skill file at `~/.hermes/skills/finance/x402books/SKILL.md`.
+Luca is powered by the x402Books API (LUCA Whale tier). Agent runtime: [Hermes](https://hermes.ai) on local Mac with skill file at `~/.hermes/skills/finance/x402books/SKILL.md`.
 
 ---
 
-## Tokens
+## Token
 
 | Token | Contract | Network | Purpose |
 |-------|----------|---------|---------|
-| $XBOOKS | `0x031d1a44785ef5e0bef61e226199122c5e1e4f02` | Base | Platform utility, API tier gating |
-| $LUCA | `0xB2b335F832FD3f43461ebD1CD9831D93D9CA4ba3` | Base | Luca community + agent identity |
+| $LUCA | `0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3` | Base | Unified ecosystem token — API tiers, premium features, agent intelligence credits |
 
 ---
 
@@ -101,9 +115,10 @@ Luca is powered by the x402Books API (whale tier). Agent runtime: [Hermes](https
 | Auth | Privy |
 | Database | Supabase (PostgreSQL) |
 | Styling | Custom CSS design system (dark/light mode) |
-| Blockchain | Base — Basescan API, BANKR API, Virtuals Protocol API |
+| Blockchain | Base — Alchemy API, BANKR API, Virtuals Protocol API, Dune Analytics |
 | AI | Claude (Anthropic) — categorization, summaries, insights |
 | Payments | x402 protocol — HTTP 402, USDC on Base, BANKR x402 Cloud |
+| Analytics | Vercel Analytics |
 | Deploy | Vercel |
 
 ---
@@ -121,7 +136,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
 
 # Blockchain
-BASESCAN_API_KEY=your_basescan_key
 NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
 
 # AI
@@ -129,6 +143,13 @@ ANTHROPIC_API_KEY=your_anthropic_key
 
 # x402 / BANKR
 BANKR_X402_API_KEY=your_bankr_key
+X402BOOKS_INTERNAL_SECRET=your_internal_secret   # shared secret for BANKR x402 Cloud proxy auth
+
+# $LUCA token — ecosystem token on Base
+LUCA_TOKEN_ADDRESS=0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
+
+# Dune Analytics (BANKR ecosystem token registry)
+DUNE_API_KEY=your_dune_key
 ```
 
 ---
@@ -157,9 +178,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 Key tables:
 
-- `waitlist_signups` — early access signups
+- `users` — Privy user records (privy_id, email, x_handle, last_seen_at)
 - `api_keys` — API key records with tier, usage counters, wallet linking
 - `api_usage` — per-request usage logs
+- `agent_submissions` — registry verification requests
 - RPC `increment_api_key_usage` — atomic daily counter increment
 
 ---

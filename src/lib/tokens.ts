@@ -5,7 +5,7 @@ export const STABLECOIN_ADDRESSES = new Set([
   "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC on Base
 ]);
 
-export const XBOOKS_TOKEN_ADDRESS = "0x031d1a44785ef5e0bef61e226199122c5e1e4f02";
+export const LUCA_TOKEN_ADDRESS = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 
 // Fallback agent token symbols used before live registry loads
 export const AGENT_TOKEN_SYMBOLS = new Set([
@@ -13,7 +13,7 @@ export const AGENT_TOKEN_SYMBOLS = new Set([
   "VIRTUAL", "VIRTUALS",
   "LUNA", "AIXBT", "GAME", "VADER", "CLANKER",
   "SEKOIA", "ACOLYT", "SPORE", "MISATO", "LMAO",
-  "NOOK", "CRED", "XBOOKS", "DEGEN", "MOCA",
+  "NOOK", "CRED", "LUCA", "DEGEN", "MOCA",
 ]);
 
 export function isStablecoin(address: string): boolean {

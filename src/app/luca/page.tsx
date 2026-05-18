@@ -55,8 +55,8 @@ const SERIES = [
 
 const TRUST_ITEMS = [
   "Official x402Books AI agent",
-  "$XBOOKS powers the platform",
-  "$LUCA represents Luca's community and agent identity",
+  "$LUCA powers Luca and x402Books AI",
+  "Ecosystem token on Base",
   "Runs on Base",
   "Powered by Claude AI",
   "x402 protocol native",
@@ -184,17 +184,17 @@ function LucaTokenSection() {
         <p className="luca-label">Token</p>
         <h2 className="luca-h2">$LUCA</h2>
         <p className="luca-section-sub">
-          The community and agent identity token around Luca&apos;s growth and future agent-specific utilities.
+          The unified ecosystem token powering Luca and x402Books AI.
         </p>
       </div>
 
       <div className="lp-token-card luca-lp-token-card">
         {/* Left — identity */}
         <div className="lp-token-left">
-          <p className="lp-token-eyebrow">Community Token · Base</p>
+          <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
           <h2 className="lp-token-name">$LUCA</h2>
           <p className="lp-token-desc">
-            $LUCA is the token tied to Luca&apos;s identity, community growth, and future agent-specific utilities inside the x402Books ecosystem.
+            $LUCA powers Luca and x402Books AI — the first AI accountant for the agent economy. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
           </p>
           <div className="lp-token-ca">
             <span className="lp-token-ca-label">CA</span>
