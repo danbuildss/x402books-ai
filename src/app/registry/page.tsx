@@ -43,7 +43,7 @@ const AGENTS: Agent[] = [
     website: "https://bankr.bot",
     xHandle: "@bankrbot",
     priority: 94,
-    lucaNote: "BNKR Staking V2 Vault — publicly referenced on X. 0 tx in 30d snapshot. Fee-recipient clustering still needed.",
+    lucaNote: "Two candidates found. Primary: 0x1364…42b3 — BNKR Staking V2 Vault, publicly referenced on X (Medium). Secondary: 0xa2d9…b417 — creator fee-beneficiary example in a Bankr launch flow (Low — likely a user wallet, not protocol treasury). 0 tx in 30d snapshot on vault. Missing: official treasury wallet, multisig/Safe, clear separation of protocol-owned vs user-created fee recipients. Next step: cluster fee-routing patterns from vault + recurring launch destinations, then ask Bankr team to verify main treasury.",
   },
   {
     name: "Virtuals Protocol",
@@ -58,7 +58,7 @@ const AGENTS: Agent[] = [
     website: "https://app.virtuals.io",
     xHandle: "@virtuals_io",
     priority: 92,
-    lucaNote: "$VIRTUAL token contract on Base — verified by Coinbase Markets. Treasury/multisig wallet not yet found.",
+    lucaNote: "$VIRTUAL token contract on Base — verified by Coinbase Markets (High). Not a treasury wallet. Missing: protocol treasury, governance wallet/multisig, EconomyOS protocol-owned reserve wallets. Next step: search Virtuals docs/governance for treasury, multisig, Safe, or reserve references — then link to token contract and official docs.",
   },
   {
     name: "Clanker",
@@ -73,7 +73,7 @@ const AGENTS: Agent[] = [
     website: "https://www.clanker.world",
     xHandle: "@clanker_world",
     priority: 88,
-    lucaNote: "Example Clanker-launched token contract. No central treasury confirmed. CEF referenced but no stable address surfaced.",
+    lucaNote: "Example Clanker-launched token contract (Low). Clanker Ecosystem Fund (CEF) referenced publicly but no stable treasury address found. No central treasury confirmed. Next step: inspect admin/claim flow and identify recurring protocol-level fee receivers.",
   },
   {
     name: "Gitlawb",
@@ -88,7 +88,7 @@ const AGENTS: Agent[] = [
     website: "https://playground.gitlawb.com",
     xHandle: "@gitlawb",
     priority: 86,
-    lucaNote: "$GITLAWB token contract — strong public attribution on X. Treasury claims exist but no wallet proof yet.",
+    lucaNote: "$GITLAWB token contract — strong public attribution on X (High). Not proof of treasury control. Treasury claims exist on X but no direct wallet proof. Missing: official treasury wallet, repo declaration file, DID-to-wallet mapping. Next step: inspect Gitlawb public repos/docs for .x402books/wallets.json or wallet declarations, then request signed proof for main treasury or operator wallet.",
   },
 
   // ── Tier 2 ──
@@ -109,7 +109,7 @@ const AGENTS: Agent[] = [
   },
   {
     name: "Primer Systems",
-    symbol: "$PRIMER",
+    symbol: "$PR",
     ecosystem: "Base",
     wallet: "0x7f0d834705f6e991edce01b739b067bdd5d0eb1b",
     role: "Deployer",
@@ -120,7 +120,7 @@ const AGENTS: Agent[] = [
     website: "https://primer.systems",
     xHandle: "@primer_systems",
     priority: 82,
-    lucaNote: "Deployer + fee-recipient for Primer Pay contract — strongest direct product-tied lead in the list.",
+    lucaNote: "Two candidates found — strongest wallet-level lead in the top 5. Primary: 0x7f0d…eb1b — deployer + fee-recipient for Primer Pay (Medium, public attribution). Secondary: 0x437E…7b07 — Primer Pay contract itself (Medium). x402Books spot-check: 1 tx / +$0.018 on deployer. Missing: official treasury wallet, full facilitator settlement wallet list, confirmation deployer is still protocol-active. Next step: trace all onchain interactions from Primer Pay contract + deployer, look for recurring settlement/fee-routing, then request team confirmation for treasury + facilitator wallet.",
   },
   {
     name: "Coinbase AgentKit",
@@ -165,7 +165,7 @@ const AGENTS: Agent[] = [
     website: "https://nookplot.com",
     xHandle: "@nookplot",
     priority: 78,
-    lucaNote: "$NOOK token contract — strong public attribution. Guild treasury / settlement mechanics referenced but no protocol address yet.",
+    lucaNote: "$NOOK token contract — strong public attribution on X (High). Not a treasury wallet. Public narrative references settlement, staking, and guild treasury mechanics. Missing: guild treasury addresses, reward distribution wallets, staking contract mapping, protocol treasury wallet. Next step: inspect Nookplot docs/app flows for guild treasury, staking contracts, reward distribution — then map into treasury/rewards/settlement roles.",
   },
 
   // ── Tier 3 ──
