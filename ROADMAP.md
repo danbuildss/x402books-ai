@@ -189,3 +189,112 @@ One-line by partner surface:
 - For Gitlawb repos: *Verified wallet identity for the agent economy*
 - For Primer endpoints: *Treasury transparency as a paid x402 service*
 - For Virtuals ecosystem: *Treasury transparency for tokenized agents*
+
+---
+
+## Competitive Landscape (Luca's Research)
+
+**Summary: The exact niche is still open.**
+
+x402Books' niche is not just "crypto accounting." It is the combination of:
+- AI-agent financial intelligence
+- Public wallet audits
+- Agent Financial Registry
+- Verification of agent wallets and roles
+- Operator-facing explanations of revenue, spend, net flow, anomalies, treasury health
+- Base / x402 / agent economy focus
+
+That combination is still differentiated. No direct same-niche competitor found with strong evidence.
+
+---
+
+### Adjacent Competitors
+
+**Cryptio**
+Enterprise digital asset accounting / ERP. Heavy institutional positioning — data transformation, reconciliation, compliance, loan management. Strong in enterprise back office, weak overlap with the agent registry and public audit wedge.
+
+**TRES Finance** (acquired by Fireblocks)
+Crypto accounting and Web3 treasury. AI Connect is moving toward AI-assisted finance operations. More finance ops software than a financial layer for the agent economy. Important adjacent player on treasury/compliance infra.
+
+**Octav**
+Portfolio intelligence, NAV reporting, exposure monitoring, AI-powered transaction labeling. Positioned at funds and portfolio visibility — not agent accounting. Adjacent, not the same wedge.
+
+**Dune (Audit & Tax layer)**
+Normalized onchain data for reconciliation, audit, and tax teams. Infrastructure competitor / dependency risk today, but moving closer to accounting workflows. Not a direct product competitor yet, but a watch item.
+
+**Surf**
+"Crypto intelligence for AI agents." Agent-native distribution, low-friction skill install. Not an accounting competitor but signals that agent-native crypto tooling is becoming real. Important packaging insight: one skill, many endpoints, immediate use.
+
+**Mensari**
+X-indexed references exist but main domain appears inactive. Weak competitive signal — more evidence the space is still early and fragmented.
+
+---
+
+### Strategic Analysis
+
+Most others are optimized for:
+- Enterprise accounting teams
+- Treasury / NAV / reconciliation
+- Generic crypto data
+- Institutional reporting
+
+x402Books can own:
+- Agent wallet identity
+- Agent wallet verification
+- Financial profiles for agents
+- Public agent registry
+- Operator-facing agent audits
+- "Are agents actually working?"
+- Base-native agent economy coverage
+
+---
+
+### Key Product Insights from Competitors
+
+| Player | Insight |
+|--------|---------|
+| Dune | Turning raw onchain data into source-traceable accounting records — good for auditability |
+| TRES | AI-native finance workflow — finance teams want AI in the loop, not just exports |
+| Octav | AI transaction review + fast exposure clarity |
+| Surf | Agent-native packaging: install one skill and your agent can use it immediately |
+
+The Surf insight is especially relevant for Luca: how we package and distribute matters as much as what we build.
+
+---
+
+### The Big Opportunity
+
+> **Others explain wallets. x402Books explains agents as economic actors.**
+
+Instead of: "here is a wallet dashboard"
+
+We say:
+- "Here is the public financial profile of an agent"
+- "Here is whether this agent is economically active"
+- "Here is its treasury health"
+- "Here is what wallets are verified vs candidate"
+- "Here is what the financial data says about this agent's viability"
+
+That is a category, not a feature.
+
+---
+
+### 4 Surfaces to Push Hard
+
+1. **Agent Financial Registry** — public directory with claim/verify flow
+2. **Luca Audit Notes** — short public-safe financial breakdowns posted regularly
+3. **Verification Layer** — Verified / Candidate / Needs Review status per agent
+4. **Ecosystem Financial Leaderboards** — most active agents, newest verified, treasury watch
+
+---
+
+### Biggest Strategic Risk
+
+Not a copycat today. The real risk is that enterprise accounting players (Cryptio, TRES, Dune) move downmarket once the agent economy category becomes obvious.
+
+**Right move:**
+- Define the category fast
+- Publish aggressively
+- Onboard agents quickly
+- Make verification a status game
+- Become the default public financial layer before others notice the wedge
