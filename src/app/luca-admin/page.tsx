@@ -552,11 +552,13 @@ export default function LucaAdminPage() {
     setAuthLoading(true);
     setAuthError("");
     try {
-      const res = await fetch("/api/registry/pending", {
-        headers: { Authorization: `Bearer ${input}` },
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: input }),
       });
       if (res.status === 401) {
-        setAuthError("Wrong secret.");
+        setAuthError("Wrong password.");
       } else {
         sessionStorage.setItem("luca_admin_secret", input);
         setSecret(input);
@@ -587,7 +589,7 @@ export default function LucaAdminPage() {
             </div>
           </div>
           <p style={{ color: "#777d86", marginBottom: "1.25rem", fontSize: "0.9rem" }}>
-            Enter your internal secret to continue.
+            Enter your admin password to continue.
           </p>
           <form onSubmit={handleLogin}>
             <input
