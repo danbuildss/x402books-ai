@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/logo";
@@ -8,21 +8,22 @@ import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
 import { AGENTS } from "./data";
 
-// ── Computed stats ────────────────────────────────────────────────────────────
+// ── Static fallback stats (used until live data loads) ────────────────────────
 
-const walletCount = AGENTS.filter(
-  (a) => a.tokenAddress !== null || a.wallets.length > 0
-).length;
-const reviewedCount = AGENTS.filter(
-  (a) => a.financialActivityScore !== null
-).length;
-
-const STATS = [
-  { label: "Agents Tracked",  value: String(AGENTS.length) },
-  { label: "Ecosystems",      value: "3"                   },
-  { label: "Wallets Indexed", value: String(walletCount)   },
-  { label: "Luca Reviewed",   value: String(reviewedCount) },
-];
+function computeStats(agents: Agent[]) {
+  const walletCount = agents.filter(
+    (a) => a.tokenAddress !== null || a.wallets.length > 0
+  ).length;
+  const reviewedCount = agents.filter(
+    (a) => a.financialActivityScore !== null
+  ).length;
+  return [
+    { label: "Agents Tracked",  value: String(agents.length) },
+    { label: "Ecosystems",      value: "3"                   },
+    { label: "Wallets Indexed", value: String(walletCount)   },
+    { label: "Luca Reviewed",   value: String(reviewedCount) },
+  ];
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -581,11 +582,29 @@ function LucaExample() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function RegistryPage() {
+  const [agents, setAgents]         = useState<Agent[]>(AGENTS);
+  const [fromSupabase, setFromSupabase] = useState(false);
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
 
-  const filtered = AGENTS.filter((a) => {
+  useEffect(() => {
+    fetch("/api/registry/agents")
+      .then((r) => r.json())
+      .then((data: { agents?: Agent[]; fromSupabase?: boolean }) => {
+        if (Array.isArray(data.agents) && data.agents.length > 0) {
+          setAgents(data.agents);
+          setFromSupabase(data.fromSupabase ?? false);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to static AGENTS
+      });
+  }, []);
+
+  const STATS = computeStats(agents);
+
+  const filtered = agents.filter((a) => {
     const matchEco    = ecoFilter === "All" || a.ecosystem === ecoFilter;
     const matchStatus = statusFilter === "All" || a.verificationStatus === statusFilter;
     const q           = search.toLowerCase();
@@ -639,6 +658,19 @@ export default function RegistryPage() {
 
       {/* ── Agent Registry ── */}
       <section className="reg-section" id="agents">
+        {fromSupabase && (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, fontSize: 12, color: "var(--muted)" }}>
+            <span style={{
+              display: "inline-block",
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#22c55e",
+              boxShadow: "0 0 4px #22c55e",
+            }} />
+            Live data from Supabase
+          </div>
+        )}
         <div className="reg-table-controls">
           <div className="reg-search-wrap">
             <span className="material-symbols-outlined reg-search-icon">search</span>
