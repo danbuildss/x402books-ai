@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./page.module.css";
 
 const layers = [
@@ -184,6 +185,9 @@ export default function LucaAdminPage() {
           <a className={styles.navItem} href="#registry">
             <span>G</span> Agent Registry
           </a>
+          <Link className={styles.navItem} href="/luca-admin/registry-updates">
+            <span>✓</span> Pending Updates
+          </Link>
           <a className={styles.navItem} href="#registry">
             <span>V</span> Verification
           </a>
