@@ -67,10 +67,10 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ keyId, walletAddress: wallet.trim() }),
       });
-      const data = await res.json() as { tier: LucaTier; xbooks_balance: number; error?: string };
+      const data = await res.json() as { tier: LucaTier; luca_balance: number; error?: string };
       if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
-      setResult({ tier: data.tier, balance: data.xbooks_balance });
-      onLinked(wallet.trim(), data.tier, data.xbooks_balance);
+      setResult({ tier: data.tier, balance: data.luca_balance });
+      onLinked(wallet.trim(), data.tier, data.luca_balance);
     } catch {
       setError("Network error — please try again.");
     } finally {

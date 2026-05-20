@@ -6,29 +6,52 @@ import { FadeContent, TextType, ThemeToggle } from "@/components/effects";
 import { ScrollLink } from "@/components/scroll-link";
 import Link from "next/link";
 
+// ── Static data ───────────────────────────────────────────────────────────────
+
 const FEATURES = [
-  { icon: "radar", title: "Wallet Scanner", body: "Paste any Base wallet and instantly fetch all USDC transfer activity, normalized and ready to read." },
-  { icon: "psychology", title: "AI Categorization", body: "Claude AI classifies every transaction — API calls, data access, compute, DeFi, and more." },
-  { icon: "flag", title: "Flag & Review", body: "Unusual amounts, duplicate patterns, and high-frequency bursts are surfaced automatically." },
-  { icon: "picture_as_pdf", title: "PDF & CSV Export", body: "Generate a clean financial report PDF or export raw rows as CSV in one click." },
-  { icon: "share", title: "Shareable Reports", body: "Every wallet report lives at a public URL you can paste anywhere — no login required to view." },
-  { icon: "terminal", title: "Agent-Ready API", body: "Query the ledger via JSON API for agent pipelines, accounting tools, and onchain automation." },
+  { icon: "account_balance_wallet", title: "Wallet Intelligence",        body: "Scan any Base wallet and get a complete financial picture — income, spend, net flow, treasury health, and risk flags in seconds." },
+  { icon: "psychology",             title: "Transaction Classification", body: "Claude AI classifies every transaction — revenue, expenses, treasury movements, API calls, DeFi, gas, and unknown items." },
+  { icon: "radar",                  title: "Anomaly Detection",          body: "Unusual inflows, duplicate patterns, high-frequency behavior, and concentration risk surfaced automatically." },
+  { icon: "picture_as_pdf",         title: "Operator-Ready Reports",     body: "Clean PDF reports, CSV exports, or machine-readable JSON — operator-ready, investor-ready, and audit-friendly." },
+  { icon: "share",                  title: "Public Report Links",        body: "Every wallet report lives at a permanent URL. Share with operators, investors, or other agents — no login required." },
+  { icon: "terminal",               title: "Financial Intelligence API", body: "Query any wallet's financial state via REST API. Built for agent pipelines, accounting tools, and autonomous systems." },
+  { icon: "menu_book",              title: "Agent Financial Registry",   body: "84 agents tracked across Base, Bankr, and Virtuals. Wallets indexed, scored, and reviewed by Luca — updated weekly." },
+  { icon: "monitoring",             title: "Financial Scoring",          body: "Every agent gets an Activity Score and Partnership Fit Score based on real wallet data — not social signals." },
 ];
 
 const STEPS = [
-  { num: "01", title: "Paste wallet address", body: "Copy any Base wallet address into the scanner bar." },
-  { num: "02", title: "Scan USDC activity", body: "We fetch and normalize every USDC transfer from the Base chain." },
-  { num: "03", title: "AI classifies it", body: "Claude labels categories, flags anomalies, and writes a narrative summary." },
-  { num: "04", title: "Export & share", body: "Download PDF or CSV, or share the public report link." },
+  { num: "01", title: "Point at a wallet",         body: "Any Base wallet address. Paste it manually, call the API, or let Luca scan it on a schedule." },
+  { num: "02", title: "x402Books fetches the data", body: "Wallet activity and token transfers are pulled from Base, normalized, and structured in seconds." },
+  { num: "03", title: "Claude classifies everything", body: "AI labels each transaction — revenue, expense, treasury, DeFi, API call, compute, and more." },
+  { num: "04", title: "Risks and patterns surface", body: "Anomalies, concentration risk, unusual flows, and missing context are flagged automatically." },
+  { num: "05", title: "Clean output, your format",  body: "PDF, CSV, JSON, shareable link, or direct API response — ready for agents and humans alike." },
 ];
 
 const TRUST_ITEMS = [
-  { label: "Base USDC", sub: "Native chain support" },
-  { label: "x402", sub: "Protocol native" },
-  { label: "AI-Powered", sub: "Claude Haiku engine" },
-  { label: "4 Ranges", sub: "7d · 14d · 30d · 90d" },
-  { label: "PDF + CSV", sub: "One-click exports" },
-  { label: "Open Access", sub: "No login to view reports" },
+  { label: "Financial Intelligence Platform", sub: "Agent Economy" },
+  { label: "84 Agents Tracked",               sub: "Registry live" },
+  { label: "Base",                             sub: "Native chain" },
+  { label: "Claude AI",                        sub: "Classification engine" },
+  { label: "x402 Native",                      sub: "Protocol payment" },
+  { label: "API + Registry",                   sub: "Open access" },
+];
+
+const FOR_AGENTS = [
+  "What did I earn this week?",
+  "Am I cashflow positive?",
+  "What did I spend on?",
+  "Is my treasury healthy?",
+  "Which transactions need review?",
+  "What should I report to operators?",
+];
+
+const FOR_BUILDERS = [
+  "Wallet audit API",
+  "Agent financial scores",
+  "Treasury health monitoring",
+  "Anomaly detection alerts",
+  "Registry lookup",
+  "Compliance-ready exports",
 ];
 
 const INFRA = [
@@ -118,23 +141,27 @@ const SOCIAL = [
 const FAQ_ITEMS = [
   {
     q: "What is x402Books AI?",
-    a: "x402Books AI is a financial intelligence tool for the agent economy. It scans Base wallet activity and turns raw USDC transactions into readable reports, categories, summaries, and exports.",
+    a: "x402Books AI is the financial intelligence platform for autonomous agents. It scans Base wallet activity and turns raw onchain transactions into readable reports, classifications, financial scores, and audit-ready exports — built for the agent economy.",
   },
   {
     q: "Who is x402Books AI built for?",
-    a: "x402Books AI is built for AI agent developers, onchain builders, teams managing agent wallets, and anyone experimenting with x402 or Base payments who needs better visibility into wallet activity.",
+    a: "x402Books AI is built for autonomous agents, AI agent developers, onchain builders, and teams managing agent wallets. If you're running an agent that earns, spends, or holds treasury on Base — x402Books is your financial layer.",
   },
   {
-    q: "What can I do with x402Books AI V1?",
-    a: "In V1, you can scan any Base wallet, view spend and income, analyze transactions, categorize activity with AI, export PDF/CSV reports, generate agent-ready JSON output, and share public wallet reports.",
+    q: "What can I do with x402Books AI?",
+    a: "Scan any Base wallet, view income and spend breakdowns, classify transactions with AI, detect anomalies, export PDF/CSV reports, generate agent-ready JSON output, share public wallet reports, look up agents in the registry, and query everything via API.",
   },
   {
     q: "Does x402Books AI control my wallet or funds?",
-    a: "No. x402Books AI is read-only. It analyzes public onchain wallet activity and does not custody funds, request private keys, or move assets from your wallet.",
+    a: "No. x402Books AI is read-only. It analyzes public onchain wallet activity and does not custody funds, request private keys, or move assets from any wallet.",
+  },
+  {
+    q: "What is the Agent Financial Registry?",
+    a: "The Agent Financial Registry is the first financial database of the agent economy. 84 Base agents are tracked with wallet data, treasury health scores, activity scores, and verification status — maintained weekly by Luca.",
   },
   {
     q: "What role does $LUCA play?",
-    a: "$LUCA is the unified ecosystem token for Luca and x402Books AI. Hold $LUCA to unlock higher API limits, premium reports, agent financial registry access, and future agent intelligence credits.",
+    a: "$LUCA is the unified ecosystem token for Luca and x402Books AI. Hold $LUCA to unlock higher API limits, premium reports, Agent Financial Registry access, and agent intelligence credits.",
   },
 ];
 
@@ -143,10 +170,10 @@ const BANKR_WALLET   = "0xb98f0de777eea8c481b64e33d3e0066cea38fa91";
 const BANKR_BASE_URL = `https://x402.bankr.bot/${BANKR_WALLET}`;
 
 const LUCA_UTILITIES = [
-  { icon: "speed",          title: "Higher API Limits",          body: "Hold ≥1,000 $LUCA → 500 req/day. Hold ≥10,000 $LUCA → 2,000 req/day. Free tier stays at 100." },
-  { icon: "picture_as_pdf", title: "Premium Reports",            body: "Unlock PDF exports, full history exports, and deep wallet scans with $LUCA." },
-  { icon: "manage_accounts", title: "Agent Financial Registry",  body: "Verify your agent, unlock profile features, and access premium registry intelligence with $LUCA." },
-  { icon: "smart_toy",      title: "Agent Intelligence Credits", body: "AI agents pay $LUCA directly to access financial intelligence endpoints — programmatic, no human in the loop." },
+  { icon: "speed",           title: "Higher API Limits",          body: "Hold ≥1,000 $LUCA → 500 req/day. Hold ≥10,000 $LUCA → 2,000 req/day. Free tier stays at 100." },
+  { icon: "picture_as_pdf",  title: "Premium Reports",            body: "Unlock PDF exports, full history exports, and deep wallet scans with $LUCA." },
+  { icon: "manage_accounts", title: "Agent Financial Registry",   body: "Verify your agent, unlock profile features, and access premium registry intelligence with $LUCA." },
+  { icon: "smart_toy",       title: "Agent Intelligence Credits", body: "AI agents pay $LUCA directly to access financial intelligence endpoints — programmatic, no human in the loop." },
 ];
 
 const X402_ENDPOINTS = [
@@ -156,6 +183,8 @@ const X402_ENDPOINTS = [
   { name: "categorize",            method: "POST", usdc: "$0.15", xbooks: "$0.105", desc: "Claude AI transaction categorization" },
   { name: "agent-financial-state", method: "GET",  usdc: "$0.05", xbooks: "$0.035", desc: "Agent snapshot with ecosystem detection" },
 ];
+
+// ── Sub-components ────────────────────────────────────────────────────────────
 
 function XBooksUtilities() {
   return (
@@ -191,12 +220,11 @@ function X402ApiSection() {
         <div className="lp-section-head">
           <p className="lp-section-label">x402 API</p>
           <h2 className="lp-h2">Pay per query. No subscriptions.</h2>
-          <p className="lp-section-sub">Every endpoint is live on BANKR x402 Cloud — discoverable by any AI agent, paid in USDC on Base, settled on-chain.</p>
+          <p className="lp-section-sub">Every endpoint is live on BANKR x402 Cloud — discoverable by any AI agent, paid in USDC on Base, settled on-chain. No subscriptions. No human in the loop.</p>
         </div>
       </FadeContent>
 
       <div className="lp-x402-grid">
-        {/* Endpoint table */}
         <div className="lp-x402-table-wrap">
           <div className="lp-x402-table-head">
             <span>Endpoint</span>
@@ -224,13 +252,12 @@ function X402ApiSection() {
           ))}
           <div className="lp-x402-table-foot">
             <span>30% discount when paying with $LUCA</span>
-            <a href={`https://bankr.bot/x402`} target="_blank" rel="noreferrer" className="lp-x402-bankr-link">
+            <a href="https://bankr.bot/x402" target="_blank" rel="noreferrer" className="lp-x402-bankr-link">
               View on BANKR ↗
             </a>
           </div>
         </div>
 
-        {/* Code snippet */}
         <div className="lp-x402-code-wrap">
           <div className="lp-x402-code-head">
             <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
@@ -262,7 +289,6 @@ const data = await res.json();
         </div>
       </div>
 
-      {/* Trust strip */}
       <div className="lp-x402-trust">
         {["USDC on Base", "Settled on-chain", "Agent-discoverable", "No subscription", "Revenue to your wallet"].map((t) => (
           <span key={t} className="lp-x402-trust-item">
@@ -399,13 +425,11 @@ function XBooksTokenSection() {
   return (
     <section className="lp-token-section">
       <div className="lp-token-card">
-        {/* Left — identity */}
         <div className="lp-token-left">
           <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
           <h2 className="lp-token-name">$LUCA</h2>
           <p className="lp-token-desc">
-            The unified ecosystem token for Luca and x402Books AI. Hold $LUCA to unlock higher API limits,
-            premium reports, Agent Financial Registry access, and agent intelligence credits.
+            $LUCA is the ecosystem token powering Luca and x402Books AI. It unlocks higher API limits, premium intelligence reports, Luca-powered wallet audits, and future agent financial credits.
           </p>
 
           <div className="lp-token-ca">
@@ -438,7 +462,6 @@ function XBooksTokenSection() {
           </div>
         </div>
 
-        {/* Right — live data */}
         <div className="lp-token-right">
           {!token ? (
             <div className="lp-token-loading">
@@ -500,6 +523,8 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -551,7 +576,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── Mobile menu overlay ── */}
+      {/* ── Mobile menu ── */}
       {mobileMenuOpen && (
         <div className="lp-mobile-menu" role="dialog" aria-modal="true">
           <div className="lp-mobile-menu-head">
@@ -596,18 +621,18 @@ export default function HomePage() {
               <span className="lp-v1-dot" />
               v1 is live
             </div>
-            <p className="lp-eyebrow">Onchain Financial Intelligence · Base USDC</p>
+            <p className="lp-eyebrow">Financial Intelligence Platform · Agent Economy</p>
             <h1 className="lp-h1">
-              Your onchain ledger,{" "}
-              <em>finally readable.</em>
+              Agents earn. Agents spend.{" "}
+              <em>Now they have books.</em>
             </h1>
             <p className="lp-hero-typing">
               <TextType
                 texts={[
-                  "Paste a wallet. See everything.",
-                  "AI categories. Instant clarity.",
-                  "Export PDF. Share the link.",
-                  "Flag anomalies. Stay in control.",
+                  "Scan any wallet. See everything.",
+                  "AI classifies every transaction.",
+                  "Score treasury health instantly.",
+                  "Built for the agent economy.",
                 ]}
                 typingSpeed={52}
                 deletingSpeed={30}
@@ -617,11 +642,11 @@ export default function HomePage() {
               />
             </p>
             <p className="lp-hero-sub">
-              x402Books AI scans any Base wallet, classifies every USDC transaction with Claude AI, and delivers clean reports you can share, export, or query via API.
+              x402Books AI is the financial intelligence platform for autonomous agents. Scan any wallet, classify transactions, analyze treasury health, and generate clean reports — built for the agent economy on Base.
             </p>
             <div className="lp-hero-actions">
-              <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Open App — Free</Link>
-              <ScrollLink targetId="how" className="lp-btn-ghost lp-btn-lg">See how it works</ScrollLink>
+              <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Scan a Wallet — Free</Link>
+              <Link href="/registry" className="lp-btn-ghost lp-btn-lg">View the Registry</Link>
             </div>
           </FadeContent>
         </div>
@@ -631,10 +656,10 @@ export default function HomePage() {
             <span className="lp-card-dot green" />
             <span className="lp-card-dot yellow" />
             <span className="lp-card-dot red" />
-            <span className="lp-card-title">Wallet Report · 30d</span>
+            <span className="lp-card-title">Agent Financial Report · 30d</span>
           </div>
           <div className="lp-card-wallet">
-            <span className="lp-card-label">Wallet</span>
+            <span className="lp-card-label">Agent Wallet</span>
             <strong className="lp-card-addr">0x7d3f…42f1</strong>
           </div>
           <div className="lp-card-stats">
@@ -661,7 +686,7 @@ export default function HomePage() {
             ))}
           </div>
           <div className="lp-card-cats">
-            {[["API calls", 74], ["Data access", 52], ["Compute", 38]].map(([label, pct]) => (
+            {[["API calls", 74], ["Revenue", 52], ["Treasury", 38]].map(([label, pct]) => (
               <div key={String(label)} className="lp-cat-row">
                 <span>{label}</span>
                 <div className="lp-cat-track"><div className="lp-cat-fill" style={{ width: `${pct}%` }} /></div>
@@ -669,8 +694,8 @@ export default function HomePage() {
             ))}
           </div>
           <div className="lp-card-badge">
-            <span className="lp-badge-pill">128 likely x402</span>
-            <span className="lp-badge-pill green">CSV ready</span>
+            <span className="lp-badge-pill">128 classified</span>
+            <span className="lp-badge-pill green">Treasury: Healthy</span>
           </div>
         </div>
       </section>
@@ -726,8 +751,8 @@ export default function HomePage() {
         <FadeContent delay={60}>
           <div className="lp-section-head">
             <p className="lp-section-label">Features</p>
-            <h2 className="lp-h2">Financial visibility for the onchain economy.</h2>
-            <p className="lp-section-sub">Everything you need to understand, audit, and share Base USDC activity.</p>
+            <h2 className="lp-h2">Everything agents need financially.</h2>
+            <p className="lp-section-sub">A complete financial intelligence stack — built for autonomous agents and the developers who build them.</p>
           </div>
         </FadeContent>
         <div className="lp-features-grid">
@@ -745,16 +770,110 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Agent Financial Registry ── */}
+      <section className="lp-section" id="registry">
+        <FadeContent delay={60}>
+          <div className="lp-registry-inner">
+            <div className="lp-registry-text">
+              <p className="lp-section-label">Agent Financial Registry</p>
+              <h2 className="lp-h2" style={{ margin: "12px 0 14px" }}>84 agents tracked across the agent economy.</h2>
+              <p className="lp-registry-sub">
+                A growing financial registry for autonomous agents. Track wallets, treasury health, activity scores, verification status, and Luca-reviewed financial notes across Base, Bankr, Virtuals, and emerging agent ecosystems.
+              </p>
+              <div className="lp-registry-stats">
+                <div className="lp-registry-stat">
+                  <strong>84</strong>
+                  <span>Agents tracked</span>
+                </div>
+                <div className="lp-registry-stat">
+                  <strong>Weekly</strong>
+                  <span>Updated by Luca</span>
+                </div>
+                <div className="lp-registry-stat">
+                  <strong>Live</strong>
+                  <span>Verification status</span>
+                </div>
+              </div>
+              <Link href="/registry" className="lp-btn-primary" style={{ display: "inline-flex", marginTop: "1.5rem" }}>
+                View the Registry →
+              </Link>
+            </div>
+            <div className="lp-registry-card">
+              <div className="lp-card-header">
+                <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
+                <span className="lp-card-title">Agent Financial Registry</span>
+              </div>
+              <div style={{ padding: "1rem" }}>
+                {[
+                  { name: "Helixa",      score: 80, health: "Healthy",  status: "Verified" },
+                  { name: "Blue Agent",  score: 100, health: "Healthy", status: "Luca Managed" },
+                  { name: "nanopay",     score: 90, health: "Stable",   status: "Verified" },
+                  { name: "BankrSynth", score: 70, health: "Stable",   status: "Needs Verification" },
+                  { name: "Gitlawb",    score: 40, health: "Watch",    status: "Candidate" },
+                ].map((agent) => (
+                  <div key={agent.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.55rem 0", borderBottom: "1px solid rgba(255,255,255,0.06)", fontSize: 13 }}>
+                    <span style={{ fontWeight: 600 }}>{agent.name}</span>
+                    <span style={{ color: "var(--accent)", fontWeight: 700 }}>{agent.score}</span>
+                    <span style={{ color: agent.health === "Healthy" ? "#4ee19a" : agent.health === "Stable" ? "#6DB874" : "#f59e0b", fontSize: 11 }}>{agent.health}</span>
+                    <span style={{ fontSize: 10, color: "#777d86", background: "rgba(255,255,255,0.05)", padding: "2px 7px", borderRadius: 99 }}>{agent.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </FadeContent>
+      </section>
+
+      {/* ── For Agents / For Builders ── */}
+      <section className="lp-section lp-section-alt" id="use-cases">
+        <FadeContent delay={60}>
+          <div className="lp-section-head">
+            <p className="lp-section-label">Built for</p>
+            <h2 className="lp-h2">Agents and the builders behind them.</h2>
+          </div>
+        </FadeContent>
+        <div className="lp-two-col">
+          <FadeContent delay={60}>
+            <div className="lp-use-card">
+              <p className="lp-use-label">For Agents</p>
+              <h3>Questions x402Books answers.</h3>
+              <ul className="lp-use-list">
+                {FOR_AGENTS.map((q) => (
+                  <li key={q}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
+                    {q}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </FadeContent>
+          <FadeContent delay={120}>
+            <div className="lp-use-card">
+              <p className="lp-use-label">For Builders</p>
+              <h3>Add financial intelligence to anything.</h3>
+              <ul className="lp-use-list">
+                {FOR_BUILDERS.map((b) => (
+                  <li key={b}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </FadeContent>
+        </div>
+      </section>
+
       {/* ── $LUCA utilities ── */}
       <XBooksUtilities />
 
       {/* ── $LUCA token ── */}
       <XBooksTokenSection />
 
-      {/* ── x402 API endpoints ── */}
+      {/* ── x402 API ── */}
       <X402ApiSection />
 
-      {/* ── Product Preview ── */}
+      {/* ── Product preview ── */}
       <section className="lp-section" id="preview">
         <FadeContent delay={60}>
           <div className="lp-section-head">
@@ -783,7 +902,7 @@ export default function HomePage() {
               <thead><tr><th>Amount</th><th>Category</th><th>Time</th></tr></thead>
               <tbody>
                 <tr><td>0.42 USDC</td><td>API call</td><td>2h ago</td></tr>
-                <tr><td>1.20 USDC</td><td>Data access</td><td>5h ago</td></tr>
+                <tr><td>1.20 USDC</td><td>Revenue</td><td>5h ago</td></tr>
                 <tr><td>12.80 USDC</td><td>Income</td><td>1d ago</td></tr>
                 <tr><td>0.18 USDC</td><td>Compute</td><td>1d ago</td></tr>
               </tbody>
@@ -798,8 +917,8 @@ export default function HomePage() {
   "total_income": 91.20,
   "net_flow": 48.40,
   "top_category": "api_call",
-  "budget_status": "safe",
-  "likely_x402_count": 128
+  "treasury_health": "healthy",
+  "activity_score": 74
 }`}</pre>
           </div>
         </div>
@@ -832,7 +951,7 @@ export default function HomePage() {
               <p className="lp-section-label">Meet Luca</p>
               <h2 className="lp-h2" style={{ margin: "12px 0 10px" }}>Your AI accountant, on Telegram.</h2>
               <p className="lp-luca-sub">
-                Send Luca a wallet address. He audits it, categorizes transactions, scores financial health, and returns a clean report — instantly.
+                Send Luca a wallet address. He audits it, classifies transactions, scores financial health, detects anomalies, and returns a clean report — instantly.
               </p>
               <div className="lp-luca-caps">
                 {["Wallet Audits", "Transaction Reports", "Anomaly Detection", "Financial Scoring", "Agent Spend Review"].map((cap) => (
@@ -857,9 +976,13 @@ export default function HomePage() {
             <span className="lp-v1-dot" />
             v1 is live
           </div>
-          <h2 className="lp-h2">Ready to read your onchain ledger?</h2>
-          <p>Paste your Base wallet address and get your first report in under 10 seconds. Free, no sign-in required.</p>
-          <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Open App — It&apos;s Free</Link>
+          <h2 className="lp-h2">The agent economy is here.<br />Financial intelligence is no longer optional.</h2>
+          <p>Start with x402Books AI — scan a wallet, explore the registry, or integrate the API.</p>
+          <div style={{ display: "flex", gap: "0.85rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.5rem" }}>
+            <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Scan a Wallet</Link>
+            <Link href="/registry" className="lp-btn-ghost lp-btn-lg">View the Registry</Link>
+            <Link href="/developer" className="lp-btn-ghost lp-btn-lg">Get API Access</Link>
+          </div>
         </FadeContent>
       </section>
 
@@ -870,7 +993,7 @@ export default function HomePage() {
             <a href="/" className="lp-brand lp-brand-sm">
               <Logo />
             </a>
-            <p>Onchain financial intelligence for Base USDC.</p>
+            <p>Financial intelligence platform for autonomous agents.</p>
             <p className="lp-footer-builder">
               Built by{" "}
               <a href="https://x.com/danbuildss" target="_blank" rel="noreferrer">@danbuildss</a>
@@ -888,7 +1011,7 @@ export default function HomePage() {
               <h4>Product</h4>
               <ScrollLink targetId="how">How it works</ScrollLink>
               <ScrollLink targetId="features">Features</ScrollLink>
-              <ScrollLink targetId="luca">Meet Luca</ScrollLink>
+              <Link href="/registry">Registry</Link>
               <ScrollLink targetId="faq">FAQ</ScrollLink>
             </div>
             <div>
@@ -902,7 +1025,7 @@ export default function HomePage() {
               <h4>Docs</h4>
               <Link href="/docs">Overview</Link>
               <Link href="/docs#api">API Reference</Link>
-              <Link href="/docs#agent">Agent JSON</Link>
+              <Link href="/luca">Meet Luca</Link>
               <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
             </div>
           </div>
