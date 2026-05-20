@@ -681,12 +681,12 @@ iframe[src*="privy"] { display: none !important; }
 /* ---------- Hero ---------- */
 .lp-hero {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 380px;
   align-items: center;
-  gap: 60px;
+  gap: 44px;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 80px 40px 70px;
+  padding: 64px 40px 54px;
 }
 
 .lp-eyebrow {
@@ -922,8 +922,8 @@ iframe[src*="privy"] { display: none !important; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 18px 32px;
+  gap: 2px;
+  padding: 12px 20px;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -931,7 +931,7 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-trust-item strong {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: #6DB874;
   font-weight: 600;
 }
@@ -1374,7 +1374,7 @@ iframe[src*="privy"] { display: none !important; }
 .lp-section {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 80px 40px;
+  padding: 56px 40px;
 }
 
 .lp-section-alt {
@@ -1392,7 +1392,7 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-section-head {
   max-width: 600px;
-  margin: 0 auto 56px;
+  margin: 0 auto 36px;
   text-align: center;
 }
 
@@ -1412,12 +1412,12 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-h2 {
   font-family: "Libre Baskerville", Georgia, serif;
-  font-size: clamp(22px, 3vw, 36px);
+  font-size: clamp(20px, 2.5vw, 30px);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.02em;
   color: #F4F2ED;
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
 
 .lp-section-sub {
@@ -1429,15 +1429,15 @@ iframe[src*="privy"] { display: none !important; }
 /* ---------- Steps ---------- */
 .lp-steps {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
 }
 
 .lp-step {
-  padding: 24px;
+  padding: 16px;
   background: #111412;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  border-radius: 12px;
   transition: border-color 0.2s;
 }
 
@@ -1448,40 +1448,40 @@ iframe[src*="privy"] { display: none !important; }
 .lp-step-num {
   display: block;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6DB874;
   letter-spacing: 0.1em;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .lp-step h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #E8E6E1;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .lp-step p {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(232, 230, 225, 0.5);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 /* ---------- Features Grid ---------- */
 .lp-features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   max-width: 1180px;
   margin: 0 auto;
 }
 
 .lp-feature-card {
-  padding: 28px;
+  padding: 20px;
   background: #111412;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  border-radius: 12px;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -1494,31 +1494,31 @@ iframe[src*="privy"] { display: none !important; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: rgba(109, 184, 116, 0.1);
   color: #6DB874;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 
 .lp-feature-icon .material-symbols-outlined {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .lp-feature-card h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #E8E6E1;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .lp-feature-card p {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(232, 230, 225, 0.5);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* ---------- Product Preview ---------- */
@@ -10124,7 +10124,7 @@ html, body {
 .lp-registry-inner {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3.5rem;
+  gap: 2.5rem;
   align-items: center;
 }
 
@@ -10137,7 +10137,7 @@ html, body {
 
 .lp-registry-stats {
   display: flex;
-  gap: 2rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
 }
 
@@ -10183,7 +10183,7 @@ html, body {
   border: 1px solid var(--line);
   border-radius: 1rem;
   background: var(--surface);
-  padding: 2rem;
+  padding: 1.4rem;
 }
 
 .lp-use-label {
@@ -10206,7 +10206,7 @@ html, body {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.65rem;
+  gap: 0.5rem;
 }
 
 .lp-use-list li {
