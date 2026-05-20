@@ -681,12 +681,12 @@ iframe[src*="privy"] { display: none !important; }
 /* ---------- Hero ---------- */
 .lp-hero {
   display: grid;
-  grid-template-columns: 1fr 420px;
+  grid-template-columns: 1fr 380px;
   align-items: center;
-  gap: 60px;
+  gap: 44px;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 80px 40px 70px;
+  padding: 64px 40px 54px;
 }
 
 .lp-eyebrow {
@@ -922,8 +922,8 @@ iframe[src*="privy"] { display: none !important; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 18px 32px;
+  gap: 2px;
+  padding: 12px 20px;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -931,7 +931,7 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-trust-item strong {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 14px;
+  font-size: 13px;
   color: #6DB874;
   font-weight: 600;
 }
@@ -1374,7 +1374,7 @@ iframe[src*="privy"] { display: none !important; }
 .lp-section {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 80px 40px;
+  padding: 56px 40px;
 }
 
 .lp-section-alt {
@@ -1392,7 +1392,7 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-section-head {
   max-width: 600px;
-  margin: 0 auto 56px;
+  margin: 0 auto 36px;
   text-align: center;
 }
 
@@ -1412,12 +1412,12 @@ iframe[src*="privy"] { display: none !important; }
 
 .lp-h2 {
   font-family: "Libre Baskerville", Georgia, serif;
-  font-size: clamp(22px, 3vw, 36px);
+  font-size: clamp(20px, 2.5vw, 30px);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.02em;
   color: #F4F2ED;
-  margin: 0 0 14px;
+  margin: 0 0 12px;
 }
 
 .lp-section-sub {
@@ -1429,15 +1429,15 @@ iframe[src*="privy"] { display: none !important; }
 /* ---------- Steps ---------- */
 .lp-steps {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
 }
 
 .lp-step {
-  padding: 24px;
+  padding: 16px;
   background: #111412;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  border-radius: 12px;
   transition: border-color 0.2s;
 }
 
@@ -1448,40 +1448,40 @@ iframe[src*="privy"] { display: none !important; }
 .lp-step-num {
   display: block;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #6DB874;
   letter-spacing: 0.1em;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .lp-step h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #E8E6E1;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .lp-step p {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(232, 230, 225, 0.5);
-  line-height: 1.55;
+  line-height: 1.5;
 }
 
 /* ---------- Features Grid ---------- */
 .lp-features-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
   max-width: 1180px;
   margin: 0 auto;
 }
 
 .lp-feature-card {
-  padding: 28px;
+  padding: 20px;
   background: #111412;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
+  border-radius: 12px;
   transition: border-color 0.2s, transform 0.15s;
 }
 
@@ -1494,31 +1494,31 @@ iframe[src*="privy"] { display: none !important; }
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
   background: rgba(109, 184, 116, 0.1);
   color: #6DB874;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 
 .lp-feature-icon .material-symbols-outlined {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
 .lp-feature-card h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #E8E6E1;
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .lp-feature-card p {
-  font-size: 13px;
+  font-size: 12px;
   color: rgba(232, 230, 225, 0.5);
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 /* ---------- Product Preview ---------- */
@@ -10117,4 +10117,111 @@ html, body {
   .reg-card-score-hint { display: none; }
   .reg-score-label { min-width: 110px; font-size: 11px; }
   .reg-status-filter { display: none; }
+}
+
+/* ── Landing page: Registry section ───────────────────────────────────────── */
+
+.lp-registry-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.lp-registry-sub {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.lp-registry-stats {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.lp-registry-stat strong {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.lp-registry-stat span {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.lp-registry-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 860px) {
+  .lp-registry-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Landing page: For Agents / For Builders ──────────────────────────────── */
+
+.lp-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.lp-use-card {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--surface);
+  padding: 1.4rem;
+}
+
+.lp-use-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.lp-use-card h3 {
+  margin: 0 0 1.25rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.lp-use-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.lp-use-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.lp-use-list li .material-symbols-outlined {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .lp-two-col { grid-template-columns: 1fr; }
 }

@@ -34,7 +34,6 @@ export async function getLucaBalance(walletAddress: string): Promise<number> {
 
   const tokenAddress =
     process.env.LUCA_TOKEN_ADDRESS ??
-    process.env.XBOOKS_TOKEN_ADDRESS ?? // backward compat during env migration
     LUCA_TOKEN_ADDRESS;
   const apiKey = process.env.ALCHEMY_API_KEY;
 
