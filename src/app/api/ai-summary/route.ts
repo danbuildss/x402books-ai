@@ -68,12 +68,22 @@ Budget status: ${summary.netFlow >= 0 ? "healthy" : summary.totalSpend > summary
 
 Write a concise 2-3 sentence financial summary for this wallet. Be specific with numbers. Mention x402 agent payments if present. End with one actionable insight. Plain text only — no markdown, no headers.`;
 
+  // Trim and guard: newer SDK versions auto-apply cache_control to text blocks,
+  // which causes a 400 if any block has empty text.
+  const safePrompt = prompt.trim();
+  if (!safePrompt) {
+    return NextResponse.json({
+      summary: buildFallbackSummary(wallet, rangeLabel, summary, categories),
+      provider: "rules",
+    });
+  }
+
   try {
     const client = new Anthropic({ apiKey });
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 256,
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: [{ type: "text", text: safePrompt }] }],
     });
 
     const text = message.content[0]?.type === "text" ? message.content[0].text.trim() : null;
