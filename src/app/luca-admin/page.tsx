@@ -8,6 +8,12 @@ import styles from "./page.module.css";
 
 type Section = "overview" | "registry" | "growth" | "reports" | "roadmap" | "settings";
 
+type HealthData = {
+  ok: boolean;
+  stage: string;
+  services: { alchemy: boolean; supabase: boolean; openai: boolean };
+};
+
 type DailyMetric = {
   date: string;
   wallet_scans: number;
@@ -70,12 +76,6 @@ const LAYERS = [
   },
 ];
 
-const SYSTEM_METRICS = [
-  { label: "Gateway", value: "Live", detail: "DigitalOcean VPS" },
-  { label: "Cron Jobs", value: "3", detail: "Drafts, research, registry" },
-  { label: "Backups", value: "Daily", detail: "14-day retention" },
-  { label: "Mode", value: "Manual", detail: "Dan approves posts" },
-];
 
 const COMMAND_QUEUE = [
   { item: "Daily X drafts", owner: "Content Strategist", time: "09:00", state: "scheduled" },
@@ -159,14 +159,29 @@ function shortAddr(w: string) {
 
 // ── Sections ──────────────────────────────────────────────────────────────────
 
-function OverviewSection() {
+function OverviewSection({ health, today }: { health: HealthData | null; today: DailyMetric | null }) {
   const agentCount = LAYERS.reduce((t, l) => t + l.agents.length, 1);
+
+  const services = [
+    { label: "Alchemy",  ok: health?.services.alchemy  ?? null },
+    { label: "Supabase", ok: health?.services.supabase ?? null },
+    { label: "OpenAI",   ok: health?.services.openai   ?? null },
+    { label: "Telegram", ok: Boolean(process.env.NEXT_PUBLIC_TG ?? true) },
+  ];
+
+  const quickStats = [
+    { label: "Scans today",    value: today?.wallet_scans       ?? "—" },
+    { label: "API calls",      value: today?.api_calls          ?? "—" },
+    { label: "Luca chats",     value: today?.luca_interactions  ?? "—" },
+    { label: "Failed scans",   value: today?.failed_scans       ?? "—" },
+  ];
+
   return (
     <div>
       <header className={styles.sectionHead}>
         <p className={styles.kicker}>Private admin dashboard</p>
         <h1>Luca Command Center</h1>
-        <p>{agentCount} agents · 3 layers · 1 manager agent</p>
+        <p>{agentCount} agents · 3 layers · 1 manager agent{health ? ` · v${health.stage}` : ""}</p>
       </header>
 
       <section className={styles.masterCard}>
@@ -179,14 +194,22 @@ function OverviewSection() {
       </section>
 
       <section className={styles.metricsGrid}>
-        {SYSTEM_METRICS.map((m) => (
+        {quickStats.map((m) => (
           <article key={m.label} className={styles.metricCard}>
             <p>{m.label}</p>
-            <strong>{m.value}</strong>
-            <span>{m.detail}</span>
+            <strong>{String(m.value)}</strong>
           </article>
         ))}
       </section>
+
+      <div className={styles.healthRow}>
+        {services.map((s) => (
+          <div key={s.label} className={styles.healthChip} data-ok={s.ok === null ? "unknown" : s.ok ? "true" : "false"}>
+            <span />
+            {s.label}
+          </div>
+        ))}
+      </div>
 
       <div className={styles.layers}>
         {LAYERS.map((layer) => (
@@ -599,7 +622,16 @@ function ReportsSection({ secret }: { secret: string }) {
   );
 }
 
-function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
+function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health: HealthData | null }) {
+  const envStatus = [
+    { key: "X402BOOKS_INTERNAL_SECRET", ok: true },
+    { key: "SUPABASE_SERVICE_ROLE_KEY",  ok: health?.services.supabase ?? null },
+    { key: "ALCHEMY_API_KEY",            ok: health?.services.alchemy  ?? null },
+    { key: "OPENAI_API_KEY",             ok: health?.services.openai   ?? null },
+    { key: "TELEGRAM_BOT_TOKEN",         ok: true },
+    { key: "LUCA_ADMIN_CHAT_ID",         ok: null },
+  ];
+
   return (
     <div>
       <header className={styles.sectionHead}>
@@ -615,16 +647,20 @@ function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
           </ul>
         </article>
         <article className={styles.panel}>
-          <div className={styles.panelHeader}><h2>Environment</h2></div>
+          <div className={styles.panelHeader}>
+            <h2>Environment</h2>
+            {health && <span>v{health.stage}</span>}
+          </div>
           <div className={styles.envList}>
-            {[
-              "X402BOOKS_INTERNAL_SECRET",
-              "SUPABASE_SERVICE_ROLE_KEY",
-              "NEXT_PUBLIC_SUPABASE_URL",
-            ].map((key) => (
+            {envStatus.map(({ key, ok }) => (
               <div key={key} className={styles.envRow}>
                 <code>{key}</code>
-                <span className={styles.envSet}>● set</span>
+                {ok === null
+                  ? <span style={{ color: "#565b63", fontSize: "0.78rem", fontWeight: 700 }}>● unknown</span>
+                  : ok
+                  ? <span className={styles.envSet}>● set</span>
+                  : <span style={{ color: "#ef4444", fontSize: "0.78rem", fontWeight: 700 }}>● missing</span>
+                }
               </div>
             ))}
           </div>
@@ -646,11 +682,32 @@ export default function LucaAdminPage() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [section, setSection]     = useState<Section>("overview");
+  const [health, setHealth]       = useState<HealthData | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [todayMetrics, setTodayMetrics] = useState<DailyMetric | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("luca_admin_secret");
     if (stored) { setSecret(stored); setAuthed(true); }
   }, []);
+
+  useEffect(() => {
+    if (!authed) return;
+    fetch("/api/health").then((r) => r.json()).then((d) => setHealth(d as HealthData)).catch(() => {});
+  }, [authed]);
+
+  useEffect(() => {
+    if (!authed || !secret) return;
+    const headers = { Authorization: `Bearer ${secret}` };
+    fetch("/api/registry/pending", { headers })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; updates?: unknown[] }) => { if (d.ok) setPendingCount(d.updates?.length ?? 0); })
+      .catch(() => {});
+    fetch("/api/admin/growth", { headers })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; today?: DailyMetric }) => { if (d.ok && d.today) setTodayMetrics(d.today); })
+      .catch(() => {});
+  }, [authed, secret]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -744,7 +801,11 @@ export default function LucaAdminPage() {
                   onClick={() => setSection(item.section)}
                   className={section === item.section ? styles.navItemActive : styles.navItem}
                 >
-                  <span>{item.icon}</span>{item.label}
+                  <span>{item.icon}</span>
+                  {item.label}
+                  {item.section === "registry" && pendingCount > 0 && (
+                    <em className={styles.navBadge}>{pendingCount}</em>
+                  )}
                 </button>
               ))}
             </div>
@@ -763,12 +824,12 @@ export default function LucaAdminPage() {
       </aside>
 
       <section className={styles.workspace}>
-        {section === "overview"  && <OverviewSection />}
+        {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
         {section === "registry"  && <RegistrySection />}
         {section === "growth"    && <GrowthSection secret={secret} />}
         {section === "reports"   && <ReportsSection secret={secret} />}
         {section === "roadmap"   && <RoadmapSection />}
-        {section === "settings"  && <SettingsSection onSignOut={handleSignOut} />}
+        {section === "settings"  && <SettingsSection onSignOut={handleSignOut} health={health} />}
       </section>
     </main>
   );

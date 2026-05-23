@@ -630,6 +630,61 @@
 .authBtn:hover:not(:disabled) { background: #4a7fff; }
 .authBtn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Nav badge ─────────────────────────────────────────────────────────────── */
+
+.navBadge {
+  margin-left: auto;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  font-style: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.3rem;
+  line-height: 1;
+}
+
+/* ── Health row ─────────────────────────────────────────────────────────────── */
+
+.healthRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.healthChip {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #8a8f98;
+}
+
+.healthChip span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: #565b63;
+  flex-shrink: 0;
+}
+
+.healthChip[data-ok="true"] { border-color: rgba(84, 216, 141, 0.3); color: #66dc9b; }
+.healthChip[data-ok="true"] span { background: #54d88d; box-shadow: 0 0 8px rgba(84, 216, 141, 0.7); }
+.healthChip[data-ok="false"] { border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
+.healthChip[data-ok="false"] span { background: #ef4444; }
+
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 1100px) {
