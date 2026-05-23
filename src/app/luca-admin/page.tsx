@@ -6,7 +6,7 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "growth" | "roadmap" | "settings";
+type Section = "overview" | "registry" | "growth" | "reports" | "roadmap" | "settings";
 
 type DailyMetric = {
   date: string;
@@ -138,6 +138,7 @@ const NAV: { section: Section; icon: string; label: string; group: string }[] = 
   { section: "overview", icon: "◇", label: "Overview",  group: "Overview" },
   { section: "registry", icon: "G",  label: "Registry",  group: "Operations" },
   { section: "growth",   icon: "↗",  label: "Growth OS", group: "Operations" },
+  { section: "reports",  icon: "📊", label: "Reports",   group: "Operations" },
   { section: "roadmap",  icon: "◈",  label: "Roadmap",   group: "Agent Tooling" },
   { section: "settings", icon: "⚙",  label: "Settings",  group: "System" },
 ];
@@ -494,6 +495,110 @@ function RoadmapSection() {
   );
 }
 
+function ReportsSection({ secret }: { secret: string }) {
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [preview, setPreview] = useState<string>("");
+  const [error, setError] = useState("");
+
+  async function sendNow() {
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/cron/daily-report", {
+        headers: { Authorization: `Bearer ${secret}` },
+      });
+      const data = await res.json() as { ok: boolean; preview?: string; error?: string };
+      if (data.ok) {
+        setPreview(data.preview ?? "");
+        setStatus("done");
+      } else {
+        setError(data.error ?? "Failed to send");
+        setStatus("error");
+      }
+    } catch {
+      setError("Network error");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div>
+      <header className={styles.sectionHead}>
+        <p className={styles.kicker}>ZHC Ops</p>
+        <h1>Daily Reports</h1>
+        <p>Luca sends a daily TLDR to your Telegram at 8:00 UTC. Trigger manually here.</p>
+      </header>
+
+      <div className={styles.registryLinkCard}>
+        <div>
+          <strong>Send Daily Ops Report</strong>
+          <p>Pulls today&apos;s metrics — scans, API calls, registry activity, failed scans — and sends a TLDR to your Telegram.</p>
+        </div>
+        <button
+          type="button"
+          onClick={sendNow}
+          disabled={status === "sending"}
+          className={styles.actionBtn}
+          style={{ opacity: status === "sending" ? 0.6 : 1 }}
+        >
+          {status === "sending" ? "Sending…" : status === "done" ? "Sent ✓" : "Send Now →"}
+        </button>
+      </div>
+
+      {status === "error" && (
+        <div className={styles.stateBox} style={{ borderColor: "#ef444444", color: "#ef4444", marginTop: "1rem" }}>
+          {error}
+        </div>
+      )}
+
+      {status === "done" && preview && (
+        <article className={styles.panel} style={{ marginTop: "1.5rem" }}>
+          <div className={styles.panelHeader}>
+            <h2>Report Preview</h2>
+            <span>Just sent to Telegram</span>
+          </div>
+          <pre style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "0.6rem",
+            padding: "1rem 1.1rem",
+            fontSize: "0.82rem",
+            lineHeight: 1.7,
+            color: "#c8cdd6",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            margin: 0,
+          }}>
+            {preview.replace(/<[^>]+>/g, "")}
+          </pre>
+        </article>
+      )}
+
+      <div className={styles.infoGrid} style={{ marginTop: "1.5rem" }}>
+        <article className={styles.infoCard}>
+          <h3>Schedule</h3>
+          <ol className={styles.infoList}>
+            <li>Luca on VPS calls <code>GET /api/cron/daily-report</code> daily</li>
+            <li>Pulls wallet scans, API calls, failed scans, registry events</li>
+            <li>Formats a TLDR and sends to <code>LUCA_ADMIN_CHAT_ID</code></li>
+            <li>Use &quot;Send Now&quot; above to trigger manually anytime</li>
+          </ol>
+        </article>
+        <article className={styles.infoCard}>
+          <h3>Required env vars</h3>
+          <div className={styles.envList}>
+            {["TELEGRAM_BOT_TOKEN", "LUCA_ADMIN_CHAT_ID", "X402BOOKS_INTERNAL_SECRET"].map((key) => (
+              <div key={key} className={styles.envRow}>
+                <code>{key}</code>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
 function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
   return (
     <div>
@@ -661,6 +766,7 @@ export default function LucaAdminPage() {
         {section === "overview"  && <OverviewSection />}
         {section === "registry"  && <RegistrySection />}
         {section === "growth"    && <GrowthSection secret={secret} />}
+        {section === "reports"   && <ReportsSection secret={secret} />}
         {section === "roadmap"   && <RoadmapSection />}
         {section === "settings"  && <SettingsSection onSignOut={handleSignOut} />}
       </section>
