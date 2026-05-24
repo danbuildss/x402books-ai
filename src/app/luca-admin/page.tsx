@@ -6,7 +6,13 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "growth" | "roadmap" | "settings";
+type Section = "overview" | "registry" | "growth" | "reports" | "comm" | "roadmap" | "settings";
+
+type HealthData = {
+  ok: boolean;
+  stage: string;
+  services: { alchemy: boolean; supabase: boolean; openai: boolean };
+};
 
 type DailyMetric = {
   date: string;
@@ -70,12 +76,6 @@ const LAYERS = [
   },
 ];
 
-const SYSTEM_METRICS = [
-  { label: "Gateway", value: "Live", detail: "DigitalOcean VPS" },
-  { label: "Cron Jobs", value: "3", detail: "Drafts, research, registry" },
-  { label: "Backups", value: "Daily", detail: "14-day retention" },
-  { label: "Mode", value: "Manual", detail: "Dan approves posts" },
-];
 
 const COMMAND_QUEUE = [
   { item: "Daily X drafts", owner: "Content Strategist", time: "09:00", state: "scheduled" },
@@ -135,11 +135,13 @@ const ROADMAP = [
 ];
 
 const NAV: { section: Section; icon: string; label: string; group: string }[] = [
-  { section: "overview", icon: "◇", label: "Overview",  group: "Overview" },
-  { section: "registry", icon: "G",  label: "Registry",  group: "Operations" },
-  { section: "growth",   icon: "↗",  label: "Growth OS", group: "Operations" },
-  { section: "roadmap",  icon: "◈",  label: "Roadmap",   group: "Agent Tooling" },
-  { section: "settings", icon: "⚙",  label: "Settings",  group: "System" },
+  { section: "overview", icon: "◇", label: "Overview",    group: "Overview" },
+  { section: "registry", icon: "G",  label: "Registry",    group: "Operations" },
+  { section: "growth",   icon: "↗",  label: "Growth OS",   group: "Operations" },
+  { section: "reports",  icon: "📊", label: "Reports",     group: "Operations" },
+  { section: "comm",     icon: "⌖",  label: "Comm Intel",  group: "Intelligence" },
+  { section: "roadmap",  icon: "◈",  label: "Roadmap",     group: "Agent Tooling" },
+  { section: "settings", icon: "⚙",  label: "Settings",    group: "System" },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -158,14 +160,29 @@ function shortAddr(w: string) {
 
 // ── Sections ──────────────────────────────────────────────────────────────────
 
-function OverviewSection() {
+function OverviewSection({ health, today }: { health: HealthData | null; today: DailyMetric | null }) {
   const agentCount = LAYERS.reduce((t, l) => t + l.agents.length, 1);
+
+  const services = [
+    { label: "Alchemy",  ok: health?.services.alchemy  ?? null },
+    { label: "Supabase", ok: health?.services.supabase ?? null },
+    { label: "OpenAI",   ok: health?.services.openai   ?? null },
+    { label: "Telegram", ok: Boolean(process.env.NEXT_PUBLIC_TG ?? true) },
+  ];
+
+  const quickStats = [
+    { label: "Scans today",    value: today?.wallet_scans       ?? "—" },
+    { label: "API calls",      value: today?.api_calls          ?? "—" },
+    { label: "Luca chats",     value: today?.luca_interactions  ?? "—" },
+    { label: "Failed scans",   value: today?.failed_scans       ?? "—" },
+  ];
+
   return (
     <div>
       <header className={styles.sectionHead}>
         <p className={styles.kicker}>Private admin dashboard</p>
         <h1>Luca Command Center</h1>
-        <p>{agentCount} agents · 3 layers · 1 manager agent</p>
+        <p>{agentCount} agents · 3 layers · 1 manager agent{health ? ` · v${health.stage}` : ""}</p>
       </header>
 
       <section className={styles.masterCard}>
@@ -178,14 +195,22 @@ function OverviewSection() {
       </section>
 
       <section className={styles.metricsGrid}>
-        {SYSTEM_METRICS.map((m) => (
+        {quickStats.map((m) => (
           <article key={m.label} className={styles.metricCard}>
             <p>{m.label}</p>
-            <strong>{m.value}</strong>
-            <span>{m.detail}</span>
+            <strong>{String(m.value)}</strong>
           </article>
         ))}
       </section>
+
+      <div className={styles.healthRow}>
+        {services.map((s) => (
+          <div key={s.label} className={styles.healthChip} data-ok={s.ok === null ? "unknown" : s.ok ? "true" : "false"}>
+            <span />
+            {s.label}
+          </div>
+        ))}
+      </div>
 
       <div className={styles.layers}>
         {LAYERS.map((layer) => (
@@ -494,7 +519,369 @@ function RoadmapSection() {
   );
 }
 
-function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
+// ── Comm Intel section ────────────────────────────────────────────────────────
+
+const COMM_PLATFORMS = ["wiretap", "telegram", "x", "email", "discord", "farcaster", "other"] as const;
+const COMM_LABELS = [
+  "payment request observed",
+  "settlement not confirmed",
+  "needs wallet confirmation",
+  "reconciliation candidate",
+] as const;
+
+const PLATFORM_COLORS: Record<string, string> = {
+  wiretap:  "#f59e0b",
+  telegram: "#3b82f6",
+  x:        "#e5e7eb",
+  email:    "#8b5cf6",
+  discord:  "#6366f1",
+  farcaster:"#a78bfa",
+  other:    "#6b7280",
+};
+
+const CONFIDENCE_COLOR: Record<string, string> = {
+  confirmed:   "#22c55e",
+  unverified:  "#f59e0b",
+};
+
+const LABEL_COLOR: Record<string, string> = {
+  "payment request observed":   "#f59e0b",
+  "settlement not confirmed":   "#ef4444",
+  "needs wallet confirmation":  "#3b82f6",
+  "reconciliation candidate":   "#a855f7",
+};
+
+type CommIdentity = {
+  id?: string;
+  platform: string;
+  handle: string;
+  url?: string | null;
+  confidence: string;
+  labels: string[];
+  notes?: string | null;
+};
+
+type CommEntry = { agent_name: string } & CommIdentity;
+
+const BLANK_FORM = { agent_name: "", platform: "wiretap", handle: "", url: "", confidence: "unverified", labels: [] as string[], notes: "" };
+
+function CommIntelSection({ secret }: { secret: string }) {
+  const [entries, setEntries] = useState<CommEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ ...BLANK_FORM });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  useEffect(() => {
+    fetch("/api/registry/comm-identities", { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; data?: CommEntry[]; error?: string }) => {
+        if (d.ok) setEntries(d.data ?? []);
+        else setError(d.error ?? "Failed to load");
+      })
+      .catch(() => setError("Network error"))
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secret]);
+
+  function toggleLabel(label: string) {
+    setForm((f) => ({
+      ...f,
+      labels: f.labels.includes(label) ? f.labels.filter((l) => l !== label) : [...f.labels, label],
+    }));
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSaveError("");
+    const res = await fetch("/api/registry/comm-identities", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ...form, url: form.url || null, notes: form.notes || null }),
+    });
+    const data = await res.json() as { ok: boolean; id?: string; error?: string };
+    if (data.ok && data.id) {
+      setEntries((prev) => [{ ...form, id: data.id, url: form.url || null, notes: form.notes || null }, ...prev]);
+      setForm({ ...BLANK_FORM });
+      setAddOpen(false);
+    } else {
+      setSaveError(data.error ?? "Failed to save");
+    }
+    setSaving(false);
+  }
+
+  async function handleDelete(id: string) {
+    setDeleting(id);
+    const res = await fetch(`/api/registry/comm-identities/${id}`, { method: "DELETE", headers });
+    const data = await res.json() as { ok: boolean };
+    if (data.ok) setEntries((prev) => prev.filter((e) => e.id !== id));
+    setDeleting(null);
+  }
+
+  const filtered = entries.filter((e) =>
+    !search || e.agent_name.toLowerCase().includes(search.toLowerCase()) || e.handle.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  return (
+    <div>
+      <header className={styles.sectionHead}>
+        <p className={styles.kicker}>Intelligence</p>
+        <h1>Comm Intel</h1>
+        <p>Agent communication identities — admin only. Not shown publicly.</p>
+      </header>
+
+      <div className={styles.registryLinkCard} style={{ marginBottom: "1rem" }}>
+        <div>
+          <strong>Communication identities are not wallet verification</strong>
+          <p>Confirmed handle ≠ verified wallet. Payment request observed ≠ confirmed revenue.</p>
+        </div>
+        <button type="button" onClick={() => setAddOpen((v) => !v)} className={styles.actionBtn}>
+          {addOpen ? "Cancel" : "+ Add Identity"}
+        </button>
+      </div>
+
+      {addOpen && (
+        <form onSubmit={handleAdd} style={{ marginBottom: "1.5rem", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.9rem", padding: "1.25rem", background: "rgba(17,18,20,0.72)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>AGENT NAME *</label>
+              <input required value={form.agent_name} onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))}
+                placeholder="e.g. Bankr" className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>PLATFORM *</label>
+              <select value={form.platform} onChange={(e) => setForm((f) => ({ ...f, platform: e.target.value }))}
+                className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }}>
+                {COMM_PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>HANDLE *</label>
+              <input required value={form.handle} onChange={(e) => setForm((f) => ({ ...f, handle: e.target.value }))}
+                placeholder="@handle or ID" className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>URL</label>
+              <input value={form.url} onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                placeholder="https://..." className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }} />
+            </div>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>CONFIDENCE *</label>
+              <select value={form.confidence} onChange={(e) => setForm((f) => ({ ...f, confidence: e.target.value }))}
+                className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }}>
+                <option value="unverified">unverified</option>
+                <option value="confirmed">confirmed</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.3rem" }}>NOTES</label>
+              <input value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                placeholder="Context..." className={styles.authInput} style={{ margin: 0, fontSize: "0.88rem", padding: "0.55rem 0.8rem" }} />
+            </div>
+          </div>
+          <div style={{ marginBottom: "0.9rem" }}>
+            <label style={{ fontSize: "0.75rem", color: "#565b63", fontWeight: 700, display: "block", marginBottom: "0.45rem" }}>LABELS</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+              {COMM_LABELS.map((label) => {
+                const active = form.labels.includes(label);
+                const c = LABEL_COLOR[label];
+                return (
+                  <button key={label} type="button" onClick={() => toggleLabel(label)}
+                    style={{ padding: "0.3rem 0.7rem", borderRadius: "999px", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", border: `1px solid ${active ? c : "rgba(255,255,255,0.1)"}`, background: active ? `${c}22` : "transparent", color: active ? c : "#565b63" }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          {saveError && <p style={{ color: "#ef4444", fontSize: "0.82rem", marginBottom: "0.5rem" }}>{saveError}</p>}
+          <button type="submit" disabled={saving} className={styles.actionBtn} style={{ opacity: saving ? 0.6 : 1 }}>
+            {saving ? "Saving…" : "Save Identity"}
+          </button>
+        </form>
+      )}
+
+      <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search agents or handles…"
+        className={styles.authInput} style={{ margin: "0 0 1rem", fontSize: "0.88rem", padding: "0.6rem 0.85rem" }} />
+
+      {loading && <div className={styles.stateBox}>Loading comm identities…</div>}
+      {!loading && error && <div className={styles.stateBox} style={{ borderColor: "#ef444444", color: "#ef4444" }}>{error}</div>}
+
+      {!loading && !error && filtered.length === 0 && (
+        <div className={styles.stateBox} style={{ textAlign: "center" }}>
+          <p style={{ marginBottom: "0.4rem", fontWeight: 700 }}>No comm identities yet</p>
+          <p style={{ color: "#565b63", fontSize: "0.85rem" }}>Add the first one above.</p>
+        </div>
+      )}
+
+      {!loading && !error && filtered.length > 0 && (
+        <div style={{ display: "grid", gap: "0.65rem" }}>
+          {filtered.map((entry) => {
+            const pc = PLATFORM_COLORS[entry.platform] ?? "#6b7280";
+            const cc = CONFIDENCE_COLOR[entry.confidence] ?? "#6b7280";
+            return (
+              <article key={entry.id ?? entry.handle} style={{ border: "1px solid rgba(255,255,255,0.07)", borderRadius: "0.85rem", background: "rgba(17,18,20,0.72)", padding: "1rem 1.2rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.85rem", flexWrap: "wrap" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.55rem", flexWrap: "wrap", marginBottom: "0.35rem" }}>
+                      <strong style={{ fontSize: "0.95rem" }}>{entry.agent_name}</strong>
+                      <span style={{ padding: "0.2rem 0.55rem", borderRadius: "999px", fontSize: "0.72rem", fontWeight: 800, background: `${pc}22`, color: pc }}>
+                        {entry.platform}
+                      </span>
+                      <code style={{ fontSize: "0.82rem", color: "#aabaf0" }}>{entry.handle}</code>
+                      <span style={{ padding: "0.2rem 0.55rem", borderRadius: "999px", fontSize: "0.72rem", fontWeight: 800, background: `${cc}22`, color: cc }}>
+                        {entry.confidence}
+                      </span>
+                    </div>
+                    {entry.labels.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.35rem", marginBottom: "0.35rem" }}>
+                        {entry.labels.map((l) => (
+                          <span key={l} style={{ padding: "0.15rem 0.5rem", borderRadius: "999px", fontSize: "0.7rem", fontWeight: 700, background: `${LABEL_COLOR[l] ?? "#6b7280"}22`, color: LABEL_COLOR[l] ?? "#6b7280" }}>
+                            {l}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {entry.notes && <p style={{ color: "#777d86", fontSize: "0.82rem", margin: 0 }}>{entry.notes}</p>}
+                    {entry.url && <a href={entry.url} target="_blank" rel="noreferrer" style={{ color: "#7da2ff", fontSize: "0.78rem" }}>{entry.url}</a>}
+                  </div>
+                  {entry.id && (
+                    <button type="button" onClick={() => handleDelete(entry.id!)} disabled={deleting === entry.id}
+                      style={{ padding: "0.3rem 0.65rem", borderRadius: "0.4rem", border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: deleting === entry.id ? 0.5 : 1 }}>
+                      {deleting === entry.id ? "…" : "Delete"}
+                    </button>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReportsSection({ secret }: { secret: string }) {
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [preview, setPreview] = useState<string>("");
+  const [error, setError] = useState("");
+
+  async function sendNow() {
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/cron/daily-report", {
+        headers: { Authorization: `Bearer ${secret}` },
+      });
+      const data = await res.json() as { ok: boolean; preview?: string; error?: string };
+      if (data.ok) {
+        setPreview(data.preview ?? "");
+        setStatus("done");
+      } else {
+        setError(data.error ?? "Failed to send");
+        setStatus("error");
+      }
+    } catch {
+      setError("Network error");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div>
+      <header className={styles.sectionHead}>
+        <p className={styles.kicker}>ZHC Ops</p>
+        <h1>Daily Reports</h1>
+        <p>Luca sends a daily TLDR to your Telegram at 8:00 UTC. Trigger manually here.</p>
+      </header>
+
+      <div className={styles.registryLinkCard}>
+        <div>
+          <strong>Send Daily Ops Report</strong>
+          <p>Pulls today&apos;s metrics — scans, API calls, registry activity, failed scans — and sends a TLDR to your Telegram.</p>
+        </div>
+        <button
+          type="button"
+          onClick={sendNow}
+          disabled={status === "sending"}
+          className={styles.actionBtn}
+          style={{ opacity: status === "sending" ? 0.6 : 1 }}
+        >
+          {status === "sending" ? "Sending…" : status === "done" ? "Sent ✓" : "Send Now →"}
+        </button>
+      </div>
+
+      {status === "error" && (
+        <div className={styles.stateBox} style={{ borderColor: "#ef444444", color: "#ef4444", marginTop: "1rem" }}>
+          {error}
+        </div>
+      )}
+
+      {status === "done" && preview && (
+        <article className={styles.panel} style={{ marginTop: "1.5rem" }}>
+          <div className={styles.panelHeader}>
+            <h2>Report Preview</h2>
+            <span>Just sent to Telegram</span>
+          </div>
+          <pre style={{
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "0.6rem",
+            padding: "1rem 1.1rem",
+            fontSize: "0.82rem",
+            lineHeight: 1.7,
+            color: "#c8cdd6",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            margin: 0,
+          }}>
+            {preview.replace(/<[^>]+>/g, "")}
+          </pre>
+        </article>
+      )}
+
+      <div className={styles.infoGrid} style={{ marginTop: "1.5rem" }}>
+        <article className={styles.infoCard}>
+          <h3>Schedule</h3>
+          <ol className={styles.infoList}>
+            <li>Luca on VPS calls <code>GET /api/cron/daily-report</code> daily</li>
+            <li>Pulls wallet scans, API calls, failed scans, registry events</li>
+            <li>Formats a TLDR and sends to <code>LUCA_ADMIN_CHAT_ID</code></li>
+            <li>Use &quot;Send Now&quot; above to trigger manually anytime</li>
+          </ol>
+        </article>
+        <article className={styles.infoCard}>
+          <h3>Required env vars</h3>
+          <div className={styles.envList}>
+            {["TELEGRAM_BOT_TOKEN", "LUCA_ADMIN_CHAT_ID", "X402BOOKS_INTERNAL_SECRET"].map((key) => (
+              <div key={key} className={styles.envRow}>
+                <code>{key}</code>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </div>
+  );
+}
+
+function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health: HealthData | null }) {
+  const envStatus = [
+    { key: "X402BOOKS_INTERNAL_SECRET", ok: true },
+    { key: "SUPABASE_SERVICE_ROLE_KEY",  ok: health?.services.supabase ?? null },
+    { key: "ALCHEMY_API_KEY",            ok: health?.services.alchemy  ?? null },
+    { key: "OPENAI_API_KEY",             ok: health?.services.openai   ?? null },
+    { key: "TELEGRAM_BOT_TOKEN",         ok: true },
+    { key: "LUCA_ADMIN_CHAT_ID",         ok: null },
+  ];
+
   return (
     <div>
       <header className={styles.sectionHead}>
@@ -510,16 +897,20 @@ function SettingsSection({ onSignOut }: { onSignOut: () => void }) {
           </ul>
         </article>
         <article className={styles.panel}>
-          <div className={styles.panelHeader}><h2>Environment</h2></div>
+          <div className={styles.panelHeader}>
+            <h2>Environment</h2>
+            {health && <span>v{health.stage}</span>}
+          </div>
           <div className={styles.envList}>
-            {[
-              "X402BOOKS_INTERNAL_SECRET",
-              "SUPABASE_SERVICE_ROLE_KEY",
-              "NEXT_PUBLIC_SUPABASE_URL",
-            ].map((key) => (
+            {envStatus.map(({ key, ok }) => (
               <div key={key} className={styles.envRow}>
                 <code>{key}</code>
-                <span className={styles.envSet}>● set</span>
+                {ok === null
+                  ? <span style={{ color: "#565b63", fontSize: "0.78rem", fontWeight: 700 }}>● unknown</span>
+                  : ok
+                  ? <span className={styles.envSet}>● set</span>
+                  : <span style={{ color: "#ef4444", fontSize: "0.78rem", fontWeight: 700 }}>● missing</span>
+                }
               </div>
             ))}
           </div>
@@ -541,11 +932,32 @@ export default function LucaAdminPage() {
   const [authError, setAuthError] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [section, setSection]     = useState<Section>("overview");
+  const [health, setHealth]       = useState<HealthData | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [todayMetrics, setTodayMetrics] = useState<DailyMetric | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("luca_admin_secret");
     if (stored) { setSecret(stored); setAuthed(true); }
   }, []);
+
+  useEffect(() => {
+    if (!authed) return;
+    fetch("/api/health").then((r) => r.json()).then((d) => setHealth(d as HealthData)).catch(() => {});
+  }, [authed]);
+
+  useEffect(() => {
+    if (!authed || !secret) return;
+    const headers = { Authorization: `Bearer ${secret}` };
+    fetch("/api/registry/pending", { headers })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; updates?: unknown[] }) => { if (d.ok) setPendingCount(d.updates?.length ?? 0); })
+      .catch(() => {});
+    fetch("/api/admin/growth", { headers })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; today?: DailyMetric }) => { if (d.ok && d.today) setTodayMetrics(d.today); })
+      .catch(() => {});
+  }, [authed, secret]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -639,7 +1051,11 @@ export default function LucaAdminPage() {
                   onClick={() => setSection(item.section)}
                   className={section === item.section ? styles.navItemActive : styles.navItem}
                 >
-                  <span>{item.icon}</span>{item.label}
+                  <span>{item.icon}</span>
+                  {item.label}
+                  {item.section === "registry" && pendingCount > 0 && (
+                    <em className={styles.navBadge}>{pendingCount}</em>
+                  )}
                 </button>
               ))}
             </div>
@@ -658,11 +1074,13 @@ export default function LucaAdminPage() {
       </aside>
 
       <section className={styles.workspace}>
-        {section === "overview"  && <OverviewSection />}
+        {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
         {section === "registry"  && <RegistrySection />}
         {section === "growth"    && <GrowthSection secret={secret} />}
+        {section === "reports"   && <ReportsSection secret={secret} />}
+        {section === "comm"      && <CommIntelSection secret={secret} />}
         {section === "roadmap"   && <RoadmapSection />}
-        {section === "settings"  && <SettingsSection onSignOut={handleSignOut} />}
+        {section === "settings"  && <SettingsSection onSignOut={handleSignOut} health={health} />}
       </section>
     </main>
   );

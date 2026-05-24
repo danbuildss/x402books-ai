@@ -1,4 +1,33 @@
 export type Ecosystem = "BANKR" | "Virtuals" | "Base";
+
+// ── Communication identity types ──────────────────────────────────────────────
+
+export type CommPlatform =
+  | "wiretap"
+  | "telegram"
+  | "x"
+  | "email"
+  | "discord"
+  | "farcaster"
+  | "other";
+
+export type CommConfidence = "unverified" | "confirmed";
+
+export type CommLabel =
+  | "payment request observed"
+  | "settlement not confirmed"
+  | "needs wallet confirmation"
+  | "reconciliation candidate";
+
+export type CommunicationIdentity = {
+  id?: string;
+  platform: CommPlatform;
+  handle: string;
+  url?: string | null;
+  confidence: CommConfidence;
+  labels: CommLabel[];
+  notes?: string | null;
+};
 export type Health = "Healthy" | "Stable" | "Watch" | "At Risk" | "Pending";
 export type VerificationStatus = "Candidate" | "Needs Verification" | "Verified" | "Luca Managed";
 export type WalletLabel =
@@ -37,4 +66,5 @@ export type Agent = {
   priority: number;
   pfp?: string;
   gitlawbRepo?: string;
+  communicationIdentities?: CommunicationIdentity[];
 };
