@@ -8,8 +8,7 @@ export async function GET() {
       { agents, fromSupabase },
       {
         headers: {
-          // Allow short-term caching — registry data changes infrequently
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+          "Cache-Control": "public, s-maxage=10, stale-while-revalidate=20",
         },
       }
     );
