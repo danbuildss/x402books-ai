@@ -1,19 +1,23 @@
 // Agent financial state — designed for AI agents querying their own wallet health.
 // Returns a structured snapshot: ecosystem, token portfolio, flows, top counterparties,
 // x402 activity, and recent transactions.
+// Auth: API key (Bearer/X-API-Key) OR x402 USDC payment on Base.
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { withX402 } from "x402-next";
 import { v1Auth } from "@/lib/v1-auth";
+import { hasLucaBalance } from "@/lib/luca-balance";
 import { ledgerErrorResponse } from "@/lib/api-utils";
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress, type TimeRange } from "@/lib/ledger";
 import { getEcosystemRegistry, isInEcosystem } from "@/lib/ecosystem-tokens";
 
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
+const PAYMENT_ADDRESS = (process.env.X402BOOKS_PAYMENT_ADDRESS ?? ZERO_ADDRESS) as `0x${string}`;
+const PAYMENT_ENABLED = Boolean(process.env.X402BOOKS_PAYMENT_ADDRESS);
 
-export async function GET(request: Request) {
-  const auth = await v1Auth(request);
-  if (!auth.ok) return auth.response;
+async function treasuryHandler(request: NextRequest): Promise<NextResponse> {
 
   const { searchParams } = new URL(request.url);
   const wallet = (searchParams.get("wallet") ?? "").trim();
@@ -89,10 +93,39 @@ export async function GET(request: Request) {
       })),
     };
 
-    auth.finish(200, Date.now() - start, "/api/v1/agent-financial-state", wallet);
     return NextResponse.json(body);
   } catch (error) {
-    auth.finish(502, Date.now() - start, "/api/v1/agent-financial-state", wallet);
     return ledgerErrorResponse(error);
   }
+}
+
+const paywallHandler = withX402(
+  treasuryHandler,
+  PAYMENT_ADDRESS,
+  async (req: NextRequest) => {
+    const agentWallet = req.headers.get("x-agent-wallet") ?? undefined;
+    const hasLuca = agentWallet ? await hasLucaBalance(agentWallet) : false;
+    return {
+      price: hasLuca ? "$0.007" : "$0.01",
+      network: "base" as const,
+      config: { description: "x402Books treasury health — Luca financial intelligence on Base" },
+    };
+  }
+);
+
+export async function GET(request: NextRequest) {
+  // Valid API key (Bearer or X-API-Key) → free access with usage tracking
+  const auth = await v1Auth(request);
+  if (auth.ok) {
+    const start = Date.now();
+    const res = await treasuryHandler(request);
+    auth.finish(res.status, Date.now() - start, "/api/v1/agent-financial-state");
+    return res;
+  }
+
+  // x402 pay-per-call: $0.01 USDC, 30% off for $LUCA holders
+  if (PAYMENT_ENABLED) return paywallHandler(request);
+
+  // Payment not configured → fall back to API key error
+  return auth.response;
 }
