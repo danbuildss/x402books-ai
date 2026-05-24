@@ -1,6 +1,35 @@
 import type { Agent } from "./types";
 
 export const AGENTS: Agent[] = [
+  // ── Registry operator self-profile ──────────────────────────────────────────
+  {
+    name: "Luca",
+    symbol: "$LUCA",
+    ecosystem: "Base",
+    xHandle: "@AskLucaAI",
+    website: "https://www.x402books.xyz",
+    bankrProfile: null,
+    tokenAddress: "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3",
+    wallets: [],
+    verificationStatus: "Luca Managed",
+    evidenceSources: ["x402Books internal"],
+    financialActivityScore: null,
+    treasuryHealth: "Pending",
+    partnershipFitScore: null,
+    outreachStatus: null,
+    lastChecked: null,
+    priority: 100,
+    adminNotes: "x402Books AI — agent financial registry operator. Tracks agent wallets, treasury health, and financial activity across the Base/BANKR/Virtuals ecosystem.",
+    communicationIdentities: [
+      {
+        platform: "wiretap",
+        handle: "askluca",
+        confidence: "confirmed",
+        labels: [],
+        notes: "Luca's official agent messaging/contact identity. Used for outreach, wallet-role confirmation, and payment-intent context. Not wallet verification by itself.",
+      },
+    ],
+  },
   // ── Tier 1 ──────────────────────────────────────────────────────────────────
   {
     name: "Bankr",
