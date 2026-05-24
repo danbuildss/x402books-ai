@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+
+import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
@@ -287,11 +289,17 @@ function AgentCard({ agent }: { agent: Agent }) {
             </div>
           )}
 
-          {/* Safe footer */}
+          {/* Profile link + footer note */}
           <div className="reg-card-footer-note">
-            Luca analyzed public data associated with {agent.name}. These are candidate wallets only —
-            not verified unless marked Verified.{" "}
-            <a href="#verify" onClick={() => setExpanded(false)}>Verify your agent →</a>
+            <Link href={`/registry/${toSlug(agent.name)}`} className="reg-card-profile-link">
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>open_in_new</span>
+              View full profile
+            </Link>
+            <span style={{ display: "block", marginTop: 8 }}>
+              Luca analyzed public data associated with {agent.name}. These are candidate wallets only —
+              not verified unless marked Verified.{" "}
+              <a href="#verify" onClick={() => setExpanded(false)}>Verify your agent →</a>
+            </span>
           </div>
         </div>
       )}
