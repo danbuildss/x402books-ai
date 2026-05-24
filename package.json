@@ -17,7 +17,10 @@
     "next": "^15.5.18",
     "pdfkit": "^0.18.0",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "viem": "^2.48.11",
+    "x402": "^1.2.0",
+    "x402-next": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.3",
