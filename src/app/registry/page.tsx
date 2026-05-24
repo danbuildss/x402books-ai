@@ -4,9 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
+import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";

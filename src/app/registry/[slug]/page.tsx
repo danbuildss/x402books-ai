@@ -5,12 +5,9 @@ import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
 import { ProfileClient } from "./profile-client";
+import { toSlug } from "./slug";
 
 export const revalidate = 30;
-
-export function toSlug(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
 
 async function getAgent(slug: string): Promise<Agent | null> {
   try {
