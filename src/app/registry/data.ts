@@ -1,6 +1,35 @@
 import type { Agent } from "./types";
 
 export const AGENTS: Agent[] = [
+  // ── Registry operator self-profile ──────────────────────────────────────────
+  {
+    name: "Luca",
+    symbol: "$LUCA",
+    ecosystem: "Base",
+    xHandle: "@AskLucaAI",
+    website: "https://www.x402books.xyz",
+    bankrProfile: null,
+    tokenAddress: "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3",
+    wallets: [],
+    verificationStatus: "Luca Managed",
+    evidenceSources: ["x402Books internal"],
+    financialActivityScore: null,
+    treasuryHealth: "Pending",
+    partnershipFitScore: null,
+    outreachStatus: null,
+    lastChecked: null,
+    priority: 100,
+    adminNotes: "x402Books AI — agent financial registry operator. Tracks agent wallets, treasury health, and financial activity across the Base/BANKR/Virtuals ecosystem.",
+    communicationIdentities: [
+      {
+        platform: "wiretap",
+        handle: "askluca",
+        confidence: "confirmed",
+        labels: [],
+        notes: "Luca's official agent messaging/contact identity. Used for outreach, wallet-role confirmation, and payment-intent context. Not wallet verification by itself.",
+      },
+    ],
+  },
   // ── Tier 1 ──────────────────────────────────────────────────────────────────
   {
     name: "Bankr",
@@ -1607,5 +1636,24 @@ export const AGENTS: Agent[] = [
     lastChecked: null,
     priority: 33,
     adminNotes: "AI agent that generates daily haiku NFTs on Base. Each day a new 100% onchain haiku is minted, auctioned for 24 hours (Nouns-style), and burned if unsold. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 0.002 WETH.",
+  },
+  {
+    name: "Echo",
+    symbol: "$ECHO",
+    ecosystem: "BANKR",
+    xHandle: "@BuiltByEcho",
+    website: "https://builtbyecho.xyz",
+    bankrProfile: null,
+    tokenAddress: "0xa7f63eb41779925803a3eec30890742571e63ba3",
+    wallets: [],
+    verificationStatus: "Candidate",
+    evidenceSources: ["x402Books agent candidate list"],
+    financialActivityScore: null,
+    treasuryHealth: "Pending",
+    partnershipFitScore: null,
+    outreachStatus: null,
+    lastChecked: null,
+    priority: 32,
+    adminNotes: null,
   },
 ];
