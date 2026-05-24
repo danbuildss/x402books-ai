@@ -1,0 +1,292 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/effects";
+import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function truncate(addr: string) {
+  return addr.slice(0, 8) + "…" + addr.slice(-6);
+}
+
+function xPfpUrl(handle: string) {
+  return `https://unavatar.io/x/${handle.replace("@", "")}`;
+}
+
+// ── Shared badge components ───────────────────────────────────────────────────
+
+function HealthBadge({ h }: { h: Health }) {
+  const cls = h === "Healthy" ? "healthy" : h === "Stable" ? "stable" : h === "Watch" ? "watch" : h === "At Risk" ? "risk" : "pending";
+  return <span className={`reg-health reg-health-${cls}`}>{h}</span>;
+}
+
+const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
+  "Candidate":          { cls: "candidate",    label: "Candidate"          },
+  "Needs Verification": { cls: "needs-verify", label: "Needs Verification" },
+  "Verified":           { cls: "verified",     label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed", label: "Luca Managed"       },
+};
+
+function StatusBadge({ status }: { status: VerificationStatus }) {
+  const m = STATUS_META[status];
+  return (
+    <span className={`reg-badge reg-vstatus reg-vstatus-${m.cls}`}>
+      {m.icon && <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{m.icon}</span>}
+      {m.label}
+    </span>
+  );
+}
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const pct = Math.min(100, Math.max(0, value));
+  const color = pct >= 70 ? "var(--accent)" : pct >= 40 ? "var(--blue)" : "var(--muted)";
+  return (
+    <div className="reg-score-row">
+      <span className="reg-score-label">{label}</span>
+      <div className="reg-score-bar-wrap">
+        <div className="reg-score-bar-fill" style={{ width: `${pct}%`, background: color }} />
+      </div>
+      <span className="reg-score-val">{value}</span>
+    </div>
+  );
+}
+
+// ── Share button ──────────────────────────────────────────────────────────────
+
+function ShareButton({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const url = `https://www.x402books.xyz/registry/${slug}`;
+
+  function copy() {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <button type="button" className="prof-share-btn" onClick={copy}>
+      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+        {copied ? "check" : "link"}
+      </span>
+      {copied ? "Copied!" : "Copy profile link"}
+    </button>
+  );
+}
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
+
+function ProfileAvatar({ agent }: { agent: Agent }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !agent.xHandle) {
+    return (
+      <div className="prof-avatar prof-avatar-fallback">
+        {agent.name[0]}
+      </div>
+    );
+  }
+  const src = agent.pfp ?? xPfpUrl(agent.xHandle);
+  return (
+    <Image
+      src={src}
+      alt={agent.name}
+      width={72}
+      height={72}
+      className="prof-avatar"
+      onError={() => setFailed(true)}
+      unoptimized
+    />
+  );
+}
+
+// ── Main profile ──────────────────────────────────────────────────────────────
+
+export function ProfileClient({ agent, slug }: { agent: Agent; slug: string }) {
+  const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
+
+  return (
+    <div className="prof-page">
+      {/* Header */}
+      <header className="lp-header">
+        <Link href="/" className="lp-brand"><Logo /></Link>
+        <nav className="lp-nav" aria-label="Main navigation">
+          <Link href="/">Home</Link>
+          <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/luca">Luca</Link>
+          <Link href="/docs">Docs</Link>
+        </nav>
+        <div className="lp-header-right">
+          <ThemeToggle />
+          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
+          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+        </div>
+      </header>
+
+      <main className="prof-main">
+        {/* Back */}
+        <Link href="/registry" className="prof-back">
+          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_back</span>
+          Agent Registry
+        </Link>
+
+        {/* Identity card */}
+        <div className="prof-identity">
+          <ProfileAvatar agent={agent} />
+          <div className="prof-identity-info">
+            <div className="prof-name-row">
+              <h1 className="prof-name">{agent.name}</h1>
+              <span className="prof-symbol">{agent.symbol}</span>
+            </div>
+            <div className="prof-badges">
+              <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
+              <StatusBadge status={agent.verificationStatus} />
+              <HealthBadge h={agent.treasuryHealth} />
+            </div>
+            <div className="prof-links">
+              {agent.xHandle && (
+                <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="prof-link">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  {agent.xHandle}
+                </a>
+              )}
+              {agent.website && (
+                <a href={agent.website} target="_blank" rel="noreferrer" className="prof-link">
+                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>open_in_new</span>
+                  Website
+                </a>
+              )}
+              {agent.bankrProfile && (
+                <a href={agent.bankrProfile} target="_blank" rel="noreferrer" className="prof-link prof-link-bankr">
+                  Bankr
+                </a>
+              )}
+            </div>
+          </div>
+          <div className="prof-share-wrap">
+            <ShareButton slug={slug} />
+          </div>
+        </div>
+
+        <div className="prof-body">
+          {/* Luca's Verdict */}
+          {agent.adminNotes && (
+            <div className="prof-verdict">
+              <div className="prof-verdict-label">
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
+                Luca&apos;s Verdict
+              </div>
+              <p className="prof-verdict-text">{agent.adminNotes}</p>
+              {agent.lastChecked && (
+                <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>
+              )}
+            </div>
+          )}
+
+          <div className="prof-grid">
+            {/* Scores */}
+            {hasScores && (
+              <section className="prof-section">
+                <p className="prof-section-title">Luca Scores</p>
+                {agent.financialActivityScore !== null && (
+                  <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
+                )}
+                {agent.partnershipFitScore !== null && (
+                  <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />
+                )}
+              </section>
+            )}
+
+            {/* Wallets */}
+            <section className="prof-section">
+              <p className="prof-section-title">Wallets</p>
+              {agent.tokenAddress && (
+                <div className="reg-card-wallet-row">
+                  <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
+                  <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                    {truncate(agent.tokenAddress)}
+                  </a>
+                </div>
+              )}
+              {agent.wallets.map((w) => (
+                <div key={w.address} className="reg-card-wallet-row">
+                  <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
+                    {w.label}
+                  </span>
+                  <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                    {truncate(w.address)}
+                  </a>
+                  {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
+                </div>
+              ))}
+              {!agent.tokenAddress && agent.wallets.length === 0 && (
+                <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
+              )}
+            </section>
+
+            {/* Evidence */}
+            {agent.evidenceSources.length > 0 && (
+              <section className="prof-section">
+                <p className="prof-section-title">Evidence Sources</p>
+                <div className="prof-pills">
+                  {agent.evidenceSources.map((s) => (
+                    <span key={s} className="reg-source-pill">{s}</span>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Report CTA */}
+            {(agent.tokenAddress || agent.wallets.length > 0) && (
+              <section className="prof-section">
+                <p className="prof-section-title">Treasury Report</p>
+                <a
+                  href={`/report/${agent.tokenAddress ?? agent.wallets[0].address}`}
+                  className="prof-report-btn"
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>description</span>
+                  Get full treasury report →
+                </a>
+              </section>
+            )}
+          </div>
+
+          {/* Footer note */}
+          <p className="prof-footer-note">
+            Luca analyzed public data associated with {agent.name}. These are candidate wallets — not verified unless marked Verified.{" "}
+            <Link href="/registry#verify">Verify your agent →</Link>
+          </p>
+        </div>
+      </main>
+
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">Product</p>
+            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
+            <Link href="/luca">Meet Luca</Link>
+            <Link href="/developer">Developer</Link>
+          </div>
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">Docs</p>
+            <Link href="/docs#api">API Reference</Link>
+            <Link href="/docs#agent">Agent Guide</Link>
+            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
+          </div>
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">Community</p>
+            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
+            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
+          </div>
+        </div>
+        <p className="lp-footer-copy">© 2026 x402Books AI. Not financial advice.</p>
+      </footer>
+    </div>
+  );
+}
