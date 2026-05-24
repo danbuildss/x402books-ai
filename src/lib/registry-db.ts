@@ -1,6 +1,9 @@
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
 import { AGENTS } from "@/app/registry/data";
-import type { Agent, AgentWallet, WalletLabel, Ecosystem, Health, VerificationStatus, OutreachStatus } from "@/app/registry/types";
+import type {
+  Agent, AgentWallet, WalletLabel, Ecosystem, Health, VerificationStatus, OutreachStatus,
+  CommunicationIdentity, CommPlatform, CommConfidence, CommLabel,
+} from "@/app/registry/types";
 
 // ── Row types from Supabase ───────────────────────────────────────────────────
 
@@ -34,6 +37,29 @@ interface RegistryAgentWalletRow {
   notes: string | null;
 }
 
+interface CommIdentityRow {
+  id: string;
+  agent_name: string;
+  platform: string;
+  handle: string;
+  url: string | null;
+  confidence: string;
+  labels: string[];
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommIdentityInput {
+  agent_name: string;
+  platform: CommPlatform;
+  handle: string;
+  url?: string | null;
+  confidence: CommConfidence;
+  labels: CommLabel[];
+  notes?: string | null;
+}
+
 export interface PendingUpdate {
   id: string;
   created_at: string;
@@ -49,7 +75,23 @@ export interface PendingUpdate {
 
 // ── Row → Agent mapper ────────────────────────────────────────────────────────
 
-function rowToAgent(row: RegistryAgentRow, wallets: AgentWallet[]): Agent {
+function rowToCommIdentity(row: CommIdentityRow): CommunicationIdentity {
+  return {
+    id: row.id,
+    platform: row.platform as CommPlatform,
+    handle: row.handle,
+    url: row.url,
+    confidence: row.confidence as CommConfidence,
+    labels: (row.labels ?? []) as CommLabel[],
+    notes: row.notes,
+  };
+}
+
+function rowToAgent(
+  row: RegistryAgentRow,
+  wallets: AgentWallet[],
+  commIdentities?: CommunicationIdentity[],
+): Agent {
   return {
     name: row.name,
     symbol: row.symbol ?? "—",
@@ -70,6 +112,7 @@ function rowToAgent(row: RegistryAgentRow, wallets: AgentWallet[]): Agent {
     priority: row.priority ?? 50,
     pfp: row.pfp ?? undefined,
     gitlawbRepo: row.gitlawb_repo ?? undefined,
+    communicationIdentities: commIdentities ?? [],
   };
 }
 
@@ -112,12 +155,13 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
   try {
     const sb = getSupabaseAdminClient();
 
-    const [agentsResult, walletsResult] = await Promise.all([
+    const [agentsResult, walletsResult, commResult] = await Promise.all([
       sb
         .from("registry_agents")
         .select("*")
         .order("priority", { ascending: false }),
       sb.from("registry_agent_wallets").select("*"),
+      sb.from("registry_agent_comm_identities").select("*"),
     ]);
 
     if (agentsResult.error) throw agentsResult.error;
@@ -125,9 +169,9 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
 
     const agentRows = (agentsResult.data ?? []) as RegistryAgentRow[];
     const walletRows = (walletsResult.data ?? []) as RegistryAgentWalletRow[];
+    const commRows = (commResult.data ?? []) as CommIdentityRow[];
 
     if (agentRows.length === 0) {
-      // DB is configured but empty — fall back to static
       return { agents: AGENTS, fromSupabase: false };
     }
 
@@ -142,8 +186,15 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
       });
     }
 
+    // Group comm identities by agent_name
+    const commByAgent: Record<string, CommunicationIdentity[]> = {};
+    for (const c of commRows) {
+      if (!commByAgent[c.agent_name]) commByAgent[c.agent_name] = [];
+      commByAgent[c.agent_name].push(rowToCommIdentity(c));
+    }
+
     const agents = agentRows.map((row) =>
-      rowToAgent(row, walletsByAgent[row.name] ?? [])
+      rowToAgent(row, walletsByAgent[row.name] ?? [], commByAgent[row.name] ?? [])
     );
 
     return { agents, fromSupabase: true };
@@ -369,5 +420,68 @@ export async function seedRegistryFromStaticData(): Promise<{ ok: boolean; error
     if (walletError) return { ok: false, error: walletError.message };
   }
 
+  return { ok: true };
+}
+
+// ── Communication identity CRUD ───────────────────────────────────────────────
+
+export async function getCommIdentities(
+  agentName?: string,
+): Promise<{ ok: boolean; data: CommunicationIdentity[]; error?: string }> {
+  if (!hasSupabaseAdminEnv()) return { ok: false, data: [], error: "Supabase not configured" };
+  const sb = getSupabaseAdminClient();
+  let query = sb.from("registry_agent_comm_identities").select("*").order("created_at", { ascending: false });
+  if (agentName) query = query.eq("agent_name", agentName);
+  const { data, error } = await query;
+  if (error) return { ok: false, data: [], error: error.message };
+  return { ok: true, data: ((data ?? []) as CommIdentityRow[]).map(rowToCommIdentity) };
+}
+
+export async function createCommIdentity(
+  input: CommIdentityInput,
+): Promise<{ ok: boolean; id?: string; error?: string }> {
+  if (!hasSupabaseAdminEnv()) return { ok: false, error: "Supabase not configured" };
+  const sb = getSupabaseAdminClient();
+  const { data, error } = await sb
+    .from("registry_agent_comm_identities")
+    .insert({
+      agent_name: input.agent_name,
+      platform:   input.platform,
+      handle:     input.handle,
+      url:        input.url ?? null,
+      confidence: input.confidence,
+      labels:     input.labels,
+      notes:      input.notes ?? null,
+    })
+    .select("id")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, id: (data as { id: string }).id };
+}
+
+export async function updateCommIdentity(
+  id: string,
+  patch: Partial<Omit<CommIdentityInput, "agent_name">>,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!hasSupabaseAdminEnv()) return { ok: false, error: "Supabase not configured" };
+  const sb = getSupabaseAdminClient();
+  const { error } = await sb
+    .from("registry_agent_comm_identities")
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+export async function deleteCommIdentity(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  if (!hasSupabaseAdminEnv()) return { ok: false, error: "Supabase not configured" };
+  const sb = getSupabaseAdminClient();
+  const { error } = await sb
+    .from("registry_agent_comm_identities")
+    .delete()
+    .eq("id", id);
+  if (error) return { ok: false, error: error.message };
   return { ok: true };
 }
