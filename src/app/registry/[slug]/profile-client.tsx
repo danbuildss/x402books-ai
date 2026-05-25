@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
+import type { AgentEconomicSummary } from "@/lib/agent-events";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -103,9 +104,49 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
   );
 }
 
+// ── Agent Economics block (Luca only) ────────────────────────────────────────
+
+function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary }) {
+  const s = economics;
+  const netColor = s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#f87171" : "var(--fg)";
+  const usd = (n: number) => `$${Math.abs(n).toFixed(2)}`;
+
+  return (
+    <section className="prof-section">
+      <p className="prof-section-title">Agent Economics · Last {s.periodDays}d</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {[
+          ["Inference Spend",   `-${usd(s.totalInferenceSpend)}`,   s.totalInferenceSpend  > 0 ? "#f87171" : undefined],
+          ["Inference Revenue", `+${usd(s.totalInferenceRevenue)}`, s.totalInferenceRevenue > 0 ? "#4ade80" : undefined],
+          ["Provider Spend",    `-${usd(s.providerSpend)}`,         undefined, s.topProvider ?? undefined],
+          ["Fallback Usage",    `-${usd(s.fallbackProviderSpend)}`, undefined, s.fallbackUsageCount > 0 ? `${s.fallbackUsageCount} call${s.fallbackUsageCount === 1 ? "" : "s"}` : undefined],
+          ["API Costs",         `-${usd(s.apiCosts)}`,              undefined],
+          ["Wallet Inflows",    `+${usd(s.walletInflows)}`,         s.walletInflows > 0 ? "#4ade80" : undefined],
+          ["Wallet Outflows",   `-${usd(s.walletOutflows)}`,        undefined],
+        ].map(([label, value, color, sub]) => (
+          <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>{label}</span>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontFamily: "monospace", color: (color as string) ?? "var(--fg)" }}>{value}</span>
+              {sub && <span style={{ color: "var(--muted)", fontSize: "0.72rem", marginLeft: 6 }}>{sub as string}</span>}
+            </div>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 4, fontSize: "0.85rem", fontWeight: 600 }}>
+          <span>Net Position</span>
+          <span style={{ fontFamily: "monospace", color: netColor }}>
+            {s.netAgentPosition >= 0 ? "+" : ""}{usd(s.netAgentPosition)}
+          </span>
+        </div>
+        <p style={{ color: "var(--muted)", fontSize: "0.78rem", marginTop: 6, lineHeight: 1.5 }}>{s.lucaVerdict}</p>
+      </div>
+    </section>
+  );
+}
+
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug }: { agent: Agent; slug: string }) {
+export function ProfileClient({ agent, slug, economics }: { agent: Agent; slug: string; economics?: AgentEconomicSummary }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
 
   return (
@@ -201,6 +242,9 @@ export function ProfileClient({ agent, slug }: { agent: Agent; slug: string }) {
                 )}
               </section>
             )}
+
+            {/* Agent Economics (Luca self-profile only) */}
+            {economics && <AgentEconomicsBlock economics={economics} />}
 
             {/* Wallets */}
             <section className="prof-section">

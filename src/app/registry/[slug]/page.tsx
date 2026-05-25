@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
+import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
+import type { AgentEconomicSummary } from "@/lib/agent-events";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
@@ -48,10 +50,21 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
+async function getLucaEconomics(): Promise<AgentEconomicSummary | undefined> {
+  try {
+    const events = await getAgentEvents("luca", 7);
+    return summarizeEvents("luca", events, 7);
+  } catch {
+    return undefined;
+  }
+}
+
 export default async function AgentProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  return <ProfileClient agent={agent} slug={slug} />;
+  const economics = slug === "luca" ? await getLucaEconomics() : undefined;
+
+  return <ProfileClient agent={agent} slug={slug} economics={economics} />;
 }
