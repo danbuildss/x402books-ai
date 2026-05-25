@@ -21,7 +21,7 @@ function computeStats(agents: Agent[]) {
   ).length;
   return [
     { label: "Agents Tracked",  value: String(agents.length) },
-    { label: "Ecosystems",      value: "3"                   },
+    { label: "Ecosystems",      value: "4"                   },
     { label: "Wallets Indexed", value: String(walletCount)   },
     { label: "Luca Reviewed",   value: String(reviewedCount) },
   ];
@@ -322,8 +322,21 @@ const WALLETS_JSON_EXAMPLE = `{
     },
     {
       "address": "0x...",
-      "role": "fee_recipient",
-      "chain": "base"
+      "role": "fee",
+      "chain": "base",
+      "notes": "Fee recipient"
+    },
+    {
+      "address": "0x...",
+      "role": "deployer",
+      "chain": "base",
+      "notes": "Contract deployer"
+    },
+    {
+      "address": "0x...",
+      "role": "operator",
+      "chain": "base",
+      "notes": "Hot wallet / operational spend"
     }
   ]
 }`;
@@ -691,7 +704,7 @@ export default function RegistryPage() {
             />
           </div>
           <div className="reg-eco-filter">
-            {(["All", "BANKR", "Virtuals", "Base"] as const).map((opt) => (
+            {(["All", "BANKR", "Virtuals", "Base", "AEON"] as const).map((opt) => (
               <button
                 key={opt}
                 type="button"
