@@ -1,4 +1,6 @@
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
+import { classifySettlementPattern } from "./luca-classify";
+import type { CategorySummary } from "./ledger";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -196,6 +198,24 @@ export function summarizeEvents(
   const netAgentPosition      = r(totalInflow - totalOutflow);
   const topProvider = Object.entries(providerCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
+  const categories: CategorySummary[] = [];
+  if (inferencePurchase + fallbackSpend > 0)
+    categories.push({ category: "inference_purchase",  label: "Inference Purchase", count: 0, totalUsdc: r(inferencePurchase + fallbackSpend) });
+  if (inferenceSale + agentRevenue > 0)
+    categories.push({ category: "inference_sale",      label: "Inference Sale",     count: 0, totalUsdc: r(inferenceSale + agentRevenue) });
+  if (providerSpend > 0)
+    categories.push({ category: "provider_spend",      label: "Provider Spend",     count: 0, totalUsdc: r(providerSpend) });
+  if (apiCosts > 0)
+    categories.push({ category: "api_cost",            label: "API Cost",           count: 0, totalUsdc: r(apiCosts) });
+  if (walletInflows > 0)
+    categories.push({ category: "income",              label: "Income",             count: 0, totalUsdc: r(walletInflows) });
+  if (walletOutflows > 0)
+    categories.push({ category: "agent_service",       label: "Agent Service",      count: 0, totalUsdc: r(walletOutflows) });
+
+  const settlement = classifySettlementPattern({ totalInflow, totalOutflow, txCount: events.length, categories });
+  const baseVerdict = buildVerdict({ agentId, agentName, totalInferenceSpend, totalInferenceRevenue, netAgentPosition, topProvider, fallbackUsageCount, apiCosts });
+  const settlementSuffix = settlement.verdict !== "Insufficient data for classification." ? ` ${settlement.verdict}` : "";
+
   return {
     agentId,
     agentName,
@@ -211,7 +231,7 @@ export function summarizeEvents(
     topProvider,
     fallbackUsageCount,
     eventCount:           events.length,
-    lucaVerdict:          buildVerdict({ agentId, agentName, totalInferenceSpend, totalInferenceRevenue, netAgentPosition, topProvider, fallbackUsageCount, apiCosts }),
+    lucaVerdict:          baseVerdict + settlementSuffix,
   };
 }
 
