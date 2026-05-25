@@ -286,18 +286,131 @@ function OverviewSection({ health, today }: { health: HealthData | null; today: 
   );
 }
 
-function RegistrySection() {
+type Submission = {
+  id: string;
+  agent_name: string;
+  wallet_address: string;
+  x_handle: string | null;
+  notes: string | null;
+  gitlawb_repo: string | null;
+  status: string;
+  admin_notes: string | null;
+  created_at: string;
+};
+
+function RegistrySection({ secret }: { secret: string }) {
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loadingSubs, setLoadingSubs]   = useState(true);
+  const [subsError, setSubsError]       = useState("");
+  const [filter, setFilter]             = useState<"pending" | "all">("pending");
+  const [acting, setActing]             = useState<string | null>(null);
+
+  const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  useEffect(() => {
+    setLoadingSubs(true);
+    setSubsError("");
+    fetch(`/api/registry/submissions?status=${filter}`, { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; submissions?: Submission[]; error?: string }) => {
+        if (d.ok) setSubmissions(d.submissions ?? []);
+        else setSubsError(d.error ?? "Failed to load submissions");
+      })
+      .catch(() => setSubsError("Network error"))
+      .finally(() => setLoadingSubs(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secret, filter]);
+
+  async function act(id: string, status: "approved" | "rejected") {
+    setActing(id);
+    const res = await fetch(`/api/registry/submissions/${id}`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ status }),
+    });
+    const d = await res.json() as { ok: boolean };
+    if (d.ok) setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, status } : s));
+    setActing(null);
+  }
+
+  const pendingCount = submissions.filter((s) => s.status === "pending").length;
+
   return (
     <div>
       <div className={styles.sectionHead}>
         <p className={styles.kicker}>Layer 3</p>
         <h1>Registry</h1>
-        <p>Review and approve Luca&apos;s proposed changes to the Agent Financial Registry.</p>
+        <p>Agent verification submissions and Luca&apos;s proposed changes.</p>
+      </div>
+
+      {/* Submissions queue */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <p className={styles.cardTitle} style={{ margin: 0 }}>Verification Submissions</p>
+            {pendingCount > 0 && (
+              <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#ef444422", color: "#ef4444" }}>
+                {pendingCount} pending
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {(["pending", "all"] as const).map((f) => (
+              <button key={f} type="button" onClick={() => setFilter(f)}
+                className={filter === f ? `${styles.periodBtn} ${styles.periodBtnActive}` : styles.periodBtn}>
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {loadingSubs && <div style={{ color: "var(--muted)", fontSize: "0.83rem" }}>Loading…</div>}
+        {!loadingSubs && subsError && <div className={styles.errorBox}>{subsError}</div>}
+        {!loadingSubs && !subsError && submissions.length === 0 && (
+          <p style={{ color: "var(--muted)", fontSize: "0.83rem", margin: 0 }}>No submissions yet.</p>
+        )}
+        {!loadingSubs && !subsError && submissions.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {submissions.map((s) => (
+              <div key={s.id} style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, alignItems: "start", padding: "10px 12px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+                    <strong style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{s.agent_name}</strong>
+                    {s.x_handle && <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{s.x_handle}</span>}
+                    <span style={{
+                      padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
+                      background: s.status === "pending" ? "#f59e0b22" : s.status === "approved" ? "var(--accent-soft)" : "#ef444422",
+                      color: s.status === "pending" ? "#f59e0b" : s.status === "approved" ? "var(--accent)" : "#ef4444",
+                    }}>{s.status}</span>
+                  </div>
+                  <code style={{ fontSize: "0.75rem", color: "var(--ink)", wordBreak: "break-all" }}>{s.wallet_address}</code>
+                  {s.gitlawb_repo && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>Gitlawb: {s.gitlawb_repo}</p>}
+                  {s.notes && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>{s.notes}</p>}
+                  <p style={{ margin: "3px 0 0", fontSize: "0.68rem", color: "var(--muted)" }}>
+                    {new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {s.status === "pending" && (
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button type="button" onClick={() => act(s.id, "approved")} disabled={acting === s.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
+                      Approve
+                    </button>
+                    <button type="button" onClick={() => act(s.id, "rejected")} disabled={acting === s.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className={styles.registryBanner}>
         <div>
-          <strong>Pending Updates Queue</strong>
+          <strong>Luca Updates Queue</strong>
           <p>Luca pushes weekly updates. Review proposed data changes before they go live on /registry.</p>
         </div>
         <Link href="/luca-admin/registry-updates" className={styles.actionBtn}>
@@ -1169,7 +1282,7 @@ export default function LucaAdminPage() {
         {/* Workspace */}
         <main className={styles.workspace}>
           {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
-          {section === "registry"  && <RegistrySection />}
+          {section === "registry"  && <RegistrySection secret={secret} />}
           {section === "economics" && <EconomicsSection />}
           {section === "growth"    && <GrowthSection secret={secret} />}
           {section === "reports"   && <ReportsSection secret={secret} />}
