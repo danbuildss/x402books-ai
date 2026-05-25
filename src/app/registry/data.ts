@@ -10,7 +10,13 @@ export const AGENTS: Agent[] = [
     website: "https://www.x402books.xyz",
     bankrProfile: null,
     tokenAddress: "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3",
-    wallets: [],
+    wallets: [
+      {
+        address: "0xC10EE38b25c8634f46c30B806Ec571eFd7a4C74F",
+        label: "verified wallet",
+        notes: "Luca operational wallet on Base. Used for inference purchases, agent revenue, and treasury activity.",
+      },
+    ],
     verificationStatus: "Luca Managed",
     evidenceSources: ["x402Books internal"],
     financialActivityScore: null,

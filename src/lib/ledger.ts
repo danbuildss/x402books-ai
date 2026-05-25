@@ -39,7 +39,14 @@ export type LedgerCategory =
   | "unknown"
   | "income"
   | "refund"
-  | "internal_transfer";
+  | "internal_transfer"
+  | "inference_purchase"
+  | "inference_sale"
+  | "provider_spend"
+  | "fallback_provider_spend"
+  | "api_cost"
+  | "agent_revenue"
+  | "unknown_agent_activity";
 
 export type LedgerRiskFlag =
   | "none"
@@ -96,15 +103,22 @@ export type LedgerReport = {
 export const BASE_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
 export const categoryLabels: Record<LedgerCategory, string> = {
-  api_call: "API Call",
-  data_access: "Data Access",
-  compute: "Compute",
-  agent_service: "Agent Service",
-  subscription: "Subscription",
-  unknown: "Uncategorized",
-  income: "Income",
-  refund: "Refund",
-  internal_transfer: "Internal Transfer",
+  api_call:                "API Call",
+  data_access:             "Data Access",
+  compute:                 "Compute",
+  agent_service:           "Agent Service",
+  subscription:            "Subscription",
+  unknown:                 "Uncategorized",
+  income:                  "Income",
+  refund:                  "Refund",
+  internal_transfer:       "Internal Transfer",
+  inference_purchase:      "Inference Purchase",
+  inference_sale:          "Inference Sale",
+  provider_spend:          "Provider Spend",
+  fallback_provider_spend: "Fallback Provider",
+  api_cost:                "API Cost",
+  agent_revenue:           "Agent Revenue",
+  unknown_agent_activity:  "Unknown Agent Activity",
 };
 
 export function isValidWalletAddress(address: string) {
