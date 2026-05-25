@@ -9,52 +9,43 @@ export type AgentEventType =
   | "fallback_provider_spend"
   | "api_cost"
   | "agent_revenue"
+  | "wallet_inflow"
+  | "wallet_outflow"
   | "unknown_agent_activity";
 
-export type AgentEventDirection = "inflow" | "outflow";
+export type AgentEventDirection = "inflow" | "outflow" | "neutral";
 
 export interface AgentEconomicEvent {
-  id?: string;
-  agentName: string;
+  id?:           string;
+  agentId:       string;
+  agentName?:    string | null;
   walletAddress?: string | null;
-  eventType: AgentEventType;
-  provider?: string | null;
-  amountUsd?: number | null;
-  token?: string;
-  direction?: AgentEventDirection | null;
-  txHash?: string | null;
-  metadata?: Record<string, unknown> | null;
-  ts?: string;
-}
-
-export interface AgentEventRow {
-  id: string;
-  agent_name: string;
-  wallet_address: string | null;
-  event_type: AgentEventType;
-  provider: string | null;
-  amount_usd: number | null;
-  token: string | null;
-  direction: AgentEventDirection | null;
-  tx_hash: string | null;
-  metadata: Record<string, unknown> | null;
-  ts: string;
-  created_at: string;
+  eventType:     AgentEventType;
+  provider?:     string | null;
+  amount?:       number | null;
+  token?:        string;
+  direction?:    AgentEventDirection | null;
+  txHash?:       string | null;
+  metadata?:     Record<string, unknown> | null;
+  timestamp?:    string;
 }
 
 export interface AgentEconomicSummary {
-  agentName: string;
-  periodDays: number;
-  inferenceCost: number;        // inference_purchase + fallback_provider_spend
-  inferenceRevenue: number;     // inference_sale + agent_revenue
-  providerSpend: number;        // provider_spend
-  apiCost: number;              // api_cost
-  totalOutflow: number;
-  totalInflow: number;
-  netPosition: number;          // inflow - outflow
-  eventCount: number;
-  topProvider: string | null;
-  primaryCostCenter: string | null;
+  agentId:               string;
+  agentName:             string | null;
+  periodDays:            number;
+  totalInferenceSpend:   number;
+  totalInferenceRevenue: number;
+  providerSpend:         number;
+  fallbackProviderSpend: number;
+  apiCosts:              number;
+  walletInflows:         number;
+  walletOutflows:        number;
+  netAgentPosition:      number;
+  topProvider:           string | null;
+  fallbackUsageCount:    number;
+  eventCount:            number;
+  lucaVerdict:           string;
 }
 
 export const EVENT_LABELS: Record<AgentEventType, string> = {
@@ -64,24 +55,43 @@ export const EVENT_LABELS: Record<AgentEventType, string> = {
   fallback_provider_spend: "Fallback Provider",
   api_cost:                "API Cost",
   agent_revenue:           "Agent Revenue",
+  wallet_inflow:           "Wallet Inflow",
+  wallet_outflow:          "Wallet Outflow",
   unknown_agent_activity:  "Unknown Activity",
 };
 
-// ── Row mapper ────────────────────────────────────────────────────────────────
+// ── DB row ────────────────────────────────────────────────────────────────────
 
-function rowToEvent(row: AgentEventRow): AgentEconomicEvent {
+interface AgentEventRow {
+  id:             string;
+  agent_id:       string;
+  agent_name:     string | null;
+  wallet_address: string | null;
+  event_type:     string;
+  provider:       string | null;
+  amount:         number | null;
+  token:          string | null;
+  direction:      string | null;
+  tx_hash:        string | null;
+  metadata:       Record<string, unknown> | null;
+  timestamp:      string;
+  created_at:     string;
+}
+
+function rowToEvent(r: AgentEventRow): AgentEconomicEvent {
   return {
-    id:            row.id,
-    agentName:     row.agent_name,
-    walletAddress: row.wallet_address,
-    eventType:     row.event_type,
-    provider:      row.provider,
-    amountUsd:     row.amount_usd,
-    token:         row.token ?? "USDC",
-    direction:     row.direction,
-    txHash:        row.tx_hash,
-    metadata:      row.metadata,
-    ts:            row.ts,
+    id:            r.id,
+    agentId:       r.agent_id,
+    agentName:     r.agent_name,
+    walletAddress: r.wallet_address,
+    eventType:     r.event_type as AgentEventType,
+    provider:      r.provider,
+    amount:        r.amount,
+    token:         r.token ?? "USDC",
+    direction:     r.direction as AgentEventDirection | null,
+    txHash:        r.tx_hash,
+    metadata:      r.metadata,
+    timestamp:     r.timestamp,
   };
 }
 
@@ -96,16 +106,17 @@ export async function logAgentEvent(
   const { data, error } = await sb
     .from("agent_economic_events")
     .insert({
-      agent_name:     event.agentName,
+      agent_id:       event.agentId,
+      agent_name:     event.agentName ?? null,
       wallet_address: event.walletAddress ?? null,
       event_type:     event.eventType,
       provider:       event.provider ?? null,
-      amount_usd:     event.amountUsd ?? null,
+      amount:         event.amount ?? null,
       token:          event.token ?? "USDC",
       direction:      event.direction ?? null,
       tx_hash:        event.txHash ?? null,
       metadata:       event.metadata ?? null,
-      ts:             event.ts ?? new Date().toISOString(),
+      timestamp:      event.timestamp ?? new Date().toISOString(),
     })
     .select("id")
     .single();
@@ -117,9 +128,9 @@ export async function logAgentEvent(
 // ── Read ──────────────────────────────────────────────────────────────────────
 
 export async function getAgentEvents(
-  agentName: string,
+  agentId: string,
   days = 7,
-  limit = 200,
+  limit = 500,
 ): Promise<AgentEconomicEvent[]> {
   if (!hasSupabaseAdminEnv()) return [];
   const sb = getSupabaseAdminClient();
@@ -129,86 +140,112 @@ export async function getAgentEvents(
   const { data, error } = await sb
     .from("agent_economic_events")
     .select("*")
-    .eq("agent_name", agentName)
-    .gte("ts", since)
-    .order("ts", { ascending: false })
+    .eq("agent_id", agentId)
+    .gte("timestamp", since)
+    .order("timestamp", { ascending: false })
     .limit(limit);
 
   if (error) return [];
   return (data ?? []).map((r) => rowToEvent(r as AgentEventRow));
 }
 
-// ── Aggregate ─────────────────────────────────────────────────────────────────
+// ── Summarize ─────────────────────────────────────────────────────────────────
 
 export function summarizeEvents(
-  agentName: string,
+  agentId: string,
   events: AgentEconomicEvent[],
   periodDays: number,
 ): AgentEconomicSummary {
-  let inferenceCost = 0;
-  let inferenceRevenue = 0;
-  let providerSpend = 0;
-  let apiCost = 0;
-  let totalOutflow = 0;
-  let totalInflow = 0;
+  let inferencePurchase   = 0;
+  let inferenceSale       = 0;
+  let providerSpend       = 0;
+  let fallbackSpend       = 0;
+  let apiCosts            = 0;
+  let agentRevenue        = 0;
+  let walletInflows       = 0;
+  let walletOutflows      = 0;
+  let fallbackUsageCount  = 0;
+  let agentName: string | null = null;
 
   const providerCounts: Record<string, number> = {};
-  const costCenters: Record<string, number> = {};
 
   for (const e of events) {
-    const amt = e.amountUsd ?? 0;
-
-    if (e.provider) {
-      providerCounts[e.provider] = (providerCounts[e.provider] ?? 0) + 1;
-    }
+    const amt = e.amount ?? 0;
+    if (e.agentName && !agentName) agentName = e.agentName;
+    if (e.provider) providerCounts[e.provider] = (providerCounts[e.provider] ?? 0) + 1;
 
     switch (e.eventType) {
-      case "inference_purchase":
+      case "inference_purchase":   inferencePurchase += amt; break;
+      case "inference_sale":       inferenceSale     += amt; break;
+      case "provider_spend":       providerSpend     += amt; break;
       case "fallback_provider_spend":
-        inferenceCost += amt;
-        totalOutflow += amt;
-        costCenters[e.eventType] = (costCenters[e.eventType] ?? 0) + amt;
+        fallbackSpend += amt;
+        fallbackUsageCount++;
         break;
-      case "inference_sale":
-      case "agent_revenue":
-        inferenceRevenue += amt;
-        totalInflow += amt;
-        break;
-      case "provider_spend":
-        providerSpend += amt;
-        totalOutflow += amt;
-        costCenters["provider_spend"] = (costCenters["provider_spend"] ?? 0) + amt;
-        break;
-      case "api_cost":
-        apiCost += amt;
-        totalOutflow += amt;
-        costCenters["api_cost"] = (costCenters["api_cost"] ?? 0) + amt;
-        break;
-      default:
-        if (e.direction === "outflow") totalOutflow += amt;
-        else if (e.direction === "inflow") totalInflow += amt;
+      case "api_cost":             apiCosts      += amt; break;
+      case "agent_revenue":        agentRevenue  += amt; break;
+      case "wallet_inflow":        walletInflows += amt; break;
+      case "wallet_outflow":       walletOutflows += amt; break;
     }
   }
 
+  const totalInferenceSpend   = r(inferencePurchase + fallbackSpend);
+  const totalInferenceRevenue = r(inferenceSale + agentRevenue);
+  const totalInflow           = r(totalInferenceRevenue + walletInflows);
+  const totalOutflow          = r(totalInferenceSpend + providerSpend + apiCosts + walletOutflows);
+  const netAgentPosition      = r(totalInflow - totalOutflow);
   const topProvider = Object.entries(providerCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
-  const primaryCostCenter = Object.entries(costCenters).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
   return {
+    agentId,
     agentName,
     periodDays,
-    inferenceCost:    round(inferenceCost),
-    inferenceRevenue: round(inferenceRevenue),
-    providerSpend:    round(providerSpend),
-    apiCost:          round(apiCost),
-    totalOutflow:     round(totalOutflow),
-    totalInflow:      round(totalInflow),
-    netPosition:      round(totalInflow - totalOutflow),
-    eventCount:       events.length,
+    totalInferenceSpend,
+    totalInferenceRevenue,
+    providerSpend:        r(providerSpend),
+    fallbackProviderSpend: r(fallbackSpend),
+    apiCosts:             r(apiCosts),
+    walletInflows:        r(walletInflows),
+    walletOutflows:       r(walletOutflows),
+    netAgentPosition,
     topProvider,
-    primaryCostCenter: primaryCostCenter ? EVENT_LABELS[primaryCostCenter as AgentEventType] ?? primaryCostCenter : null,
+    fallbackUsageCount,
+    eventCount:           events.length,
+    lucaVerdict:          buildVerdict({ agentId, agentName, totalInferenceSpend, totalInferenceRevenue, netAgentPosition, topProvider, fallbackUsageCount, apiCosts }),
   };
 }
 
-function round(n: number) {
-  return Math.round(n * 100) / 100;
+function buildVerdict(s: {
+  agentId: string;
+  agentName: string | null;
+  totalInferenceSpend: number;
+  totalInferenceRevenue: number;
+  netAgentPosition: number;
+  topProvider: string | null;
+  fallbackUsageCount: number;
+  apiCosts: number;
+}): string {
+  const name = s.agentName ?? s.agentId;
+
+  if (s.totalInferenceSpend === 0 && s.totalInferenceRevenue === 0) {
+    return `${name} has no recorded economic activity. Agent may be dormant or not yet connected to event tracking.`;
+  }
+
+  const spendPart    = s.totalInferenceSpend > 0    ? `spent $${s.totalInferenceSpend.toFixed(2)} on inference` : null;
+  const revenuePart  = s.totalInferenceRevenue > 0  ? `earned $${s.totalInferenceRevenue.toFixed(2)} from marketplace calls` : null;
+  const providerPart = s.topProvider                ? `Primary provider: ${s.topProvider}.` : "";
+  const fallbackPart = s.fallbackUsageCount > 0     ? `Fallback provider used ${s.fallbackUsageCount} time${s.fallbackUsageCount === 1 ? "" : "s"}.` : "";
+  const apiPart      = s.apiCosts > 0               ? `API costs: $${s.apiCosts.toFixed(2)}.` : "";
+
+  const activity = [spendPart, revenuePart].filter(Boolean).join(" and ");
+
+  const position =
+    s.netAgentPosition > 0.01 ? `Net position: positive (+$${s.netAgentPosition.toFixed(2)}). Verdict: operationally active, financially sustainable for now.` :
+    s.netAgentPosition < -0.01 ? `Net position: negative ($${s.netAgentPosition.toFixed(2)}). Verdict: operationally active, running at a deficit — monitor closely.` :
+    "Net position: balanced. Verdict: operationally active, financially neutral.";
+
+  return [activity ? `${name} ${activity} this period.` : "", providerPart, fallbackPart, apiPart, position]
+    .filter(Boolean).join(" ").trim();
 }
+
+function r(n: number) { return Math.round(n * 100) / 100; }

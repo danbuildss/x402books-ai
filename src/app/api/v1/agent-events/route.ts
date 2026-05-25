@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { agentName, eventType, amountUsd, provider, token, direction, txHash, walletAddress, metadata } = body;
+  const { agentName, eventType, amount, provider, token, direction, txHash, walletAddress, metadata } = body;
 
   if (!agentName || typeof agentName !== "string") {
     return NextResponse.json({ error: "agentName is required" }, { status: 400 });
@@ -29,11 +29,12 @@ export async function POST(req: NextRequest) {
   }
 
   const result = await logAgentEvent({
+    agentId:       agentName,
     agentName,
     eventType:     eventType as AgentEventType,
     walletAddress: typeof walletAddress === "string" ? walletAddress : null,
     provider:      typeof provider === "string" ? provider : null,
-    amountUsd:     typeof amountUsd === "number" ? amountUsd : null,
+    amount:        typeof amount === "number" ? amount : null,
     token:         typeof token === "string" ? token : "USDC",
     direction:     typeof direction === "string" ? direction as AgentEventDirection : null,
     txHash:        typeof txHash === "string" ? txHash : null,
