@@ -87,7 +87,7 @@ const ROADMAP = [
     items: [
       "Agent verification submissions queue",
       "Wallet manifest format (.x402books/wallets.json)",
-      "AEON ecosystem integration — 4 ecosystems live",
+      "AEON + EigenCloud ecosystem integration — 5 ecosystems live",
       "Settlement pattern badges on public profiles",
       "Growth OS — product usage metrics",
       "Registry fully DB-driven via Supabase",
@@ -98,10 +98,9 @@ const ROADMAP = [
     title: "Ecosystem Embeds",
     status: "next",
     items: [
-      "AEON agent wallet verification flow",
       "Surplus inference spend logging",
       "Virtuals agent onboarding",
-      "Embeddable agent profile cards",
+      "Embeddable agent profile cards — live at /registry/[slug]/card",
       "x402Books profile sharing as default trust signal",
     ],
   },

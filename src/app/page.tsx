@@ -30,7 +30,7 @@ const STEPS = [
 const TRUST_ITEMS = [
   { label: "Financial OS",       sub: "Autonomous Entities" },
   { label: "84 Agents Tracked",  sub: "Registry live" },
-  { label: "4 Ecosystems",       sub: "BANKR · Virtuals · Base · AEON" },
+  { label: "5 Ecosystems",       sub: "BANKR · Virtuals · Base · AEON · EigenCloud" },
   { label: "Claude AI",          sub: "Classification engine" },
   { label: "x402 Native",        sub: "Protocol payment" },
   { label: "API + Registry",     sub: "Open access" },
@@ -778,7 +778,7 @@ export default function HomePage() {
               <p className="lp-section-label">Agent Financial Registry</p>
               <h2 className="lp-h2" style={{ margin: "12px 0 14px" }}>84 agents tracked across the agent economy.</h2>
               <p className="lp-registry-sub">
-                A growing financial registry for autonomous agents. Track wallets, treasury health, activity scores, verification status, and Luca-reviewed settlement profiles across BANKR, Virtuals, Base, and AEON ecosystems.
+                A growing financial registry for autonomous agents. Track wallets, treasury health, activity scores, verification status, and Luca-reviewed settlement profiles across BANKR, Virtuals, Base, AEON, and EigenCloud ecosystems.
               </p>
               <div className="lp-registry-stats">
                 <div className="lp-registry-stat">
