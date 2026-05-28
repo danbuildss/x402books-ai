@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
@@ -33,6 +32,27 @@ const PATTERN_COLOR: Partial<Record<SettlementPattern, string>> = {
   incomplete_wallet_role:    "#f59e0b",
   dormant:                   "var(--muted)",
 };
+
+type DataStatus = "Candidate" | "Wallets Declared" | "Verified" | "Live Financial Data";
+type DataConfidence = "Low" | "Medium" | "High";
+
+function deriveDataStatus(agent: Agent): DataStatus {
+  const isVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
+  const hasLiveData = (agent.financialActivityScore ?? 0) >= 20;
+  if (isVerified && hasLiveData) return "Live Financial Data";
+  if (isVerified) return "Verified";
+  if (agent.wallets.length > 0) return "Wallets Declared";
+  return "Candidate";
+}
+
+function deriveDataConfidence(agent: Agent): DataConfidence {
+  const isVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
+  const hasWallets = agent.wallets.length > 0 || !!agent.tokenAddress;
+  const hasActivity = (agent.financialActivityScore ?? 0) > 0;
+  if (isVerified && hasWallets && hasActivity) return "High";
+  if (isVerified || hasWallets) return "Medium";
+  return "Low";
+}
 
 async function getAgent(slug: string): Promise<Agent | null> {
   try {
@@ -73,17 +93,30 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
     .filter((p) => p !== "active_operational" && PATTERN_LABEL[p])
     .slice(0, 4);
 
+  const dataStatus     = deriveDataStatus(agent);
+  const dataConfidence = deriveDataConfidence(agent);
+  const isVerified     = dataStatus === "Verified" || dataStatus === "Live Financial Data";
+
   const healthColor =
-    agent.treasuryHealth === "Healthy" ? "var(--accent)" :
-    agent.treasuryHealth === "Stable"  ? "var(--accent)" :
+    agent.treasuryHealth === "Healthy" ? "#6DB874" :
+    agent.treasuryHealth === "Stable"  ? "#6DB874" :
     agent.treasuryHealth === "Watch"   ? "#f59e0b" :
-    agent.treasuryHealth === "At Risk" ? "#f87171" : "var(--muted)";
+    agent.treasuryHealth === "At Risk" ? "#f87171" : "#7d828d";
 
   const ecoColor =
-    agent.ecosystem === "BANKR"       ? "var(--accent)" :
-    agent.ecosystem === "Virtuals"    ? "var(--blue)"   :
-    agent.ecosystem === "AEON"        ? "#8B5CF6"       :
-    agent.ecosystem === "EigenCloud"  ? "#F97316"       : "#C9A84C";
+    agent.ecosystem === "BANKR"       ? "#6DB874" :
+    agent.ecosystem === "Virtuals"    ? "#5B8FA8" :
+    agent.ecosystem === "AEON"        ? "#8B5CF6" :
+    agent.ecosystem === "EigenCloud"  ? "#F97316" : "#C9A84C";
+
+  const statusColor =
+    dataStatus === "Live Financial Data" ? "#6DB874" :
+    dataStatus === "Verified"            ? "#6DB874" :
+    dataStatus === "Wallets Declared"    ? "#5B8FA8" : "#7d828d";
+
+  const confidenceColor =
+    dataConfidence === "High"   ? "#6DB874" :
+    dataConfidence === "Medium" ? "#f59e0b" : "#7d828d";
 
   return (
     <html lang="en">
@@ -114,11 +147,21 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
             padding: 2px 8px; border-radius: 99px;
             border: 1px solid;
           }
+          .card-status {
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px;
+          }
+          .status-pair { display: flex; flex-direction: column; gap: 3px; }
+          .status-label { font-size: 0.62rem; color: rgba(232,230,225,0.3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+          .status-val { font-size: 0.75rem; font-weight: 700; }
+          .status-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.07); }
           .card-scores { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px; }
           .score-row { display: flex; align-items: center; gap: 10px; }
           .score-label { font-size: 0.75rem; color: rgba(232,230,225,0.45); width: 130px; flex-shrink: 0; }
           .score-track { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
-          .score-fill { height: 100%; border-radius: 99px; background: #6DB874; }
+          .score-fill { height: 100%; border-radius: 99px; }
           .score-val { font-size: 0.75rem; font-weight: 700; color: #e8e6e1; width: 24px; text-align: right; }
           .card-patterns { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-wrap: wrap; gap: 6px; }
           .pattern-pill {
@@ -126,6 +169,15 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
             padding: 3px 9px; border-radius: 99px;
             border: 1px solid;
           }
+          .card-claim {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center; gap: 8px;
+          }
+          .claim-dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
+          .claim-text { font-size: 0.72rem; color: rgba(232,230,225,0.5); flex: 1; line-height: 1.45; }
+          .claim-link { font-size: 0.72rem; font-weight: 600; color: #6DB874; text-decoration: none; white-space: nowrap; }
+          .claim-link:hover { text-decoration: underline; }
           .card-bottom {
             padding: 12px 20px;
             display: flex; align-items: center; justify-content: space-between;
@@ -140,6 +192,7 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
       </head>
       <body>
         <div className="card">
+          {/* Identity */}
           <div className="card-top">
             <div className="name-row">
               <span className="name">{agent.name}</span>
@@ -152,12 +205,23 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
               <span className="badge" style={{ color: healthColor, borderColor: `color-mix(in srgb, ${healthColor} 30%, transparent)`, background: `color-mix(in srgb, ${healthColor} 10%, transparent)` }}>
                 {agent.treasuryHealth}
               </span>
-              <span className="badge" style={{ color: "rgba(232,230,225,0.5)", borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.04)" }}>
-                {agent.verificationStatus}
-              </span>
             </div>
           </div>
 
+          {/* Status + confidence row */}
+          <div className="card-status">
+            <div className="status-pair">
+              <span className="status-label">Profile Status</span>
+              <span className="status-val" style={{ color: statusColor }}>{dataStatus}</span>
+            </div>
+            <div className="status-divider" />
+            <div className="status-pair" style={{ textAlign: "right" }}>
+              <span className="status-label">Data Confidence</span>
+              <span className="status-val" style={{ color: confidenceColor }}>{dataConfidence}</span>
+            </div>
+          </div>
+
+          {/* Scores */}
           {(agent.financialActivityScore !== null || agent.partnershipFitScore !== null) && (
             <div className="card-scores">
               {agent.financialActivityScore !== null && (
@@ -181,6 +245,7 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
             </div>
           )}
 
+          {/* Settlement patterns */}
           {visiblePatterns.length > 0 && (
             <div className="card-patterns">
               {visiblePatterns.map((p) => (
@@ -199,6 +264,22 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
             </div>
           )}
 
+          {/* Claim / verify CTA for unverified profiles */}
+          {!isVerified && (
+            <div className="card-claim">
+              <span className="claim-dot" />
+              <span className="claim-text">
+                {dataStatus === "Wallets Declared"
+                  ? "Wallets declared — submit for Luca verification to upgrade this profile."
+                  : "This profile is based on public data. Submit a wallet manifest to verify."}
+              </span>
+              <a href={`https://www.x402books.xyz/registry#verify`} target="_blank" rel="noreferrer" className="claim-link">
+                Verify →
+              </a>
+            </div>
+          )}
+
+          {/* Footer */}
           <div className="card-bottom">
             <span className="x402-brand">x402Books AI</span>
             <a href={`https://www.x402books.xyz/registry/${slug}`} target="_blank" rel="noreferrer" className="view-link">

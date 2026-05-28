@@ -10343,6 +10343,10 @@ html, body {
 .prof-share-wrap {
   flex-shrink: 0;
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
 }
 
 .prof-share-btn {
