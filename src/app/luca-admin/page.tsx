@@ -304,8 +304,24 @@ function RegistrySection({ secret }: { secret: string }) {
   const [subsError, setSubsError]       = useState("");
   const [filter, setFilter]             = useState<"pending" | "all">("pending");
   const [acting, setActing]             = useState<string | null>(null);
+  const [seeding, setSeeding]           = useState(false);
+  const [seedMsg, setSeedMsg]           = useState("");
 
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  async function seedRegistry() {
+    setSeeding(true);
+    setSeedMsg("");
+    try {
+      const res = await fetch("/api/admin/seed-registry", { method: "POST", headers });
+      const d = await res.json() as { ok: boolean; message?: string; error?: string };
+      setSeedMsg(d.ok ? `✓ ${d.message}` : `✗ ${d.error}`);
+    } catch {
+      setSeedMsg("✗ Network error");
+    } finally {
+      setSeeding(false);
+    }
+  }
 
   useEffect(() => {
     setLoadingSubs(true);
@@ -406,6 +422,31 @@ function RegistrySection({ secret }: { secret: string }) {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Seed Registry */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <p className={styles.cardTitle} style={{ margin: "0 0 2px" }}>Seed Registry DB</p>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)" }}>
+              Writes all 84 agents from <code>data.ts</code> into Supabase. Run once to go fully DB-driven.
+            </p>
+            {seedMsg && (
+              <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: seedMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+                {seedMsg}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={seedRegistry}
+            disabled={seeding}
+            style={{ padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
+          >
+            {seeding ? "Seeding…" : "Seed Registry →"}
+          </button>
+        </div>
       </div>
 
       <div className={styles.registryBanner}>
