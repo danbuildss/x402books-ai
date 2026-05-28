@@ -323,6 +323,10 @@ export function ProfileClient({ agent, slug, economics, classification }: { agen
           </div>
           <div className="prof-share-wrap">
             <ShareButton slug={slug} />
+            <a href={`/registry/${slug}/card`} target="_blank" rel="noreferrer" className="prof-share-btn" style={{ textDecoration: "none" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>credit_card</span>
+              View card
+            </a>
             <EmbedButton slug={slug} />
           </div>
         </div>
