@@ -138,6 +138,59 @@ function ShareButton({ slug }: { slug: string }) {
   );
 }
 
+// ── Embed button ──────────────────────────────────────────────────────────────
+
+function EmbedButton({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+  const src = `https://www.x402books.xyz/registry/${slug}/card`;
+  const snippet = `<iframe src="${src}" width="400" height="320" style="border:0;border-radius:12px;overflow:hidden;" loading="lazy"></iframe>`;
+
+  function copy() {
+    navigator.clipboard.writeText(snippet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button type="button" className="prof-share-btn" onClick={() => setOpen(!open)} style={{ marginTop: 6 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>code</span>
+        Embed card
+      </button>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 10,
+          background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10,
+          padding: "12px 14px", width: 340, boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+        }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 8 }}>
+            Paste this iframe in any README, doc, or page:
+          </p>
+          <pre style={{
+            fontSize: "0.68rem", lineHeight: 1.5, color: "var(--ink)",
+            background: "var(--surface-soft)", borderRadius: 6, padding: "8px 10px",
+            whiteSpace: "pre-wrap", wordBreak: "break-all", marginBottom: 10,
+            border: "1px solid var(--line)",
+          }}>{snippet}</pre>
+          <button type="button" onClick={copy} style={{
+            width: "100%", padding: "7px 0", borderRadius: 7, border: "1px solid var(--line)",
+            background: "var(--surface-soft)", color: copied ? "var(--accent)" : "var(--ink)",
+            fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex",
+            alignItems: "center", justifyContent: "center", gap: 6,
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+              {copied ? "check" : "content_copy"}
+            </span>
+            {copied ? "Copied!" : "Copy snippet"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Avatar ────────────────────────────────────────────────────────────────────
 
 function ProfileAvatar({ agent }: { agent: Agent }) {
@@ -167,7 +220,7 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
 
 function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary }) {
   const s = economics;
-  const netColor = s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#f87171" : "var(--fg)";
+  const netColor = s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#f87171" : "var(--ink)";
   const usd = (n: number) => `$${Math.abs(n).toFixed(2)}`;
 
   return (
@@ -186,12 +239,12 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
           <div key={label as string} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem" }}>
             <span style={{ color: "var(--muted)" }}>{label}</span>
             <div style={{ textAlign: "right" }}>
-              <span style={{ fontFamily: "monospace", color: (color as string) ?? "var(--fg)" }}>{value}</span>
+              <span style={{ fontFamily: "monospace", color: (color as string) ?? "var(--ink)" }}>{value}</span>
               {sub && <span style={{ color: "var(--muted)", fontSize: "0.72rem", marginLeft: 6 }}>{sub as string}</span>}
             </div>
           </div>
         ))}
-        <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: 8, marginTop: 4, fontSize: "0.85rem", fontWeight: 600 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--line)", paddingTop: 8, marginTop: 4, fontSize: "0.85rem", fontWeight: 600 }}>
           <span>Net Position</span>
           <span style={{ fontFamily: "monospace", color: netColor }}>
             {s.netAgentPosition >= 0 ? "+" : ""}{usd(s.netAgentPosition)}
@@ -270,6 +323,7 @@ export function ProfileClient({ agent, slug, economics, classification }: { agen
           </div>
           <div className="prof-share-wrap">
             <ShareButton slug={slug} />
+            <EmbedButton slug={slug} />
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-export type Ecosystem = "BANKR" | "Virtuals" | "Base" | "AEON";
+export type Ecosystem = "BANKR" | "Virtuals" | "Base" | "AEON" | "EigenCloud";
 
 // ── Communication identity types ──────────────────────────────────────────────
 
