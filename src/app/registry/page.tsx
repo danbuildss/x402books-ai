@@ -21,7 +21,7 @@ function computeStats(agents: Agent[]) {
   ).length;
   return [
     { label: "Agents Tracked",  value: String(agents.length) },
-    { label: "Ecosystems",      value: "4"                   },
+    { label: "Ecosystems",      value: "5"                   },
     { label: "Wallets Indexed", value: String(walletCount)   },
     { label: "Luca Reviewed",   value: String(reviewedCount) },
   ];
@@ -704,7 +704,7 @@ export default function RegistryPage() {
             />
           </div>
           <div className="reg-eco-filter">
-            {(["All", "BANKR", "Virtuals", "Base", "AEON"] as const).map((opt) => (
+            {(["All", "BANKR", "Virtuals", "Base", "AEON", "EigenCloud"] as const).map((opt) => (
               <button
                 key={opt}
                 type="button"

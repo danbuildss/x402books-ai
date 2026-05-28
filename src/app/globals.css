@@ -9551,7 +9551,8 @@ html, body {
 
 /* ── Registry additions ── */
 .reg-eco-base { background: rgba(201,168,76,0.1); color: #C9A84C; border: 1px solid rgba(201,168,76,0.18); }
-.reg-eco-aeon { background: rgba(139,92,246,0.1); color: #8B5CF6; border: 1px solid rgba(139,92,246,0.22); }
+.reg-eco-aeon        { background: rgba(139,92,246,0.1);  color: #8B5CF6; border: 1px solid rgba(139,92,246,0.22); }
+.reg-eco-eigencloud  { background: rgba(249,115,22,0.08); color: #F97316; border: 1px solid rgba(249,115,22,0.22); }
 
 .reg-role-token-contract { background: rgba(109,184,116,0.08); color: var(--accent); border: 1px solid rgba(109,184,116,0.15); }
 .reg-role-fee-recipient  { background: rgba(91,143,168,0.08);  color: var(--blue);   border: 1px solid rgba(91,143,168,0.15); }
