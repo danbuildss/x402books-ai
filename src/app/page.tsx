@@ -28,12 +28,12 @@ const STEPS = [
 ];
 
 const TRUST_ITEMS = [
-  { label: "Financial Intelligence Platform", sub: "Agent Economy" },
-  { label: "84 Agents Tracked",               sub: "Registry live" },
-  { label: "Base",                             sub: "Native chain" },
-  { label: "Claude AI",                        sub: "Classification engine" },
-  { label: "x402 Native",                      sub: "Protocol payment" },
-  { label: "API + Registry",                   sub: "Open access" },
+  { label: "Financial OS",       sub: "Autonomous Entities" },
+  { label: "84 Agents Tracked",  sub: "Registry live" },
+  { label: "4 Ecosystems",       sub: "BANKR · Virtuals · Base · AEON" },
+  { label: "Claude AI",          sub: "Classification engine" },
+  { label: "x402 Native",        sub: "Protocol payment" },
+  { label: "API + Registry",     sub: "Open access" },
 ];
 
 const FOR_AGENTS = [
@@ -191,9 +191,9 @@ function XBooksUtilities() {
     <section className="lp-section lp-section-alt" id="xbooks-utility">
       <FadeContent delay={60}>
         <div className="lp-section-head">
-          <p className="lp-section-label">$LUCA Utility</p>
+          <p className="lp-section-label">Ecosystem Token</p>
           <h2 className="lp-h2">Hold $LUCA. Pay less. Do more.</h2>
-          <p className="lp-section-sub">$LUCA powers Luca and x402Books AI. Every feature, every limit upgrade, and every agent intelligence credit is powered by $LUCA.</p>
+          <p className="lp-section-sub">$LUCA is the ecosystem token for Luca and x402Books. Hold it to unlock higher API limits, premium reports, and agent intelligence credits.</p>
         </div>
       </FadeContent>
       <div className="lp-features-grid">
@@ -621,7 +621,7 @@ export default function HomePage() {
               <span className="lp-v1-dot" />
               v1 is live
             </div>
-            <p className="lp-eyebrow">Financial Intelligence Platform · Agent Economy</p>
+            <p className="lp-eyebrow">Financial OS · Autonomous Entities</p>
             <h1 className="lp-h1">
               Agents earn. Agents spend.{" "}
               <em>Now they have books.</em>
@@ -629,20 +629,20 @@ export default function HomePage() {
             <p className="lp-hero-typing">
               <TextType
                 texts={[
-                  "Scan any wallet. See everything.",
-                  "AI classifies every transaction.",
-                  "Score treasury health instantly.",
-                  "Built for the agent economy.",
+                  "Financial identity for autonomous agents.",
+                  "Settlement classification. Treasury intelligence.",
+                  "Wallet roles. Verified. Readable.",
+                  "Built for agents that operate economically.",
                 ]}
-                typingSpeed={52}
-                deletingSpeed={30}
-                pauseDuration={1400}
+                typingSpeed={48}
+                deletingSpeed={28}
+                pauseDuration={1600}
                 showCursor
                 cursorCharacter="|"
               />
             </p>
             <p className="lp-hero-sub">
-              x402Books AI is the financial intelligence platform for autonomous agents. Scan any wallet, classify transactions, analyze treasury health, and generate clean reports — built for the agent economy on Base.
+              x402Books is the financial operating system for autonomous entities — wallet identity, settlement classification, treasury intelligence, and readable audit trails for agents that operate economically.
             </p>
             <div className="lp-hero-actions">
               <Link href="/dashboard" className="lp-btn-primary lp-btn-lg">Scan a Wallet — Free</Link>
@@ -778,7 +778,7 @@ export default function HomePage() {
               <p className="lp-section-label">Agent Financial Registry</p>
               <h2 className="lp-h2" style={{ margin: "12px 0 14px" }}>84 agents tracked across the agent economy.</h2>
               <p className="lp-registry-sub">
-                A growing financial registry for autonomous agents. Track wallets, treasury health, activity scores, verification status, and Luca-reviewed financial notes across Base, Bankr, Virtuals, and emerging agent ecosystems.
+                A growing financial registry for autonomous agents. Track wallets, treasury health, activity scores, verification status, and Luca-reviewed settlement profiles across BANKR, Virtuals, Base, and AEON ecosystems.
               </p>
               <div className="lp-registry-stats">
                 <div className="lp-registry-stat">
@@ -786,12 +786,12 @@ export default function HomePage() {
                   <span>Agents tracked</span>
                 </div>
                 <div className="lp-registry-stat">
-                  <strong>Weekly</strong>
-                  <span>Updated by Luca</span>
+                  <strong>4</strong>
+                  <span>Ecosystems</span>
                 </div>
                 <div className="lp-registry-stat">
                   <strong>Live</strong>
-                  <span>Verification status</span>
+                  <span>Settlement profiles</span>
                 </div>
               </div>
               <Link href="/registry" className="lp-btn-primary" style={{ display: "inline-flex", marginTop: "1.5rem" }}>
