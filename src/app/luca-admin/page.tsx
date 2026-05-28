@@ -1215,8 +1215,10 @@ export default function LucaAdminPage() {
       if (res.status === 401) {
         setAuthError("Wrong password.");
       } else {
-        sessionStorage.setItem("luca_admin_secret", input);
-        setSecret(input);
+        const data = await res.json() as { ok: boolean; token?: string };
+        const token = data.token ?? input;
+        sessionStorage.setItem("luca_admin_secret", token);
+        setSecret(token);
         setAuthed(true);
       }
     } catch {
