@@ -7,6 +7,65 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
+import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
+
+// ── Settlement pattern display ────────────────────────────────────────────────
+
+const PATTERN_STYLE: Record<SettlementPattern, { bg: string; color: string; border: string }> = {
+  dormant:                       { bg: "rgba(125,130,141,0.08)", color: "var(--muted)",  border: "rgba(125,130,141,0.14)" },
+  active_operational:            { bg: "rgba(109,184,116,0.08)", color: "var(--accent)", border: "rgba(109,184,116,0.15)" },
+  stable_treasury:               { bg: "rgba(109,184,116,0.08)", color: "var(--accent)", border: "rgba(109,184,116,0.15)" },
+  revenue_generating:            { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
+  high_spend_low_revenue:        { bg: "rgba(248,113,113,0.08)", color: "#f87171",        border: "rgba(248,113,113,0.15)" },
+  heavy_outbound_settlement:     { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
+  high_internal_transfer:        { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
+  recurring_flow_detected:       { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
+  incomplete_wallet_role:        { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
+  unknown_counterparty_dominant: { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
+};
+
+const PATTERN_LABEL: Record<SettlementPattern, string> = {
+  dormant:                       "Dormant",
+  active_operational:            "Active",
+  stable_treasury:               "Stable Treasury",
+  revenue_generating:            "Revenue Generating",
+  high_spend_low_revenue:        "High Spend",
+  heavy_outbound_settlement:     "Heavy Outbound",
+  high_internal_transfer:        "High Internal Transfer",
+  recurring_flow_detected:       "Recurring Flows",
+  incomplete_wallet_role:        "Roles Unverified",
+  unknown_counterparty_dominant: "Unknown Counterparties",
+};
+
+function SettlementSection({ classification }: { classification: SettlementClassification }) {
+  const visible = classification.patterns.filter((p) => p !== "active_operational");
+  return (
+    <section className="prof-section">
+      <p className="prof-section-title">Settlement Profile</p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: classification.signals.length > 0 ? 10 : 0 }}>
+        {classification.patterns.map((p) => {
+          const s = PATTERN_STYLE[p];
+          return (
+            <span key={p} style={{ fontSize: "0.72rem", padding: "3px 9px", borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, fontWeight: 500 }}>
+              {PATTERN_LABEL[p]}
+            </span>
+          );
+        })}
+      </div>
+      {classification.signals.length > 0 && (
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55, marginTop: 4 }}>
+          {classification.signals.join(" · ")}
+        </p>
+      )}
+      {visible.includes("incomplete_wallet_role") && (
+        <a href="/registry#verify" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--accent)", marginTop: 8, textDecoration: "none" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>add_circle</span>
+          Declare wallet roles to unlock full classification
+        </a>
+      )}
+    </section>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -146,7 +205,7 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics }: { agent: Agent; slug: string; economics?: AgentEconomicSummary }) {
+export function ProfileClient({ agent, slug, economics, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; classification?: SettlementClassification }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
 
   return (
@@ -242,6 +301,9 @@ export function ProfileClient({ agent, slug, economics }: { agent: Agent; slug: 
                 )}
               </section>
             )}
+
+            {/* Settlement profile */}
+            {classification && <SettlementSection classification={classification} />}
 
             {/* Agent Economics (Luca self-profile only) */}
             {economics && <AgentEconomicsBlock economics={economics} />}

@@ -4,8 +4,11 @@ import type { Metadata } from "next";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
+import type { Health } from "@/app/registry/types";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
+import { classifySettlementPattern } from "@/lib/luca-classify";
+import type { SettlementClassification } from "@/lib/luca-classify";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
@@ -59,12 +62,36 @@ async function getLucaEconomics(): Promise<AgentEconomicSummary | undefined> {
   }
 }
 
+const HEALTH_RATIO: Partial<Record<Health, number>> = {
+  "Healthy":  0.72,
+  "Stable":   0.95,
+  "Watch":    1.35,
+  "At Risk":  1.90,
+};
+
+function deriveClassification(agent: Agent): SettlementClassification {
+  const score      = agent.financialActivityScore ?? 0;
+  const isActive   = score >= 10;
+  const ratio      = HEALTH_RATIO[agent.treasuryHealth] ?? 1.0;
+  const totalInflow  = isActive ? 100 : 0;
+  const totalOutflow = totalInflow * ratio;
+
+  return classifySettlementPattern({
+    totalInflow,
+    totalOutflow,
+    txCount:             isActive ? Math.max(10, score) : 0,
+    categories:          [],
+    walletRolesDeclared: agent.wallets.length > 0,
+  });
+}
+
 export default async function AgentProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const economics = slug === "luca" ? await getLucaEconomics() : undefined;
+  const economics      = slug === "luca" ? await getLucaEconomics() : undefined;
+  const classification = deriveClassification(agent);
 
-  return <ProfileClient agent={agent} slug={slug} economics={economics} />;
+  return <ProfileClient agent={agent} slug={slug} economics={economics} classification={classification} />;
 }
