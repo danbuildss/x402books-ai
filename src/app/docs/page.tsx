@@ -69,39 +69,77 @@ const CORE_PAGES = [
 const ROADMAP = [
   {
     phase: "Phase 1",
-    title: "V1 Launch",
+    title: "Financial Identity Layer",
     status: "live",
-    items: ["Wallet scanner", "Dashboard + analytics", "AI categorization", "PDF / CSV export", "Public report links", "Privy authentication"],
+    items: [
+      "Wallet scanner + AI categorization (16 categories)",
+      "Dashboard, analytics, PDF / CSV export",
+      "Public shareable report links — no auth required",
+      "Agent Financial Registry — 84 agents indexed",
+      "Developer API keys + $LUCA tier system",
+      "Settlement classifier + Luca verdict signals",
+    ],
   },
   {
     phase: "Phase 2",
-    title: "Beta Hardening",
-    status: "next",
-    items: ["Categorization accuracy improvements", "Enhanced PDF reports", "Better onboarding flow", "UI polish + bug fixes", "User feedback integration"],
+    title: "Trust & Registry Infrastructure",
+    status: "live",
+    items: [
+      "Agent verification submissions queue",
+      "Wallet manifest format (.x402books/wallets.json)",
+      "AEON ecosystem integration — 4 ecosystems live",
+      "Settlement pattern badges on public profiles",
+      "Growth OS — product usage metrics",
+      "Registry fully DB-driven via Supabase",
+    ],
   },
   {
     phase: "Phase 3",
-    title: "API Layer",
-    status: "planned",
-    items: ["API key management", "Rate limiting", "Public developer endpoints", "API usage dashboard", "Agent-readable output"],
+    title: "Ecosystem Embeds",
+    status: "next",
+    items: [
+      "AEON agent wallet verification flow",
+      "Surplus inference spend logging",
+      "Virtuals agent onboarding",
+      "Embeddable agent profile cards",
+      "x402Books profile sharing as default trust signal",
+    ],
   },
   {
     phase: "Phase 4",
-    title: "$LUCA Integration",
+    title: "Financial Intelligence",
     status: "planned",
-    items: ["Token-gated premium features", "Discounted API usage", "Usage-based token sinks", "Agent payment flows"],
+    items: [
+      "Treasury health alerts",
+      "Settlement quality scoring",
+      "Operational runway tracking",
+      "Recurring spend detection",
+      "Inference economics dashboard",
+    ],
   },
   {
     phase: "Phase 5",
-    title: "Agent Financial Intelligence",
+    title: "Network Effects",
     status: "planned",
-    items: ["Agent Financial Score", "Budget tracking + alerts", "Anomaly detection", "Forecasting", "Financial state API"],
+    items: [
+      "Public leaderboards by activity score",
+      "Ecosystem discovery feed",
+      "Verified treasury badge — projects earn it",
+      "Embeddable report cards",
+      "State of Agent Finance — weekly reports",
+    ],
   },
   {
     phase: "Phase 6",
-    title: "Ecosystem",
+    title: "Infrastructure Revenue",
     status: "planned",
-    items: ["Bankr integration", "XMTP alerts", "Nookplot partnership", "Agent protocol integrations", "On-chain intelligence products"],
+    items: [
+      "Verification as a service",
+      "Premium treasury reports",
+      "Enterprise monitoring API",
+      "Compliance-grade audit exports",
+      "Ecosystem analytics packages",
+    ],
   },
 ];
 
@@ -372,7 +410,7 @@ unknown           → Unclassified activity`}</pre>
             <p className="docs-lead">Programmatic access to wallet financial intelligence.</p>
 
             <div className="docs-callout docs-callout-info">
-              The API is currently in beta. Public API keys and developer documentation are coming in Phase 3.
+              The API is live. Generate your key at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>. Rate limits are based on $LUCA holdings.
             </div>
 
             <h2 className="docs-h2">Endpoints</h2>
