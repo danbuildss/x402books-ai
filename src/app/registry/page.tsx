@@ -547,13 +547,23 @@ function VerifyCTA() {
                 <form className="reg-verify-form" onSubmit={submit}>
                   <div className="reg-field">
                     <label>Agent Name</label>
-                    <input type="text" placeholder="e.g. Bankr" value={form.agent_name}
+                    <input type="text" placeholder="e.g. AEON" value={form.agent_name}
                       onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))} required />
                   </div>
                   <div className="reg-field">
-                    <label>Wallet Address</label>
-                    <input type="text" placeholder="0x…" value={form.wallet_address}
-                      onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))} required />
+                    <label>Primary Wallet Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x…"
+                      value={form.wallet_address}
+                      onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))}
+                      pattern="^0x[0-9a-fA-F]{40}$"
+                      title="Enter a valid Base wallet address (0x followed by 40 hex characters)"
+                      required
+                    />
+                    {form.wallet_address.length > 0 && !/^0x[0-9a-fA-F]{40}$/.test(form.wallet_address) && (
+                      <p className="reg-field-hint">Must be a valid address — 0x followed by 40 hex characters.</p>
+                    )}
                   </div>
                   <div className="reg-field">
                     <label>X / Twitter Handle <span className="reg-field-opt">(optional)</span></label>
@@ -562,7 +572,7 @@ function VerifyCTA() {
                   </div>
                   <div className="reg-field">
                     <label>Notes <span className="reg-field-opt">(optional)</span></label>
-                    <textarea placeholder="Wallet role, ecosystem, anything we should know…" rows={3}
+                    <textarea placeholder="Wallet role, ecosystem, anything helpful…" rows={3}
                       value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
                   </div>
                   {state === "error" && <p className="reg-form-error">{msg}</p>}

@@ -9536,6 +9536,12 @@ html, body {
   color: var(--rose);
   margin: 0;
 }
+.reg-field-hint {
+  font-size: 11px;
+  color: var(--rose);
+  margin: 4px 0 0;
+  opacity: 0.85;
+}
 
 .reg-submit-btn {
   padding: 10px 20px;
