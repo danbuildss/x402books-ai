@@ -279,10 +279,10 @@ export default function LucaPage() {
           <div className="luca-hero-text">
             <div className="luca-powered-badge">Powered by x402Books AI</div>
             <h1 className="luca-h1">Luca</h1>
-            <p className="luca-tagline">AI Accountant for the Agent Economy.</p>
+            <p className="luca-tagline">Financial Intelligence Agent.</p>
             <p className="luca-hero-sub">
-              Luca helps humans and autonomous agents audit wallets, understand cashflow,
-              detect anomalies, and keep better onchain books.
+              Luca interprets onchain activity for autonomous agents — classifying settlements,
+              reading treasury health, and turning wallet data into operational intelligence.
             </p>
             <div className="luca-hero-btns">
               <a href={TELEGRAM} target="_blank" rel="noreferrer" className="luca-btn-primary">

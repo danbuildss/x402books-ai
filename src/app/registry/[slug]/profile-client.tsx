@@ -267,9 +267,9 @@ export function ProfileClient({ agent, slug, economics, classification }: { agen
       <header className="lp-header">
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
-          <Link href="/">Home</Link>
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
           <Link href="/luca">Luca</Link>
+          <Link href="/docs#api">API</Link>
           <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
@@ -434,7 +434,7 @@ export function ProfileClient({ agent, slug, economics, classification }: { agen
             <p className="lp-footer-heading">Product</p>
             <Link href="/dashboard">App</Link>
             <Link href="/registry">Registry</Link>
-            <Link href="/luca">Meet Luca</Link>
+            <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>
           </div>
           <div className="lp-footer-col">
