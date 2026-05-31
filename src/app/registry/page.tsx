@@ -341,12 +341,48 @@ const WALLETS_JSON_EXAMPLE = `{
   ]
 }`;
 
+type FetchedWallet = { address: string; role: string; label: string; chain: string; notes: string | null };
+
 function VerifyCTA() {
   const [tab, setTab] = useState<"manual" | "gitlawb">("gitlawb");
   const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "" });
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Gitlawb repo flow state
+  const [repoUrl, setRepoUrl] = useState("");
+  const [repoState, setRepoState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [repoMsg, setRepoMsg] = useState("");
+  const [fetchedWallets, setFetchedWallets] = useState<FetchedWallet[] | null>(null);
+  const [fetchedAgent, setFetchedAgent] = useState("");
+
+  async function submitRepo(e: React.FormEvent) {
+    e.preventDefault();
+    setRepoState("loading");
+    setFetchedWallets(null);
+    setFetchedAgent("");
+    try {
+      const res = await fetch("/api/registry/fetch-manifest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: repoUrl }),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string; agent?: string; wallets?: FetchedWallet[]; message?: string };
+      if (data.ok) {
+        setRepoState("done");
+        setRepoMsg(data.message ?? "Manifest submitted successfully.");
+        setFetchedWallets(data.wallets ?? null);
+        setFetchedAgent(data.agent ?? "");
+      } else {
+        setRepoState("error");
+        setRepoMsg(data.error ?? "Something went wrong.");
+      }
+    } catch {
+      setRepoState("error");
+      setRepoMsg("Network error. Please try again.");
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -454,31 +490,10 @@ function VerifyCTA() {
               {tab === "gitlawb" ? (
                 <div className="reg-gitlawb-panel">
                   <p className="reg-gitlawb-intro">
-                    Add a <code className="reg-code">.x402books/wallets.json</code> file to your Gitlawb or GitHub repo to declare your agent&apos;s wallets. Luca will detect it and upgrade your registry confidence level.
+                    Add a <code className="reg-code">.x402books/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
                   </p>
-                  <ol className="reg-gitlawb-steps">
-                    <li>
-                      <span className="reg-step-num">1</span>
-                      <div>
-                        <strong>Create the file</strong>
-                        <p>Add <code className="reg-code">.x402books/wallets.json</code> to your repo root</p>
-                      </div>
-                    </li>
-                    <li>
-                      <span className="reg-step-num">2</span>
-                      <div>
-                        <strong>Declare your wallets</strong>
-                        <p>Use the schema below — treasury, revenue, expense, deployer</p>
-                      </div>
-                    </li>
-                    <li>
-                      <span className="reg-step-num">3</span>
-                      <div>
-                        <strong>Submit your repo URL</strong>
-                        <p>Luca will verify and upgrade your listing</p>
-                      </div>
-                    </li>
-                  </ol>
+
+                  {/* Schema preview */}
                   <div className="reg-schema-wrap">
                     <div className="reg-schema-header">
                       <span className="reg-schema-filename">.x402books/wallets.json</span>
@@ -491,27 +506,42 @@ function VerifyCTA() {
                     </div>
                     <pre className="reg-schema-code">{WALLETS_JSON_EXAMPLE}</pre>
                   </div>
-                  <form className="reg-verify-form" onSubmit={submit}>
-                    <div className="reg-field">
-                      <label>Agent Name</label>
-                      <input type="text" placeholder="e.g. Bankr" value={form.agent_name}
-                        onChange={(e) => setForm((f) => ({ ...f, agent_name: e.target.value }))} required />
+
+                  {/* Repo URL submit form */}
+                  {repoState === "done" && fetchedWallets ? (
+                    <div className="reg-submit-success">
+                      <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--accent)" }}>check_circle</span>
+                      <p style={{ fontWeight: 600, marginBottom: 4 }}>{fetchedAgent} — manifest received</p>
+                      <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 10 }}>
+                        {fetchedWallets.length} wallet{fetchedWallets.length !== 1 ? "s" : ""} queued for Luca verification.
+                      </p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        {fetchedWallets.map((w) => (
+                          <div key={w.address} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: "0.75rem" }}>
+                            <span style={{ color: "var(--accent)", fontWeight: 600, minWidth: 72 }}>{w.role}</span>
+                            <code style={{ color: "var(--muted)", fontFamily: "monospace" }}>{w.address.slice(0, 10)}…{w.address.slice(-6)}</code>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="reg-field">
-                      <label>Wallet Address <span className="reg-field-opt">(primary wallet)</span></label>
-                      <input type="text" placeholder="0x…" value={form.wallet_address}
-                        onChange={(e) => setForm((f) => ({ ...f, wallet_address: e.target.value }))} required />
-                    </div>
-                    <div className="reg-field">
-                      <label>Gitlawb / GitHub Repo URL <span className="reg-field-opt">(where wallets.json lives)</span></label>
-                      <input type="text" placeholder="https://github.com/yourorg/yourrepo" value={form.gitlawb_repo}
-                        onChange={(e) => setForm((f) => ({ ...f, gitlawb_repo: e.target.value }))} />
-                    </div>
-                    {state === "error" && <p className="reg-form-error">{msg}</p>}
-                    <button type="submit" className="reg-submit-btn" disabled={state === "loading"}>
-                      {state === "loading" ? "Submitting…" : "Submit via Gitlawb"}
-                    </button>
-                  </form>
+                  ) : (
+                    <form className="reg-verify-form" onSubmit={submitRepo}>
+                      <div className="reg-field">
+                        <label>GitHub / Gitlawb Repo URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://github.com/yourorg/yourrepo"
+                          value={repoUrl}
+                          onChange={(e) => setRepoUrl(e.target.value)}
+                          required
+                        />
+                      </div>
+                      {repoState === "error" && <p className="reg-form-error">{repoMsg}</p>}
+                      <button type="submit" className="reg-submit-btn" disabled={repoState === "loading"}>
+                        {repoState === "loading" ? "Fetching manifest…" : "Fetch & Submit Manifest"}
+                      </button>
+                    </form>
+                  )}
                 </div>
               ) : (
                 <form className="reg-verify-form" onSubmit={submit}>
