@@ -1,338 +1,323 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
-import {
-  StitchAiSummary,
-  StitchDonut,
-  StitchEmpty,
-  StitchHeader,
-  StitchIcon,
-  StitchLineChart,
-  StitchRange,
-  StitchScanBar,
-  StitchShell,
-  StitchStat,
-  StitchTransactionsTable,
-  StitchWalletPill,
-} from "@/components/stitch-app";
-import { formatUsdc, relativeTime, shortenAddress } from "@/lib/ledger";
-import { useLedgerState } from "@/lib/use-ledger-state";
-import type { AgentResult, WalletType } from "@/lib/agent-search";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { StitchHeader, StitchShell } from "@/components/stitch-app";
+import { toSlug } from "@/app/registry/[slug]/slug";
 
-const WALLET_TYPE_LABEL: Record<WalletType, string> = {
-  sentient: "Sentient Wallet",
-  tba:      "Token-Bound Wallet",
-  deployer: "Deployer Wallet",
-  token:    "Token Contract",
+type AgentProfile = {
+  name: string;
+  symbol: string | null;
+  ecosystem: string | null;
+  verificationStatus: string;
+  treasuryHealth: string;
+  financialActivityScore: number | null;
+  partnershipFitScore: number | null;
+  wallets: { address: string; label: string }[];
+  xHandle: string | null;
 };
 
-const WALLET_TYPE_STYLE: Record<WalletType, string> = {
-  sentient: "wallet",
-  tba:      "wallet",
-  deployer: "wallet",
-  token:    "token",
+const STATUS_COLOR: Record<string, string> = {
+  Verified:       "var(--st-green)",
+  "Luca Managed": "var(--st-green)",
+  "Needs Verification": "#f59e0b",
+  Candidate:      "var(--st-muted)",
 };
 
-const RANGE_LABELS: Record<string, string> = {
-  "7d": "7 days", "14d": "14 days", "30d": "30 days", "90d": "90 days",
+const HEALTH_COLOR: Record<string, string> = {
+  Healthy:  "var(--st-green)",
+  Stable:   "var(--st-green)",
+  Watch:    "#f59e0b",
+  "At Risk": "#ef4444",
 };
 
-function AgentSearch({ onSelect }: { onSelect: (address: string) => void }) {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<AgentResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (timer.current) clearTimeout(timer.current);
-    if (query.length < 2) { setResults([]); setOpen(false); return; }
-    timer.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/agent/search?q=${encodeURIComponent(query)}`);
-        const data = await res.json() as { results: AgentResult[] };
-        setResults(data.results ?? []);
-        setOpen(true);
-      } catch { /* silent */ } finally { setLoading(false); }
-    }, 380);
-  }, [query]);
-
-  useEffect(() => {
-    function onOutside(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onOutside);
-    return () => document.removeEventListener("mousedown", onOutside);
-  }, []);
-
-  function pick(agent: AgentResult) {
-    onSelect(agent.walletAddress);
-    setQuery(agent.name || agent.symbol);
-    setOpen(false);
-  }
-
+function StatusPill({ status }: { status: string }) {
+  const color = STATUS_COLOR[status] ?? "var(--st-muted)";
   return (
-    <div className="stitch-agent-search" ref={wrapRef}>
-      <div className="stitch-agent-search-bar">
-        <span className="material-symbols-outlined" style={{ fontSize: 17, color: "var(--st-muted)" }}>
-          manage_search
-        </span>
-        <input
-          className="stitch-agent-search-input"
-          placeholder="Search agent name, symbol or @handle…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          autoComplete="off"
-        />
-        {loading && <span className="stitch-agent-spinner" />}
+    <span style={{
+      fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99,
+      background: `color-mix(in srgb, ${color} 14%, transparent)`,
+      color, border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+    }}>
+      {status}
+    </span>
+  );
+}
+
+function ScoreBar({ label, value }: { label: string; value: number }) {
+  const color = value >= 70 ? "var(--st-green)" : value >= 40 ? "var(--st-blue)" : "var(--st-muted)";
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <span style={{ fontSize: 12, color: "var(--st-muted)", width: 130, flexShrink: 0 }}>{label}</span>
+      <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 99 }} />
       </div>
-
-      {open && results.length > 0 && (
-        <div className="stitch-agent-results">
-          {results.map((agent, i) => (
-            <button
-              key={i}
-              type="button"
-              className="stitch-agent-result"
-              onClick={() => pick(agent)}
-            >
-              {agent.imageUrl && (
-                <img src={agent.imageUrl} alt="" className="stitch-agent-img" />
-              )}
-              <div className="stitch-agent-info">
-                <span className="stitch-agent-name">{agent.name}</span>
-                <span className="stitch-agent-sym">
-                  {agent.symbol}
-                  {agent.xHandle && (
-                    <span style={{ color: "var(--st-muted)", marginLeft: 4 }}>
-                      · @{agent.xHandle.replace(/^@/, "")}
-                    </span>
-                  )}
-                </span>
-              </div>
-              <span className={`stitch-ecosystem-badge ${agent.ecosystem.toLowerCase()}`}>
-                {agent.ecosystem}
-              </span>
-              <div className="stitch-agent-addr-wrap">
-                <span className={`stitch-agent-addr-pill ${WALLET_TYPE_STYLE[agent.walletType]}`}>
-                  {WALLET_TYPE_LABEL[agent.walletType]} · {agent.walletAddress.slice(0, 6)}…{agent.walletAddress.slice(-4)}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {open && results.length === 0 && !loading && query.length >= 2 && (
-        <div className="stitch-agent-results">
-          <div className="stitch-agent-empty">No agents found for &quot;{query}&quot;</div>
-        </div>
-      )}
+      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--st-text)", width: 24, textAlign: "right" }}>{value}</span>
     </div>
   );
 }
 
-export default function DashboardPage() {
-  const ledger = useLedgerState();
-  const [mode, setMode] = useState<"wallet" | "agent">("wallet");
-  const recent = ledger.transactions.slice(0, 6);
-  const hasWallet = Boolean(ledger.wallet);
+function AgentCard({ agent }: { agent: AgentProfile }) {
+  const slug = toSlug(agent.name);
+  const healthColor = HEALTH_COLOR[agent.treasuryHealth] ?? "var(--st-muted)";
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    await ledger.scanWallet();
+  return (
+    <div style={{ background: "var(--st-surface)", border: "1px solid var(--st-border)", borderRadius: 12, overflow: "hidden" }}>
+      {/* Header */}
+      <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--st-border)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+          <strong style={{ fontSize: 16, color: "var(--st-text)" }}>{agent.name}</strong>
+          {agent.symbol && <span style={{ fontSize: 12, color: "var(--st-muted)" }}>{agent.symbol}</span>}
+        </div>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <StatusPill status={agent.verificationStatus} />
+          <span style={{
+            fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 99,
+            background: `color-mix(in srgb, ${healthColor} 14%, transparent)`,
+            color: healthColor, border: `1px solid color-mix(in srgb, ${healthColor} 25%, transparent)`,
+          }}>{agent.treasuryHealth}</span>
+          {agent.ecosystem && (
+            <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 99, background: "var(--st-bg)", color: "var(--st-muted)", border: "1px solid var(--st-border)" }}>
+              {agent.ecosystem}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Scores */}
+      {(agent.financialActivityScore !== null || agent.partnershipFitScore !== null) && (
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--st-border)", display: "flex", flexDirection: "column", gap: 8 }}>
+          {agent.financialActivityScore !== null && <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />}
+          {agent.partnershipFitScore !== null && <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />}
+        </div>
+      )}
+
+      {/* Wallets */}
+      {agent.wallets.length > 0 && (
+        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--st-border)" }}>
+          <p style={{ fontSize: 11, fontWeight: 600, color: "var(--st-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Declared Wallets</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+            {agent.wallets.slice(0, 4).map((w) => (
+              <div key={w.address} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 12 }}>
+                <span style={{ color: "var(--st-green)", fontWeight: 600, minWidth: 120 }}>{w.label}</span>
+                <code style={{ color: "var(--st-muted)", fontFamily: "monospace", fontSize: 11 }}>
+                  {w.address.slice(0, 10)}…{w.address.slice(-6)}
+                </code>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ padding: "12px 20px", display: "flex", gap: 8 }}>
+        <Link href={`/registry/${slug}`} target="_blank"
+          style={{ fontSize: 12, fontWeight: 600, color: "var(--st-green)", textDecoration: "none", padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "color-mix(in srgb, var(--st-green) 8%, transparent)" }}>
+          View public profile →
+        </Link>
+        <Link href={`/registry/${slug}/card`} target="_blank"
+          style={{ fontSize: 12, fontWeight: 600, color: "var(--st-muted)", textDecoration: "none", padding: "5px 12px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-bg)" }}>
+          Embeddable card
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div style={{ textAlign: "center", padding: "60px 20px", maxWidth: 480, margin: "0 auto" }}>
+      <div style={{ width: 48, height: 48, borderRadius: 12, background: "color-mix(in srgb, var(--st-green) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--st-green) 20%, transparent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "var(--st-green)" }}>manage_accounts</span>
+      </div>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--st-text)", marginBottom: 8 }}>No agent linked yet</h2>
+      <p style={{ fontSize: 14, color: "var(--st-muted)", lineHeight: 1.6, marginBottom: 24 }}>
+        Find your agent in the registry and claim your profile. Once claimed, you can submit a wallet manifest, track verification status, and share your embeddable card.
+      </p>
+      <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        <Link href="/registry"
+          style={{ fontSize: 13, fontWeight: 600, color: "#fff", textDecoration: "none", padding: "8px 18px", borderRadius: 8, background: "var(--st-green)" }}>
+          Browse Registry
+        </Link>
+        <Link href="/registry#verify"
+          style={{ fontSize: 13, fontWeight: 600, color: "var(--st-muted)", textDecoration: "none", padding: "8px 18px", borderRadius: 8, border: "1px solid var(--st-border)", background: "var(--st-bg)" }}>
+          Submit Wallet Manifest
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function VerificationSteps({ status }: { status: string }) {
+  const steps = [
+    { key: "Candidate",         label: "Candidate",        desc: "Agent indexed from public data" },
+    { key: "Wallets Declared",  label: "Wallets Declared", desc: "Wallet manifest submitted" },
+    { key: "Verified",          label: "Verified",         desc: "Luca-reviewed and confirmed" },
+    { key: "Live Financial Data", label: "Live Data",      desc: "Active on-chain data tracked" },
+  ];
+
+  const order = ["Candidate", "Wallets Declared", "Verified", "Live Financial Data"];
+  const currentIdx = order.indexOf(status === "Needs Verification" ? "Candidate" : status);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+      {steps.map((s, i) => {
+        const done = i <= currentIdx;
+        const current = i === currentIdx;
+        return (
+          <div key={s.key} style={{ display: "flex", gap: 12, alignItems: "flex-start", paddingBottom: i < steps.length - 1 ? 16 : 0, position: "relative" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700,
+                background: done ? "var(--st-green)" : "var(--st-bg)",
+                color: done ? "#fff" : "var(--st-muted)",
+                border: `2px solid ${current ? "var(--st-green)" : done ? "var(--st-green)" : "var(--st-border)"}`,
+              }}>
+                {done && !current ? "✓" : i + 1}
+              </div>
+              {i < steps.length - 1 && <div style={{ width: 2, flex: 1, minHeight: 12, background: done ? "var(--st-green)" : "var(--st-border)", marginTop: 2 }} />}
+            </div>
+            <div style={{ paddingBottom: 4 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: current ? "var(--st-green)" : done ? "var(--st-text)" : "var(--st-muted)", margin: "0 0 2px" }}>{s.label}</p>
+              <p style={{ fontSize: 12, color: "var(--st-muted)", margin: 0 }}>{s.desc}</p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function MyAgentPage() {
+  const [agentName, setAgentName] = useState("");
+  const [query, setQuery] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState<{ name: string; symbol: string | null }[]>([]);
+  const [agent, setAgent] = useState<AgentProfile | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("x402books_my_agent");
+    if (saved) loadAgent(saved);
+  }, []);
+
+  useEffect(() => {
+    if (query.length < 2) { setResults([]); return; }
+    const t = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(`/api/agent/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json() as { results: { name: string; symbol: string | null; walletAddress: string }[] };
+        setResults((data.results ?? []).map((r) => ({ name: r.name, symbol: r.symbol })));
+      } catch { /* silent */ } finally { setSearching(false); }
+    }, 350);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  async function loadAgent(name: string) {
+    setLoading(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/registry/agents?name=${encodeURIComponent(name)}`);
+      const data = await res.json() as { agents?: AgentProfile[]; ok?: boolean };
+      const found = (data.agents ?? []).find((a) => a.name.toLowerCase() === name.toLowerCase());
+      if (found) {
+        setAgent(found);
+        setAgentName(found.name);
+        localStorage.setItem("x402books_my_agent", found.name);
+      } else {
+        setError("Agent not found in registry.");
+      }
+    } catch {
+      setError("Could not load agent profile.");
+    } finally { setLoading(false); }
+  }
+
+  function pick(name: string) {
+    setQuery("");
+    setResults([]);
+    loadAgent(name);
+  }
+
+  function unlink() {
+    setAgent(null);
+    setAgentName("");
+    localStorage.removeItem("x402books_my_agent");
   }
 
   return (
     <StitchShell>
       <StitchHeader
-        title="Overview"
-        description={`Financial overview · Last ${RANGE_LABELS[ledger.range] ?? ledger.range}`}
-        actions={
-          <>
-            <StitchWalletPill wallet={ledger.wallet} onCopy={() => ledger.copyText(ledger.wallet, "wallet")} />
-            <StitchRange value={ledger.range} onChange={ledger.setRange} />
-          </>
-        }
+        title="My Agent"
+        description="Your agent's financial identity — profile status, wallets, and verification."
       />
 
-      {/* Mode toggle */}
-      <div className="stitch-mode-tabs">
-        <button
-          type="button"
-          className={`stitch-mode-tab${mode === "wallet" ? " active" : ""}`}
-          onClick={() => setMode("wallet")}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>account_balance_wallet</span>
-          Wallet
-        </button>
-        <button
-          type="button"
-          className={`stitch-mode-tab${mode === "agent" ? " active" : ""}`}
-          onClick={() => setMode("agent")}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>smart_toy</span>
-          Find Agent
-        </button>
-      </div>
+      <div style={{ maxWidth: 680, display: "flex", flexDirection: "column", gap: 16 }}>
 
-      {mode === "wallet" ? (
-        <StitchScanBar
-          value={ledger.walletInput}
-          onChange={ledger.setWalletInput}
-          onSubmit={onSubmit}
-          onCategorize={ledger.categorizeTransactions}
-          onExport={ledger.exportCsv}
-          onExportPdf={ledger.exportPdf}
-          loading={ledger.isLoading}
-          categorizing={ledger.isCategorizing}
-          error={ledger.error}
-          status={ledger.status}
-          hasTransactions={ledger.transactions.length > 0}
-        />
-      ) : (
-        <AgentSearch
-          onSelect={(addr) => {
-            ledger.setWalletInput(addr);
-            setMode("wallet");
-            ledger.scanWallet(addr, ledger.range);
-          }}
-        />
-      )}
-
-      {!hasWallet && !ledger.isLoading && (
-        <div className="stitch-onboard">
-          <div className="stitch-onboard-icon">
-            <StitchIcon name="account_balance_wallet" />
-          </div>
-          <h2>Connect your Base wallet to get started.</h2>
-          <p>
-            Paste any Base wallet address above and hit Scan to see your USDC activity,
-            AI-generated insights, category breakdowns, and exportable reports.
-          </p>
-          <div className="stitch-onboard-steps">
-            <span className="stitch-onboard-step"><strong>1</strong> Paste wallet address</span>
-            <span className="stitch-onboard-step"><strong>2</strong> Hit Scan Wallet</span>
-            <span className="stitch-onboard-step"><strong>3</strong> Get your report</span>
-          </div>
-        </div>
-      )}
-
-      <section className="stitch-stats-grid">
-        <StitchStat
-          label="Total Spend"
-          value={`$${formatUsdc(ledger.summary.totalSpend)}`}
-          usd="USD equivalent across all tokens"
-          helper="Base ERC-20 outflow"
-          icon="south_east"
-          tone="red"
-        />
-        <StitchStat
-          label="Total Income"
-          value={`$${formatUsdc(ledger.summary.totalIncome)}`}
-          usd="USD equivalent across all tokens"
-          helper="Base ERC-20 inflow"
-          icon="north_east"
-        />
-        <StitchStat
-          label="Net Flow"
-          value={`${ledger.summary.netFlow >= 0 ? "+" : "-"}$${formatUsdc(Math.abs(ledger.summary.netFlow))}`}
-          usd="USD net across all tokens"
-          helper={ledger.report.budgetStatus}
-          icon="monitoring"
-        />
-        <StitchStat
-          label="Transactions"
-          value={String(ledger.summary.transactionCount)}
-          helper={`${ledger.summary.likelyX402Count} likely x402`}
-          icon="receipt_long"
-          tone="blue"
-        />
-      </section>
-
-      {/* Portfolio breakdown — top 5 */}
-      {ledger.hasLedger && ledger.portfolio.length > 0 && (
-        <section className="stitch-card stitch-portfolio">
-          <div className="stitch-card-head">
-            <h3>Portfolio</h3>
-            <a href="/portfolio">View all →</a>
-          </div>
-          <div className="stitch-portfolio-list">
-            {ledger.portfolio.slice(0, 5).map((entry) => (
-              <div key={entry.tokenAddress} className="stitch-portfolio-row">
-                <div className="stitch-portfolio-token">
-                  <span className="stitch-token-symbol">{entry.tokenSymbol}</span>
-                  {entry.isAgentToken && <span className="stitch-agent-badge">AGENT</span>}
+        {/* Search / link agent */}
+        {!agent && (
+          <div style={{ background: "var(--st-surface)", border: "1px solid var(--st-border)", borderRadius: 12, padding: "16px 20px" }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: "var(--st-text)", marginBottom: 4 }}>Find your agent</p>
+            <p style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 12 }}>Search by agent name or token symbol to link your agent profile.</p>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Search agents…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                style={{ width: "100%", padding: "9px 12px", borderRadius: 8, border: "1px solid var(--st-border)", background: "var(--st-bg)", color: "var(--st-text)", fontSize: 13, boxSizing: "border-box" }}
+              />
+              {searching && <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: "var(--st-muted)" }}>Searching…</span>}
+              {results.length > 0 && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "var(--st-surface)", border: "1px solid var(--st-border)", borderRadius: 8, marginTop: 4, zIndex: 10, overflow: "hidden" }}>
+                  {results.slice(0, 6).map((r) => (
+                    <button key={r.name} type="button" onClick={() => pick(r.name)}
+                      style={{ width: "100%", padding: "9px 12px", display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", textAlign: "left", borderBottom: "1px solid var(--st-border)" }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--st-text)" }}>{r.name}</span>
+                      {r.symbol && <span style={{ fontSize: 11, color: "var(--st-muted)" }}>{r.symbol}</span>}
+                    </button>
+                  ))}
                 </div>
-                <div className="stitch-portfolio-flows">
-                  <span className="stitch-portfolio-inflow">+${entry.usdInflow.toFixed(2)}</span>
-                  <span className="stitch-portfolio-outflow">-${entry.usdOutflow.toFixed(2)}</span>
-                </div>
-                <span className={`stitch-portfolio-net ${entry.usdNetFlow >= 0 ? "positive" : "negative"}`}>
-                  {entry.usdNetFlow >= 0 ? "+" : ""}{entry.usdNetFlow.toFixed(2)} USD
-                </span>
-                <span className="stitch-portfolio-txcount">{entry.txCount} tx</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {hasWallet && (
-        <StitchAiSummary
-          summary={ledger.aiSummary}
-          isLoading={ledger.isGeneratingSummary}
-          onRefresh={ledger.generateAiSummary}
-        />
-      )}
-
-      <section className="stitch-two-grid">
-        <StitchLineChart flows={ledger.dailyFlows} />
-        <StitchDonut categories={ledger.categories} />
-      </section>
-
-      <section className="stitch-lower-grid">
-        <div className="stitch-card">
-          <div className="stitch-card-head">
-            <h3>Recent Transactions</h3>
-            <a href="/transactions">View all</a>
-          </div>
-          {recent.length ? (
-            <StitchTransactionsTable compact transactions={recent} />
-          ) : (
-            <StitchEmpty compact>Scan a wallet to see recent USDC transfers.</StitchEmpty>
-          )}
-        </div>
-
-        <div className="stitch-card">
-          <div className="stitch-card-head">
-            <h3>Activity Feed</h3>
-            <a href="/transactions">View all</a>
-          </div>
-          {recent.length ? (
-            <div className="stitch-feed">
-              {recent.slice(0, 5).map((transaction) => (
-                <div key={transaction.txHash}>
-                  <span className={transaction.direction === "income" ? "income" : "expense"}>
-                    {transaction.direction === "income" ? "north_east" : "south_east"}
-                  </span>
-                  <div>
-                    <strong>
-                      {transaction.direction === "income" ? "Received" : "Spent"} {formatUsdc(transaction.amountUsdc)} USDC
-                    </strong>
-                    <p>{shortenAddress(transaction.counterparty)}</p>
-                  </div>
-                  <small>{relativeTime(transaction.timestamp)}</small>
-                </div>
-              ))}
+              )}
             </div>
-          ) : (
-            <StitchEmpty compact>Wallet activity will appear here.</StitchEmpty>
-          )}
-        </div>
-      </section>
+            {error && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 8 }}>{error}</p>}
+            {loading && <p style={{ fontSize: 12, color: "var(--st-muted)", marginTop: 8 }}>Loading profile…</p>}
+          </div>
+        )}
+
+        {/* Linked agent view */}
+        {agent ? (
+          <>
+            {/* Agent name + unlink */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <p style={{ fontSize: 12, color: "var(--st-muted)" }}>Linked agent: <strong style={{ color: "var(--st-text)" }}>{agentName}</strong></p>
+              <button type="button" onClick={unlink}
+                style={{ fontSize: 11, color: "var(--st-muted)", background: "none", border: "1px solid var(--st-border)", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>
+                Unlink
+              </button>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 220px", gap: 16, alignItems: "start" }}>
+              <AgentCard agent={agent} />
+
+              {/* Verification progress */}
+              <div style={{ background: "var(--st-surface)", border: "1px solid var(--st-border)", borderRadius: 12, padding: "16px 20px" }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "var(--st-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 14 }}>Verification Path</p>
+                <VerificationSteps status={agent.verificationStatus} />
+                {agent.verificationStatus !== "Verified" && agent.verificationStatus !== "Luca Managed" && (
+                  <Link href="/registry#verify"
+                    style={{ display: "block", marginTop: 16, fontSize: 12, fontWeight: 600, color: "var(--st-green)", textDecoration: "none", textAlign: "center", padding: "7px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "color-mix(in srgb, var(--st-green) 8%, transparent)" }}>
+                    Submit wallet manifest →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </>
+        ) : (
+          !loading && <EmptyState />
+        )}
+      </div>
     </StitchShell>
   );
 }
