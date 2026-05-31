@@ -17,22 +17,16 @@ import type { CategorySummary, DailyFlow, LedgerCategory, LedgerTransaction, Tim
 
 const navGroups = [
   {
-    label: "Analytics",
+    label: "Agent",
     items: [
-      { href: "/dashboard",    label: "Overview",      icon: "dashboard" },
-      { href: "/portfolio",    label: "Portfolio",     icon: "donut_small" },
-      { href: "/transactions", label: "Transactions",  icon: "receipt_long" },
-      { href: "/categories",   label: "Categories",    icon: "category" },
-      { href: "/flags",        label: "Flags",         icon: "flag" },
+      { href: "/dashboard",  label: "My Agent",   icon: "manage_accounts" },
+      { href: "/registry",   label: "Registry",   icon: "list_alt" },
     ],
   },
   {
-    label: "Tools",
+    label: "Build",
     items: [
-      { href: "/reports",    label: "Reports",    icon: "description" },
-      { href: "/wallets",    label: "Wallets",    icon: "account_balance_wallet" },
       { href: "/developer",  label: "Developer",  icon: "code" },
-      { href: "/api",        label: "API",        icon: "api" },
     ],
   },
   {
@@ -44,16 +38,10 @@ const navGroups = [
 ];
 
 const pageNames: Record<string, string> = {
-  "/dashboard":    "Overview",
-  "/portfolio":    "Portfolio",
-  "/transactions": "Transactions",
-  "/categories":   "Categories",
-  "/flags":        "Flags",
-  "/reports":      "Reports",
-  "/wallets":      "Wallets",
-  "/developer":    "Developer",
-  "/api":          "API",
-  "/settings":     "Settings",
+  "/dashboard":  "My Agent",
+  "/registry":   "Registry",
+  "/developer":  "Developer",
+  "/settings":   "Settings",
 };
 
 const allNavItems = navGroups.flatMap((g) => g.items);
