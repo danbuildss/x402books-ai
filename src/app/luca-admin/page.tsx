@@ -298,6 +298,134 @@ type Submission = {
   created_at: string;
 };
 
+type ManifestUpdate = {
+  id: string;
+  agent_name: string;
+  status: string;
+  diff_summary: string;
+  luca_notes: string | null;
+  created_at: string;
+  proposed_data: {
+    wallets?: { address: string; label: string; notes: string | null }[];
+    source_repo?: string;
+    xHandle?: string | null;
+    ecosystem?: string | null;
+  };
+};
+
+function ManifestSubmissions({ secret }: { secret: string }) {
+  const [manifests, setManifests] = useState<ManifestUpdate[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState("");
+  const [acting, setActing]       = useState<string | null>(null);
+
+  const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/registry/pending", { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; updates?: ManifestUpdate[]; error?: string }) => {
+        if (d.ok) {
+          setManifests((d.updates ?? []).filter((u) => u.luca_notes?.startsWith("Auto-fetched from")));
+        } else {
+          setError(d.error ?? "Failed to load manifest submissions");
+        }
+      })
+      .catch(() => setError("Network error"))
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secret]);
+
+  async function act(id: string, action: "approve" | "reject") {
+    setActing(id);
+    const res = await fetch("/api/registry/approve", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ id, action }),
+    });
+    const d = await res.json() as { ok: boolean };
+    if (d.ok) setManifests((prev) => prev.map((m) => m.id === id ? { ...m, status: action === "approve" ? "approved" : "rejected" } : m));
+    setActing(null);
+  }
+
+  return (
+    <div className={styles.card} style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <p className={styles.cardTitle} style={{ margin: 0 }}>Manifest Submissions</p>
+        {manifests.filter((m) => m.status === "pending").length > 0 && (
+          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#f59e0b22", color: "#f59e0b" }}>
+            {manifests.filter((m) => m.status === "pending").length} pending
+          </span>
+        )}
+      </div>
+      <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12 }}>
+        Repo-submitted wallet manifests via <code>.x402books/wallets.json</code>. Review and approve to upgrade agent profile.
+      </p>
+
+      {loading && <div style={{ color: "var(--muted)", fontSize: "0.83rem" }}>Loading…</div>}
+      {!loading && error && <div className={styles.errorBox}>{error}</div>}
+      {!loading && !error && manifests.length === 0 && (
+        <p style={{ color: "var(--muted)", fontSize: "0.83rem", margin: 0 }}>No manifest submissions yet.</p>
+      )}
+      {!loading && !error && manifests.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {manifests.map((m) => (
+            <div key={m.id} style={{ padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
+                    <strong style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{m.agent_name}</strong>
+                    <span style={{
+                      padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
+                      background: m.status === "pending" ? "#f59e0b22" : m.status === "approved" ? "var(--accent-soft)" : "#ef444422",
+                      color: m.status === "pending" ? "#f59e0b" : m.status === "approved" ? "var(--accent)" : "#ef4444",
+                    }}>{m.status}</span>
+                    {m.proposed_data?.ecosystem && (
+                      <span style={{ fontSize: "0.7rem", color: "var(--muted)", fontWeight: 600 }}>{m.proposed_data.ecosystem}</span>
+                    )}
+                  </div>
+                  {m.proposed_data?.source_repo && (
+                    <a href={m.proposed_data.source_repo} target="_blank" rel="noreferrer"
+                      style={{ fontSize: "0.75rem", color: "var(--accent)", wordBreak: "break-all", display: "block", marginBottom: 6 }}>
+                      {m.proposed_data.source_repo}
+                    </a>
+                  )}
+                  {m.proposed_data?.wallets && m.proposed_data.wallets.length > 0 && (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      {m.proposed_data.wallets.map((w) => (
+                        <div key={w.address} style={{ display: "flex", gap: 10, alignItems: "center", fontSize: "0.75rem" }}>
+                          <span style={{ color: "var(--accent)", fontWeight: 600, minWidth: 120 }}>{w.label}</span>
+                          <code style={{ color: "var(--muted)", fontFamily: "monospace", fontSize: "0.7rem" }}>{w.address}</code>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <p style={{ margin: "6px 0 0", fontSize: "0.68rem", color: "var(--muted)" }}>
+                    {new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {m.status === "pending" && (
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button type="button" onClick={() => act(m.id, "approve")} disabled={acting === m.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
+                      Approve
+                    </button>
+                    <button type="button" onClick={() => act(m.id, "reject")} disabled={acting === m.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RegistrySection({ secret }: { secret: string }) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubs, setLoadingSubs]   = useState(true);
@@ -358,6 +486,9 @@ function RegistrySection({ secret }: { secret: string }) {
         <h1>Registry</h1>
         <p>Agent verification submissions and Luca&apos;s proposed changes.</p>
       </div>
+
+      {/* Manifest Submissions (repo-submitted wallets.json) */}
+      <ManifestSubmissions secret={secret} />
 
       {/* Submissions queue */}
       <div className={styles.card} style={{ marginBottom: 16 }}>

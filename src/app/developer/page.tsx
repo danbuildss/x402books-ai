@@ -82,7 +82,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
     <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
       <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
-        Link wallet to check $LUCA balance and upgrade tier
+        Link wallet to verify your access tier
       </div>
       <div style={{ display: "flex", gap: 8 }}>
         <input
@@ -101,7 +101,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
         <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--st-green)" }}>check_circle</span>
           <span style={{ color: "var(--st-muted)" }}>
-            {result.balance.toLocaleString(undefined, { maximumFractionDigits: 0 })} $LUCA detected →
+            Wallet verified →
           </span>
           <TierBadge tier={result.tier} />
           <span style={{ color: "var(--st-muted)" }}>{TIER_LIMITS[result.tier].toLocaleString()} req/day</span>
@@ -109,8 +109,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
       )}
       {!result && currentTier === "free" && (
         <div style={{ marginTop: 8, fontSize: 11, color: "var(--st-muted)" }}>
-          Hold ≥{TIER_THRESHOLDS.holder.toLocaleString()} $LUCA → 500 req/day &nbsp;·&nbsp;
-          Hold ≥{TIER_THRESHOLDS.whale.toLocaleString()} $LUCA → 2,000 req/day
+          Developer: 500 req/day &nbsp;·&nbsp; Enterprise: 2,000 req/day
         </div>
       )}
     </div>
@@ -182,7 +181,7 @@ export default function DeveloperPage() {
     <StitchShell>
       <StitchHeader
         title="Developer API"
-        description="Manage API keys · Upgrade tier with $LUCA · Powered by x402Books AI"
+        description="Manage API keys · Build on x402Books · Powered by x402Books AI"
       />
 
       {/* Tier overview */}
@@ -197,9 +196,9 @@ export default function DeveloperPage() {
               <span style={{ fontSize: 12, fontWeight: 400, color: "var(--st-muted)", marginLeft: 4 }}>req/day</span>
             </div>
             <div style={{ fontSize: 11, color: "var(--st-muted)", marginTop: 4 }}>
-              {tier === "free" && "No $LUCA required"}
-              {tier === "holder" && `≥ ${TIER_THRESHOLDS.holder.toLocaleString()} $LUCA`}
-              {tier === "whale" && `≥ ${TIER_THRESHOLDS.whale.toLocaleString()} $LUCA`}
+              {tier === "free" && "Free tier"}
+              {tier === "holder" && "Developer access"}
+              {tier === "whale" && "High-volume access"}
             </div>
           </div>
         ))}
