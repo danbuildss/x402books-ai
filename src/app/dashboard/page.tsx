@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePrivy } from "@privy-io/react-auth";
 import { StitchHeader, StitchShell } from "@/components/stitch-app";
 import { toSlug } from "@/app/registry/[slug]/slug";
 
@@ -189,6 +190,7 @@ function VerificationSteps({ status }: { status: string }) {
 }
 
 export default function MyAgentPage() {
+  const { user } = usePrivy();
   const [agentName, setAgentName] = useState("");
   const [query, setQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -196,11 +198,36 @@ export default function MyAgentPage() {
   const [agent, setAgent] = useState<AgentProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [detected, setDetected] = useState<AgentProfile | null>(null);
+  const [detecting, setDetecting] = useState(false);
 
+  // Get connected wallet address from Privy
+  const connectedWallet = (
+    user?.linkedAccounts?.find((a) => a.type === "wallet") as { address?: string } | undefined
+  )?.address?.toLowerCase();
+
+  // On load: check localStorage first, then try wallet-based detection
   useEffect(() => {
     const saved = localStorage.getItem("x402books_my_agent");
-    if (saved) loadAgent(saved);
+    if (saved) { loadAgent(saved); return; }
   }, []);
+
+  // When wallet connects and no agent is linked yet, try to detect via wallet match
+  useEffect(() => {
+    if (!connectedWallet || agent || localStorage.getItem("x402books_my_agent")) return;
+    setDetecting(true);
+    fetch("/api/registry/agents")
+      .then((r) => r.json())
+      .then((d: { agents?: AgentProfile[] }) => {
+        const match = (d.agents ?? []).find((a) =>
+          a.wallets.some((w) => w.address.toLowerCase() === connectedWallet)
+        );
+        if (match) setDetected(match);
+      })
+      .catch(() => {})
+      .finally(() => setDetecting(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connectedWallet]);
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); return; }
@@ -240,9 +267,18 @@ export default function MyAgentPage() {
     loadAgent(name);
   }
 
+  function claimDetected() {
+    if (!detected) return;
+    setDetected(null);
+    setAgent(detected);
+    setAgentName(detected.name);
+    localStorage.setItem("x402books_my_agent", detected.name);
+  }
+
   function unlink() {
     setAgent(null);
     setAgentName("");
+    setDetected(null);
     localStorage.removeItem("x402books_my_agent");
   }
 
@@ -254,6 +290,33 @@ export default function MyAgentPage() {
       />
 
       <div style={{ maxWidth: 680, display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {/* Wallet-detected agent banner */}
+        {!agent && detected && (
+          <div style={{ background: "color-mix(in srgb, var(--st-green) 8%, var(--st-surface))", border: "1px solid color-mix(in srgb, var(--st-green) 25%, transparent)", borderRadius: 12, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 22, color: "var(--st-green)", flexShrink: 0 }}>verified</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: "var(--st-text)", marginBottom: 2 }}>
+                We found your agent: <span style={{ color: "var(--st-green)" }}>{detected.name}</span>
+              </p>
+              <p style={{ fontSize: 12, color: "var(--st-muted)" }}>
+                Your connected wallet matches a declared wallet for this agent.
+              </p>
+            </div>
+            <button type="button" onClick={claimDetected}
+              style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: "var(--st-green)", border: "none", borderRadius: 7, padding: "7px 16px", cursor: "pointer", whiteSpace: "nowrap" }}>
+              Claim Agent
+            </button>
+          </div>
+        )}
+
+        {/* Detecting */}
+        {!agent && !detected && detecting && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--st-muted)", padding: "8px 0" }}>
+            <span className="stitch-agent-spinner" />
+            Checking your wallet against the registry…
+          </div>
+        )}
 
         {/* Search / link agent */}
         {!agent && (
