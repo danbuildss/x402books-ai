@@ -642,9 +642,9 @@ export default function RegistryPage() {
       <header className="lp-header">
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
-          <Link href="/">Home</Link>
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
           <Link href="/luca">Luca</Link>
+          <Link href="/docs#api">API</Link>
           <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
@@ -659,7 +659,7 @@ export default function RegistryPage() {
         <p className="reg-label">Agent Financial Registry</p>
         <h1 className="reg-h1">Track the wallets behind agents.</h1>
         <p className="reg-hero-sub">
-          x402Books AI indexes agent wallets across Base, BANKR, and Virtuals —
+          x402Books AI indexes agent wallets across BANKR, Virtuals, Base, AEON, and EigenCloud —
           sourced and scored by Luca. All entries start as Candidate until teams
           submit wallet proof.
         </p>
@@ -757,7 +757,7 @@ export default function RegistryPage() {
             <p className="lp-footer-heading">Product</p>
             <Link href="/dashboard">App</Link>
             <Link href="/registry">Registry</Link>
-            <Link href="/luca">Meet Luca</Link>
+            <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>
           </div>
           <div className="lp-footer-col">
