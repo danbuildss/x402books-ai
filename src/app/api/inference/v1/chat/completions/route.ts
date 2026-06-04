@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logAgentEvent } from "@/lib/agent-events";
+import { logInferenceEvent } from "@/lib/inference-events";
 
 export const dynamic = "force-dynamic";
 
@@ -42,13 +43,17 @@ async function logInference(opts: {
   requestId: string | null;
   usage: { prompt_tokens?: number; completion_tokens?: number } | null;
   streamed: boolean;
+  latencyMs?: number;
 }) {
+  const cost = estimateCost(opts.model, opts.usage);
+
+  // Broader financial ledger (agent_economic_events)
   await logAgentEvent({
     agentId:   "luca",
     agentName: "Luca",
     eventType: "inference_purchase",
     provider:  "surplus",
-    amount:    estimateCost(opts.model, opts.usage),
+    amount:    cost,
     token:     "USD",
     direction: "outflow",
     metadata: {
@@ -59,7 +64,18 @@ async function logInference(opts: {
       streamed:   opts.streamed,
       usage:      opts.usage,
     },
-  }).catch(() => {}); // never fail the request due to logging
+  }).catch(() => {});
+
+  // Inference ledger (inference_events) — powers /luca/ledger and profile cards
+  await logInferenceEvent({
+    agentId:     "luca",
+    provider:    "surplus",
+    model:       opts.model,
+    requestType: "chat_completion",
+    costUsd:     cost,
+    latencyMs:   opts.latencyMs ?? null,
+    status:      "success",
+  }).catch(() => {});
 }
 
 export async function POST(req: NextRequest) {
@@ -81,6 +97,7 @@ export async function POST(req: NextRequest) {
 
   const model    = typeof body.model === "string" ? body.model : "unknown";
   const isStream = body.stream === true;
+  const t0       = Date.now();
 
   // Forward to Surplus, replacing auth header server-side
   let upstream: Response;
@@ -169,7 +186,7 @@ export async function POST(req: NextRequest) {
   }
 
   const usage = (data.usage as { prompt_tokens?: number; completion_tokens?: number } | null) ?? null;
-  await logInference({ model, requestId: requestId ?? (data.id as string | null) ?? null, usage, streamed: false });
+  await logInference({ model, requestId: requestId ?? (data.id as string | null) ?? null, usage, streamed: false, latencyMs: Date.now() - t0 });
 
   return NextResponse.json(data);
 }
