@@ -7,6 +7,7 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
+import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
 
 // ── Settlement pattern display ────────────────────────────────────────────────
@@ -216,6 +217,49 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
   );
 }
 
+// ── Inference Activity block (any agent with data) ───────────────────────────
+
+function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
+  const usd = (n: number) => n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`;
+
+  return (
+    <section className="prof-section">
+      <p className="prof-section-title">
+        Inference Activity · Last 30d
+        {ia.agentId === "luca" && (
+          <a href="/luca/ledger" style={{ marginLeft: 8, fontSize: "0.7rem", color: "var(--accent)", textDecoration: "none" }}>
+            Full ledger →
+          </a>
+        )}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>30d Spend</span>
+          <span style={{ fontFamily: "monospace", color: "#f87171" }}>-{usd(ia.totalCostUsd)}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>Requests</span>
+          <span style={{ fontFamily: "monospace" }}>{ia.requestCount}</span>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>Primary Provider</span>
+          <span style={{ color: "var(--ink)", textTransform: "capitalize" }}>{ia.primaryProvider ?? "—"}</span>
+        </div>
+        {ia.providerBreakdown.length > 1 && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Providers Used</span>
+            <span style={{ color: "var(--ink)" }}>{ia.providersUsed.join(", ")}</span>
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>Avg Cost / Request</span>
+          <span style={{ fontFamily: "monospace" }}>{usd(ia.avgCostPerRequest)}</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Agent Economics block (Luca only) ────────────────────────────────────────
 
 function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary }) {
@@ -258,7 +302,7 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; classification?: SettlementClassification }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
 
   return (
@@ -362,6 +406,9 @@ export function ProfileClient({ agent, slug, economics, classification }: { agen
 
             {/* Settlement profile */}
             {classification && <SettlementSection classification={classification} />}
+
+            {/* Inference Activity (any agent with data) */}
+            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
 
             {/* Agent Economics (Luca self-profile only) */}
             {economics && <AgentEconomicsBlock economics={economics} />}
