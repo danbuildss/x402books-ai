@@ -29,7 +29,7 @@ export type CommunicationIdentity = {
   notes?: string | null;
 };
 export type Health = "Healthy" | "Stable" | "Watch" | "At Risk" | "Pending";
-export type VerificationStatus = "Candidate" | "Needs Verification" | "Verified" | "Luca Managed";
+export type VerificationStatus = "Candidate" | "Needs Verification" | "Wallets Declared" | "Verified" | "Luca Managed";
 export type WalletLabel =
   | "candidate wallet"
   | "verified wallet"
