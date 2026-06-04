@@ -424,7 +424,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                   </a>
                 </div>
               )}
-              {Array.from(new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
+              {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
                 <div key={w.address} className="reg-card-wallet-row">
                   <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
                     {w.label}

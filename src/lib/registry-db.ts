@@ -100,7 +100,7 @@ function rowToAgent(
     website: row.website,
     bankrProfile: row.bankr_profile,
     tokenAddress: row.token_address,
-    wallets,
+    wallets: wallets ?? [],
     verificationStatus: (row.verification_status as VerificationStatus) ?? "Candidate",
     evidenceSources: row.evidence_sources ?? [],
     financialActivityScore: row.financial_activity_score,
