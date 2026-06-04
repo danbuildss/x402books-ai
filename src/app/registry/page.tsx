@@ -14,7 +14,7 @@ import { AGENTS } from "./data";
 
 function computeStats(agents: Agent[]) {
   const walletCount = agents.filter(
-    (a) => a.tokenAddress !== null || a.wallets.length > 0
+    (a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0
   ).length;
   const reviewedCount = agents.filter(
     (a) => a.financialActivityScore !== null
@@ -213,7 +213,7 @@ function AgentCard({ agent }: { agent: Agent }) {
           )}
 
           {/* Wallets */}
-          {agent.wallets.length > 0 && (
+          {(agent.wallets ?? []).length > 0 && (
             <div className="reg-card-section">
               <p className="reg-card-section-title">Wallets</p>
               {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
@@ -236,7 +236,7 @@ function AgentCard({ agent }: { agent: Agent }) {
           )}
 
           {/* No wallet state */}
-          {!agent.tokenAddress && agent.wallets.length === 0 && (
+          {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
             <div className="reg-card-section">
               <p className="reg-card-section-title">Wallets</p>
               <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
