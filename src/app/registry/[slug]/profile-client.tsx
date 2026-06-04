@@ -89,6 +89,7 @@ const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon
   "Candidate":          { cls: "candidate",       label: "Candidate"          },
   "Needs Verification": { cls: "needs-verify",    label: "Needs Verification" },
   "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"  },
+  "Claimed":            { cls: "claimed",          label: "Claimed by Team", icon: "handshake" },
   "Verified":           { cls: "verified",         label: "Verified", icon: "verified" },
   "Luca Managed":       { cls: "luca-managed",     label: "Luca Managed"       },
 };
@@ -301,6 +302,118 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
   );
 }
 
+// ── Claim section ────────────────────────────────────────────────────────────
+
+function ClaimSection({ slug, status }: { slug: string; status: string }) {
+  const [wallet, setWallet]   = useState("");
+  const [state, setState]     = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [matched, setMatched] = useState(false);
+  const [msg, setMsg]         = useState("");
+
+  if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!wallet.trim()) return;
+    setState("loading");
+    try {
+      const res = await fetch("/api/registry/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ agent_slug: slug, wallet_address: wallet.trim() }),
+      });
+      const d = await res.json() as { ok: boolean; matched?: boolean; message?: string; error?: string };
+      if (d.ok) {
+        setState("done");
+        setMatched(d.matched ?? false);
+        setMsg(d.message ?? "Claim submitted.");
+      } else {
+        setState("error");
+        setMsg(d.error ?? "Something went wrong.");
+      }
+    } catch {
+      setState("error");
+      setMsg("Network error. Please try again.");
+    }
+  }
+
+  return (
+    <div style={{
+      marginTop: 24,
+      padding: "18px 20px",
+      border: "1px solid var(--line)",
+      borderRadius: 12,
+      background: "var(--surface-soft)",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
+        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Own this agent? Claim your profile.</p>
+      </div>
+      <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 14, lineHeight: 1.55 }}>
+        Submit a wallet address that matches your declared manifest. If verified, your profile will show{" "}
+        <strong style={{ color: "var(--ink)" }}>Claimed by Team</strong> and unlock full trust signals.
+      </p>
+
+      {state === "done" ? (
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18, color: matched ? "var(--accent)" : "#f59e0b", marginTop: 1 }}>
+            {matched ? "check_circle" : "info"}
+          </span>
+          <div>
+            <p style={{ fontSize: "0.82rem", fontWeight: 600, color: matched ? "var(--accent)" : "#f59e0b", marginBottom: 3 }}>
+              {matched ? "Wallet matched — claim submitted" : "Claim submitted"}
+            </p>
+            <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{msg}</p>
+            {!matched && (
+              <a href="/registry#verify" style={{ fontSize: "0.75rem", color: "var(--accent)", display: "inline-block", marginTop: 6 }}>
+                Submit your wallet manifest →
+              </a>
+            )}
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={submit} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Your wallet address — 0x…"
+            value={wallet}
+            onChange={(e) => setWallet(e.target.value)}
+            pattern="^0x[0-9a-fA-F]{40}$"
+            required
+            style={{
+              flex: 1, minWidth: 200,
+              padding: "8px 12px", borderRadius: 8,
+              border: "1px solid var(--line)",
+              background: "var(--surface)",
+              color: "var(--ink)", fontSize: "0.82rem",
+              fontFamily: "monospace",
+              outline: "none",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={state === "loading"}
+            style={{
+              padding: "8px 16px", borderRadius: 8,
+              border: "1px solid rgba(109,184,116,0.3)",
+              background: "var(--accent-soft)", color: "var(--accent)",
+              fontSize: "0.82rem", fontWeight: 700,
+              cursor: state === "loading" ? "not-allowed" : "pointer",
+              opacity: state === "loading" ? 0.6 : 1,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {state === "loading" ? "Checking…" : "Claim Profile →"}
+          </button>
+          {state === "error" && (
+            <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{msg}</p>
+          )}
+        </form>
+      )}
+    </div>
+  );
+}
+
 // ── Main profile ──────────────────────────────────────────────────────────────
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification }) {
@@ -467,6 +580,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               </section>
             )}
           </div>
+
+          {/* Claim profile */}
+          <ClaimSection slug={slug} status={agent.verificationStatus} />
 
           {/* Footer note */}
           <p className="prof-footer-note">

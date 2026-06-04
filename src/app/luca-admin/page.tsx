@@ -426,6 +426,118 @@ function ManifestSubmissions({ secret }: { secret: string }) {
   );
 }
 
+type ClaimRequest = {
+  id: string;
+  agent_name: string;
+  wallet_address: string;
+  wallet_matched: boolean;
+  status: string;
+  created_at: string;
+};
+
+function ClaimsReview({ secret }: { secret: string }) {
+  const [claims, setClaims]   = useState<ClaimRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState("");
+  const [acting, setActing]   = useState<string | null>(null);
+
+  const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/registry/claims", { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; claims?: ClaimRequest[]; error?: string }) => {
+        if (d.ok) setClaims(d.claims ?? []);
+        else setError(d.error ?? "Failed to load claims");
+      })
+      .catch(() => setError("Network error"))
+      .finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secret]);
+
+  async function act(id: string, action: "approve" | "reject") {
+    setActing(id);
+    const res = await fetch("/api/registry/claims", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ id, action }),
+    });
+    const d = await res.json() as { ok: boolean };
+    if (d.ok) setClaims((prev) => prev.map((c) => c.id === id ? { ...c, status: action === "approve" ? "approved" : "rejected" } : c));
+    setActing(null);
+  }
+
+  const pending = claims.filter((c) => c.status === "pending");
+
+  return (
+    <div className={styles.card} style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <p className={styles.cardTitle} style={{ margin: 0 }}>Profile Claim Requests</p>
+        {pending.length > 0 && (
+          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#f59e0b22", color: "#f59e0b" }}>
+            {pending.length} pending
+          </span>
+        )}
+      </div>
+      <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12 }}>
+        Agent teams claiming their profile by wallet match. Approve to set status to <strong>Claimed</strong>.
+      </p>
+
+      {loading && <div style={{ color: "var(--muted)", fontSize: "0.83rem" }}>Loading…</div>}
+      {!loading && error && <div className={styles.errorBox}>{error}</div>}
+      {!loading && !error && claims.length === 0 && (
+        <p style={{ color: "var(--muted)", fontSize: "0.83rem", margin: 0 }}>No claim requests yet.</p>
+      )}
+      {!loading && !error && claims.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {claims.map((c) => (
+            <div key={c.id} style={{ padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5, flexWrap: "wrap" }}>
+                    <strong style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{c.agent_name}</strong>
+                    <span style={{
+                      padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
+                      background: c.status === "pending" ? "#f59e0b22" : c.status === "approved" ? "var(--accent-soft)" : "#ef444422",
+                      color: c.status === "pending" ? "#f59e0b" : c.status === "approved" ? "var(--accent)" : "#ef4444",
+                    }}>{c.status}</span>
+                    <span style={{
+                      padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
+                      background: c.wallet_matched ? "var(--accent-soft)" : "rgba(248,113,113,0.1)",
+                      color: c.wallet_matched ? "var(--accent)" : "#f87171",
+                    }}>
+                      {c.wallet_matched ? "Wallet matched" : "No wallet match"}
+                    </span>
+                  </div>
+                  <code style={{ fontSize: "0.75rem", color: "var(--muted)", wordBreak: "break-all", display: "block", marginBottom: 4 }}>
+                    {c.wallet_address}
+                  </code>
+                  <p style={{ fontSize: "0.68rem", color: "var(--muted)", margin: 0 }}>
+                    {new Date(c.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {c.status === "pending" && (
+                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                    <button type="button" onClick={() => act(c.id, "approve")} disabled={acting === c.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
+                      Approve
+                    </button>
+                    <button type="button" onClick={() => act(c.id, "reject")} disabled={acting === c.id}
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RegistrySection({ secret }: { secret: string }) {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loadingSubs, setLoadingSubs]   = useState(true);
@@ -548,6 +660,9 @@ function RegistrySection({ secret }: { secret: string }) {
 
       {/* Manifest Submissions (repo-submitted wallets.json) */}
       <ManifestSubmissions secret={secret} />
+
+      {/* Profile Claim Requests */}
+      <ClaimsReview secret={secret} />
 
       {/* Submissions queue */}
       <div className={styles.card} style={{ marginBottom: 16 }}>
