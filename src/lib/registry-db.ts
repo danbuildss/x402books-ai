@@ -249,12 +249,35 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
   const proposed = update.proposed_data as Record<string, unknown>;
 
   try {
+    // Resolve the canonical agent name from the registry (case-insensitive).
+    // The manifest may use different casing (e.g. "AEON" vs "Aeon") — we match
+    // by slug so wallets land on the existing registry entry, not a new one.
+    const rawName = String(proposed.name ?? update.agent_name);
+    const toSlug  = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const rawSlug = toSlug(rawName);
+
+    const { data: existingRows } = await sb
+      .from("registry_agents")
+      .select("name")
+      .limit(100);
+
+    const existingMatch = (existingRows ?? []).find(
+      (r: { name: string }) => toSlug(r.name) === rawSlug,
+    );
+    const canonicalName = existingMatch ? existingMatch.name : rawName;
+
     // Build the agent row from proposed_data
     const agentFields: Record<string, unknown> = {
-      name: proposed.name ?? update.agent_name,
-      ecosystem: proposed.ecosystem ?? "Base",
+      name:       canonicalName,
+      ecosystem:  proposed.ecosystem ?? "Base",
       updated_at: new Date().toISOString(),
     };
+
+    // Promote to "Wallets Declared" when a manifest provides wallet data
+    const hasWallets = Array.isArray(proposed.wallets) && (proposed.wallets as unknown[]).length > 0;
+    if (hasWallets && !("verificationStatus" in proposed)) {
+      agentFields.verification_status = "Wallets Declared";
+    }
 
     const fieldMap: Record<string, string> = {
       symbol: "symbol",
