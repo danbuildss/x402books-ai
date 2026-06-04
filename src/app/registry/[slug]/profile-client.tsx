@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { toPng } from "html-to-image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
@@ -118,78 +119,278 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-// ── Share button ──────────────────────────────────────────────────────────────
+// ── Card helpers (shared with share modal) ───────────────────────────────────
 
-function ShareButton({ slug }: { slug: string }) {
-  const [copied, setCopied] = useState(false);
-  const url = `https://www.x402books.xyz/registry/${slug}`;
+const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
+  stable_treasury:           "Stable Treasury",
+  revenue_generating:        "Revenue Activity",
+  high_spend_low_revenue:    "High Spend",
+  heavy_outbound_settlement: "Heavy Outbound",
+  recurring_flow_detected:   "Recurring Flows",
+  incomplete_wallet_role:    "Roles Unverified",
+};
 
-  function copy() {
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  return (
-    <button type="button" className="prof-share-btn" onClick={copy}>
-      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-        {copied ? "check" : "link"}
-      </span>
-      {copied ? "Copied!" : "Copy profile link"}
-    </button>
-  );
+function cardTreasuryScore(agent: Agent): number {
+  const map: Record<string, number> = { Healthy: 92, Stable: 78, Watch: 45, "At Risk": 18 };
+  return map[agent.treasuryHealth] ?? 0;
 }
 
-// ── Embed button ──────────────────────────────────────────────────────────────
+function cardTransparencyScore(agent: Agent): number {
+  let s = 0;
+  const wallets = agent.wallets ?? [];
+  if (wallets.length > 0) s += 30;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
+  else if (agent.verificationStatus === "Claimed")          s += 20;
+  else if (agent.verificationStatus === "Wallets Declared") s += 10;
+  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
+  if (agent.evidenceSources.length > 0) s += 10;
+  if (agent.adminNotes) s += 10;
+  return Math.min(100, s);
+}
 
-function EmbedButton({ slug }: { slug: string }) {
-  const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
-  const src = `https://www.x402books.xyz/registry/${slug}/card`;
-  const snippet = `<iframe src="${src}" width="400" height="320" style="border:0;border-radius:12px;overflow:hidden;" loading="lazy"></iframe>`;
 
-  function copy() {
-    navigator.clipboard.writeText(snippet).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
+function cardVerdictSnippet(agent: Agent): string {
+  if (!agent.adminNotes) return `${agent.name} is indexed in the registry. No verdict available yet.`;
+  const notes = agent.adminNotes.trim();
+  if (notes.length <= 180) return notes;
+  const cut = notes.slice(0, 180);
+  const lastDot = cut.lastIndexOf(".");
+  return lastDot > 80 ? cut.slice(0, lastDot + 1) : cut + "…";
+}
 
+function cardStatusLabel(agent: Agent): string {
+  const map: Record<string, string> = {
+    "Verified": "Verified", "Luca Managed": "Luca Managed",
+    "Claimed": "Claimed by Team", "Wallets Declared": "Wallets Declared",
+    "Needs Verification": "Needs Verification", "Candidate": "Candidate",
+  };
+  return map[agent.verificationStatus] ?? agent.verificationStatus;
+}
+
+function cardStatusColor(agent: Agent): string {
+  const s = agent.verificationStatus;
+  if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#6DB874";
+  if (s === "Wallets Declared") return "#5B8FA8";
+  return "#7d828d";
+}
+
+// ── Share card modal ──────────────────────────────────────────────────────────
+
+function ShareCardModal({ agent, slug, classification, onClose }: {
+  agent: Agent;
+  slug: string;
+  classification?: SettlementClassification;
+  onClose: () => void;
+}) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const treasuryScore   = cardTreasuryScore(agent);
+  const transpScore     = cardTransparencyScore(agent);
+  const verdict         = cardVerdictSnippet(agent);
+  const vstatus         = cardStatusLabel(agent);
+
+  const healthColor =
+    agent.treasuryHealth === "Healthy" || agent.treasuryHealth === "Stable" ? "#2d6e35"
+    : agent.treasuryHealth === "Watch"   ? "#a06020"
+    : agent.treasuryHealth === "At Risk" ? "#a03030" : "#888";
+
+  const verifyColor =
+    agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
+      ? "#2d6e35"
+      : agent.verificationStatus === "Wallets Declared" ? "#376e8a" : "#888";
+
+  const visiblePatterns = (classification?.patterns ?? [])
+    .filter((p) => p !== "active_operational" && p !== "dormant" && CARD_PATTERN_LABEL[p])
+    .slice(0, 3);
+
+  const download = useCallback(async () => {
+    if (!cardRef.current) return;
+    setDownloading(true);
+    try {
+      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
+      const link = document.createElement("a");
+      link.download = `${slug}-x402books.png`;
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      setDownloading(false);
+    }
+  }, [slug]);
+
+  const shareToX = useCallback(() => {
+    const text = `${agent.name} · Treasury: ${agent.treasuryHealth} · ${vstatus} — tracked by x402Books AI`;
+    const url  = `https://www.x402books.xyz/registry/${slug}`;
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }, [agent.name, agent.treasuryHealth, vstatus, slug]);
+
+  // Prevent scroll-through on the body
   return (
-    <div style={{ position: "relative" }}>
-      <button type="button" className="prof-share-btn" onClick={() => setOpen(!open)} style={{ marginTop: 6 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>code</span>
-        Embed card
-      </button>
-      {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 8px)", right: 0, zIndex: 10,
-          background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10,
-          padding: "12px 14px", width: 340, boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
-        }}>
-          <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 8 }}>
-            Paste this iframe in any README, doc, or page:
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.72)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 24,
+        backdropFilter: "blur(4px)",
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, maxWidth: 660, width: "100%" }}>
+
+        {/* ── The card ── */}
+        <div
+          ref={cardRef}
+          style={{
+            position: "relative",
+            width: "100%", maxWidth: 620,
+            background: "#f0ece0",
+            borderRadius: 20,
+            overflow: "hidden",
+            padding: "32px 36px 26px",
+            boxShadow: "0 2px 40px rgba(0,0,0,0.12)",
+            fontFamily: "'Inter', system-ui, sans-serif",
+          }}
+        >
+          {/* Ghost watermark */}
+          <div style={{
+            position: "absolute", right: -10, top: "50%",
+            transform: "translateY(-50%)",
+            fontSize: 180, fontWeight: 800,
+            color: "rgba(80,70,50,0.045)",
+            letterSpacing: "-0.05em",
+            lineHeight: 1,
+            pointerEvents: "none",
+            userSelect: "none",
+          }}>x402</div>
+
+          {/* Brand row */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+            <div style={{ width: 18, height: 18, borderRadius: 4, background: "#3b7a45", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ width: 7, height: 7, borderRadius: 2, background: "#f0ece0" }} />
+            </div>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>x402Books AI</span>
+          </div>
+
+          {/* Headline */}
+          <p style={{ fontSize: "1.35rem", fontWeight: 300, color: "#7a7364", marginBottom: 8, lineHeight: 1.2 }}>
+            <strong style={{ fontWeight: 600, color: "#3c3830" }}>{agent.name}</strong> is tracked by x402Books
           </p>
-          <pre style={{
-            fontSize: "0.68rem", lineHeight: 1.5, color: "var(--ink)",
-            background: "var(--surface-soft)", borderRadius: 6, padding: "8px 10px",
-            whiteSpace: "pre-wrap", wordBreak: "break-all", marginBottom: 10,
-            border: "1px solid var(--line)",
-          }}>{snippet}</pre>
-          <button type="button" onClick={copy} style={{
-            width: "100%", padding: "7px 0", borderRadius: 7, border: "1px solid var(--line)",
-            background: "var(--surface-soft)", color: copied ? "var(--accent)" : "var(--ink)",
-            fontSize: "0.75rem", fontWeight: 600, cursor: "pointer", display: "flex",
-            alignItems: "center", justifyContent: "center", gap: 6,
-          }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
-              {copied ? "check" : "content_copy"}
+
+          {/* Hero stat */}
+          <p style={{ fontSize: "3.2rem", fontWeight: 700, color: healthColor, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
+            {agent.treasuryHealth === "Pending" ? "—" : agent.treasuryHealth}
+          </p>
+          <p style={{ fontSize: "0.75rem", color: "#9a9180", marginBottom: 22 }}>
+            Treasury Health · Score {agent.treasuryHealth === "Pending" ? "—" : `${treasuryScore}/100`}
+          </p>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "rgba(80,70,50,0.12)", marginBottom: 20 }} />
+
+          {/* Stats columns */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+              <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
+                {agent.financialActivityScore ?? "—"}
+              </span>
+              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Financial Activity</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
+              <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
+                {transpScore}
+              </span>
+              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Transparency Score</span>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: 700, color: verifyColor, marginTop: 4 }}>
+                {vstatus}
+              </span>
+              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Verification</span>
+            </div>
+          </div>
+
+          {/* Verdict */}
+          <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(80,70,50,0.12)", position: "relative", zIndex: 1 }}>
+            <p style={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(59,122,69,0.65)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
+              Luca&apos;s Verdict
+            </p>
+            <p style={{ fontSize: "0.74rem", color: "#7a7364", lineHeight: 1.6 }}>{verdict}</p>
+          </div>
+
+          {/* Footer */}
+          <div style={{ marginTop: 18, display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", zIndex: 1 }}>
+            <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+              {visiblePatterns.map((p) => (
+                <span key={p} style={{
+                  fontSize: "0.62rem", fontWeight: 600, padding: "2px 7px",
+                  borderRadius: 99, background: "rgba(80,70,50,0.07)",
+                  color: "#7a7364", border: "1px solid rgba(80,70,50,0.12)",
+                }}>
+                  {CARD_PATTERN_LABEL[p] ?? p}
+                </span>
+              ))}
+            </div>
+            <span style={{ fontSize: "0.66rem", color: "#b0a990" }}>
+              x402books.xyz/registry/{slug}
             </span>
-            {copied ? "Copied!" : "Copy snippet"}
+          </div>
+        </div>
+
+        {/* ── Action buttons ── */}
+        <div style={{ display: "flex", gap: 10, width: "100%", maxWidth: 420 }}>
+          <button
+            type="button"
+            onClick={download}
+            disabled={downloading}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              padding: "10px 16px", borderRadius: 10,
+              border: "1px solid rgba(109,184,116,0.3)",
+              background: "rgba(109,184,116,0.1)", color: "#6DB874",
+              fontSize: "0.82rem", fontWeight: 700, cursor: downloading ? "not-allowed" : "pointer",
+              opacity: downloading ? 0.6 : 1,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>download</span>
+            {downloading ? "Saving…" : "Download PNG"}
+          </button>
+          <button
+            type="button"
+            onClick={shareToX}
+            style={{
+              flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+              padding: "10px 16px", borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.05)", color: "#eae8e3",
+              fontSize: "0.82rem", fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            Share on X
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "10px 14px", borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(255,255,255,0.04)", color: "rgba(234,232,227,0.4)",
+              fontSize: "0.82rem", cursor: "pointer",
+            }}
+            aria-label="Close"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 }
@@ -418,6 +619,7 @@ function ClaimSection({ slug, status }: { slug: string; status: string }) {
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
+  const [showShare, setShowShare] = useState(false);
 
   return (
     <div className="prof-page">
@@ -480,12 +682,10 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </div>
           </div>
           <div className="prof-share-wrap">
-            <ShareButton slug={slug} />
-            <a href={`/registry/${slug}/card`} target="_blank" rel="noreferrer" className="prof-share-btn" style={{ textDecoration: "none" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>credit_card</span>
-              View card
-            </a>
-            <EmbedButton slug={slug} />
+            <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
+              Share
+            </button>
           </div>
         </div>
 
@@ -591,6 +791,15 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </p>
         </div>
       </main>
+
+      {showShare && (
+        <ShareCardModal
+          agent={agent}
+          slug={slug}
+          classification={classification}
+          onClose={() => setShowShare(false)}
+        />
+      )}
 
       <footer className="lp-footer">
         <div className="lp-footer-inner">
