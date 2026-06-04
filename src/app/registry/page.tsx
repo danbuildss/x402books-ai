@@ -216,7 +216,7 @@ function AgentCard({ agent }: { agent: Agent }) {
           {agent.wallets.length > 0 && (
             <div className="reg-card-section">
               <p className="reg-card-section-title">Wallets</p>
-              {agent.wallets.map((w) => (
+              {Array.from(new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
                 <div key={w.address} className="reg-card-wallet-row">
                   <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
                     {w.label}

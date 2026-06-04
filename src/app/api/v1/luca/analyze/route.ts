@@ -132,9 +132,11 @@ async function analyzeByAgentId(agentId: string) {
       avg_cost:     inferenceSummary.avgCostPerRequest,
       providers:    inferenceSummary.providersUsed,
     } : null,
-    wallets: agent.wallets.map((w) => ({
-      address: w.address,
-      role:    w.label,
+    wallets: Array.from(
+      new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()
+    ).map((w) => ({
+      address:  w.address,
+      role:     w.label,
       verified: walletsVerified,
     })),
     scores: {
@@ -217,7 +219,9 @@ async function analyzeByWallet(wallet: string) {
       providers:    inferenceSummary.providersUsed,
     } : null,
     wallets: agent
-      ? agent.wallets.map((w) => ({ address: w.address, role: w.label, verified: agentVerified }))
+      ? Array.from(
+          new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()
+        ).map((w) => ({ address: w.address, role: w.label, verified: agentVerified }))
       : [{ address: wallet, role: "unknown", verified: false }],
     scores: {
       financial_activity: agent?.financialActivityScore ?? null,
