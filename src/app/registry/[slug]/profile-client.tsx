@@ -503,13 +503,14 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
   );
 }
 
-// ── Claim section ────────────────────────────────────────────────────────────
+// ── Claim banner (top of body, unclaimed profiles only) ──────────────────────
 
-function ClaimSection({ slug, status }: { slug: string; status: string }) {
-  const [wallet, setWallet]   = useState("");
-  const [state, setState]     = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [matched, setMatched] = useState(false);
-  const [msg, setMsg]         = useState("");
+function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const [wallet, setWallet]     = useState("");
+  const [state, setState]       = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [matched, setMatched]   = useState(false);
+  const [msg, setMsg]           = useState("");
 
   if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
 
@@ -540,76 +541,107 @@ function ClaimSection({ slug, status }: { slug: string; status: string }) {
 
   return (
     <div style={{
-      marginTop: 24,
-      padding: "18px 20px",
-      border: "1px solid var(--line)",
       borderRadius: 12,
-      background: "var(--surface-soft)",
+      border: "1px solid rgba(109,184,116,0.22)",
+      borderLeft: "3px solid var(--accent)",
+      background: "var(--accent-soft)",
+      padding: expanded ? "16px 18px" : "13px 18px",
+      marginBottom: 20,
+      transition: "padding 0.15s",
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
-        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Own this agent? Claim your profile.</p>
-      </div>
-      <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 14, lineHeight: 1.55 }}>
-        Submit a wallet address that matches your declared manifest. If verified, your profile will show{" "}
-        <strong style={{ color: "var(--ink)" }}>Claimed by Team</strong> and unlock full trust signals.
-      </p>
-
       {state === "done" ? (
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18, color: matched ? "var(--accent)" : "#f59e0b", marginTop: 1 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 18, color: matched ? "var(--accent)" : "#f59e0b", marginTop: 1, flexShrink: 0 }}>
             {matched ? "check_circle" : "info"}
           </span>
           <div>
-            <p style={{ fontSize: "0.82rem", fontWeight: 600, color: matched ? "var(--accent)" : "#f59e0b", marginBottom: 3 }}>
-              {matched ? "Wallet matched — claim submitted" : "Claim submitted"}
+            <p style={{ fontSize: "0.84rem", fontWeight: 700, color: matched ? "var(--accent)" : "#f59e0b", marginBottom: 3 }}>
+              {matched ? "Wallet matched — claim under review" : "Claim submitted for review"}
             </p>
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{msg}</p>
-            {!matched && (
-              <a href="/registry#verify" style={{ fontSize: "0.75rem", color: "var(--accent)", display: "inline-block", marginTop: 6 }}>
-                Submit your wallet manifest →
-              </a>
-            )}
           </div>
         </div>
-      ) : (
-        <form onSubmit={submit} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <input
-            type="text"
-            placeholder="Your wallet address — 0x…"
-            value={wallet}
-            onChange={(e) => setWallet(e.target.value)}
-            pattern="^0x[0-9a-fA-F]{40}$"
-            required
-            style={{
-              flex: 1, minWidth: 200,
-              padding: "8px 12px", borderRadius: 8,
-              border: "1px solid var(--line)",
-              background: "var(--surface)",
-              color: "var(--ink)", fontSize: "0.82rem",
-              fontFamily: "monospace",
-              outline: "none",
-            }}
-          />
+      ) : !expanded ? (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)", flexShrink: 0 }}>handshake</span>
+            <p style={{ fontSize: "0.82rem", color: "var(--ink)", fontWeight: 500, margin: 0 }}>
+              Is this your agent?{" "}
+              <span style={{ color: "var(--muted)", fontWeight: 400 }}>
+                Claim <strong style={{ color: "var(--ink)" }}>{agentName}</strong> to verify ownership and boost your Transparency Score.
+              </span>
+            </p>
+          </div>
           <button
-            type="submit"
-            disabled={state === "loading"}
+            type="button"
+            onClick={() => setExpanded(true)}
             style={{
-              padding: "8px 16px", borderRadius: 8,
-              border: "1px solid rgba(109,184,116,0.3)",
-              background: "var(--accent-soft)", color: "var(--accent)",
-              fontSize: "0.82rem", fontWeight: 700,
-              cursor: state === "loading" ? "not-allowed" : "pointer",
-              opacity: state === "loading" ? 0.6 : 1,
+              flexShrink: 0,
+              padding: "7px 16px", borderRadius: 8,
+              border: "1px solid rgba(109,184,116,0.35)",
+              background: "var(--accent)", color: "#fff",
+              fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
               whiteSpace: "nowrap",
             }}
           >
-            {state === "loading" ? "Checking…" : "Claim Profile →"}
+            Claim Profile →
           </button>
-          {state === "error" && (
-            <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{msg}</p>
-          )}
-        </form>
+        </div>
+      ) : (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
+            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Claim {agentName}</p>
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.8rem" }}
+            >
+              ✕
+            </button>
+          </div>
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
+            Enter a wallet address that matches your declared manifest. A match fast-tracks verification.{" "}
+            <a href="/registry#verify" style={{ color: "var(--accent)" }}>No manifest yet?</a>
+          </p>
+          <form onSubmit={submit} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input
+              type="text"
+              placeholder="0x… your wallet address"
+              value={wallet}
+              onChange={(e) => setWallet(e.target.value)}
+              pattern="^0x[0-9a-fA-F]{40}$"
+              required
+              autoFocus
+              style={{
+                flex: 1, minWidth: 200,
+                padding: "8px 12px", borderRadius: 8,
+                border: "1px solid var(--line)",
+                background: "var(--surface)",
+                color: "var(--ink)", fontSize: "0.82rem",
+                fontFamily: "monospace", outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={state === "loading"}
+              style={{
+                padding: "8px 18px", borderRadius: 8,
+                border: "none",
+                background: "var(--accent)", color: "#fff",
+                fontSize: "0.82rem", fontWeight: 700,
+                cursor: state === "loading" ? "not-allowed" : "pointer",
+                opacity: state === "loading" ? 0.7 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {state === "loading" ? "Checking…" : "Submit Claim →"}
+            </button>
+            {state === "error" && (
+              <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{msg}</p>
+            )}
+          </form>
+        </div>
       )}
     </div>
   );
@@ -620,6 +652,9 @@ function ClaimSection({ slug, status }: { slug: string; status: string }) {
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
+  const transparencyScore = cardTransparencyScore(agent);
+  const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
+  const tsBg    = transparencyScore >= 70 ? "var(--accent-soft)" : transparencyScore >= 40 ? "rgba(91,143,168,0.08)" : "rgba(125,130,141,0.06)";
 
   return (
     <div className="prof-page">
@@ -682,6 +717,20 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </div>
           </div>
           <div className="prof-share-wrap">
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center",
+              padding: "10px 16px", borderRadius: 10,
+              background: tsBg,
+              border: `1px solid ${tsColor}22`,
+              gap: 2, marginBottom: 8,
+            }}>
+              <span style={{ fontSize: "1.5rem", fontWeight: 700, color: tsColor, lineHeight: 1, letterSpacing: "-0.02em" }}>
+                {transparencyScore}
+              </span>
+              <span style={{ fontSize: "0.62rem", color: "var(--muted)", fontWeight: 500, textAlign: "center", whiteSpace: "nowrap" }}>
+                Transparency Score
+              </span>
+            </div>
             <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
               Share
@@ -690,6 +739,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         </div>
 
         <div className="prof-body">
+          {/* Claim banner — top of body, unclaimed agents only */}
+          <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+
           {/* Luca's Verdict */}
           {agent.adminNotes && (
             <div className="prof-verdict">
@@ -780,9 +832,6 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               </section>
             )}
           </div>
-
-          {/* Claim profile */}
-          <ClaimSection slug={slug} status={agent.verificationStatus} />
 
           {/* Footer note */}
           <p className="prof-footer-note">
