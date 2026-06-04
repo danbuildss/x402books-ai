@@ -77,8 +77,9 @@ const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon
   "Candidate":          { cls: "candidate",        label: "Candidate"          },
   "Needs Verification": { cls: "needs-verify",     label: "Needs Verification" },
   "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"   },
-  "Verified":           { cls: "verified",         label: "Verified", icon: "verified" },
-  "Luca Managed":       { cls: "luca-managed",     label: "Luca Managed"       },
+  "Claimed":            { cls: "claimed",           label: "Claimed by Team", icon: "handshake" },
+  "Verified":           { cls: "verified",          label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed",      label: "Luca Managed"       },
 };
 
 function StatusBadge({ status }: { status: VerificationStatus }) {
@@ -757,7 +758,7 @@ export default function RegistryPage() {
             ))}
           </div>
           <div className="reg-eco-filter reg-status-filter">
-            {(["All", "Candidate", "Needs Verification", "Wallets Declared", "Verified", "Luca Managed"] as const).map((opt) => (
+            {(["All", "Candidate", "Needs Verification", "Wallets Declared", "Claimed", "Verified", "Luca Managed"] as const).map((opt) => (
               <button
                 key={opt}
                 type="button"
