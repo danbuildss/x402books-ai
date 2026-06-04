@@ -86,10 +86,11 @@ function HealthBadge({ h }: { h: Health }) {
 }
 
 const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
-  "Candidate":          { cls: "candidate",    label: "Candidate"          },
-  "Needs Verification": { cls: "needs-verify", label: "Needs Verification" },
-  "Verified":           { cls: "verified",     label: "Verified", icon: "verified" },
-  "Luca Managed":       { cls: "luca-managed", label: "Luca Managed"       },
+  "Candidate":          { cls: "candidate",       label: "Candidate"          },
+  "Needs Verification": { cls: "needs-verify",    label: "Needs Verification" },
+  "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"  },
+  "Verified":           { cls: "verified",         label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed",     label: "Luca Managed"       },
 };
 
 function StatusBadge({ status }: { status: VerificationStatus }) {
