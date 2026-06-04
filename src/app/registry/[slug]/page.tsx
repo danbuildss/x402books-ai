@@ -7,6 +7,8 @@ import type { Agent } from "@/app/registry/types";
 import type { Health } from "@/app/registry/types";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
+import { getInferenceEvents, summarizeInferenceEvents } from "@/lib/inference-events";
+import type { InferenceSummary } from "@/lib/inference-events";
 import { classifySettlementPattern } from "@/lib/luca-classify";
 import type { SettlementClassification } from "@/lib/luca-classify";
 import { ProfileClient } from "./profile-client";
@@ -62,6 +64,16 @@ async function getLucaEconomics(): Promise<AgentEconomicSummary | undefined> {
   }
 }
 
+async function getInferenceActivity(agentId: string): Promise<InferenceSummary | undefined> {
+  try {
+    const events = await getInferenceEvents(agentId, 30);
+    if (events.length === 0) return undefined;
+    return summarizeInferenceEvents(agentId, events, 30);
+  } catch {
+    return undefined;
+  }
+}
+
 const HEALTH_RATIO: Partial<Record<Health, number>> = {
   "Healthy":  0.72,
   "Stable":   0.95,
@@ -90,8 +102,9 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const economics      = slug === "luca" ? await getLucaEconomics() : undefined;
-  const classification = deriveClassification(agent);
+  const economics         = slug === "luca" ? await getLucaEconomics() : undefined;
+  const inferenceActivity = await getInferenceActivity(slug);
+  const classification    = deriveClassification(agent);
 
-  return <ProfileClient agent={agent} slug={slug} economics={economics} classification={classification} />;
+  return <ProfileClient agent={agent} slug={slug} economics={economics} inferenceActivity={inferenceActivity} classification={classification} />;
 }
