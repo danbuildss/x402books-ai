@@ -437,6 +437,10 @@ function RegistrySection({ secret }: { secret: string }) {
   const [deleteTarget, setDeleteTarget] = useState("");
   const [deleting, setDeleting]         = useState(false);
   const [deleteMsg, setDeleteMsg]       = useState("");
+  const [verdictTarget, setVerdictTarget] = useState("");
+  const [refreshing, setRefreshing]       = useState(false);
+  const [verdictMsg, setVerdictMsg]       = useState("");
+  const [verdictPreview, setVerdictPreview] = useState("");
 
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
 
@@ -476,6 +480,33 @@ function RegistrySection({ secret }: { secret: string }) {
       setDeleteMsg("✗ Network error");
     } finally {
       setDeleting(false);
+    }
+  }
+
+  async function refreshVerdict(e: React.FormEvent) {
+    e.preventDefault();
+    if (!verdictTarget.trim()) return;
+    setRefreshing(true);
+    setVerdictMsg("");
+    setVerdictPreview("");
+    try {
+      const res = await fetch("/api/admin/registry/refresh-verdict", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ agent_id: verdictTarget.trim().toLowerCase() }),
+      });
+      const d = await res.json() as { ok: boolean; agent?: string; verdict?: string; error?: string };
+      if (d.ok) {
+        setVerdictMsg(`✓ Verdict updated for "${d.agent}"`);
+        setVerdictPreview(d.verdict ?? "");
+        setVerdictTarget("");
+      } else {
+        setVerdictMsg(`✗ ${d.error}`);
+      }
+    } catch {
+      setVerdictMsg("✗ Network error");
+    } finally {
+      setRefreshing(false);
     }
   }
 
@@ -644,6 +675,41 @@ function RegistrySection({ secret }: { secret: string }) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Refresh Luca Verdict */}
+      <div className={styles.card} style={{ marginTop: 16 }}>
+        <p className={styles.cardTitle}>Refresh Luca Verdict</p>
+        <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
+          Generates a fresh verdict from live registry data — treasury health, settlement pattern, wallet status, activity score —
+          and writes it back to the agent&apos;s profile. Enter the agent slug (e.g. <code>aeon</code>, <code>luca</code>).
+        </p>
+        <form onSubmit={refreshVerdict} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            value={verdictTarget}
+            onChange={(e) => setVerdictTarget(e.target.value)}
+            placeholder="Agent slug, e.g. aeon"
+            className={styles.formInput}
+            style={{ flex: 1, minWidth: 180 }}
+          />
+          <button
+            type="submit"
+            disabled={refreshing || !verdictTarget.trim()}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: refreshing || !verdictTarget.trim() ? "not-allowed" : "pointer", opacity: refreshing || !verdictTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+          >
+            {refreshing ? "Generating…" : "Refresh Verdict →"}
+          </button>
+        </form>
+        {verdictMsg && (
+          <p style={{ margin: "8px 0 4px", fontSize: "0.8rem", color: verdictMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+            {verdictMsg}
+          </p>
+        )}
+        {verdictPreview && (
+          <p style={{ margin: "4px 0 0", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6, padding: "8px 10px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 6 }}>
+            {verdictPreview}
+          </p>
+        )}
       </div>
 
       {/* Danger Zone */}
