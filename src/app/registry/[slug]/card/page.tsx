@@ -41,13 +41,13 @@ function deriveDataStatus(agent: Agent): DataStatus {
   const hasLiveData = (agent.financialActivityScore ?? 0) >= 20;
   if (isVerified && hasLiveData) return "Live Financial Data";
   if (isVerified) return "Verified";
-  if (agent.wallets.length > 0) return "Wallets Declared";
+  if ((agent.wallets ?? []).length > 0) return "Wallets Declared";
   return "Candidate";
 }
 
 function deriveDataConfidence(agent: Agent): DataConfidence {
   const isVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
-  const hasWallets = agent.wallets.length > 0 || !!agent.tokenAddress;
+  const hasWallets = (agent.wallets ?? []).length > 0 || !!agent.tokenAddress;
   const hasActivity = (agent.financialActivityScore ?? 0) > 0;
   if (isVerified && hasWallets && hasActivity) return "High";
   if (isVerified || hasWallets) return "Medium";
@@ -86,7 +86,7 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
     totalOutflow:        isActive ? 100 * ratio : 0,
     txCount:             isActive ? Math.max(10, score) : 0,
     categories:          [],
-    walletRolesDeclared: agent.wallets.length > 0,
+    walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });
 
   const visiblePatterns = classification.patterns

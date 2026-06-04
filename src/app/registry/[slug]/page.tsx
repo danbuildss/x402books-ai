@@ -93,7 +93,7 @@ function deriveClassification(agent: Agent): SettlementClassification {
     totalOutflow,
     txCount:             isActive ? Math.max(10, score) : 0,
     categories:          [],
-    walletRolesDeclared: agent.wallets.length > 0,
+    walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });
 }
 

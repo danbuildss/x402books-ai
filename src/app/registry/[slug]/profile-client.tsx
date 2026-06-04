@@ -435,7 +435,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                   {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
                 </div>
               ))}
-              {!agent.tokenAddress && agent.wallets.length === 0 && (
+              {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
                 <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
               )}
             </section>
@@ -453,7 +453,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             )}
 
             {/* Report CTA */}
-            {(agent.tokenAddress || agent.wallets.length > 0) && (
+            {(agent.tokenAddress || (agent.wallets ?? []).length > 0) && (
               <section className="prof-section">
                 <p className="prof-section-title">Treasury Report</p>
                 <a
