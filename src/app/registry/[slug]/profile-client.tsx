@@ -136,17 +136,15 @@ function cardTreasuryScore(agent: Agent): number {
 }
 
 function cardTransparencyScore(agent: Agent): number {
-  // Verification tier is the primary signal — each tier has a hard ceiling
-  // Candidate+all data=36 · Wallets Declared+all=56 · Claimed+all=76 · Verified+all=94 · LM+all=98
   let s = 0;
-  if      (agent.verificationStatus === "Luca Managed")    s += 62;
-  else if (agent.verificationStatus === "Verified")        s += 58;
-  else if (agent.verificationStatus === "Claimed")         s += 40;
-  else if (agent.verificationStatus === "Wallets Declared") s += 20;
-  // Data richness — additive regardless of tier
-  if ((agent.financialActivityScore ?? 0) > 0) s += 18;
-  if (agent.evidenceSources.length > 0)        s += 10;
-  if (agent.adminNotes)                         s += 8;
+  const wallets = agent.wallets ?? [];
+  if (wallets.length > 0) s += 30;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
+  else if (agent.verificationStatus === "Claimed")          s += 20;
+  else if (agent.verificationStatus === "Wallets Declared") s += 10;
+  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
+  if (agent.evidenceSources.length > 0) s += 10;
+  if (agent.adminNotes) s += 10;
   return Math.min(100, s);
 }
 
