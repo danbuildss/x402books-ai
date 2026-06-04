@@ -9,49 +9,40 @@ import { toSlug } from "../slug";
 
 export const revalidate = 60;
 
-const HEALTH_RATIO: Partial<Record<string, number>> = {
-  "Healthy": 0.72, "Stable": 0.95, "Watch": 1.35, "At Risk": 1.90,
-};
-
-const PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
-  stable_treasury:           "Stable Treasury",
-  revenue_generating:        "Revenue",
-  high_spend_low_revenue:    "High Spend",
-  heavy_outbound_settlement: "Heavy Outbound",
-  recurring_flow_detected:   "Recurring Flows",
-  incomplete_wallet_role:    "Roles Unverified",
-  dormant:                   "Dormant",
-};
-
-const PATTERN_COLOR: Partial<Record<SettlementPattern, string>> = {
-  stable_treasury:           "var(--accent)",
-  revenue_generating:        "var(--blue)",
-  high_spend_low_revenue:    "#f87171",
-  heavy_outbound_settlement: "#f59e0b",
-  recurring_flow_detected:   "var(--blue)",
-  incomplete_wallet_role:    "#f59e0b",
-  dormant:                   "var(--muted)",
-};
-
-type DataStatus = "Candidate" | "Wallets Declared" | "Verified" | "Live Financial Data";
-type DataConfidence = "Low" | "Medium" | "High";
-
-function deriveDataStatus(agent: Agent): DataStatus {
-  const isVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
-  const hasLiveData = (agent.financialActivityScore ?? 0) >= 20;
-  if (isVerified && hasLiveData) return "Live Financial Data";
-  if (isVerified) return "Verified";
-  if ((agent.wallets ?? []).length > 0) return "Wallets Declared";
-  return "Candidate";
+function deriveTreasuryScore(agent: Agent): number {
+  const map: Record<string, number> = { Healthy: 92, Stable: 78, Watch: 45, "At Risk": 18 };
+  return map[agent.treasuryHealth] ?? 0;
 }
 
-function deriveDataConfidence(agent: Agent): DataConfidence {
-  const isVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
-  const hasWallets = (agent.wallets ?? []).length > 0 || !!agent.tokenAddress;
-  const hasActivity = (agent.financialActivityScore ?? 0) > 0;
-  if (isVerified && hasWallets && hasActivity) return "High";
-  if (isVerified || hasWallets) return "Medium";
-  return "Low";
+function deriveTransparencyScore(agent: Agent): number {
+  let s = 0;
+  const wallets = agent.wallets ?? [];
+  if (wallets.length > 0) s += 30;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
+  else if (agent.verificationStatus === "Claimed")          s += 20;
+  else if (agent.verificationStatus === "Wallets Declared") s += 10;
+  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
+  if (agent.evidenceSources.length > 0) s += 10;
+  if (agent.adminNotes) s += 10;
+  return Math.min(100, s);
+}
+
+function statusLabel(agent: Agent): string {
+  const map: Record<string, string> = {
+    "Verified": "Verified", "Luca Managed": "Luca Managed",
+    "Claimed": "Claimed by Team", "Wallets Declared": "Wallets Declared",
+    "Needs Verification": "Needs Verification", "Candidate": "Candidate",
+  };
+  return map[agent.verificationStatus] ?? agent.verificationStatus;
+}
+
+function lucaVerdict(agent: Agent): string {
+  if (!agent.adminNotes) return `${agent.name} is indexed in the registry. No verdict available yet.`;
+  const notes = agent.adminNotes.trim();
+  if (notes.length <= 160) return notes;
+  const cut = notes.slice(0, 160);
+  const lastDot = cut.lastIndexOf(".");
+  return lastDot > 80 ? cut.slice(0, lastDot + 1) : cut + "…";
 }
 
 async function getAgent(slug: string): Promise<Agent | null> {
@@ -68,8 +59,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const agent = await getAgent(slug);
   if (!agent) return { title: "Agent not found" };
   return {
-    title: `${agent.name} — x402Books Agent Card`,
-    description: `Financial profile card for ${agent.name}. Treasury: ${agent.treasuryHealth}. Tracked by x402Books AI.`,
+    title: `${agent.name} — x402Books Registry Card`,
+    description: `${agent.name} · Treasury: ${agent.treasuryHealth} · ${statusLabel(agent)} · Tracked by x402Books AI.`,
   };
 }
 
@@ -78,45 +69,41 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const score     = agent.financialActivityScore ?? 0;
-  const isActive  = score >= 10;
-  const ratio     = HEALTH_RATIO[agent.treasuryHealth] ?? 1.0;
+  const score             = agent.financialActivityScore ?? 0;
+  const isActive          = score >= 10;
+  const treasuryScore     = deriveTreasuryScore(agent);
+  const transparencyScore = deriveTransparencyScore(agent);
+  const vstatus           = statusLabel(agent);
+  const verdict           = lucaVerdict(agent);
+
+  const healthColor =
+    agent.treasuryHealth === "Healthy" || agent.treasuryHealth === "Stable" ? "#2d6e35"
+    : agent.treasuryHealth === "Watch"   ? "#a06020"
+    : agent.treasuryHealth === "At Risk" ? "#a03030" : "#888";
+
+  const verifyColor =
+    agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
+      ? "#2d6e35"
+      : agent.verificationStatus === "Wallets Declared" ? "#376e8a"
+      : "#888";
+
   const classification = classifySettlementPattern({
     totalInflow:         isActive ? 100 : 0,
-    totalOutflow:        isActive ? 100 * ratio : 0,
+    totalOutflow:        isActive ? 100 * (({ Healthy: 0.72, Stable: 0.95, Watch: 1.35, "At Risk": 1.90 } as Record<string, number>)[agent.treasuryHealth] ?? 1) : 0,
     txCount:             isActive ? Math.max(10, score) : 0,
     categories:          [],
     walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });
 
-  const visiblePatterns = classification.patterns
-    .filter((p) => p !== "active_operational" && PATTERN_LABEL[p])
-    .slice(0, 4);
+  const patterns: SettlementPattern[] = classification.patterns
+    .filter((p): p is SettlementPattern => p !== "active_operational" && p !== "dormant")
+    .slice(0, 3);
 
-  const dataStatus     = deriveDataStatus(agent);
-  const dataConfidence = deriveDataConfidence(agent);
-  const isVerified     = dataStatus === "Verified" || dataStatus === "Live Financial Data";
-
-  const healthColor =
-    agent.treasuryHealth === "Healthy" ? "#6DB874" :
-    agent.treasuryHealth === "Stable"  ? "#6DB874" :
-    agent.treasuryHealth === "Watch"   ? "#f59e0b" :
-    agent.treasuryHealth === "At Risk" ? "#f87171" : "#7d828d";
-
-  const ecoColor =
-    agent.ecosystem === "BANKR"       ? "#6DB874" :
-    agent.ecosystem === "Virtuals"    ? "#5B8FA8" :
-    agent.ecosystem === "AEON"        ? "#8B5CF6" :
-    agent.ecosystem === "EigenCloud"  ? "#F97316" : "#C9A84C";
-
-  const statusColor =
-    dataStatus === "Live Financial Data" ? "#6DB874" :
-    dataStatus === "Verified"            ? "#6DB874" :
-    dataStatus === "Wallets Declared"    ? "#5B8FA8" : "#7d828d";
-
-  const confidenceColor =
-    dataConfidence === "High"   ? "#6DB874" :
-    dataConfidence === "Medium" ? "#f59e0b" : "#7d828d";
+  const PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
+    stable_treasury: "Stable Treasury", revenue_generating: "Revenue Activity",
+    high_spend_low_revenue: "High Spend", heavy_outbound_settlement: "Heavy Outbound",
+    recurring_flow_detected: "Recurring Flows", incomplete_wallet_role: "Roles Unverified",
+  };
 
   return (
     <html lang="en">
@@ -125,166 +112,204 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <style>{`
           *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body { width: 100%; min-height: 100%; background: #0d0f0e; font-family: 'Inter', sans-serif; }
-          body { display: flex; align-items: center; justify-content: center; padding: 24px; }
+          html, body {
+            width: 100%; min-height: 100%;
+            background: #ddd9cc;
+            font-family: 'Inter', system-ui, sans-serif;
+          }
+          body {
+            display: flex; align-items: center; justify-content: center;
+            padding: 32px 24px;
+          }
+
           .card {
-            width: 100%; max-width: 400px;
-            background: #141714;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 14px;
+            position: relative;
+            width: 100%; max-width: 660px;
+            background: #f0ece0;
+            border-radius: 20px;
             overflow: hidden;
+            padding: 36px 40px 30px;
+            box-shadow: 0 2px 40px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
           }
-          .card-top { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); }
-          .name-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-          .name { font-size: 1.15rem; font-weight: 700; color: #e8e6e1; }
-          .symbol { font-size: 0.78rem; color: rgba(232,230,225,0.4); font-weight: 500; }
-          .badges { display: flex; gap: 6px; flex-wrap: wrap; }
-          .badge {
-            font-size: 0.68rem; font-weight: 600;
-            padding: 2px 8px; border-radius: 99px;
-            border: 1px solid;
+
+          /* Ghost watermark */
+          .card-watermark {
+            position: absolute;
+            right: -20px; top: 50%;
+            transform: translateY(-50%);
+            font-size: 200px; font-weight: 800;
+            color: rgba(80,70,50,0.045);
+            letter-spacing: -0.05em;
+            pointer-events: none;
+            user-select: none;
+            line-height: 1;
           }
-          .card-status {
-            padding: 10px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px;
-          }
-          .status-pair { display: flex; flex-direction: column; gap: 3px; }
-          .status-label { font-size: 0.62rem; color: rgba(232,230,225,0.3); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-          .status-val { font-size: 0.75rem; font-weight: 700; }
-          .status-divider { width: 1px; height: 28px; background: rgba(255,255,255,0.07); }
-          .card-scores { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 8px; }
-          .score-row { display: flex; align-items: center; gap: 10px; }
-          .score-label { font-size: 0.75rem; color: rgba(232,230,225,0.45); width: 130px; flex-shrink: 0; }
-          .score-track { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 99px; overflow: hidden; }
-          .score-fill { height: 100%; border-radius: 99px; }
-          .score-val { font-size: 0.75rem; font-weight: 700; color: #e8e6e1; width: 24px; text-align: right; }
-          .card-patterns { padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; flex-wrap: wrap; gap: 6px; }
-          .pattern-pill {
-            font-size: 0.68rem; font-weight: 600;
-            padding: 3px 9px; border-radius: 99px;
-            border: 1px solid;
-          }
-          .card-claim {
-            padding: 12px 20px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+
+          /* Brand row */
+          .card-brand {
             display: flex; align-items: center; gap: 8px;
+            margin-bottom: 28px;
           }
-          .claim-dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; }
-          .claim-text { font-size: 0.72rem; color: rgba(232,230,225,0.5); flex: 1; line-height: 1.45; }
-          .claim-link { font-size: 0.72rem; font-weight: 600; color: #6DB874; text-decoration: none; white-space: nowrap; }
-          .claim-link:hover { text-decoration: underline; }
-          .card-bottom {
-            padding: 12px 20px;
+          .brand-dot {
+            width: 20px; height: 20px; border-radius: 5px;
+            background: #3b7a45;
+            display: flex; align-items: center; justify-content: center;
+          }
+          .brand-dot-inner {
+            width: 8px; height: 8px; border-radius: 2px;
+            background: #f0ece0;
+          }
+          .brand-name {
+            font-size: 0.8rem; font-weight: 700;
+            color: #3b5e43; letter-spacing: 0.01em;
+          }
+
+          /* Hero */
+          .card-headline {
+            font-size: 1.5rem; font-weight: 300;
+            color: #7a7364;
+            margin-bottom: 10px;
+            line-height: 1.2;
+          }
+          .card-headline strong {
+            font-weight: 600; color: #3c3830;
+          }
+
+          .card-hero {
+            font-size: 3.6rem; font-weight: 700;
+            color: ${healthColor};
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 6px;
+          }
+          .card-hero-label {
+            font-size: 0.78rem; color: #9a9180;
+            font-weight: 400; margin-bottom: 24px;
+          }
+
+          /* Divider */
+          .card-divider {
+            width: 100%; height: 1px;
+            background: rgba(80,70,50,0.12);
+            margin-bottom: 22px;
+          }
+
+          /* Stats row */
+          .card-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            position: relative;
+            z-index: 1;
+          }
+          .stat-col { display: flex; flex-direction: column; gap: 4px; }
+          .stat-col + .stat-col { border-left: 1px solid rgba(80,70,50,0.1); padding-left: 20px; }
+          .stat-num {
+            font-size: 1.35rem; font-weight: 600;
+            color: #3c3830; letter-spacing: -0.02em;
+            font-variant-numeric: tabular-nums;
+          }
+          .stat-label {
+            font-size: 0.7rem; color: #9a9180;
+            font-weight: 400;
+          }
+          .stat-badge {
+            display: inline-block;
+            font-size: 0.7rem; font-weight: 600;
+            padding: 2px 8px; border-radius: 99px;
+            margin-top: 2px;
+          }
+
+          /* Verdict */
+          .card-verdict {
+            margin-top: 20px; padding-top: 18px;
+            border-top: 1px solid rgba(80,70,50,0.12);
+            position: relative; z-index: 1;
+          }
+          .verdict-label {
+            font-size: 0.62rem; font-weight: 700;
+            color: rgba(59,122,69,0.65);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            margin-bottom: 6px;
+          }
+          .verdict-text {
+            font-size: 0.76rem; color: #7a7364;
+            line-height: 1.6; font-weight: 400;
+          }
+
+          /* Footer */
+          .card-footer {
+            margin-top: 22px;
             display: flex; align-items: center; justify-content: space-between;
+            position: relative; z-index: 1;
           }
-          .x402-brand { font-size: 0.72rem; color: rgba(232,230,225,0.3); font-weight: 600; letter-spacing: 0.01em; }
-          .view-link {
-            font-size: 0.72rem; font-weight: 600; color: #6DB874;
-            text-decoration: none; display: flex; align-items: center; gap: 4px;
+          .footer-patterns { display: flex; gap: 5px; flex-wrap: wrap; }
+          .pattern-pill {
+            font-size: 0.63rem; font-weight: 600;
+            padding: 2px 7px; border-radius: 99px;
+            background: rgba(80,70,50,0.07);
+            color: #7a7364; border: 1px solid rgba(80,70,50,0.12);
           }
-          .view-link:hover { text-decoration: underline; }
+          .footer-url {
+            font-size: 0.68rem; color: #b0a990;
+            font-weight: 400; white-space: nowrap;
+          }
         `}</style>
       </head>
       <body>
         <div className="card">
-          {/* Identity */}
-          <div className="card-top">
-            <div className="name-row">
-              <span className="name">{agent.name}</span>
-              <span className="symbol">{agent.symbol}</span>
+          <div className="card-watermark">x402</div>
+
+          {/* Brand */}
+          <div className="card-brand">
+            <div className="brand-dot"><div className="brand-dot-inner" /></div>
+            <span className="brand-name">x402Books AI</span>
+          </div>
+
+          {/* Hero */}
+          <p className="card-headline">
+            <strong>{agent.name}</strong> is tracked by x402Books
+          </p>
+          <p className="card-hero">
+            {agent.treasuryHealth === "Pending" ? "—" : agent.treasuryHealth}
+          </p>
+          <p className="card-hero-label">Treasury Health · Score {treasuryScore}/100</p>
+
+          <div className="card-divider" />
+
+          {/* Stats */}
+          <div className="card-stats">
+            <div className="stat-col">
+              <span className="stat-num">{agent.financialActivityScore ?? "—"}</span>
+              <span className="stat-label">Financial Activity</span>
             </div>
-            <div className="badges">
-              <span className="badge" style={{ color: ecoColor, borderColor: `color-mix(in srgb, ${ecoColor} 30%, transparent)`, background: `color-mix(in srgb, ${ecoColor} 10%, transparent)` }}>
-                {agent.ecosystem}
-              </span>
-              <span className="badge" style={{ color: healthColor, borderColor: `color-mix(in srgb, ${healthColor} 30%, transparent)`, background: `color-mix(in srgb, ${healthColor} 10%, transparent)` }}>
-                {agent.treasuryHealth}
-              </span>
+            <div className="stat-col" style={{ paddingLeft: 20 }}>
+              <span className="stat-num">{transparencyScore}</span>
+              <span className="stat-label">Transparency Score</span>
+            </div>
+            <div className="stat-col" style={{ paddingLeft: 20 }}>
+              <span className="stat-num" style={{ fontSize: "0.85rem", color: verifyColor, marginTop: 4 }}>{vstatus}</span>
+              <span className="stat-label">Verification</span>
             </div>
           </div>
 
-          {/* Status + confidence row */}
-          <div className="card-status">
-            <div className="status-pair">
-              <span className="status-label">Profile Status</span>
-              <span className="status-val" style={{ color: statusColor }}>{dataStatus}</span>
-            </div>
-            <div className="status-divider" />
-            <div className="status-pair" style={{ textAlign: "right" }}>
-              <span className="status-label">Data Confidence</span>
-              <span className="status-val" style={{ color: confidenceColor }}>{dataConfidence}</span>
-            </div>
+          {/* Verdict */}
+          <div className="card-verdict">
+            <p className="verdict-label">Luca&apos;s Verdict</p>
+            <p className="verdict-text">{verdict}</p>
           </div>
-
-          {/* Scores */}
-          {(agent.financialActivityScore !== null || agent.partnershipFitScore !== null) && (
-            <div className="card-scores">
-              {agent.financialActivityScore !== null && (
-                <div className="score-row">
-                  <span className="score-label">Financial Activity</span>
-                  <div className="score-track">
-                    <div className="score-fill" style={{ width: `${agent.financialActivityScore}%`, background: agent.financialActivityScore >= 70 ? "#6DB874" : agent.financialActivityScore >= 40 ? "#5B8FA8" : "#666" }} />
-                  </div>
-                  <span className="score-val">{agent.financialActivityScore}</span>
-                </div>
-              )}
-              {agent.partnershipFitScore !== null && (
-                <div className="score-row">
-                  <span className="score-label">Partnership Fit</span>
-                  <div className="score-track">
-                    <div className="score-fill" style={{ width: `${agent.partnershipFitScore}%`, background: agent.partnershipFitScore >= 70 ? "#6DB874" : agent.partnershipFitScore >= 40 ? "#5B8FA8" : "#666" }} />
-                  </div>
-                  <span className="score-val">{agent.partnershipFitScore}</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Settlement patterns */}
-          {visiblePatterns.length > 0 && (
-            <div className="card-patterns">
-              {visiblePatterns.map((p) => (
-                <span
-                  key={p}
-                  className="pattern-pill"
-                  style={{
-                    color: PATTERN_COLOR[p] ?? "rgba(232,230,225,0.5)",
-                    borderColor: `color-mix(in srgb, ${PATTERN_COLOR[p] ?? "rgba(232,230,225,0.5)"} 30%, transparent)`,
-                    background: `color-mix(in srgb, ${PATTERN_COLOR[p] ?? "rgba(232,230,225,0.5)"} 10%, transparent)`,
-                  }}
-                >
-                  {PATTERN_LABEL[p]}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {/* Claim / verify CTA for unverified profiles */}
-          {!isVerified && (
-            <div className="card-claim">
-              <span className="claim-dot" />
-              <span className="claim-text">
-                {dataStatus === "Wallets Declared"
-                  ? "Wallets declared — submit for Luca verification to upgrade this profile."
-                  : "This profile is based on public data. Submit a wallet manifest to verify."}
-              </span>
-              <a href={`https://www.x402books.xyz/registry#verify`} target="_blank" rel="noreferrer" className="claim-link">
-                Verify →
-              </a>
-            </div>
-          )}
 
           {/* Footer */}
-          <div className="card-bottom">
-            <span className="x402-brand">x402Books AI</span>
-            <a href={`https://www.x402books.xyz/registry/${slug}`} target="_blank" rel="noreferrer" className="view-link">
-              Full profile →
-            </a>
+          <div className="card-footer">
+            <div className="footer-patterns">
+              {patterns.map((p) => (
+                <span key={p} className="pattern-pill">{PATTERN_LABEL[p] ?? p}</span>
+              ))}
+            </div>
+            <span className="footer-url">x402books.xyz/registry/{slug}</span>
           </div>
         </div>
       </body>
