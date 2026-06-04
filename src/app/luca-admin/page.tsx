@@ -434,6 +434,9 @@ function RegistrySection({ secret }: { secret: string }) {
   const [acting, setActing]             = useState<string | null>(null);
   const [seeding, setSeeding]           = useState(false);
   const [seedMsg, setSeedMsg]           = useState("");
+  const [deleteTarget, setDeleteTarget] = useState("");
+  const [deleting, setDeleting]         = useState(false);
+  const [deleteMsg, setDeleteMsg]       = useState("");
 
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
 
@@ -448,6 +451,31 @@ function RegistrySection({ secret }: { secret: string }) {
       setSeedMsg("✗ Network error");
     } finally {
       setSeeding(false);
+    }
+  }
+
+  async function deleteAgent(e: React.FormEvent) {
+    e.preventDefault();
+    if (!deleteTarget.trim()) return;
+    setDeleting(true);
+    setDeleteMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/delete-agent", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ name: deleteTarget.trim() }),
+      });
+      const d = await res.json() as { ok: boolean; deleted?: number; name?: string; error?: string };
+      if (d.ok) {
+        setDeleteMsg(`✓ Deleted "${d.name}" (${d.deleted} row${d.deleted === 1 ? "" : "s"})`);
+        setDeleteTarget("");
+      } else {
+        setDeleteMsg(`✗ ${d.error}`);
+      }
+    } catch {
+      setDeleteMsg("✗ Network error");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -616,6 +644,37 @@ function RegistrySection({ secret }: { secret: string }) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className={styles.card} style={{ marginTop: 16, border: "1px solid rgba(239,68,68,0.25)" }}>
+        <p className={styles.cardTitle} style={{ color: "#ef4444" }}>Danger Zone — Delete Agent Row</p>
+        <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
+          Permanently removes an agent and all its wallet rows from the DB. Use this to clean up ghost rows
+          before re-submitting a manifest (e.g. <code>AEON</code> vs <code>Aeon</code> casing mismatches).
+          Enter the <strong>exact name</strong> as it appears in the DB.
+        </p>
+        <form onSubmit={deleteAgent} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            value={deleteTarget}
+            onChange={(e) => setDeleteTarget(e.target.value)}
+            placeholder="Exact agent name, e.g. AEON"
+            className={styles.formInput}
+            style={{ flex: 1, minWidth: 180 }}
+          />
+          <button
+            type="submit"
+            disabled={deleting || !deleteTarget.trim()}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#ef4444", fontSize: "0.8rem", fontWeight: 700, cursor: deleting || !deleteTarget.trim() ? "not-allowed" : "pointer", opacity: deleting || !deleteTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+          >
+            {deleting ? "Deleting…" : "Delete Agent →"}
+          </button>
+        </form>
+        {deleteMsg && (
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: deleteMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+            {deleteMsg}
+          </p>
+        )}
       </div>
     </div>
   );
