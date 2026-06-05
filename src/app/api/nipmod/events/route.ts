@@ -37,24 +37,14 @@ export async function POST(req: NextRequest) {
   const validRisk     = ["low", "medium", "high", "unknown"];
   const validDecision = ["install", "reject", "defer", "unknown"];
 
-  // Normalize agent_id to lowercase slug so it matches registry profile URLs
-  const normalizedAgentId = String(agent_id).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-  // Parse timestamp safely — fall back to now() if malformed
-  let eventTime = new Date().toISOString();
-  if (timestamp) {
-    const parsed = new Date(String(timestamp));
-    if (!isNaN(parsed.getTime())) eventTime = parsed.toISOString();
-  }
-
   const row = {
-    agent_id:    normalizedAgentId,
-    package:     String(pkg),
-    source:      source ? String(source) : null,
+    agent_id:   String(agent_id),
+    package:    String(pkg),
+    source:     source ? String(source) : null,
     trust_score: typeof trust_score === "number" ? Math.min(100, Math.max(0, trust_score)) : null,
     risk_level:  risk_level && validRisk.includes(String(risk_level)) ? String(risk_level) : "unknown",
     decision:    decision && validDecision.includes(String(decision)) ? String(decision) : "unknown",
-    event_time:  eventTime,
+    event_time:  timestamp ? new Date(timestamp).toISOString() : new Date().toISOString(),
     raw:         body,
   };
 
