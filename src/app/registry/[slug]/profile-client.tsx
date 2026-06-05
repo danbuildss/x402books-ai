@@ -10,6 +10,7 @@ import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
+import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 
 // ── Settlement pattern display ────────────────────────────────────────────────
 
@@ -503,6 +504,95 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
   );
 }
 
+// ── Tool Decisions block (Nipmod integration) ────────────────────────────────
+
+const RISK_STYLE: Record<string, { color: string; bg: string; border: string }> = {
+  low:     { color: "var(--accent)", bg: "rgba(109,184,116,0.08)", border: "rgba(109,184,116,0.18)" },
+  medium:  { color: "#f59e0b",       bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.18)"  },
+  high:    { color: "#f87171",       bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.18)" },
+  unknown: { color: "var(--muted)",  bg: "rgba(125,130,141,0.06)", border: "rgba(125,130,141,0.14)" },
+};
+
+const DECISION_ICON: Record<string, string> = {
+  install: "check_circle",
+  reject:  "cancel",
+  defer:   "schedule",
+  unknown: "help",
+};
+
+function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
+  if (events.length === 0) return null;
+
+  const installs = events.filter((e) => e.decision === "install").length;
+  const rejects  = events.filter((e) => e.decision === "reject").length;
+  const highRisk = events.filter((e) => e.risk_level === "high").length;
+
+  return (
+    <section className="prof-section">
+      <p className="prof-section-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        Tool Decisions
+        <span style={{ fontSize: "0.65rem", fontWeight: 500, color: "var(--muted)", background: "var(--surface-soft)", padding: "1px 6px", borderRadius: 99, border: "1px solid var(--line)" }}>
+          via Nipmod
+        </span>
+      </p>
+
+      {/* Summary row */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+        {[
+          { label: "Installed", value: installs, color: "var(--accent)" },
+          { label: "Rejected",  value: rejects,  color: "#f87171" },
+          { label: "High Risk", value: highRisk,  color: "#f59e0b" },
+        ].map(({ label, value, color }) => (
+          <div key={label} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <span style={{ fontSize: "1rem", fontWeight: 700, color, lineHeight: 1 }}>{value}</span>
+            <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Event list */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {events.slice(0, 6).map((e) => {
+          const rs = RISK_STYLE[e.risk_level] ?? RISK_STYLE.unknown;
+          return (
+            <div key={e.id} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "7px 10px", borderRadius: 8,
+              background: "var(--surface-soft)", border: "1px solid var(--line)",
+            }}>
+              <span className="material-symbols-outlined" style={{
+                fontSize: 14,
+                color: e.decision === "install" ? "var(--accent)" : e.decision === "reject" ? "#f87171" : "var(--muted)",
+                flexShrink: 0,
+              }}>
+                {DECISION_ICON[e.decision] ?? "help"}
+              </span>
+              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--ink)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {e.package}
+              </span>
+              {e.source && (
+                <span style={{ fontSize: "0.68rem", color: "var(--muted)", flexShrink: 0 }}>{e.source}</span>
+              )}
+              <span style={{
+                fontSize: "0.64rem", fontWeight: 600, padding: "2px 6px", borderRadius: 99,
+                color: rs.color, background: rs.bg, border: `1px solid ${rs.border}`,
+                flexShrink: 0, textTransform: "capitalize",
+              }}>
+                {e.risk_level}
+              </span>
+              {e.trust_score !== null && (
+                <span style={{ fontSize: "0.68rem", color: "var(--muted)", flexShrink: 0 }}>
+                  {e.trust_score}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ── Claim banner (top of body, unclaimed profiles only) ──────────────────────
 
 function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
@@ -649,7 +739,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[] }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
@@ -778,6 +868,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
             {/* Agent Economics (Luca self-profile only) */}
             {economics && <AgentEconomicsBlock economics={economics} />}
+
+            {/* Tool Decisions (Nipmod integration) */}
+            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
 
             {/* Wallets */}
             <section className="prof-section">

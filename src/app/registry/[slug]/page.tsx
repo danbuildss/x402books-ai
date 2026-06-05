@@ -9,6 +9,8 @@ import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import { getInferenceEvents, summarizeInferenceEvents } from "@/lib/inference-events";
 import type { InferenceSummary } from "@/lib/inference-events";
+import { getToolDecisions } from "@/lib/tool-decisions";
+import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import { classifySettlementPattern } from "@/lib/luca-classify";
 import type { SettlementClassification } from "@/lib/luca-classify";
 import { ProfileClient } from "./profile-client";
@@ -105,6 +107,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   const economics         = slug === "luca" ? await getLucaEconomics() : undefined;
   const inferenceActivity = await getInferenceActivity(slug);
   const classification    = deriveClassification(agent);
+  const toolDecisions     = await getToolDecisions(slug);
 
-  return <ProfileClient agent={agent} slug={slug} economics={economics} inferenceActivity={inferenceActivity} classification={classification} />;
+  return <ProfileClient agent={agent} slug={slug} economics={economics} inferenceActivity={inferenceActivity} classification={classification} toolDecisions={toolDecisions} />;
 }
