@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
+import "./validate.css";
 
 // ── Schema constants (mirror wallets.schema.json) ─────────────────────────────
 
@@ -37,7 +38,6 @@ function validateManifest(raw: unknown): ValidationError[] {
 
   const obj = raw as Record<string, unknown>;
 
-  // Required top-level fields
   for (const field of ["agent", "project", "ecosystem", "wallets"]) {
     if (!(field in obj)) {
       errors.push({ path: field, message: `Required field "${field}" is missing` });
@@ -69,7 +69,6 @@ function validateManifest(raw: unknown): ValidationError[] {
     }
   }
 
-  // Wallets array
   if ("wallets" in obj) {
     if (!Array.isArray(obj.wallets)) {
       errors.push({ path: "wallets", message: '"wallets" must be an array' });
@@ -84,13 +83,11 @@ function validateManifest(raw: unknown): ValidationError[] {
         }
         const wallet = w as Record<string, unknown>;
 
-        // Required wallet fields
         for (const f of ["address", "chain", "role", "verification_method"]) {
           if (!(f in wallet)) {
             errors.push({ path: `${prefix}.${f}`, message: `Required field "${f}" is missing` });
           }
         }
-
         if ("address" in wallet) {
           if (typeof wallet.address !== "string" || !/^0x[a-fA-F0-9]{40}$/.test(wallet.address as string)) {
             errors.push({ path: `${prefix}.address`, message: "Must be a valid EVM address (0x + 40 hex chars)" });
@@ -138,7 +135,7 @@ const STARTER = `{
   ]
 }`;
 
-// ── Result display ────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type WalletEntry = {
   address: string;
@@ -161,6 +158,8 @@ function truncate(addr: string) {
   return addr.slice(0, 6) + "…" + addr.slice(-4);
 }
 
+// ── Result components ─────────────────────────────────────────────────────────
+
 function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmit: () => void }) {
   return (
     <div className="val-result val-result-ok">
@@ -173,7 +172,6 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
           </p>
         </div>
       </div>
-
       <div className="val-manifest-summary">
         <div className="val-summary-row"><span>Agent</span><strong>{manifest.agent}</strong></div>
         <div className="val-summary-row"><span>Project</span><strong>{manifest.project}</strong></div>
@@ -186,19 +184,13 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
         )}
         {manifest.x && <div className="val-summary-row"><span>X Handle</span><strong>{manifest.x}</strong></div>}
       </div>
-
       <div className="val-wallets">
         <p className="val-wallets-label">Wallets</p>
         {manifest.wallets.map((w, i) => (
           <div key={i} className="val-wallet-row">
             <span className="val-wallet-role">{w.role}</span>
             <span className="val-wallet-chain">{w.chain}</span>
-            <a
-              href={`https://basescan.org/address/${w.address}`}
-              target="_blank"
-              rel="noreferrer"
-              className="val-wallet-addr"
-            >
+            <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="val-wallet-addr">
               {truncate(w.address)}
             </a>
             {w.notes && <span className="val-wallet-note">{w.notes}</span>}
@@ -206,7 +198,6 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
           </div>
         ))}
       </div>
-
       <div className="val-actions">
         <button type="button" className="lp-btn-primary" onClick={onSubmit}>
           <span className="material-symbols-outlined" style={{ fontSize: 15 }}>send</span>
@@ -214,7 +205,6 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
         </button>
         <Link href="/registry" className="lp-btn-ghost">View Registry</Link>
       </div>
-
       <p className="val-actions-note">
         Submitting adds this manifest to the x402Books registry queue. Luca will verify and generate a financial profile.
       </p>
@@ -242,12 +232,7 @@ function ErrorResult({ errors }: { errors: ValidationError[] }) {
       </div>
       <p className="val-fix-hint">
         Fix the errors above and validate again. See the{" "}
-        <a
-          href="https://github.com/danbuildss/agent-wallet-manifest/blob/main/schema/wallets.schema.json"
-          target="_blank"
-          rel="noreferrer"
-          className="val-link"
-        >
+        <a href="https://github.com/danbuildss/agent-wallet-manifest/blob/main/schema/wallets.schema.json" target="_blank" rel="noreferrer" className="val-link">
           full schema
         </a>{" "}
         for reference.
@@ -323,7 +308,6 @@ export default function ValidatePage() {
 
   return (
     <div className="val-page">
-      {/* Header */}
       <header className="lp-header">
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
@@ -339,7 +323,6 @@ export default function ValidatePage() {
         </div>
       </header>
 
-      {/* Hero */}
       <section className="val-hero">
         <p className="reg-label">Agent Wallet Manifest</p>
         <h1 className="val-h1">Validate your manifest.</h1>
@@ -351,7 +334,6 @@ export default function ValidatePage() {
         </p>
       </section>
 
-      {/* Main editor + result */}
       <section className="val-main">
         <div className="val-editor-wrap">
           <div className="val-editor-header">
@@ -405,53 +387,25 @@ export default function ValidatePage() {
                   <Link href="/registry" className="lp-btn-primary" style={{ marginTop: 12 }}>View Registry</Link>
                 </div>
               ) : (
-                <ValidResult
-                  manifest={parsed}
-                  onSubmit={submitToRegistry}
-                />
+                <ValidResult manifest={parsed} onSubmit={submitToRegistry} />
               )}
-              {submitState === "loading" && (
-                <p className="val-submitting">Submitting to registry&hellip;</p>
-              )}
-              {submitState === "error" && (
-                <p className="val-form-error">{submitMsg}</p>
-              )}
+              {submitState === "loading" && <p className="val-submitting">Submitting to registry&hellip;</p>}
+              {submitState === "error" && <p className="val-form-error">{submitMsg}</p>}
             </>
           )}
           {result === "err" && <ErrorResult errors={errors} />}
         </div>
       </section>
 
-      {/* How it works */}
       <section className="val-how">
         <p className="reg-label">How it works</p>
         <h2 className="val-h2">From manifest to registry profile.</h2>
         <div className="val-steps">
           {[
-            {
-              icon: "edit_document",
-              step: "1",
-              title: "Add wallets.json",
-              body: "Create .x402books/wallets.json in your repo. Declare wallet addresses, roles, and chain.",
-            },
-            {
-              icon: "verified",
-              step: "2",
-              title: "Validate here",
-              body: "Paste and validate against the open schema. Zero errors means it's registry-ready.",
-            },
-            {
-              icon: "send",
-              step: "3",
-              title: "Submit to registry",
-              body: "One click submits to x402Books. Luca indexes your wallets and builds a financial profile.",
-            },
-            {
-              icon: "workspace_premium",
-              step: "4",
-              title: "Get verified",
-              body: "Earn the Verified badge. Paste it in your README as proof of financial identity.",
-            },
+            { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .x402books/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
+            { icon: "verified", step: "2", title: "Validate here", body: "Paste and validate against the open schema. Zero errors means it's registry-ready." },
+            { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to x402Books. Luca indexes your wallets and builds a financial profile." },
+            { icon: "workspace_premium", step: "4", title: "Get verified", body: "Earn the Verified badge. Paste it in your README as proof of financial identity." },
           ].map((s) => (
             <div key={s.step} className="val-step">
               <div className="val-step-icon">
@@ -465,22 +419,21 @@ export default function ValidatePage() {
         </div>
       </section>
 
-      {/* Wallet roles reference */}
       <section className="val-roles">
         <p className="reg-label">Reference</p>
         <h2 className="val-h2">Wallet roles.</h2>
         <div className="val-roles-grid">
           {[
-            ["treasury",          "Holds protocol reserves and long-term funds"],
-            ["revenue",           "Receives income from services or API usage"],
-            ["expense",           "Sends payments to providers or services"],
-            ["operator",          "Hot wallet for agent-initiated on-chain operations"],
-            ["deployer",          "Used to deploy contracts"],
-            ["fee_recipient",     "Receives protocol or platform fees"],
-            ["payment_receiver",  "Receives payments from users or integrations"],
-            ["token_contract",    "Address of an associated token contract"],
+            ["treasury", "Holds protocol reserves and long-term funds"],
+            ["revenue", "Receives income from services or API usage"],
+            ["expense", "Sends payments to providers or services"],
+            ["operator", "Hot wallet for agent-initiated on-chain operations"],
+            ["deployer", "Used to deploy contracts"],
+            ["fee_recipient", "Receives protocol or platform fees"],
+            ["payment_receiver", "Receives payments from users or integrations"],
+            ["token_contract", "Address of an associated token contract"],
             ["token_bound_account", "ERC-6551 token-bound account"],
-            ["unknown",           "Role not yet classified"],
+            ["unknown", "Role not yet classified"],
           ].map(([role, desc]) => (
             <div key={role} className="val-role-row">
               <code className="val-role-code">{role}</code>
@@ -490,7 +443,6 @@ export default function ValidatePage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-col">
