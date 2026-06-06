@@ -49,9 +49,14 @@ export async function POST(req: NextRequest) {
     if (!isNaN(parsed.getTime())) eventTime = parsed.toISOString();
   }
 
+  // package may arrive as a string or an object {name, id, ...} depending on Nipmod version
+  const pkgStr = typeof pkg === "object" && pkg !== null
+    ? String((pkg as Record<string, unknown>).name ?? (pkg as Record<string, unknown>).id ?? JSON.stringify(pkg))
+    : String(pkg);
+
   const row = {
     agent_id:            normalizedAgentId,
-    package:             String(pkg),
+    package:             pkgStr,
     source:              source ? String(source) : null,
     trust_score:         typeof trust_score === "number" ? Math.min(100, Math.max(0, trust_score)) : null,
     risk_level:          risk_level && validRisk.includes(String(risk_level)) ? String(risk_level) : "unknown",
