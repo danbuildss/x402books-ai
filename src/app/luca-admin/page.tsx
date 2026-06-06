@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings";
+type Section = "overview" | "registry" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -63,6 +63,30 @@ type EconomicsResponse = {
   periodDays: number;
   summary: EconomicsSummary;
   report: { summary: string; netPositionLabel: string };
+};
+
+type SubagentRun = {
+  id: string;
+  subagent_name: string;
+  status: "running" | "success" | "failed" | "timeout";
+  started_at: string;
+  finished_at: string | null;
+  duration_ms: number | null;
+  summary: string | null;
+  error: string | null;
+  triggered_by: string | null;
+};
+
+type PendingReply = {
+  id: string;
+  target_user: string | null;
+  target_post_url: string | null;
+  draft_reply: string;
+  risk_level: "low" | "medium" | "high";
+  recommendation: string | null;
+  status: "pending" | "approved" | "rejected";
+  reviewer_notes: string | null;
+  created_at: string;
 };
 
 // ── Static data ───────────────────────────────────────────────────────────────
@@ -148,8 +172,10 @@ const NAV: { section: Section; label: string; group: string }[] = [
   { section: "economics",  label: "Economics",   group: "ops" },
   { section: "growth",     label: "Growth OS",   group: "ops" },
   { section: "reports",    label: "Reports",     group: "ops" },
-  { section: "comm",       label: "Comm Intel",  group: "intel" },
-  { section: "roadmap",    label: "Roadmap",     group: "intel" },
+  { section: "comm",            label: "Comm Intel",      group: "intel" },
+  { section: "subagent-runs",   label: "Subagent Runs",   group: "intel" },
+  { section: "pending-replies", label: "Pending Replies", group: "intel" },
+  { section: "roadmap",         label: "Roadmap",         group: "intel" },
   { section: "settings",   label: "Settings",    group: "system" },
 ];
 
@@ -1537,6 +1563,276 @@ function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health:
   );
 }
 
+// ── Subagent Runs ─────────────────────────────────────────────────────────────
+
+const RUN_STATUS_COLOR: Record<string, string> = {
+  running: "var(--blue)",
+  success: "var(--accent)",
+  failed:  "#f87171",
+  timeout: "#f59e0b",
+};
+
+function fmtDuration(ms: number | null) {
+  if (!ms) return "—";
+  if (ms < 1000) return `${ms}ms`;
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function SubagentRunsSection({ secret }: { secret: string }) {
+  const [runs, setRuns]     = useState<SubagentRun[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<"all" | "success" | "failed" | "running">("all");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/admin/subagent-runs", { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; runs?: SubagentRun[] }) => { setRuns(d.runs ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [secret]);
+
+  const visible = filter === "all" ? runs : runs.filter((r) => r.status === filter);
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Luca Intelligence</p>
+        <h2>Subagent Runs</h2>
+        <p>Live log of every Hermes skill execution — name, status, duration, and result.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center" }}>
+        {(["all", "running", "success", "failed"] as const).map((f) => (
+          <button key={f} type="button" onClick={() => setFilter(f)} style={{
+            padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
+            background: filter === f ? "var(--accent)" : "var(--surface)",
+            color: filter === f ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600,
+          }}>
+            {f.charAt(0).toUpperCase() + f.slice(1)}
+          </button>
+        ))}
+        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--muted)" }}>
+          {visible.length} run{visible.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {loading ? (
+        <div className={styles.stateBox}>Loading runs…</div>
+      ) : visible.length === 0 ? (
+        <div className={styles.stateBox}>No runs yet. Hermes will log here when skills execute.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {visible.map((run) => (
+            <div key={run.id} className={styles.card} style={{ padding: "11px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                  background: RUN_STATUS_COLOR[run.status] ?? "var(--muted)",
+                  boxShadow: run.status === "running" ? `0 0 6px ${RUN_STATUS_COLOR.running}` : undefined,
+                }} />
+                <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--ink)", flex: 1 }}>
+                  {run.subagent_name}
+                </span>
+                <span style={{
+                  fontSize: "0.68rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
+                  border: "1px solid var(--line)", textTransform: "capitalize",
+                  color: RUN_STATUS_COLOR[run.status] ?? "var(--muted)",
+                }}>
+                  {run.status}
+                </span>
+                <span style={{ fontSize: "0.72rem", color: "var(--muted)", flexShrink: 0 }}>
+                  {fmtDuration(run.duration_ms)}
+                </span>
+                <span style={{ fontSize: "0.72rem", color: "var(--muted)", flexShrink: 0 }}>
+                  {new Date(run.started_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              {run.summary && (
+                <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "6px 0 0", paddingLeft: 18 }}>
+                  {run.summary}
+                </p>
+              )}
+              {run.error && (
+                <p style={{ fontSize: "0.75rem", color: "#f87171", margin: "4px 0 0", paddingLeft: 18, fontFamily: "monospace" }}>
+                  {run.error}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Pending Replies ───────────────────────────────────────────────────────────
+
+const RISK_COLOR: Record<string, string> = {
+  low:    "var(--accent)",
+  medium: "#f59e0b",
+  high:   "#f87171",
+};
+
+function PendingRepliesSection({ secret }: { secret: string }) {
+  const [replies, setReplies]   = useState<PendingReply[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [filter, setFilter]     = useState<"pending" | "all">("pending");
+  const [notes, setNotes]       = useState<Record<string, string>>({});
+  const [acting, setActing]     = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    fetch(`/api/admin/pending-replies?status=${filter}`, { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; replies?: PendingReply[] }) => { setReplies(d.replies ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [secret, filter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function act(id: string, action: "approve" | "reject") {
+    setActing(id);
+    await fetch(`/api/admin/pending-replies/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
+      body: JSON.stringify({ action, reviewer_notes: notes[id] ?? null }),
+    });
+    setActing(null);
+    load();
+  }
+
+  const pendingCount = replies.filter((r) => r.status === "pending").length;
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Luca Intelligence</p>
+        <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          Pending X Replies
+          {pendingCount > 0 && (
+            <span style={{ fontSize: "0.6em", background: "#f87171", color: "#fff", borderRadius: 99, padding: "2px 8px" }}>
+              {pendingCount}
+            </span>
+          )}
+        </h2>
+        <p>Luca queues draft replies here. Nothing posts until you approve.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+        {(["pending", "all"] as const).map((f) => (
+          <button key={f} type="button" onClick={() => setFilter(f)} style={{
+            padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
+            background: filter === f ? "var(--accent)" : "var(--surface)",
+            color: filter === f ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600,
+          }}>
+            {f === "pending" ? "Pending" : "All"}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className={styles.stateBox}>Loading replies…</div>
+      ) : replies.length === 0 ? (
+        <div className={styles.stateBox}>
+          {filter === "pending"
+            ? "No pending replies. Luca will queue drafts here before anything posts publicly."
+            : "No replies logged yet."}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {replies.map((reply) => (
+            <div key={reply.id} className={styles.card} style={{ padding: "14px 16px" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                {reply.target_user && (
+                  <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--ink)" }}>
+                    @{reply.target_user.replace("@", "")}
+                  </span>
+                )}
+                {reply.target_post_url && (
+                  <a href={reply.target_post_url} target="_blank" rel="noreferrer"
+                    style={{ fontSize: "0.72rem", color: "var(--blue)", textDecoration: "none" }}>
+                    View post ↗
+                  </a>
+                )}
+                <span style={{ marginLeft: "auto", fontSize: "0.68rem", fontWeight: 600,
+                  padding: "2px 7px", borderRadius: 99, border: "1px solid var(--line)",
+                  textTransform: "capitalize", color: RISK_COLOR[reply.risk_level],
+                }}>
+                  {reply.risk_level} risk
+                </span>
+                {reply.status !== "pending" && (
+                  <span style={{
+                    fontSize: "0.68rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
+                    background: reply.status === "approved" ? "var(--accent)" : "#f87171",
+                    color: "#fff", textTransform: "capitalize",
+                  }}>
+                    {reply.status}
+                  </span>
+                )}
+              </div>
+
+              {/* Draft */}
+              <div style={{
+                background: "var(--surface-soft)", border: "1px solid var(--line)",
+                borderRadius: 8, padding: "10px 12px", marginBottom: 10,
+                fontSize: "0.85rem", color: "var(--ink)", lineHeight: 1.65, whiteSpace: "pre-wrap",
+              }}>
+                {reply.draft_reply}
+              </div>
+
+              {/* Recommendation */}
+              {reply.recommendation && (
+                <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginBottom: 10, fontStyle: "italic" }}>
+                  Luca: {reply.recommendation}
+                </p>
+              )}
+
+              {/* Approve / Reject */}
+              {reply.status === "pending" && (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Reviewer note (optional)…"
+                    value={notes[reply.id] ?? ""}
+                    onChange={(e) => setNotes((prev) => ({ ...prev, [reply.id]: e.target.value }))}
+                    style={{
+                      width: "100%", padding: "6px 10px", marginBottom: 8,
+                      border: "1px solid var(--line)", borderRadius: 6,
+                      background: "var(--surface)", color: "var(--ink)", fontSize: "0.8rem", outline: "none",
+                    }}
+                  />
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button type="button" disabled={acting === reply.id}
+                      onClick={() => act(reply.id, "approve")} className={styles.actionBtn}>
+                      {acting === reply.id ? "…" : "Approve"}
+                    </button>
+                    <button type="button" disabled={acting === reply.id}
+                      onClick={() => act(reply.id, "reject")} className={styles.ghostBtn}
+                      style={{ color: "#f87171", borderColor: "#f87171" }}>
+                      Reject
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {reply.status !== "pending" && reply.reviewer_notes && (
+                <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 8 }}>
+                  Note: {reply.reviewer_notes}
+                </p>
+              )}
+
+              <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 8 }}>
+                {new Date(reply.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function LucaAdminPage() {
@@ -1547,8 +1843,9 @@ export default function LucaAdminPage() {
   const [authLoading, setAuthLoading] = useState(false);
   const [section, setSection]   = useState<Section>("overview");
   const [health, setHealth]     = useState<HealthData | null>(null);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [todayMetrics, setTodayMetrics] = useState<DailyMetric | null>(null);
+  const [pendingCount, setPendingCount]               = useState(0);
+  const [pendingRepliesCount, setPendingRepliesCount] = useState(0);
+  const [todayMetrics, setTodayMetrics]               = useState<DailyMetric | null>(null);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("luca_admin_secret");
@@ -1566,6 +1863,10 @@ export default function LucaAdminPage() {
     fetch("/api/registry/pending", { headers: h })
       .then((r) => r.json())
       .then((d: { ok: boolean; updates?: unknown[] }) => { if (d.ok) setPendingCount(d.updates?.length ?? 0); })
+      .catch(() => {});
+    fetch("/api/admin/pending-replies?status=pending", { headers: h })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; replies?: unknown[] }) => { if (d.ok) setPendingRepliesCount(d.replies?.length ?? 0); })
       .catch(() => {});
     fetch("/api/admin/growth", { headers: h })
       .then((r) => r.json())
@@ -1678,6 +1979,9 @@ export default function LucaAdminPage() {
                   {item.section === "registry" && pendingCount > 0 && (
                     <span className={styles.navBadge}>{pendingCount}</span>
                   )}
+                  {item.section === "pending-replies" && pendingRepliesCount > 0 && (
+                    <span className={styles.navBadge}>{pendingRepliesCount}</span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1701,8 +2005,10 @@ export default function LucaAdminPage() {
           {section === "growth"    && <GrowthSection secret={secret} />}
           {section === "reports"   && <ReportsSection secret={secret} />}
           {section === "comm"      && <CommIntelSection secret={secret} />}
-          {section === "roadmap"   && <RoadmapSection />}
-          {section === "settings"  && <SettingsSection onSignOut={handleSignOut} health={health} />}
+          {section === "subagent-runs"   && <SubagentRunsSection secret={secret} />}
+          {section === "pending-replies" && <PendingRepliesSection secret={secret} />}
+          {section === "roadmap"         && <RoadmapSection />}
+          {section === "settings"        && <SettingsSection onSignOut={handleSignOut} health={health} />}
         </main>
       </div>
     </div>
