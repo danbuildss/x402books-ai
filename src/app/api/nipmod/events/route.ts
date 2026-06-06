@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { agent_id, package: pkg, source, trust_score, risk_level, decision, timestamp } = body as {
+  const { agent_id, package: pkg, source, trust_score, risk_level, decision, timestamp, project_id, decision_proof_hash } = body as {
     agent_id?: string;
     package?: string;
     source?: string;
@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
     risk_level?: string;
     decision?: string;
     timestamp?: string;
+    project_id?: string;
+    decision_proof_hash?: string;
   };
 
   if (!agent_id || !pkg) {
@@ -48,14 +50,16 @@ export async function POST(req: NextRequest) {
   }
 
   const row = {
-    agent_id:    normalizedAgentId,
-    package:     String(pkg),
-    source:      source ? String(source) : null,
-    trust_score: typeof trust_score === "number" ? Math.min(100, Math.max(0, trust_score)) : null,
-    risk_level:  risk_level && validRisk.includes(String(risk_level)) ? String(risk_level) : "unknown",
-    decision:    decision && validDecision.includes(String(decision)) ? String(decision) : "unknown",
-    event_time:  eventTime,
-    raw:         body,
+    agent_id:            normalizedAgentId,
+    package:             String(pkg),
+    source:              source ? String(source) : null,
+    trust_score:         typeof trust_score === "number" ? Math.min(100, Math.max(0, trust_score)) : null,
+    risk_level:          risk_level && validRisk.includes(String(risk_level)) ? String(risk_level) : "unknown",
+    decision:            decision && validDecision.includes(String(decision)) ? String(decision) : "unknown",
+    event_time:          eventTime,
+    project_id:          project_id ? String(project_id) : null,
+    decision_proof_hash: decision_proof_hash ? String(decision_proof_hash) : null,
+    raw:                 body,
   };
 
   if (!hasSupabaseAdminEnv()) {
