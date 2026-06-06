@@ -595,19 +595,32 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
 
 // ── Claim banner (top of body, unclaimed profiles only) ──────────────────────
 
+type ClaimTab = "wallet" | "manifest";
+type ClaimState = "idle" | "loading" | "done" | "error";
+
 function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const [wallet, setWallet]     = useState("");
-  const [state, setState]       = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [matched, setMatched]   = useState(false);
-  const [msg, setMsg]           = useState("");
+  const [expanded, setExpanded]       = useState(false);
+  const [tab, setTab]                 = useState<ClaimTab>("wallet");
+
+  // wallet tab state
+  const [wallet, setWallet]           = useState("");
+  const [walletState, setWalletState] = useState<ClaimState>("idle");
+  const [walletMatched, setWalletMatched] = useState(false);
+  const [walletMsg, setWalletMsg]     = useState("");
+
+  // manifest tab state
+  const [repoUrl, setRepoUrl]         = useState("");
+  const [mfState, setMfState]         = useState<ClaimState>("idle");
+  const [mfMsg, setMfMsg]             = useState("");
 
   if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
 
-  async function submit(e: React.FormEvent) {
+  const done = (tab === "wallet" && walletState === "done") || (tab === "manifest" && mfState === "done");
+
+  async function submitWallet(e: React.FormEvent) {
     e.preventDefault();
     if (!wallet.trim()) return;
-    setState("loading");
+    setWalletState("loading");
     try {
       const res = await fetch("/api/registry/claim", {
         method: "POST",
@@ -616,85 +629,170 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       });
       const d = await res.json() as { ok: boolean; matched?: boolean; message?: string; error?: string };
       if (d.ok) {
-        setState("done");
-        setMatched(d.matched ?? false);
-        setMsg(d.message ?? "Claim submitted.");
+        setWalletState("done");
+        setWalletMatched(d.matched ?? false);
+        setWalletMsg(d.message ?? "Claim submitted.");
       } else {
-        setState("error");
-        setMsg(d.error ?? "Something went wrong.");
+        setWalletState("error");
+        setWalletMsg(d.error ?? "Something went wrong.");
       }
     } catch {
-      setState("error");
-      setMsg("Network error. Please try again.");
+      setWalletState("error");
+      setWalletMsg("Network error. Please try again.");
     }
   }
 
-  return (
-    <div style={{
-      borderRadius: 12,
-      border: "1px solid rgba(109,184,116,0.22)",
-      borderLeft: "3px solid var(--accent)",
-      background: "var(--accent-soft)",
-      padding: expanded ? "16px 18px" : "13px 18px",
-      marginBottom: 20,
-      transition: "padding 0.15s",
-    }}>
-      {state === "done" ? (
+  async function submitManifest(e: React.FormEvent) {
+    e.preventDefault();
+    if (!repoUrl.trim()) return;
+    setMfState("loading");
+    try {
+      const res = await fetch("/api/registry/fetch-manifest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: repoUrl.trim() }),
+      });
+      const d = await res.json() as { ok: boolean; message?: string; error?: string };
+      if (d.ok) {
+        setMfState("done");
+        setMfMsg(d.message ?? "Manifest submitted for verification.");
+      } else {
+        setMfState("error");
+        setMfMsg(d.error ?? "Something went wrong.");
+      }
+    } catch {
+      setMfState("error");
+      setMfMsg("Network error. Please try again.");
+    }
+  }
+
+  const bannerStyle: React.CSSProperties = {
+    borderRadius: 12,
+    border: "1px solid rgba(109,184,116,0.22)",
+    borderLeft: "3px solid var(--accent)",
+    background: "var(--accent-soft)",
+    padding: expanded ? "16px 18px" : "13px 18px",
+    marginBottom: 20,
+    transition: "padding 0.15s",
+  };
+
+  // ── Done state ────────────────────────────────────────────────────────────
+  if (done) {
+    const isMatch = tab === "wallet" && walletMatched;
+    const doneMsg = tab === "wallet" ? walletMsg : mfMsg;
+    const title   = tab === "manifest"
+      ? "Manifest queued for verification"
+      : isMatch ? "Wallet matched — claim under review" : "Claim submitted for review";
+    const color   = (tab === "manifest" || isMatch) ? "var(--accent)" : "#f59e0b";
+    const icon    = (tab === "manifest" || isMatch) ? "check_circle" : "info";
+    return (
+      <div style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 18, color: matched ? "var(--accent)" : "#f59e0b", marginTop: 1, flexShrink: 0 }}>
-            {matched ? "check_circle" : "info"}
-          </span>
+          <span className="material-symbols-outlined" style={{ fontSize: 18, color, marginTop: 1, flexShrink: 0 }}>{icon}</span>
           <div>
-            <p style={{ fontSize: "0.84rem", fontWeight: 700, color: matched ? "var(--accent)" : "#f59e0b", marginBottom: 3 }}>
-              {matched ? "Wallet matched — claim under review" : "Claim submitted for review"}
-            </p>
-            <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{msg}</p>
+            <p style={{ fontSize: "0.84rem", fontWeight: 700, color, marginBottom: 3 }}>{title}</p>
+            <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{doneMsg}</p>
           </div>
         </div>
-      ) : !expanded ? (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      </div>
+    );
+  }
+
+  // ── Collapsed state ───────────────────────────────────────────────────────
+  if (!expanded) {
+    return (
+      <div style={bannerStyle}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)", flexShrink: 0 }}>handshake</span>
             <p style={{ fontSize: "0.82rem", color: "var(--ink)", fontWeight: 500, margin: 0 }}>
               Is this your agent?{" "}
               <span style={{ color: "var(--muted)", fontWeight: 400 }}>
-                Claim <strong style={{ color: "var(--ink)" }}>{agentName}</strong> to verify ownership and boost your Transparency Score.
+                Claim <strong style={{ color: "var(--ink)" }}>{agentName}</strong> to verify ownership.
               </span>
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            style={{
-              flexShrink: 0,
-              padding: "7px 16px", borderRadius: 8,
-              border: "1px solid rgba(109,184,116,0.35)",
-              background: "var(--accent)", color: "#fff",
-              fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Claim Profile →
-          </button>
-        </div>
-      ) : (
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
-            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Claim {agentName}</p>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
             <button
               type="button"
-              onClick={() => setExpanded(false)}
-              style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.8rem" }}
+              onClick={() => { setTab("manifest"); setExpanded(true); }}
+              style={{
+                padding: "7px 14px", borderRadius: 8,
+                border: "1px solid rgba(59,130,246,0.4)",
+                background: "rgba(59,130,246,0.08)", color: "#3b82f6",
+                fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
             >
-              ✕
+              Submit manifest
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTab("wallet"); setExpanded(true); }}
+              style={{
+                padding: "7px 14px", borderRadius: 8,
+                border: "1px solid rgba(109,184,116,0.35)",
+                background: "var(--accent)", color: "#fff",
+                fontSize: "0.8rem", fontWeight: 700, cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Claim with wallet →
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Expanded state ────────────────────────────────────────────────────────
+  return (
+    <div style={bannerStyle}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
+        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Claim {agentName}</p>
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.8rem" }}
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 0, marginBottom: 14, borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden", width: "fit-content" }}>
+        {(["manifest", "wallet"] as ClaimTab[]).map((t) => {
+          const labels: Record<ClaimTab, string> = { wallet: "Claim with wallet", manifest: "Submit manifest" };
+          const active = tab === t;
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              style={{
+                padding: "6px 14px",
+                background: active ? "var(--accent)" : "transparent",
+                color: active ? "#fff" : "var(--muted)",
+                border: "none", cursor: "pointer",
+                fontSize: "0.78rem", fontWeight: active ? 700 : 400,
+                transition: "background 0.12s",
+              }}
+            >
+              {labels[t]}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Wallet tab */}
+      {tab === "wallet" && (
+        <>
           <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
-            Enter a wallet address that matches your declared manifest. A match fast-tracks verification.{" "}
-            <a href="/registry#verify" style={{ color: "var(--accent)" }}>No manifest yet?</a>
+            Enter a wallet address associated with this agent. A match against declared wallets fast-tracks verification.
           </p>
-          <form onSubmit={submit} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <form onSubmit={submitWallet} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input
               type="text"
               placeholder="0x… your wallet address"
@@ -714,24 +812,69 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
             />
             <button
               type="submit"
-              disabled={state === "loading"}
+              disabled={walletState === "loading"}
               style={{
-                padding: "8px 18px", borderRadius: 8,
-                border: "none",
+                padding: "8px 18px", borderRadius: 8, border: "none",
                 background: "var(--accent)", color: "#fff",
                 fontSize: "0.82rem", fontWeight: 700,
-                cursor: state === "loading" ? "not-allowed" : "pointer",
-                opacity: state === "loading" ? 0.7 : 1,
+                cursor: walletState === "loading" ? "not-allowed" : "pointer",
+                opacity: walletState === "loading" ? 0.7 : 1,
                 whiteSpace: "nowrap",
               }}
             >
-              {state === "loading" ? "Checking…" : "Submit Claim →"}
+              {walletState === "loading" ? "Checking…" : "Submit Claim →"}
             </button>
-            {state === "error" && (
-              <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{msg}</p>
+            {walletState === "error" && (
+              <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{walletMsg}</p>
             )}
           </form>
-        </div>
+        </>
+      )}
+
+      {/* Manifest tab */}
+      {tab === "manifest" && (
+        <>
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
+            Add a <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 4px", borderRadius: 3 }}>.x402books/wallets.json</code> file
+            to your agent&apos;s GitHub or Gitlawb repo, then paste the repo URL below.
+            This is the fastest path to <strong style={{ color: "var(--ink)" }}>Wallets Declared</strong> status.
+          </p>
+          <form onSubmit={submitManifest} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input
+              type="url"
+              placeholder="https://github.com/your-org/your-repo"
+              value={repoUrl}
+              onChange={(e) => setRepoUrl(e.target.value)}
+              required
+              autoFocus={tab === "manifest"}
+              style={{
+                flex: 1, minWidth: 220,
+                padding: "8px 12px", borderRadius: 8,
+                border: "1px solid var(--line)",
+                background: "var(--surface)",
+                color: "var(--ink)", fontSize: "0.82rem",
+                outline: "none",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={mfState === "loading"}
+              style={{
+                padding: "8px 18px", borderRadius: 8, border: "none",
+                background: "#3b82f6", color: "#fff",
+                fontSize: "0.82rem", fontWeight: 700,
+                cursor: mfState === "loading" ? "not-allowed" : "pointer",
+                opacity: mfState === "loading" ? 0.7 : 1,
+                whiteSpace: "nowrap",
+              }}
+            >
+              {mfState === "loading" ? "Fetching…" : "Submit Manifest →"}
+            </button>
+            {mfState === "error" && (
+              <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{mfMsg}</p>
+            )}
+          </form>
+        </>
       )}
     </div>
   );
