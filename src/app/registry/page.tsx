@@ -10,15 +10,30 @@ import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
 import { AGENTS } from "./data";
 
-// ── Static fallback stats (used until live data loads) ────────────────────────
+// ── Sort constants ────────────────────────────────────────────────────────────
+
+const VSTATUS_ORDER: Record<VerificationStatus, number> = {
+  "Luca Managed":       0,
+  "Verified":           1,
+  "Claimed":            2,
+  "Wallets Declared":   3,
+  "Needs Verification": 4,
+  "Candidate":          5,
+};
+
+const HEALTH_ORDER: Record<Health, number> = {
+  "Healthy": 0, "Stable": 1, "Watch": 2, "At Risk": 3, "Pending": 4,
+};
+
+const PAGE_SIZE = 25;
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
 
 function computeStats(agents: Agent[]) {
   const walletCount = agents.filter(
     (a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0
   ).length;
-  const reviewedCount = agents.filter(
-    (a) => a.financialActivityScore !== null
-  ).length;
+  const reviewedCount = agents.filter((a) => a.financialActivityScore !== null).length;
   return [
     { label: "Agents Tracked",  value: String(agents.length) },
     { label: "Ecosystems",      value: "5"                   },
@@ -28,10 +43,6 @@ function computeStats(agents: Agent[]) {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function truncate(addr: string) {
-  return addr.slice(0, 6) + "…" + addr.slice(-4);
-}
 
 function xPfpUrl(handle: string) {
   return `https://unavatar.io/x/${handle.replace("@", "")}`;
@@ -94,218 +105,36 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
-// ── Score bar ─────────────────────────────────────────────────────────────────
+// ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.min(100, Math.max(0, value));
-  const color = pct >= 70 ? "var(--accent)" : pct >= 40 ? "var(--blue)" : "var(--muted)";
+function AgentRow({ agent }: { agent: Agent }) {
+  const slug = toSlug(agent.name);
   return (
-    <div className="reg-score-row">
-      <span className="reg-score-label">{label}</span>
-      <div className="reg-score-bar-wrap">
-        <div className="reg-score-bar-fill" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <span className="reg-score-val">{value}</span>
-    </div>
-  );
-}
-
-// ── Agent Card ────────────────────────────────────────────────────────────────
-
-function AgentCard({ agent }: { agent: Agent }) {
-  const [expanded, setExpanded] = useState(false);
-  const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
-
-  return (
-    <div className={`reg-card${expanded ? " expanded" : ""}`}>
-      {/* Header row — always visible, click to toggle */}
-      <button
-        type="button"
-        className="reg-card-header"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-      >
-        <AgentAvatar agent={agent} size={36} />
-
-        <div className="reg-card-name-group">
-          <span className="reg-card-name">
-            {agent.name}
-            {agent.gitlawbRepo && (
-              <span className="reg-gitlawb-dot" title="Wallet declared via Gitlawb repo">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                </svg>
-              </span>
-            )}
-          </span>
-          <span className="reg-card-sym">{agent.symbol}</span>
-        </div>
-
-        <div className="reg-card-badges">
-          <EcoBadge eco={agent.ecosystem} />
-          <StatusBadge status={agent.verificationStatus} />
-          <HealthBadge h={agent.treasuryHealth} />
-        </div>
-
-        {hasScores && (
-          <div className="reg-card-score-hint" title="Partnership fit score">
-            <span className="reg-score-hint-val">{agent.partnershipFitScore}</span>
-            <span className="reg-score-hint-label">score</span>
-          </div>
+    <Link href={`/registry/${slug}`} className="reg-row">
+      <AgentAvatar agent={agent} size={32} />
+      <div className="reg-row-name">
+        <span className="reg-row-agent-name">{agent.name}</span>
+        {agent.symbol && agent.symbol !== "—" && (
+          <span className="reg-row-sym">{agent.symbol}</span>
         )}
-
-        <span className="material-symbols-outlined reg-card-chevron">
-          {expanded ? "expand_less" : "expand_more"}
-        </span>
-      </button>
-
-      {/* Expanded body */}
-      {expanded && (
-        <div className="reg-card-body">
-
-          {/* Links row */}
-          {(agent.website || agent.xHandle || agent.bankrProfile || agent.gitlawbRepo) && (
-            <div className="reg-card-links">
-              {agent.website && (
-                <a href={agent.website} target="_blank" rel="noreferrer" className="reg-card-link">
-                  <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
-                  Website
-                </a>
-              )}
-              {agent.xHandle && (
-                <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="reg-card-link">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                  {agent.xHandle}
-                </a>
-              )}
-              {agent.bankrProfile && (
-                <a href={agent.bankrProfile} target="_blank" rel="noreferrer" className="reg-card-link reg-card-link-bankr">
-                  Bankr profile
-                </a>
-              )}
-              {agent.gitlawbRepo && (
-                <a href={agent.gitlawbRepo} target="_blank" rel="noreferrer" className="reg-card-link reg-card-link-gitlawb">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-                  </svg>
-                  Gitlawb repo
-                </a>
-              )}
-            </div>
-          )}
-
-          {/* Token address */}
-          {agent.tokenAddress && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Token Address (Base)</p>
-              <div className="reg-card-wallet-row">
-                <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
-                <a
-                  href={`https://basescan.org/token/${agent.tokenAddress}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="reg-mono reg-wallet-addr"
-                >
-                  {truncate(agent.tokenAddress)}
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* Wallets */}
-          {(agent.wallets ?? []).length > 0 && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Wallets</p>
-              {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
-                <div key={w.address} className="reg-card-wallet-row">
-                  <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
-                    {w.label}
-                  </span>
-                  <a
-                    href={`https://basescan.org/address/${w.address}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="reg-mono reg-wallet-addr"
-                  >
-                    {truncate(w.address)}
-                  </a>
-                  {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* No wallet state */}
-          {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Wallets</p>
-              <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
-            </div>
-          )}
-
-          {/* Financial scores */}
-          {hasScores && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Luca Scores</p>
-              {agent.financialActivityScore !== null && (
-                <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
-              )}
-              {agent.partnershipFitScore !== null && (
-                <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />
-              )}
-              {agent.lastChecked && (
-                <p className="reg-card-last-checked">Last reviewed: {agent.lastChecked}</p>
-              )}
-            </div>
-          )}
-
-          {/* Evidence sources */}
-          {agent.evidenceSources.length > 0 && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Evidence Sources</p>
-              <div className="reg-card-sources">
-                {agent.evidenceSources.map((s) => (
-                  <span key={s} className="reg-source-pill">{s}</span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Outreach status */}
-          {agent.outreachStatus && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Outreach Status</p>
-              <span className={`reg-outreach-pill reg-outreach-${agent.outreachStatus.toLowerCase().replace(/\s+/g, "-")}`}>
-                {agent.outreachStatus}
-              </span>
-            </div>
-          )}
-
-          {/* Luca's notes */}
-          {agent.adminNotes && (
-            <div className="reg-card-section">
-              <p className="reg-card-section-title">Luca&apos;s Notes</p>
-              <p className="reg-card-notes">{agent.adminNotes}</p>
-            </div>
-          )}
-
-          {/* Profile link + footer note */}
-          <div className="reg-card-footer-note">
-            <Link href={`/registry/${toSlug(agent.name)}`} className="reg-card-profile-link">
-              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>open_in_new</span>
-              View full profile
-            </Link>
-            <span style={{ display: "block", marginTop: 8 }}>
-              Luca analyzed public data associated with {agent.name}. These are candidate wallets only —
-              not verified unless marked Verified.{" "}
-              <a href="#verify" onClick={() => setExpanded(false)}>Verify your agent →</a>
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
+      </div>
+      <div className="reg-row-badges">
+        <EcoBadge eco={agent.ecosystem} />
+        <StatusBadge status={agent.verificationStatus} />
+        <HealthBadge h={agent.treasuryHealth} />
+      </div>
+      <div className="reg-row-score-wrap">
+        {agent.financialActivityScore !== null ? (
+          <>
+            <span className="reg-row-score">{agent.financialActivityScore}</span>
+            <span className="reg-row-score-label">score</span>
+          </>
+        ) : (
+          <span className="reg-row-score-empty">—</span>
+        )}
+      </div>
+      <span className="material-symbols-outlined reg-row-arrow">chevron_right</span>
+    </Link>
   );
 }
 
@@ -352,7 +181,6 @@ function VerifyCTA() {
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Gitlawb repo flow state
   const [repoUrl, setRepoUrl] = useState("");
   const [repoState, setRepoState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [repoMsg, setRepoMsg] = useState("");
@@ -495,7 +323,6 @@ function VerifyCTA() {
                     Add a <code className="reg-code">.x402books/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
                   </p>
 
-                  {/* Schema preview */}
                   <div className="reg-schema-wrap">
                     <div className="reg-schema-header">
                       <span className="reg-schema-filename">.x402books/wallets.json</span>
@@ -509,7 +336,6 @@ function VerifyCTA() {
                     <pre className="reg-schema-code">{WALLETS_JSON_EXAMPLE}</pre>
                   </div>
 
-                  {/* Repo URL submit form */}
                   {repoState === "done" && fetchedWallets ? (
                     <div className="reg-submit-success">
                       <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--accent)" }}>check_circle</span>
@@ -644,12 +470,16 @@ function LucaExample() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+type SortKey = "verification" | "name" | "activity" | "health";
+
 export default function RegistryPage() {
   const [agents, setAgents]         = useState<Agent[]>(AGENTS);
   const [fromSupabase, setFromSupabase] = useState(false);
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
+  const [sortBy, setSortBy]         = useState<SortKey>("verification");
+  const [page, setPage]             = useState(1);
 
   useEffect(() => {
     fetch("/api/registry/agents")
@@ -660,13 +490,15 @@ export default function RegistryPage() {
           setFromSupabase(data.fromSupabase ?? false);
         }
       })
-      .catch(() => {
-        // Silently fall back to static AGENTS
-      });
+      .catch(() => {});
   }, []);
+
+  // Reset to page 1 whenever filters or sort change
+  useEffect(() => { setPage(1); }, [search, ecoFilter, statusFilter, sortBy]);
 
   const STATS = computeStats(agents);
 
+  // Filter
   const filtered = agents.filter((a) => {
     const matchEco    = ecoFilter === "All" || a.ecosystem === ecoFilter;
     const matchStatus = statusFilter === "All" || a.verificationStatus === statusFilter;
@@ -678,8 +510,35 @@ export default function RegistryPage() {
     return matchEco && matchStatus && matchSearch;
   });
 
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "name":
+        return a.name.localeCompare(b.name);
+      case "activity": {
+        const as = a.financialActivityScore ?? -1;
+        const bs = b.financialActivityScore ?? -1;
+        return bs - as;
+      }
+      case "health":
+        return (HEALTH_ORDER[a.treasuryHealth] ?? 99) - (HEALTH_ORDER[b.treasuryHealth] ?? 99);
+      default: {
+        const vdiff = VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
+        if (vdiff !== 0) return vdiff;
+        return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
+      }
+    }
+  });
+
+  // Paginate
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const paginated  = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const start      = (page - 1) * PAGE_SIZE + 1;
+  const end        = Math.min(page * PAGE_SIZE, sorted.length);
+
   return (
     <div className="reg-page">
+
       {/* ── Header ── */}
       <header className="lp-header">
         <Link href="/" className="lp-brand"><Logo /></Link>
@@ -721,20 +580,10 @@ export default function RegistryPage() {
 
       {/* ── Agent Registry ── */}
       <section className="reg-section" id="agents">
-        {fromSupabase && (
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, fontSize: 12, color: "var(--muted)" }}>
-            <span style={{
-              display: "inline-block",
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#22c55e",
-              boxShadow: "0 0 4px #22c55e",
-            }} />
-            Live data from Supabase
-          </div>
-        )}
+
+        {/* Controls */}
         <div className="reg-table-controls">
+          {/* Search */}
           <div className="reg-search-wrap">
             <span className="material-symbols-outlined reg-search-icon">search</span>
             <input
@@ -745,6 +594,8 @@ export default function RegistryPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+
+          {/* Ecosystem filter buttons */}
           <div className="reg-eco-filter">
             {(["All", "BANKR", "Virtuals", "Base", "AEON", "EigenCloud"] as const).map((opt) => (
               <button
@@ -757,27 +608,85 @@ export default function RegistryPage() {
               </button>
             ))}
           </div>
-          <div className="reg-eco-filter reg-status-filter">
-            {(["All", "Candidate", "Needs Verification", "Wallets Declared", "Claimed", "Verified", "Luca Managed"] as const).map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                className={`reg-eco-btn${statusFilter === opt ? " active" : ""}`}
-                onClick={() => setStatusFilter(opt)}
-              >
-                {opt}
-              </button>
-            ))}
+
+          {/* Status + Sort selects */}
+          <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+            <select
+              className="reg-filter-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as "All" | VerificationStatus)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Candidate">Candidate</option>
+              <option value="Needs Verification">Needs Verification</option>
+              <option value="Wallets Declared">Wallets Declared</option>
+              <option value="Claimed">Claimed</option>
+              <option value="Verified">Verified</option>
+              <option value="Luca Managed">Luca Managed</option>
+            </select>
+            <select
+              className="reg-filter-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortKey)}
+            >
+              <option value="verification">Sort: Verification</option>
+              <option value="name">Sort: Name A–Z</option>
+              <option value="activity">Sort: Activity Score</option>
+              <option value="health">Sort: Treasury Health</option>
+            </select>
           </div>
         </div>
 
-        <div className="reg-cards">
-          {filtered.length === 0 ? (
-            <div className="reg-empty-cards">No agents match your filters.</div>
-          ) : (
-            filtered.map((a) => <AgentCard key={a.name} agent={a} />)
+        {/* Count + live dot */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+            {sorted.length === agents.length
+              ? `${agents.length} agents`
+              : `${sorted.length} of ${agents.length} agents`}
+          </span>
+          {fromSupabase && (
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)" }}>
+              <span style={{
+                display: "inline-block", width: 7, height: 7,
+                borderRadius: "50%", background: "#22c55e",
+                boxShadow: "0 0 4px #22c55e",
+              }} />
+              Live
+            </div>
           )}
         </div>
+
+        {/* List */}
+        <div className="reg-list">
+          {paginated.length === 0 ? (
+            <div className="reg-empty-cards">No agents match your filters.</div>
+          ) : (
+            paginated.map((a) => <AgentRow key={a.name} agent={a} />)
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="reg-pagination">
+            <button
+              className="reg-page-btn"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              ← Prev
+            </button>
+            <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>
+              {start}–{end} of {sorted.length}
+            </span>
+            <button
+              className="reg-page-btn"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next →
+            </button>
+          </div>
+        )}
 
         <p className="reg-table-note">
           All wallet addresses are candidate addresses sourced by Luca from public data. Nothing is Verified

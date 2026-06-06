@@ -269,15 +269,11 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
     // Build the agent row from proposed_data
     const agentFields: Record<string, unknown> = {
       name:       canonicalName,
-      ecosystem:  proposed.ecosystem ?? "Base",
       updated_at: new Date().toISOString(),
     };
 
-    // Promote to "Wallets Declared" when a manifest provides wallet data
-    const hasWallets = Array.isArray(proposed.wallets) && (proposed.wallets as unknown[]).length > 0;
-    if (hasWallets && !("verificationStatus" in proposed)) {
-      agentFields.verification_status = "Wallets Declared";
-    }
+    // Only update ecosystem if the manifest explicitly provides one — never clobber with "Base" default
+    if (proposed.ecosystem) agentFields.ecosystem = proposed.ecosystem;
 
     const fieldMap: Record<string, string> = {
       symbol: "symbol",
@@ -302,6 +298,12 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
       if (agentKey in proposed) {
         agentFields[dbKey] = proposed[agentKey];
       }
+    }
+
+    // Promote to "Wallets Declared" AFTER fieldMap so it always wins over anything in proposed_data
+    const hasWallets = Array.isArray(proposed.wallets) && (proposed.wallets as unknown[]).length > 0;
+    if (hasWallets) {
+      agentFields.verification_status = "Wallets Declared";
     }
 
     // Upsert into registry_agents
