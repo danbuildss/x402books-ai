@@ -71,7 +71,7 @@ export default function ApiPage() {
     <StitchShell>
       <StitchHeader
         title="API"
-        description="Programmatic access to onchain ledger data for agents and builders."
+        description="Programmatic access to agent financial identity data — registry, verification, treasury intelligence."
         actions={
           <StitchWalletPill
             wallet={ledger.wallet}
@@ -91,7 +91,7 @@ export default function ApiPage() {
               Build with x402Books AI Intelligence
             </h3>
             <p style={{ fontSize: "13px", color: "var(--s-muted)", margin: "0 0 16px", maxWidth: "480px", lineHeight: "1.6" }}>
-              Integrate institutional-grade onchain accounting directly into your dApp. Access real-time ledgers, automated AI categorisation, and cross-chain financial summaries via our high-performance REST API.
+              Build on the financial identity layer for autonomous agents. Query the registry, verify agent wallets, access real-time treasury intelligence, and resolve prediction markets — all via a clean REST API. Public endpoints are free and require no auth.
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
               <a
