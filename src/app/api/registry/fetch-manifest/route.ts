@@ -3,6 +3,23 @@ import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admi
 import { normalizeWalletRole } from "@/lib/luca-classify";
 import type { WalletLabel } from "@/app/registry/types";
 
+// 5 submissions per IP per 10 minutes
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT   = 5;
+const WINDOW_MS    = 10 * 60 * 1000;
+
+function checkRateLimit(ip: string): boolean {
+  const now   = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
   treasury: "likely treasury",
   fee:      "likely fee recipient",
@@ -53,6 +70,14 @@ async function fetchManifest(urls: string[]): Promise<{ url: string; data: unkno
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Try again in 10 minutes." },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
