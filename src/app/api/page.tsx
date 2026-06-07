@@ -10,39 +10,47 @@ import {
 import { useLedgerState } from "@/lib/use-ledger-state";
 
 const STATIC_ENDPOINTS = [
-  { method: "POST", path: "/api/categorize",           note: "Categorize transactions with AI" },
-  { method: "GET",  path: "/api/health",               note: "Check service readiness" },
+  { method: "GET",  path: "/api/stats",                          note: "Live adoption metrics + market resolution" },
+  { method: "GET",  path: "/api/badge/[slug]",                   note: "SVG verification badge (embed in README)" },
+  { method: "GET",  path: "/api/registry/agents",                note: "All indexed agents with verification status" },
+  { method: "POST", path: "/api/registry/fetch-manifest",        note: "Submit .x402books/wallets.json from repo" },
+  { method: "POST", path: "/api/registry/claim",                 note: "Claim agent profile with wallet address" },
+  { method: "GET",  path: "/api/v1/agent-financial-state",       note: "Treasury health for any wallet (API key)" },
+  { method: "GET",  path: "/api/v1/agent-report",                note: "Financial intelligence report (API key)" },
+  { method: "GET",  path: "/api/health",                         note: "Service health check" },
 ];
 
 const CODE_TABS = ["Node.js", "Python"] as const;
 type CodeTab = (typeof CODE_TABS)[number];
 
 const CODE_SAMPLES: Record<CodeTab, string> = {
-  "Node.js": `const x402 = require('@x402books/sdk');
-const client = new x402.Client({
-  key: 'xb_live_***************************',
-  network: 'base-mainnet',
-});
+  "Node.js": `// Fetch live registry stats (no auth)
+const res = await fetch('https://www.x402books.xyz/api/stats');
+const stats = await res.json();
+console.log(stats.agents_indexed);      // 125
+console.log(stats.wallets_declared_or_above); // 15
 
-async function fetchLedger(wallet) {
-  const data = await client.ledger.get({
-    wallet,
-    range: '30d',
-  });
-  console.log(data.summary);
-}`,
-  Python: `import x402books
+// Fetch treasury health (API key)
+const state = await fetch(
+  'https://www.x402books.xyz/api/v1/agent-financial-state?wallet=0x...&range=30d',
+  { headers: { 'Authorization': 'Bearer xb_live_...' } }
+);
+const data = await state.json();
+console.log(data.financial_health.budget_status);`,
+  Python: `import requests
 
-client = x402books.Client(
-    key="xb_live_***************************",
-    network="base-mainnet",
-)
+# Fetch live registry stats (no auth)
+stats = requests.get('https://www.x402books.xyz/api/stats').json()
+print(stats['agents_indexed'])          # 125
+print(stats['wallets_declared_or_above']) # 15
 
-data = client.ledger.get(
-    wallet="0x...",
-    range="30d",
-)
-print(data["summary"])`,
+# Fetch treasury health (API key)
+state = requests.get(
+    'https://www.x402books.xyz/api/v1/agent-financial-state',
+    params={'wallet': '0x...', 'range': '30d'},
+    headers={'Authorization': 'Bearer xb_live_...'}
+).json()
+print(state['financial_health']['budget_status'])`,
 };
 
 import { useState } from "react";

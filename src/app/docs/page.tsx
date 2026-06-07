@@ -406,36 +406,41 @@ unknown           → Unclassified activity`}</pre>
           <section id="api" className="docs-section">
             <span className="docs-tag">Product</span>
             <h1 className="docs-h1">API Reference</h1>
-            <p className="docs-lead">Programmatic access to wallet financial intelligence.</p>
+            <p className="docs-lead">Financial identity data for agents, builders, and prediction markets.</p>
 
             <div className="docs-callout docs-callout-info">
-              The API is live. Generate your key at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>. Free tier starts at 100 req/day — no token required.
+              Public endpoints require no auth. Financial intelligence endpoints require an API key — generate one at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>. Free tier: 100 req/day. $LUCA holders: up to 2,000/day.
             </div>
 
-            <h2 className="docs-h2">Endpoints</h2>
+            <h2 className="docs-h2">Public — no auth required</h2>
 
             <div className="docs-endpoint">
               <div className="docs-endpoint-head">
                 <span className="docs-method get">GET</span>
-                <code>/api/ledger/summary</code>
+                <code>/api/stats</code>
               </div>
-              <p className="docs-p">Returns a financial summary for a given wallet and time range.</p>
-              <div className="docs-code-block">
-                <div className="docs-code-head"><span>Request</span></div>
-                <pre>{`GET /api/ledger/summary?wallet=0x...&period=30d`}</pre>
-              </div>
+              <p className="docs-p">Live adoption metrics across the registry. Includes pre-computed resolution booleans for prediction markets.</p>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Response</span></div>
                 <pre>{`{
-  "wallet": "0x7d3f...42f1",
-  "range": "30d",
-  "total_spend": 42.80,
-  "total_income": 91.20,
-  "net_flow": 48.40,
-  "transaction_count": 128,
-  "likely_x402_count": 94,
-  "top_category": "api_call",
-  "budget_status": "safe"
+  "agents_indexed": 125,
+  "wallets_declared_or_above": 15,
+  "claimed_or_above": 4,
+  "verified_or_above": 2,
+  "by_status": {
+    "Candidate": 89, "Wallets Declared": 12,
+    "Claimed": 3, "Verified": 1, "Luca Managed": 1
+  },
+  "by_ecosystem": {
+    "AEON":  { "total": 8, "wallets_declared": 2, "verified": 1 },
+    "BANKR": { "total": 34, "wallets_declared": 5, "verified": 0 }
+  },
+  "markets": {
+    "100_manifests_before_august": false,
+    "50_claimed_before_q4": false,
+    "top_ecosystem_by_verified": { "ecosystem": "AEON", "count": 2 }
+  },
+  "updated_at": "2026-06-07T12:00:00Z"
 }`}</pre>
               </div>
             </div>
@@ -443,30 +448,73 @@ unknown           → Unclassified activity`}</pre>
             <div className="docs-endpoint">
               <div className="docs-endpoint-head">
                 <span className="docs-method get">GET</span>
-                <code>/api/ledger/transactions</code>
+                <code>/api/badge/[slug]</code>
               </div>
-              <p className="docs-p">Returns paginated, categorized transactions for a wallet.</p>
+              <p className="docs-p">Returns a live SVG verification badge for any indexed agent. Embed in GitHub READMEs or project pages.</p>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Example</span></div>
+                <pre>{`GET /api/badge/aeon
+→ image/svg+xml — "aeon | Wallets Declared" (blue)
+
+Cache-Control: public, max-age=60, stale-while-revalidate=300
+
+# In a README:
+![x402Books](https://www.x402books.xyz/api/badge/aeon)`}</pre>
+              </div>
+              <p className="docs-p" style={{ marginTop: 8 }}>Badge colors: Verified / Luca Managed → green · Claimed → purple · Wallets Declared → blue · Candidate → gray</p>
+            </div>
+
+            <div className="docs-endpoint">
+              <div className="docs-endpoint-head">
+                <span className="docs-method get">GET</span>
+                <code>/api/registry/agents</code>
+              </div>
+              <p className="docs-p">Returns all indexed agents with verification status, ecosystem, transparency scores, and declared wallets.</p>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Response (excerpt)</span></div>
+                <pre>{`{
+  "agents": [
+    {
+      "name": "Aeon",
+      "symbol": "AEON",
+      "ecosystem": "AEON",
+      "verificationStatus": "Wallets Declared",
+      "financialActivityScore": 72,
+      "treasuryHealth": "Stable",
+      "wallets": [
+        { "address": "0x...", "label": "likely treasury" }
+      ]
+    }
+  ],
+  "fromSupabase": true
+}`}</pre>
+              </div>
+            </div>
+
+            <h2 className="docs-h2">Registry — no auth required</h2>
+
+            <div className="docs-endpoint">
+              <div className="docs-endpoint-head">
+                <span className="docs-method post">POST</span>
+                <code>/api/registry/fetch-manifest</code>
+              </div>
+              <p className="docs-p">Fetch and validate a <code>.x402books/wallets.json</code> manifest from a GitHub or Gitlawb repo. Queues wallet declarations for Luca verification.</p>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
-                <pre>{`GET /api/ledger/transactions?wallet=0x...&period=30d&page=1`}</pre>
+                <pre>{`POST /api/registry/fetch-manifest
+Content-Type: application/json
+
+{ "repo_url": "https://github.com/your-org/your-repo" }`}</pre>
               </div>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Response</span></div>
                 <pre>{`{
-  "transactions": [
-    {
-      "tx_hash": "0xabc...",
-      "direction": "expense",
-      "amount_usdc": 0.42,
-      "category": "api_call",
-      "counterparty": "0xdef...",
-      "is_likely_x402": true,
-      "confidence_score": 92,
-      "timestamp": "2026-05-01T14:32:00Z"
-    }
+  "ok": true,
+  "agent": "MyAgent",
+  "wallets": [
+    { "address": "0x...", "role": "treasury", "label": "likely treasury" }
   ],
-  "total": 128,
-  "page": 1
+  "message": "Manifest submitted. 1 wallet(s) queued for Luca verification."
 }`}</pre>
               </div>
             </div>
@@ -474,17 +522,57 @@ unknown           → Unclassified activity`}</pre>
             <div className="docs-endpoint">
               <div className="docs-endpoint-head">
                 <span className="docs-method post">POST</span>
-                <code>/api/ledger/categorize</code>
+                <code>/api/registry/claim</code>
               </div>
-              <p className="docs-p">Runs AI categorization on a wallet's transactions for a given period.</p>
+              <p className="docs-p">Submit a wallet address to claim an agent profile. Checks against declared wallets — a match fast-tracks verification.</p>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
-                <pre>{`POST /api/ledger/categorize
+                <pre>{`POST /api/registry/claim
 Content-Type: application/json
 
 {
-  "wallet": "0x7d3f...42f1",
-  "period": "30d"
+  "agent_slug": "my-agent",
+  "wallet_address": "0x..."
+}`}</pre>
+              </div>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Response</span></div>
+                <pre>{`{
+  "ok": true,
+  "matched": true,
+  "message": "Wallet matched — claim submitted for review."
+}`}</pre>
+              </div>
+            </div>
+
+            <h2 className="docs-h2">Financial Intelligence — API key required</h2>
+
+            <div className="docs-endpoint">
+              <div className="docs-endpoint-head">
+                <span className="docs-method get">GET</span>
+                <code>/api/v1/agent-financial-state</code>
+              </div>
+              <p className="docs-p">Live treasury health for any wallet — token portfolio, flows, settlement patterns, top counterparties. Also accepts <code>$0.01 USDC</code> x402 payment ($0.007 for $LUCA holders).</p>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Request</span></div>
+                <pre>{`GET /api/v1/agent-financial-state?wallet=0x...&range=30d
+Authorization: Bearer xb_live_...`}</pre>
+              </div>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Response (excerpt)</span></div>
+                <pre>{`{
+  "wallet": "0x...",
+  "range": "30d",
+  "financial_health": {
+    "total_income_usd": 91.20,
+    "total_spend_usd": 42.80,
+    "net_flow_usd": 48.40,
+    "budget_status": "safe",
+    "transaction_count": 128
+  },
+  "token_portfolio": [...],
+  "top_counterparties": [...],
+  "recent_transactions": [...]
 }`}</pre>
               </div>
             </div>
@@ -492,46 +580,18 @@ Content-Type: application/json
             <div className="docs-endpoint">
               <div className="docs-endpoint-head">
                 <span className="docs-method get">GET</span>
-                <code>/api/ledger/report</code>
+                <code>/api/v1/agent-report</code>
               </div>
-              <p className="docs-p">Returns the full report data used to render public wallet report pages.</p>
+              <p className="docs-p">Returns a plain-language financial intelligence report for a named agent.</p>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
-                <pre>{`GET /api/ledger/report?wallet=0x...&period=30d`}</pre>
+                <pre>{`GET /api/v1/agent-report?agentName=Aeon&days=7
+Authorization: Bearer xb_live_...`}</pre>
               </div>
             </div>
 
-            <h2 className="docs-h2">Agent JSON output</h2>
-            <p className="docs-p">
-              x402Books AI generates structured JSON that agents can consume directly to understand their own financial state. This enables agents to make budget-aware decisions.
-            </p>
-            <div className="docs-code-block">
-              <div className="docs-code-head"><span>Agent financial state</span></div>
-              <pre>{`{
-  "wallet": "0x7d3f...42f1",
-  "generated_at": "2026-05-12T10:00:00Z",
-  "range": "30d",
-  "summary": {
-    "total_spend": 42.80,
-    "total_income": 91.20,
-    "net_flow": 48.40,
-    "transaction_count": 128
-  },
-  "categories": [
-    { "category": "api_call", "total_usdc": 18.40, "count": 74 },
-    { "category": "data_access", "total_usdc": 11.25, "count": 31 },
-    { "category": "compute", "total_usdc": 13.15, "count": 23 }
-  ],
-  "report": {
-    "title": "Healthy agent wallet with consistent API spend",
-    "narrative": "This wallet shows steady outflows across API and compute categories...",
-    "budget_status": "safe",
-    "top_category": "api_call"
-  }
-}`}</pre>
-            </div>
             <div className="docs-callout">
-              <strong>Example use case:</strong> An agent reads its wallet report via the API before deciding whether it has sufficient balance to initiate another API call.
+              <strong>Rate limits:</strong> Free — 100 req/day · $LUCA Holder (≥1,000) — 500/day · $LUCA Whale (≥10,000) — 2,000/day. Generate your key at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>.
             </div>
           </section>
 
