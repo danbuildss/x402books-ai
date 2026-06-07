@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
@@ -613,6 +613,26 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const [mfState, setMfState]         = useState<ClaimState>("idle");
   const [mfMsg, setMfMsg]             = useState("");
 
+  // claim status — check for existing pending submissions on mount
+  const [claimStatus, setClaimStatus] = useState<"checking" | "pending" | "none">("checking");
+  const [pendingSummary, setPendingSummary] = useState("");
+
+  useEffect(() => {
+    fetch(`/api/registry/claim-status?agent=${slug}`)
+      .then((r) => r.json())
+      .then((d: { found?: boolean; pending?: Array<{ status: string; type: string; submitted_at: string }> }) => {
+        const activePending = (d.pending ?? []).find((p) => p.status === "pending");
+        if (activePending) {
+          setClaimStatus("pending");
+          const date = new Date(activePending.submitted_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+          setPendingSummary(`${activePending.type === "wallet_update" ? "Manifest" : "Claim"} submitted ${date} — Luca is reviewing.`);
+        } else {
+          setClaimStatus("none");
+        }
+      })
+      .catch(() => setClaimStatus("none"));
+  }, [slug]);
+
   if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
 
   const done = (tab === "wallet" && walletState === "done") || (tab === "manifest" && mfState === "done");
@@ -700,6 +720,21 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
   // ── Collapsed state ───────────────────────────────────────────────────────
   if (!expanded) {
+    // Pending verification state — show status instead of action buttons
+    if (claimStatus === "pending") {
+      return (
+        <div style={{ ...bannerStyle, borderLeft: "3px solid #f59e0b", border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16, color: "#f59e0b", flexShrink: 0 }}>pending</span>
+            <div>
+              <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "#f59e0b", margin: "0 0 2px" }}>Verification in progress</p>
+              <p style={{ fontSize: "0.76rem", color: "var(--muted)", margin: 0 }}>{pendingSummary}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>

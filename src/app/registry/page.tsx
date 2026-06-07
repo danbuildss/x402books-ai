@@ -29,15 +29,14 @@ const PAGE_SIZE = 25;
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
 function computeStats(agents: Agent[]) {
-  const walletCount = agents.filter(
-    (a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0
-  ).length;
-  const reviewedCount = agents.filter((a) => a.financialActivityScore !== null).length;
+  const walletCount     = agents.filter((a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0).length;
+  const reviewedCount   = agents.filter((a) => a.financialActivityScore !== null).length;
+  const ecosystemCount  = new Set(agents.map((a) => a.ecosystem)).size;
   return [
-    { label: "Agents Tracked",  value: String(agents.length) },
-    { label: "Ecosystems",      value: "5"                   },
-    { label: "Wallets Indexed", value: String(walletCount)   },
-    { label: "Luca Reviewed",   value: String(reviewedCount) },
+    { label: "Agents Tracked",  value: String(agents.length)    },
+    { label: "Ecosystems",      value: String(ecosystemCount)    },
+    { label: "Wallets Indexed", value: String(walletCount)       },
+    { label: "Luca Reviewed",   value: String(reviewedCount)     },
   ];
 }
 
