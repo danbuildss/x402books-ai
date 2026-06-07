@@ -8,7 +8,6 @@ import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
-import { AGENTS } from "./data";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
 
@@ -473,7 +472,8 @@ function LucaExample() {
 type SortKey = "verification" | "name" | "activity" | "health";
 
 export default function RegistryPage() {
-  const [agents, setAgents]         = useState<Agent[]>(AGENTS);
+  const [agents, setAgents]         = useState<Agent[]>([]);
+  const [loading, setLoading]       = useState(true);
   const [fromSupabase, setFromSupabase] = useState(false);
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
@@ -490,7 +490,8 @@ export default function RegistryPage() {
           setFromSupabase(data.fromSupabase ?? false);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   // Reset to page 1 whenever filters or sort change
@@ -567,7 +568,7 @@ export default function RegistryPage() {
         <div className="reg-hero-stats">
           {STATS.map((s) => (
             <div key={s.label} className="reg-hero-stat">
-              <span className="reg-hero-stat-val">{s.value}</span>
+              <span className="reg-hero-stat-val">{loading ? "…" : s.value}</span>
               <span className="reg-hero-stat-label">{s.label}</span>
             </div>
           ))}
@@ -640,11 +641,11 @@ export default function RegistryPage() {
         {/* Count + live dot */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
-            {sorted.length === agents.length
+            {loading ? "Loading…" : sorted.length === agents.length
               ? `${agents.length} agents`
               : `${sorted.length} of ${agents.length} agents`}
           </span>
-          {fromSupabase && (
+          {!loading && fromSupabase && (
             <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)" }}>
               <span style={{
                 display: "inline-block", width: 7, height: 7,
@@ -658,7 +659,16 @@ export default function RegistryPage() {
 
         {/* List */}
         <div className="reg-list">
-          {paginated.length === 0 ? (
+          {loading ? (
+            Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="reg-row reg-row-skeleton">
+                <div className="reg-skeleton reg-skeleton-avatar" />
+                <div className="reg-skeleton reg-skeleton-name" />
+                <div className="reg-skeleton reg-skeleton-badges" />
+                <div className="reg-skeleton reg-skeleton-score" />
+              </div>
+            ))
+          ) : paginated.length === 0 ? (
             <div className="reg-empty-cards">No agents match your filters.</div>
           ) : (
             paginated.map((a) => <AgentRow key={a.name} agent={a} />)
