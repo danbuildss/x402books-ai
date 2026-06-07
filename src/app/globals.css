@@ -10649,6 +10649,23 @@ html, body {
   margin-top: 4px;
 }
 
+/* Skeleton loading rows */
+@keyframes reg-shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.reg-row-skeleton { pointer-events: none; }
+.reg-skeleton {
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--surface-hover) 25%, var(--border) 50%, var(--surface-hover) 75%);
+  background-size: 400px 100%;
+  animation: reg-shimmer 1.4s ease-in-out infinite;
+}
+.reg-skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; }
+.reg-skeleton-name   { width: 140px; height: 14px; }
+.reg-skeleton-badges { width: 200px; height: 20px; flex: 1; }
+.reg-skeleton-score  { width: 36px; height: 20px; margin-left: auto; }
+
 .reg-row {
   display: flex;
   align-items: center;
