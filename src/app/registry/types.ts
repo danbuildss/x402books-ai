@@ -43,6 +43,10 @@ export type OutreachStatus = "Not started" | "In progress" | "Connected";
 export type AgentWallet = {
   address: string;
   label: WalletLabel;
+  role?: string;          // treasury | fee | deployer | operator | unknown
+  chain?: string;         // base | ethereum | solana | etc
+  confidence?: string;    // declared | inferred | confirmed
+  evidenceSource?: string; // manifest | luca | admin
   notes?: string;
 };
 

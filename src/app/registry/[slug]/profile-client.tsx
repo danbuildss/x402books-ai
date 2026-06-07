@@ -1031,6 +1031,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                   <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
                     {w.label}
                   </span>
+                  {w.chain && (
+                    <span className="reg-wallet-chain">{w.chain}</span>
+                  )}
+                  {w.confidence && w.confidence !== "declared" && (
+                    <span className="reg-wallet-confidence">{w.confidence}</span>
+                  )}
                   <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
                     {truncate(w.address)}
                   </a>

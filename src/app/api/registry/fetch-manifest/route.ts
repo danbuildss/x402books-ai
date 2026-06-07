@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     agent_name:    manifest.agent.trim(),
     update_type:   "wallet_update",
     proposed_data: {
-      wallets:   normalized.map((w) => ({ address: w.address, label: w.label, notes: w.notes })),
+      wallets:   normalized.map((w) => ({ address: w.address, label: w.label, role: w.role, chain: w.chain, notes: w.notes })),
       xHandle:   manifest.xHandle ?? null,
       ecosystem: manifest.ecosystem ?? null,
       source_repo: repo_url.trim(),
