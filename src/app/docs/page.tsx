@@ -7,23 +7,23 @@ const NAV_GROUPS = [
   {
     label: "Introduction",
     items: [
-      { id: "overview", label: "Overview" },
-      { id: "features", label: "V1 Features" },
-      { id: "how-it-works", label: "How It Works" },
+      { id: "overview",      label: "Overview"           },
+      { id: "features",      label: "What We Built"      },
+      { id: "how-it-works",  label: "The Manifest Loop"  },
     ],
   },
   {
     label: "Product",
     items: [
-      { id: "core-pages", label: "Core Pages" },
-      { id: "api", label: "API Reference" },
+      { id: "core-pages", label: "Core Product"  },
+      { id: "api",        label: "API Reference" },
     ],
   },
   {
     label: "Token",
     items: [
-      { id: "xbooks", label: "$LUCA Utility" },
-      { id: "monetization", label: "Monetization" },
+      { id: "xbooks",       label: "$LUCA Utility" },
+      { id: "monetization", label: "Monetization"  },
     ],
   },
   {
@@ -35,8 +35,8 @@ const NAV_GROUPS = [
   {
     label: "Trust",
     items: [
-      { id: "security", label: "Security" },
-      { id: "faq", label: "FAQ" },
+      { id: "security",    label: "Security"    },
+      { id: "faq",         label: "FAQ"         },
       { id: "positioning", label: "Positioning" },
     ],
   },
@@ -45,63 +45,61 @@ const NAV_GROUPS = [
 const ALL_IDS = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
 
 const FEATURES = [
-  { icon: "lock_open", label: "Auth", items: ["Privy login (email + X)", "Persistent sessions", "User profile stored securely"] },
-  { icon: "dashboard", label: "Dashboard", items: ["4 date ranges (7d · 14d · 30d · 90d)", "Spend, Income, Net Flow, Tx Count", "AI summary, line chart, donut chart"] },
-  { icon: "receipt_long", label: "Transactions", items: ["Searchable + filterable table", "Inline AI category editing", "Per-transaction notes + detail drawer"] },
-  { icon: "flag", label: "Flags", items: ["Duplicate & unusual amount detection", "High-frequency + unknown counterparty flags", "Bulk mark-reviewed workflow"] },
-  { icon: "description", label: "Reports", items: ["PDF + CSV export", "Agent-ready JSON output", "Income vs Spend visual + counterparties"] },
-  { icon: "category", label: "Categories", items: ["AI-categorized spend breakdown", "Horizontal bar chart by category", "Income breakdown + AI narrative"] },
-  { icon: "account_balance_wallet", label: "Wallets", items: ["Recently scanned wallets", "Quick wallet switching", "Top counterparties by volume"] },
-  { icon: "share", label: "Public Reports", items: ["Shareable /report/[wallet] URL", "No login required to view", "Live data with range switcher"] },
+  { icon: "dataset",            label: "Agent Registry",          items: ["125+ autonomous agents indexed", "5 ecosystems: AEON, BANKR, Virtuals, Base, EigenCloud", "Sort by score, status, health, activity"] },
+  { icon: "folder_open",        label: "Wallet Manifest Standard", items: [".x402books/wallets.json open format", "GitHub + Gitlawb repo support", "GitHub Action for automated validation"] },
+  { icon: "verified_user",      label: "Verification System",      items: ["Six-tier pipeline: Candidate → Luca Managed", "Manifest submission fast-tracks to Wallets Declared", "Wallet claim + signed proof paths"] },
+  { icon: "analytics",          label: "Transparency Scores",      items: ["0–100 composite score per agent", "Factors: wallets, status, activity, evidence, verdict", "Live on every public profile"] },
+  { icon: "psychology",         label: "Luca Intelligence",        items: ["AI writes verdicts for every agent", "Scores financial activity + partnership fit", "Runs integrity passes + approves claims"] },
+  { icon: "badge",              label: "SVG Verification Badges",  items: ["Live badge at /api/badge/[slug]", "Embed in GitHub READMEs in one line", "Updates automatically as status changes"] },
+  { icon: "person_pin",         label: "Agent Profiles",           items: ["Public profile at /registry/[slug]", "Wallets, scores, settlement patterns, Luca verdict", "Claim banner with manifest + wallet paths"] },
+  { icon: "security",           label: "Nipmod Integration",       items: ["Tool decision events on agent profiles", "Install / reject / defer with risk levels", "181+ events indexed live"] },
 ];
 
 const CORE_PAGES = [
-  { path: "/dashboard", name: "Overview", desc: "Wallet scanner, stat cards, AI summary, charts, and recent activity.", actions: "Scan wallet, change range, categorize, export" },
-  { path: "/transactions", name: "Transactions", desc: "Full transaction explorer with search, filters, inline editing, and detail drawer.", actions: "Edit category, add note, open in Basescan" },
-  { path: "/flags", name: "Flags", desc: "Risk review queue surfacing anomalous activity across all transactions.", actions: "Filter by flag type, mark reviewed, bulk clear" },
-  { path: "/reports", name: "Reports", desc: "Reporting center for PDF, CSV, JSON, and visual financial summaries.", actions: "Download PDF, export CSV, copy agent JSON" },
-  { path: "/categories", name: "Categories", desc: "Category intelligence page breaking down spend and income by type.", actions: "View breakdown, read AI narrative insight" },
-  { path: "/wallets", name: "Wallets", desc: "Wallet management with counterparty analysis and quick switching.", actions: "Switch wallet, copy address, open Basescan" },
-  { path: "/settings", name: "Settings", desc: "Account preferences — theme, wallet, sign-out, and cache management.", actions: "Toggle theme, clear cache, sign out" },
-  { path: "/report/[wallet]", name: "Public Report", desc: "Publicly shareable wallet report — no authentication required.", actions: "Share link, download PDF, switch range" },
+  { path: "/registry",       name: "Agent Registry",  desc: "125+ autonomous agents indexed. Sort by verification tier, activity score, treasury health, or name. Filter by ecosystem and status.", actions: "Browse agents, filter by status, sort by score" },
+  { path: "/registry/[slug]", name: "Agent Profile",  desc: "Public financial identity profile for every agent. Shows declared wallets, transparency score, settlement patterns, Luca verdict, and tool decisions.", actions: "View wallets, read Luca verdict, claim profile, embed badge" },
+  { path: "/luca",           name: "Luca",            desc: "Luca's public interface — financial intelligence agent built on x402Books. Access Luca's analysis, ask questions about agent finances.", actions: "Ask Luca, view agent economics, read analysis" },
+  { path: "/developer",      name: "Developer Portal", desc: "API key management with $LUCA tier system. Free: 100 req/day. Holder: 500/day. Whale: 2,000/day.", actions: "Generate API key, verify wallet for tier, view usage" },
+  { path: "/docs",           name: "Documentation",   desc: "Product docs, API reference, manifest standard specification, and integration guides.", actions: "Read API docs, copy endpoints, learn manifest format" },
 ];
 
 const ROADMAP = [
   {
     phase: "Phase 1",
-    title: "Financial Identity Layer",
+    title: "Financial Identity Infrastructure",
     status: "live",
     items: [
-      "Wallet scanner + AI categorization (16 categories)",
-      "Dashboard, analytics, PDF / CSV export",
-      "Public shareable report links — no auth required",
-      "Agent Financial Registry — 84 agents indexed",
-      "Developer API keys + $LUCA tier system",
-      "Settlement classifier + Luca verdict signals",
+      "125+ autonomous agents indexed across 5 ecosystems",
+      "Agent Wallet Manifest standard (.x402books/wallets.json)",
+      "Six-tier verification pipeline: Candidate → Luca Managed",
+      "Transparency scores + Luca verdicts on every profile",
+      "SVG verification badges + /api/stats prediction oracle",
+      "Nipmod tool decision integration — 181+ events live",
+      "Developer API keys + $LUCA tier system (100 / 500 / 2,000 req/day)",
     ],
   },
   {
     phase: "Phase 2",
-    title: "Trust & Registry Infrastructure",
-    status: "live",
+    title: "Manifest Adoption",
+    status: "next",
     items: [
-      "Agent verification submissions queue",
-      "Wallet manifest format (.x402books/wallets.json)",
-      "AEON + EigenCloud ecosystem integration — 5 ecosystems live",
-      "Settlement pattern badges on public profiles",
-      "Growth OS — product usage metrics",
-      "Registry fully DB-driven via Supabase",
+      "Starter templates: OpenAI Agents SDK, LangGraph, CrewAI",
+      "Registry leaderboards: Most Transparent, Most Verified, Recently Declared",
+      "Claim flow improvements + claim status tracking",
+      "Manifest auto-create: unknown agents get profiles on submission",
+      "Target: 100 manifest submissions · 50 claimed profiles",
     ],
   },
   {
     phase: "Phase 3",
-    title: "Ecosystem Embeds",
-    status: "next",
+    title: "Verification Program",
+    status: "planned",
     items: [
-      "Surplus inference spend logging",
-      "Virtuals agent onboarding",
-      "Embeddable agent profile cards — live at /registry/[slug]/card",
-      "x402Books profile sharing as default trust signal",
+      "Verified Agent Program — formal requirements + public benefits",
+      "State of Agent Finance — twice weekly intelligence reports (Mon + Thu)",
+      "Profile sharing improvements: PNG cards, shareable links",
+      "Homepage featuring verified agents",
+      "Target: 25 verified profiles",
     ],
   },
   {
@@ -109,11 +107,11 @@ const ROADMAP = [
     title: "Financial Intelligence",
     status: "planned",
     items: [
-      "Treasury health alerts",
+      "Treasury health alerts and runway tracking",
       "Settlement quality scoring",
-      "Operational runway tracking",
       "Recurring spend detection",
-      "Inference economics dashboard",
+      "Counterparty concentration analysis",
+      "Operational finance reports for agent teams",
     ],
   },
   {
@@ -121,11 +119,10 @@ const ROADMAP = [
     title: "Network Effects",
     status: "planned",
     items: [
-      "Public leaderboards by activity score",
-      "Ecosystem discovery feed",
-      "Verified treasury badge — projects earn it",
-      "Embeddable report cards",
-      "State of Agent Finance — weekly reports",
+      "Ecosystem discovery feed — ranked by trust signals",
+      "Embeddable profile cards for partner sites",
+      "API partnerships with agent frameworks",
+      "x402Books as the default financial identity layer for new agents",
     ],
   },
   {
@@ -134,38 +131,46 @@ const ROADMAP = [
     status: "planned",
     items: [
       "Verification as a service",
-      "Premium treasury reports",
       "Enterprise monitoring API",
+      "Premium Luca intelligence reports",
       "Compliance-grade audit exports",
-      "Ecosystem analytics packages",
+      "Ecosystem analytics packages for protocols",
     ],
   },
 ];
 
 const FAQ_ITEMS = [
   {
-    q: "What is x402Books AI?",
-    a: "x402Books AI is a financial intelligence platform that turns Base wallet activity into readable reports, AI-categorized transactions, and agent-ready data. It gives developers and builders the accounting layer for the agent economy.",
+    q: "What is x402Books?",
+    a: "x402Books is Financial Identity Infrastructure for Autonomous Agents. We index agents, verify wallet ownership via a manifest standard, classify financial activity, and generate transparency scores — giving every autonomous agent a verifiable, public financial identity.",
   },
   {
-    q: "Who is x402Books AI for?",
-    a: "AI agent developers, onchain builders, teams managing agent wallets, x402 developers, and Base ecosystem builders who need clear financial visibility into wallet activity.",
+    q: "What is the Agent Wallet Manifest?",
+    a: "An open standard for declaring financial identity. Agents add a .x402books/wallets.json file to their GitHub or Gitlawb repo declaring wallet addresses and roles (treasury, fee recipient, deployer, operator). x402Books validates it, upgrades the registry profile to Wallets Declared, and issues a live SVG verification badge.",
   },
   {
-    q: "Does x402Books AI control my funds?",
-    a: "No. x402Books AI is read-only. It analyzes public onchain data. It never requests private keys, executes transactions, or takes custody of any assets.",
+    q: "How does verification work?",
+    a: "Six tiers: Candidate → Needs Verification → Wallets Declared → Claimed → Verified → Luca Managed. Submitting a wallet manifest moves an agent to Wallets Declared. Submitting a matching wallet address moves to Claimed. Full Verified status requires Luca review. Luca Managed means Luca actively monitors and interprets the agent's finances.",
   },
   {
-    q: "What can I do in V1?",
-    a: "Scan any Base wallet, view spend and income analytics, AI-categorize transactions, export PDF and CSV reports, generate agent-ready JSON, and share public wallet report links.",
+    q: "What is Luca?",
+    a: "Luca is the AI financial intelligence agent built on top of x402Books. He writes verdicts for every agent profile, scores financial activity and partnership fit, approves manifest submissions and wallet claims, and runs integrity passes to maintain registry quality.",
+  },
+  {
+    q: "How do I get my agent listed?",
+    a: "Add a .x402books/wallets.json manifest to your agent's GitHub repo and submit your repo URL via the Claim Banner on your profile page. If your agent isn't indexed yet, contact the team to add it. Once indexed, manifest submission is fully self-serve.",
   },
   {
     q: "What is $LUCA?",
-    a: "$LUCA is Luca's intelligence token. It unlocks deep financial analysis, premium treasury reports, and priority verification via Luca. It is not required to use x402Books or the API — those are separate.",
+    a: "$LUCA is Luca's intelligence token. Holding $LUCA increases your API rate limit — Holder (≥1,000 $LUCA): 500 req/day, Whale (≥10,000 $LUCA): 2,000 req/day. It also unlocks priority verification and premium Luca intelligence reports.",
   },
   {
-    q: "Is there a free tier?",
-    a: "Yes. Wallet scanning, transaction analytics, and public report sharing are free. Premium features including advanced exports, deep scans, and API access will be part of paid tiers.",
+    q: "Does x402Books control agent funds?",
+    a: "No. x402Books is read-only infrastructure. It never requests private keys, cannot execute transactions, and holds no custody over any assets. All data comes from public blockchain records and agent-declared manifests.",
+  },
+  {
+    q: "Is the API free?",
+    a: "Public endpoints (/api/stats, /api/badge/[slug], /api/registry/agents) require no auth and are free. Financial intelligence endpoints (/api/v1/*) require an API key — free tier is 100 req/day. Generate a key at /developer.",
   },
 ];
 
@@ -268,36 +273,36 @@ export default function DocsPage() {
           {/* ── Overview ── */}
           <section id="overview" className="docs-section">
             <span className="docs-tag">Introduction</span>
-            <h1 className="docs-h1">x402Books AI</h1>
-            <p className="docs-lead">The financial intelligence layer for the agent economy.</p>
+            <h1 className="docs-h1">x402Books</h1>
+            <p className="docs-lead">Financial Identity Infrastructure for Autonomous Agents.</p>
             <p className="docs-p">
-              AI agents are becoming economic actors. They pay for APIs, data, compute, and services — all onchain, all in USDC. But raw wallet data tells you nothing useful on its own.
+              AI agents are becoming economic actors. They operate wallets, settle payments, and generate revenue — all onchain. But raw wallet data tells you nothing about who the agent is, whether it can be trusted, or what it&apos;s actually doing.
             </p>
             <p className="docs-p">
-              x402Books AI solves this. It scans any Base wallet and turns raw USDC activity into structured financial reports, AI-categorized transactions, exportable data, and agent-readable JSON output.
+              x402Books solves this. We give every autonomous agent a verifiable financial identity — indexed in a public registry, scored for transparency, verified through a manifest standard, and interpreted by Luca.
             </p>
 
             <div className="docs-callout">
-              <strong>In one line:</strong> x402Books AI turns wallet activity into readable books.
+              <strong>In one line:</strong> x402Books is the open standard for agent financial identity.
             </div>
 
-            <h2 className="docs-h2">What you can do</h2>
+            <h2 className="docs-h2">What x402Books does</h2>
             <ul className="docs-list">
-              <li>Scan any Base wallet and view spend, income, and net flow</li>
-              <li>AI-categorize every transaction — API calls, compute, data, services, income</li>
-              <li>Review flagged or anomalous activity in a dedicated queue</li>
-              <li>Export financial reports as PDF, CSV, or agent-ready JSON</li>
-              <li>Share public wallet reports via a permanent link — no login required</li>
-              <li>Query wallet financial data programmatically via the API</li>
+              <li><strong>Indexes</strong> — 125+ autonomous agents across 5 ecosystems in a public registry</li>
+              <li><strong>Verifies</strong> — agents declare wallets via manifest, x402Books validates ownership</li>
+              <li><strong>Scores</strong> — Transparency Score (0–100) based on wallets, status, activity, evidence</li>
+              <li><strong>Classifies</strong> — settlement patterns: treasury, revenue, operational spend, inference</li>
+              <li><strong>Interprets</strong> — Luca writes financial verdicts and monitors agent finances</li>
+              <li><strong>Distributes</strong> — SVG badges, public profiles, embeddable cards, API data</li>
             </ul>
 
             <h2 className="docs-h2">Who it's for</h2>
             <div className="docs-audience-grid">
               {[
-                { label: "AI Agent Developers", desc: "Understand what your agents are spending and earning onchain." },
-                { label: "Onchain Builders", desc: "Get financial clarity on any Base wallet you work with." },
-                { label: "x402 Developers", desc: "Track micropayment activity and identify x402 payment patterns." },
-                { label: "Protocol Teams", desc: "Monitor wallet-level financial activity across your ecosystem." },
+                { label: "Agent Developers",  desc: "Give your agent a verifiable financial identity. Declare wallets, get verified, embed a trust badge." },
+                { label: "Protocol Teams",    desc: "Index your ecosystem's agents. Surface financial transparency across your community." },
+                { label: "Builders & Auditors", desc: "Query live agent financial data via API. Verify wallet ownership. Assess trust signals." },
+                { label: "Prediction Markets", desc: "Use /api/stats as a live resolution oracle for adoption-based prediction markets." },
               ].map((a) => (
                 <div key={a.label} className="docs-audience-card">
                   <strong>{a.label}</strong>
@@ -306,23 +311,26 @@ export default function DocsPage() {
               ))}
             </div>
 
-            <h2 className="docs-h2">Why it matters</h2>
+            <h2 className="docs-h2">The architecture</h2>
             <p className="docs-p">
-              Without a financial intelligence layer, agent wallet activity is invisible — raw hashes, no context, no categories. You can't tell what was spent, where income came from, or whether a transaction was unusual.
+              Three layers. Each one depends on the one below it.
             </p>
-            <p className="docs-p">
-              x402Books AI makes wallet activity readable, reportable, and actionable — for both humans and the agents themselves.
-            </p>
+            <div className="docs-code-block">
+              <div className="docs-code-head"><span>Stack</span></div>
+              <pre>{`x402Books  =  infrastructure  (index, verify, classify, display)
+Luca       =  intelligence    (interpret, score, verdict, monitor)
+$LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
+            </div>
           </section>
 
-          {/* ── V1 Features ── */}
+          {/* ── What We Built ── */}
           <section id="features" className="docs-section">
             <span className="docs-tag">Introduction</span>
-            <h1 className="docs-h1">V1 Features</h1>
-            <p className="docs-lead">Everything included in the live v1 release.</p>
+            <h1 className="docs-h1">What We Built</h1>
+            <p className="docs-lead">The full infrastructure stack — live today.</p>
             <div className="docs-version-status">
               <span className="docs-status-dot" />
-              V1 is live and open for feedback.
+              All features below are live. 125+ agents indexed.
             </div>
             <div className="docs-features-grid">
               {FEATURES.map((f) => (
@@ -339,20 +347,18 @@ export default function DocsPage() {
             </div>
           </section>
 
-          {/* ── How It Works ── */}
+          {/* ── The Manifest Loop ── */}
           <section id="how-it-works" className="docs-section">
             <span className="docs-tag">Introduction</span>
-            <h1 className="docs-h1">How It Works</h1>
-            <p className="docs-lead">Six steps from raw wallet data to financial intelligence.</p>
+            <h1 className="docs-h1">The Manifest Loop</h1>
+            <p className="docs-lead">From zero identity to verified financial profile in four steps.</p>
 
             <div className="docs-steps">
               {[
-                { n: "01", title: "Sign In", body: "Authenticate with Privy using your email or X/Twitter account. Your session is persisted securely — no wallet signature required." },
-                { n: "02", title: "Paste a Wallet Address", body: "Enter any Base wallet address into the scanner. x402Books AI is read-only — it works with public onchain data only." },
-                { n: "03", title: "Fetch & Normalize Activity", body: "x402Books AI fetches all USDC transfers for the wallet across the selected date range (7d, 14d, 30d, or 90d) and normalizes the raw data." },
-                { n: "04", title: "AI Categorization", body: "Claude AI classifies each transaction into a category — API Calls, Data Access, Compute, Agent Services, Income, and more. A rule-based fallback ensures every transaction is classified." },
-                { n: "05", title: "Generate Reports", body: "Export your financial data as a PDF report, CSV spreadsheet, or structured agent-ready JSON. All formats are available from the Reports page." },
-                { n: "06", title: "Share Public Reports", body: "Every wallet report is available at a permanent public URL. Share it with anyone — no login required to view." },
+                { n: "01", title: "Declare", body: "Add .x402books/wallets.json to your agent's GitHub or Gitlawb repo. Declare wallet addresses with roles: treasury, fee recipient, deployer, or operator. The GitHub Action validates the format on every push." },
+                { n: "02", title: "Submit", body: "Paste your repo URL into the Claim Banner on your agent's profile page. x402Books fetches the manifest, validates the wallets, and queues the update for Luca review." },
+                { n: "03", title: "Verify", body: "Luca reviews the submission. Verified manifests upgrade the agent's status to Wallets Declared. Matching a wallet address via the claim form upgrades to Claimed. Full Verified status follows Luca review." },
+                { n: "04", title: "Distribute", body: "A live SVG badge appears at /api/badge/[your-slug]. Embed it in your README. Your Transparency Score updates. Your profile shows declared wallets, settlement patterns, and Luca's financial verdict." },
               ].map((s) => (
                 <div key={s.n} className="docs-step">
                   <span className="docs-step-num">{s.n}</span>
@@ -364,27 +370,43 @@ export default function DocsPage() {
               ))}
             </div>
 
-            <h2 className="docs-h2">Transaction categories</h2>
-            <p className="docs-p">AI categorization assigns each transaction one of the following labels:</p>
+            <h2 className="docs-h2">Wallet manifest format</h2>
+            <p className="docs-p">Add this file to your repo at <code>.x402books/wallets.json</code>:</p>
             <div className="docs-code-block">
-              <div className="docs-code-head"><span>Categories</span></div>
-              <pre>{`api_call          → API endpoint consumption
-data_access       → Data query or feed access
-compute           → Compute or inference cost
-agent_service     → Payment to another agent
-subscription      → Recurring service payment
-income            → Inbound USDC received
-refund            → Returned payment
-internal_transfer → Wallet-to-wallet self-transfer
-unknown           → Unclassified activity`}</pre>
+              <div className="docs-code-head"><span>.x402books/wallets.json</span></div>
+              <pre>{`{
+  "agent": "MyAgent",
+  "ecosystem": "AEON",
+  "x": "@MyAgent",
+  "website": "https://myagent.xyz",
+  "wallets": [
+    {
+      "address": "0x...",
+      "role": "treasury",
+      "chain": "base",
+      "notes": "Primary treasury wallet"
+    }
+  ]
+}`}</pre>
+            </div>
+
+            <h2 className="docs-h2">Verification tiers</h2>
+            <div className="docs-code-block">
+              <div className="docs-code-head"><span>Trust pipeline</span></div>
+              <pre>{`Candidate          →  Indexed, no proof of ownership
+Needs Verification →  Flagged for review
+Wallets Declared   →  Manifest submitted + validated ← start here
+Claimed            →  Wallet address matches declared wallet
+Verified           →  Luca-reviewed, fully verified
+Luca Managed       →  Luca actively monitors finances`}</pre>
             </div>
           </section>
 
-          {/* ── Core Pages ── */}
+          {/* ── Core Product ── */}
           <section id="core-pages" className="docs-section">
             <span className="docs-tag">Product</span>
-            <h1 className="docs-h1">Core Pages</h1>
-            <p className="docs-lead">Every page in the x402Books AI app and what it does.</p>
+            <h1 className="docs-h1">Core Product</h1>
+            <p className="docs-lead">The pages that make up the financial identity infrastructure.</p>
 
             <div className="docs-pages-list">
               {CORE_PAGES.map((page) => (
@@ -631,28 +653,26 @@ Authorization: Bearer xb_live_...`}</pre>
                   <tr>
                     <th>Feature</th>
                     <th>Free</th>
-                    <th>Pro</th>
-                    <th>Team</th>
-                    <th>Agent</th>
+                    <th>Holder ≥1K</th>
+                    <th>Whale ≥10K</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[
-                    ["Wallet scanning", "✓", "✓", "✓", "✓"],
-                    ["Transaction analytics", "✓", "✓", "✓", "✓"],
-                    ["AI categorization", "✓", "✓", "✓", "✓"],
-                    ["Public report sharing", "✓", "✓", "✓", "✓"],
-                    ["PDF + CSV export", "—", "✓", "✓", "✓"],
-                    ["Deep wallet scans", "—", "✓", "✓", "✓"],
-                    ["API access", "—", "—", "✓", "✓"],
-                    ["Multi-wallet tracking", "—", "—", "✓", "✓"],
-                    ["Agent financial score", "—", "—", "—", "✓"],
-                    ["High-frequency queries", "—", "—", "—", "✓"],
+                    ["Registry API (/api/registry/agents)", "✓", "✓", "✓"],
+                    ["Public stats (/api/stats)", "✓", "✓", "✓"],
+                    ["Verification badges (/api/badge/*)", "✓", "✓", "✓"],
+                    ["Agent financial state (v1)", "100/day", "500/day", "2,000/day"],
+                    ["Agent intelligence report (v1)", "100/day", "500/day", "2,000/day"],
+                    ["Priority manifest review", "—", "✓", "✓"],
+                    ["Priority claim processing", "—", "✓", "✓"],
+                    ["Premium Luca reports", "—", "—", "✓"],
+                    ["Enterprise monitoring API", "—", "—", "✓"],
                   ].map(([feat, ...tiers]) => (
                     <tr key={String(feat)}>
                       <td>{feat}</td>
                       {tiers.map((v, i) => (
-                        <td key={i} className={v === "✓" ? "tier-yes" : "tier-no"}>{v}</td>
+                        <td key={i} className={v === "✓" ? "tier-yes" : v === "—" ? "tier-no" : ""}>{v}</td>
                       ))}
                     </tr>
                   ))}
@@ -665,17 +685,16 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="monetization" className="docs-section">
             <span className="docs-tag">Token</span>
             <h1 className="docs-h1">Monetization</h1>
-            <p className="docs-lead">Multiple revenue streams built for the agent economy.</p>
+            <p className="docs-lead">Infrastructure companies monetize through trust, access, and data.</p>
 
             <div className="docs-mono-grid">
               {[
-                { n: "01", title: "SaaS Subscriptions", desc: "Monthly access to Pro and Team tiers with advanced features, exports, and multi-wallet support." },
-                { n: "02", title: "API Usage Fees", desc: "Pay-per-call pricing for developers and agents querying wallet financial data programmatically." },
-                { n: "03", title: "Premium Reports", desc: "On-demand deep scans, full history exports, and tax-style PDF reports for detailed financial analysis." },
-                { n: "04", title: "$LUCA Token", desc: "Token powers discounted access, feature unlocks, and future agent usage flows across the platform." },
-                { n: "05", title: "Agent Financial Score", desc: "A future scoring system assigning wallet-level financial reliability scores — useful for agents and protocols." },
-                { n: "06", title: "Intelligence Products", desc: "Aggregated ecosystem data, trend reports, and financial intelligence for protocols, researchers, and teams." },
-                { n: "07", title: "Enterprise Tools", desc: "Advanced analytics, bulk wallet reporting, and custom integrations for teams managing large agent fleets." },
+                { n: "01", title: "API Access (live)",            desc: "Tiered API access for financial intelligence endpoints. Free: 100 req/day. $LUCA Holder: 500/day. $LUCA Whale: 2,000/day." },
+                { n: "02", title: "Verification Program",         desc: "Verification as a service — formal review, Luca verdict, and Verified badge for agent teams that want priority processing." },
+                { n: "03", title: "Premium Luca Reports",         desc: "On-demand deep intelligence reports generated by Luca. Treasury health, settlement quality, runway analysis, counterparty risk." },
+                { n: "04", title: "$LUCA Token",                  desc: "Token powers API tier upgrades, priority verification, and future governance over registry standards." },
+                { n: "05", title: "Enterprise Monitoring API",    desc: "Bulk agent monitoring, custom dashboards, and compliance-grade exports for protocols managing agent fleets." },
+                { n: "06", title: "Ecosystem Analytics",          desc: "Aggregated financial intelligence for protocol teams — ecosystem-level transparency scores, adoption metrics, settlement trends." },
               ].map((m) => (
                 <div key={m.n} className="docs-mono-card">
                   <span className="docs-mono-num">{m.n}</span>
@@ -772,32 +791,51 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="positioning" className="docs-section docs-section-last">
             <span className="docs-tag">Trust</span>
             <h1 className="docs-h1">Positioning</h1>
-            <p className="docs-lead">What x402Books AI is, who it's for, and where it's going.</p>
+            <p className="docs-lead">Financial identity infrastructure for autonomous agents.</p>
 
             <div className="docs-position-block">
-              <p className="docs-position-line">Readable books for the agent economy.</p>
+              <p className="docs-position-line">The open standard for agent financial identity.</p>
             </div>
 
-            <h2 className="docs-h2">One-line description</h2>
+            <h2 className="docs-h2">What we are</h2>
             <p className="docs-p docs-p-large">
-              x402Books AI turns Base wallet activity into financial intelligence for humans and AI agents.
+              x402Books is the financial identity layer for the autonomous agent economy — not a wallet scanner, not a dashboard, not a token project.
+            </p>
+            <p className="docs-p">
+              AI agents are becoming economic actors. They operate wallets, settle payments, generate revenue, and pay for inference — all onchain. But raw blockchain data tells you nothing about who the agent is, whether it can be trusted, or whether its finances are healthy.
+            </p>
+            <p className="docs-p">
+              x402Books solves the identity problem: every agent gets a verifiable financial identity, publicly readable, verified through an open manifest standard, and interpreted by Luca.
             </p>
 
-            <h2 className="docs-h2">Full description</h2>
+            <h2 className="docs-h2">The architecture</h2>
+            <div className="docs-code-block">
+              <div className="docs-code-head"><span>Three layers</span></div>
+              <pre>{`x402Books  =  infrastructure  (index, verify, classify, display)
+Luca       =  intelligence    (interpret, verdict, score, monitor)
+$LUCA      =  ecosystem asset (API tier, priority verification)
+
+These are three distinct things. Never blur them.`}</pre>
+            </div>
+
+            <h2 className="docs-h2">The moat</h2>
             <p className="docs-p">
-              x402Books AI is the financial intelligence layer for the agent economy. It gives developers, builders, and autonomous agents the tools to understand wallet-level spend, income, categories, reports, and financial activity — in a format that both humans and machines can use.
+              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.x402books/wallets.json</code> to their repo plugs into x402Books' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
+            </p>
+            <p className="docs-p">
+              Infrastructure compounds slowly. Trust compounds slowly. Once infra wins — it is extremely difficult to replace.
             </p>
 
-            <h2 className="docs-h2">The vision</h2>
-            <p className="docs-p">
-              AI agents are becoming economic actors. As they operate autonomously — paying for APIs, data, and compute in real time — they need more than a wallet. They need accounting. They need budgeting. They need financial visibility.
-            </p>
-            <p className="docs-p">
-              x402Books AI is building the financial operating system for autonomous agents. Starting with the ledger. Adding intelligence. Growing with the ecosystem.
-            </p>
+            <h2 className="docs-h2">What we are not</h2>
+            <ul className="docs-list">
+              <li>Not a wallet scanner for retail users</li>
+              <li>Not another AI agent personality</li>
+              <li>Not a token project or memecoin</li>
+              <li>Not a dashboard for human wallet tracking</li>
+            </ul>
 
             <div className="docs-callout docs-callout-green">
-              <strong>Product first. Token later.</strong> x402Books AI is built on real utility — readable wallet data that developers and agents actually need today.
+              <strong>The one question.</strong> Before we ship anything: <em>"Does this make autonomous agents more financially readable, trustworthy, or auditable?"</em> If yes — ship it. If no — don't build it.
             </div>
           </section>
 
