@@ -35,6 +35,10 @@ interface RegistryAgentWalletRow {
   address: string;
   label: string;
   notes: string | null;
+  chain: string | null;
+  role: string | null;
+  confidence: string | null;
+  evidence_source: string | null;
 }
 
 interface CommIdentityRow {
@@ -182,6 +186,10 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
       walletsByAgent[w.agent_name].push({
         address: w.address,
         label: w.label as WalletLabel,
+        role: w.role ?? undefined,
+        chain: w.chain ?? undefined,
+        confidence: w.confidence ?? undefined,
+        evidenceSource: w.evidence_source ?? undefined,
         notes: w.notes ?? undefined,
       });
     }
@@ -316,7 +324,8 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
     }
 
     // If proposed_data includes wallets, upsert them
-    const wallets = proposed.wallets as AgentWallet[] | undefined;
+    type PendingWallet = AgentWallet & { role?: string; chain?: string; confidence?: string; evidence_source?: string };
+    const wallets = proposed.wallets as PendingWallet[] | undefined;
     if (Array.isArray(wallets) && wallets.length > 0) {
       const agentName = String(agentFields.name);
 
@@ -324,10 +333,14 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
       await sb.from("registry_agent_wallets").delete().eq("agent_name", agentName);
 
       const walletRows = wallets.map((w) => ({
-        agent_name: agentName,
-        address: w.address,
-        label: w.label,
-        notes: w.notes ?? null,
+        agent_name:      agentName,
+        address:         w.address,
+        label:           w.label,
+        notes:           w.notes ?? null,
+        chain:           w.chain ?? "base",
+        role:            w.role ?? "unknown",
+        confidence:      w.confidence ?? "declared",
+        evidence_source: w.evidence_source ?? "manifest",
       }));
 
       const { error: walletError } = await sb
