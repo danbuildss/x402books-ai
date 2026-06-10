@@ -15,6 +15,7 @@ const STATIC_ENDPOINTS = [
   { method: "GET",  path: "/api/registry/agents",                note: "All indexed agents with verification status" },
   { method: "POST", path: "/api/registry/fetch-manifest",        note: "Submit .x402books/wallets.json from repo" },
   { method: "POST", path: "/api/registry/claim",                 note: "Claim agent profile with wallet address" },
+  { method: "GET",  path: "/api/v1/kya/[slug]",                  note: "Trust decision: score, risk, recommendation (API key)" },
   { method: "GET",  path: "/api/v1/agent-financial-state",       note: "Treasury health for any wallet (API key)" },
   { method: "GET",  path: "/api/v1/agent-report",                note: "Financial intelligence report (API key)" },
   { method: "GET",  path: "/api/health",                         note: "Service health check" },
