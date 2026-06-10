@@ -312,6 +312,7 @@ export default function ValidatePage() {
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry">Registry</Link>
+          <Link href="/trust">Trust</Link>
           <Link href="/luca">Luca</Link>
           <Link href="/docs#api">API</Link>
           <Link href="/methodology">Methodology</Link>
@@ -449,7 +450,9 @@ export default function ValidatePage() {
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Product</p>
             <Link href="/registry">Registry</Link>
+          <Link href="/trust">Trust</Link>
             <Link href="/registry">Registry</Link>
+          <Link href="/trust">Trust</Link>
             <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>
           </div>
