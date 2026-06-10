@@ -546,6 +546,7 @@ export default function RegistryPage() {
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
           <Link href="/luca">Luca</Link>
           <Link href="/docs#api">API</Link>
+          <Link href="/methodology">Methodology</Link>
           <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">

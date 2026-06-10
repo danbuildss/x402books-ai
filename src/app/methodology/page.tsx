@@ -27,7 +27,7 @@ export default function MethodologyPage() {
         </div>
       </header>
 
-      <div className="docs-layout" style={{ maxWidth: 860, margin: "0 auto" }}>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px" }}>
         <main className="docs-content" style={{ width: "100%" }}>
 
           <section className="docs-section">
