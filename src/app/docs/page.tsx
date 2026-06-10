@@ -567,6 +567,38 @@ Content-Type: application/json
               </div>
             </div>
 
+            <h2 className="docs-h2">Trust Decisions — API key required</h2>
+
+            <div className="docs-endpoint">
+              <div className="docs-endpoint-head">
+                <span className="docs-method get">GET</span>
+                <code>/api/v1/kya/[slug]</code>
+              </div>
+              <p className="docs-p">Know Your Agent — the one call to make before trusting an agent with money. Returns a trust decision: score, confidence, risk level, recommendation, and the evidence behind it.</p>
+              <div className="docs-code-block">
+                <div className="docs-code-head"><span>Response</span></div>
+                <pre>{`{
+  "agent": "aeon",
+  "name": "Aeon",
+  "ecosystem": "AEON",
+  "trust_score": 72,
+  "confidence": 68,
+  "verification_status": "Wallets Declared",
+  "risk_level": "LOW",
+  "recommendation": "ALLOW",
+  "key_drivers": [
+    "treasury + operator wallet roles declared via manifest",
+    "Treasury health: Stable",
+    "Financial activity score 72/100"
+  ],
+  "advisory": "Advisory risk signal based on registry data...",
+  "profile": "https://www.x402books.xyz/registry/aeon",
+  "checked_at": "2026-06-10T12:00:00Z"
+}`}</pre>
+              </div>
+              <p className="docs-p" style={{ marginTop: 8 }}><strong>trust_score</strong> is how good the agent looks; <strong>confidence</strong> is how much data underlies that. A high score with low confidence means &quot;looks fine, thin evidence.&quot; Recommendations: ALLOW · REVIEW · BLOCK (BLOCK only on explicit negative signals — absence of data is REVIEW, never BLOCK).</p>
+            </div>
+
             <h2 className="docs-h2">Financial Intelligence — API key required</h2>
 
             <div className="docs-endpoint">
