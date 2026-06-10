@@ -320,7 +320,7 @@ export default function ValidatePage() {
         <div className="lp-header-right">
           <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+          <Link href="/registry" className="lp-btn-primary">Open Registry</Link>
         </div>
       </header>
 
@@ -448,7 +448,7 @@ export default function ValidatePage() {
         <div className="lp-footer-inner">
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
             <Link href="/registry">Registry</Link>
             <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>

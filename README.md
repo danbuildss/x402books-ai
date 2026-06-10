@@ -1,129 +1,128 @@
-# x402Books AI
+# x402Books
 
-**Readable books for the agent economy.**
+**Trust infrastructure for autonomous agents.**
 
-x402Books AI is an onchain accounting platform for autonomous agents and their operators. It turns Base wallet activity into clean financial reports, categorized transactions, financial health scores, and agent-readable summaries — powered by the x402 payment protocol.
+Agents are becoming economic actors — they operate wallets, settle payments, and pay for inference. Before one agent trusts another with money, someone has to answer: *who is this agent, and should I trust it?*
 
-Live at **[x402books.xyz](https://x402books.xyz)**
+x402Books answers that with one API call.
 
----
-
-## Ecosystem
-
-| Layer | Role |
-|-------|------|
-| **x402Books AI** | The platform — wallet audits, reports, financial intelligence |
-| **Luca** | The AI accountant agent — Telegram, onchain, conversational |
-| **$LUCA** | The unified ecosystem token — API tiers, premium features, agent credits |
+Live at **[x402books.xyz](https://www.x402books.xyz)**
 
 ---
 
-## What It Does
+## The stack
 
-- **Wallet Audits** — Scan any Base wallet address and get a complete financial breakdown
-- **Transaction Categorization** — AI classifies every onchain transaction: revenue, expenses, gas, swaps, treasury movement
-- **Financial Scoring** — Treasury health scores, inflow/outflow analysis, anomaly detection
-- **Agent Reports** — Structured summaries built for agents, operators, and on-chain bookkeeping
-- **Portfolio Tracking** — Live token balances across BANKR and Virtuals ecosystems + stablecoins (USDC, USDT, DAI, EURC)
-- **CSV & PDF Export** — Download full transaction history or formatted reports
-- **Shareable Reports** — Public-facing report links at `/report/[wallet]`
+| Layer | What it is |
+|-------|------------|
+| **Trust Check API** | `GET /api/v1/kya/[agent]` — trust score, confidence, risk level, recommendation, evidence |
+| **Agent Wallet Manifest** | `.agent/wallets.json` — the open standard for declaring agent financial identity |
+| **Agent Registry** | 125+ agents indexed with verified wallets, roles, treasury health, and verdicts |
+| **Luca** | The intelligence layer — verifies manifests, computes scores, writes verdicts |
+| **Methodology** | Every factor and point value is public: [x402books.xyz/methodology](https://www.x402books.xyz/methodology) |
 
 ---
 
-## Key Features
+## Trust Check — one call before money moves
 
-### App (Authenticated)
-- **Dashboard** — Financial stats, sparkline charts, AI insight cards, agent search
-- **Transactions** — Full ledger with date filtering, category editing, transaction notes, flagging
-- **Portfolio** — Live token balances with 24h price changes across ecosystem + stablecoins
-- **Reports** — Pre-built views: summary, cashflow, categories, flagged items
-- **Wallets** — Multi-wallet support, add/remove wallets
-- **Categories** — Custom category management
-- **Developer** — API key management, $LUCA token-gated rate limits, usage logs, wallet linking
+```bash
+curl -s https://www.x402books.xyz/api/v1/kya/aeon \
+  -H "Authorization: Bearer xb_live_..."
+```
 
-### Landing Page (`/`)
-- How it works, features, $LUCA utilities, $LUCA token card, x402 API section
-- Luca section — meet the AI accountant agent
-- FAQ, CTA
+```json
+{
+  "agent": "aeon",
+  "trust_score": 72,
+  "confidence": 68,
+  "verification_status": "Wallets Declared",
+  "risk_level": "LOW",
+  "recommendation": "ALLOW",
+  "key_drivers": [
+    "treasury + operator wallet roles declared via manifest",
+    "Treasury health: Stable"
+  ]
+}
+```
 
-### Luca Page (`/luca`)
-- Standalone marketing page for [Luca](https://t.me/AskLucaBot) — the AI accountant agent
-- Capabilities, how it works, sample report, For Agents / For Builders use cases
-- Content series, $LUCA token card with live price and copy contract address
-- SEO metadata (OG + Twitter card)
+Two numbers on purpose: **trust_score** is how good the agent looks, **confidence** is how much evidence sits behind that. `BLOCK` is reserved for explicit negative signals — absence of data is always `REVIEW`.
 
-### Agent Financial Registry (`/registry`)
-- Public directory of 20+ AI agents indexed by Luca
-- Confidence labels, wallet data, ecosystem filters, Luca's research notes
-- Agent verification CTA powered by $LUCA
+Full integration guide: [docs/TRUST-CHECK-API.md](docs/TRUST-CHECK-API.md)
+
+---
+
+## Declare your agent — `.agent/wallets.json`
+
+Add one file to your repo:
+
+```json
+{
+  "agent": "YourAgent",
+  "ecosystem": "Base",
+  "wallets": [
+    { "address": "0x...", "role": "treasury", "chain": "base" },
+    { "address": "0x...", "role": "operator", "chain": "base" }
+  ]
+}
+```
+
+Submit your repo URL at [x402books.xyz/registry](https://www.x402books.xyz/registry). Validated manifests upgrade your profile to **Wallets Declared**, raise your trust score and confidence, and give your agent a live verification badge plus its own Trust Check endpoint.
+
+Verification tiers: `Candidate → Wallets Declared → Claimed → Verified → Luca Managed`
 
 ---
 
 ## API
 
-Public REST API with key-based auth and $LUCA token-gated rate limits.
+**Public, no auth:**
+
+```
+GET /api/stats                Registry metrics + trust-check counts
+GET /api/badge/[slug]         SVG verification badge
+GET /api/registry/agents      All indexed agents
+```
+
+**API key (get one at [/developer](https://www.x402books.xyz/developer)):**
+
+```
+GET /api/v1/kya/[slug]                 Trust Check — the trust decision
+GET /api/v1/agent-financial-state      Treasury health for any wallet
+GET /api/v1/agent-report               Financial intelligence report
+```
 
 | Tier | Requirement | Requests/day |
 |------|-------------|-------------|
 | Free | Any API key | 100 |
-| LUCA Holder | ≥ 1,000 $LUCA | 500 |
-| LUCA Whale | ≥ 10,000 $LUCA | 2,000 |
+| Holder | ≥ 1,000 $LUCA | 500 |
+| Whale | ≥ 10,000 $LUCA | 2,000 |
 
-**Base URL:** `https://x402books.xyz/api/v1`
-
-**Auth:** `X-API-Key: xb_live_...` header
-
-### Endpoints
-
-```
-GET  /api/v1/agent-financial-state?wallet=0x...   Agent financial state summary
-GET  /api/v1/full-report?wallet=0x...             Full audit report
-GET  /api/v1/transactions?wallet=0x...            Paginated transaction list
-GET  /api/v1/ledger-summary?wallet=0x...          Ledger totals
-GET  /api/v1/categorize?wallet=0x...              Category breakdown
-```
-
-Get your API key at [x402books.xyz/developer](https://x402books.xyz/developer).
+API keys are session-owned; wallet tiers require a signed challenge (no address-pasting).
 
 ---
 
-## Luca — AI Accountant Agent
+## Luca
 
-**Luca** is the official x402Books AI agent, powered by $LUCA. He lives on Telegram and answers financial questions about any Base wallet.
+**Luca** is the intelligence layer of x402Books. He verifies manifests, computes trust and activity scores, writes the verdict on every profile, and publishes the *State of Agent Trust*.
 
 - Telegram: [@AskLucaBot](https://t.me/AskLucaBot)
 - X: [@AskLucaAI](https://x.com/AskLucaAI)
-- Page: [x402books.xyz/luca](https://x402books.xyz/luca)
+- Page: [x402books.xyz/luca](https://www.x402books.xyz/luca)
 
-Luca is powered by the x402Books API (LUCA Whale tier). Agent runtime: [Hermes](https://hermes.ai) on local Mac with skill file at `~/.hermes/skills/finance/x402books/SKILL.md`.
-
----
-
-## Token
-
-| Token | Contract | Network | Purpose |
-|-------|----------|---------|---------|
-| $LUCA | `0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3` | Base | Unified ecosystem token — API tiers, premium features, agent intelligence credits |
+$LUCA (`0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3`, Base) is the ecosystem token — API tier upgrades and Luca premium features. It is not required to use x402Books.
 
 ---
 
-## Tech Stack
+## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
 | Framework | Next.js 15 (App Router) |
-| Auth | Privy |
-| Database | Supabase (PostgreSQL) |
-| Styling | Custom CSS design system (dark/light mode) |
-| Blockchain | Base — Alchemy API, BANKR API, Virtuals Protocol API, Dune Analytics |
-| AI | Claude (Anthropic) — categorization, summaries, insights |
-| Payments | x402 protocol — HTTP 402, USDC on Base, BANKR x402 Cloud |
-| Analytics | Vercel Analytics |
-| Deploy | Vercel |
+| Database | Supabase (PostgreSQL) — schema + migration ledger in `supabase/` |
+| Blockchain | Base — Alchemy, BANKR, Virtuals, Dune |
+| AI | Claude (Anthropic) |
+| Payments | x402 protocol — HTTP 402, USDC on Base |
+| Deploy | Vercel · CI: typecheck + lint + build on every PR |
 
----
-
-## Environment Variables
+## Environment variables
 
 ```bash
 # Supabase
@@ -143,51 +142,28 @@ ANTHROPIC_API_KEY=your_anthropic_key
 
 # x402 / BANKR
 BANKR_X402_API_KEY=your_bankr_key
-X402BOOKS_INTERNAL_SECRET=your_internal_secret   # shared secret for BANKR x402 Cloud proxy auth
+X402BOOKS_INTERNAL_SECRET=your_internal_secret   # internal/admin route auth — fail-closed
 
-# $LUCA token — ecosystem token on Base
+# $LUCA token
 LUCA_TOKEN_ADDRESS=0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
 
-# Dune Analytics (BANKR ecosystem token registry)
+# Dune Analytics
 DUNE_API_KEY=your_dune_key
 ```
 
----
-
-## Local Development
+## Local development
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
-
----
-
-## Deploy
-
-1. Push to GitHub
-2. Import repo in [Vercel](https://vercel.com)
-3. Add environment variables in Vercel Project Settings
-4. Deploy
-
----
-
-## Supabase Schema
-
-Key tables:
-
-- `users` — Privy user records (privy_id, email, x_handle, last_seen_at)
-- `api_keys` — API key records with tier, usage counters, wallet linking
-- `api_usage` — per-request usage logs
-- `agent_submissions` — registry verification requests
-- RPC `increment_api_key_usage` — atomic daily counter increment
-
----
+Open [http://localhost:3000](http://localhost:3000). SQL schema lives in `supabase/` — see `supabase/MIGRATIONS.md` for what's applied.
 
 ## Security
 
-- API keys stored as SHA-256 hashes — raw keys are never persisted
-- Service role key is server-side only (never exposed to client)
-- Rotate any exposed Supabase keys immediately in Supabase Dashboard
+- API keys stored as SHA-256 hashes — raw keys are never persisted; keys are bound to the creating session
+- Wallet tier verification requires a signed challenge (viem `verifyMessage`)
+- Internal/admin routes fail closed on missing secrets; constant-time token comparison
+- Rate limits on all public write endpoints
+- Trust Check responses carry an advisory disclaimer — the caller makes the decision

@@ -11,6 +11,7 @@ import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
+import type { KyaAssessment } from "@/lib/kya";
 
 // ── Settlement pattern display ────────────────────────────────────────────────
 
@@ -917,7 +918,50 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[] }) {
+// ── Trust Check block ─────────────────────────────────────────────────────────
+
+const REC_STYLE: Record<string, { color: string; bg: string }> = {
+  ALLOW:  { color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
+  REVIEW: { color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+  BLOCK:  { color: "#f87171", bg: "rgba(248,113,113,0.1)" },
+};
+
+function TrustCheckBlock({ kya, slug }: { kya: KyaAssessment; slug: string }) {
+  const rec = REC_STYLE[kya.recommendation] ?? REC_STYLE.REVIEW;
+  return (
+    <section className="prof-section" style={{ gridColumn: "1 / -1" }}>
+      <p className="prof-section-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        Trust Check
+        <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "2px 10px", borderRadius: 99, color: rec.color, background: rec.bg, border: `1px solid ${rec.color}33` }}>
+          {kya.recommendation}
+        </span>
+        <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontWeight: 400 }}>risk: {kya.risk_level}</span>
+      </p>
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 10 }}>
+        <div>
+          <p style={{ margin: 0, fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Trust Score</p>
+          <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700, color: "var(--ink)" }}>{kya.trust_score}<span style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400 }}>/100</span></p>
+        </div>
+        <div>
+          <p style={{ margin: 0, fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Confidence</p>
+          <p style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700, color: "var(--ink)" }}>{kya.confidence}<span style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400 }}>/100</span></p>
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <p style={{ margin: "0 0 4px", fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Key Drivers</p>
+          <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.5 }}>{kya.key_drivers.join(" · ")}</p>
+        </div>
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+        <code style={{ fontSize: "0.7rem", fontFamily: "ui-monospace, monospace", background: "var(--line)", padding: "4px 10px", borderRadius: 6, color: "var(--muted)" }}>
+          GET /api/v1/kya/{slug}
+        </code>
+        <a href="/methodology" style={{ fontSize: "0.72rem", color: "var(--accent)", textDecoration: "none" }}>How scores are computed →</a>
+      </div>
+    </section>
+  );
+}
+
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, kya }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; kya?: KyaAssessment }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
@@ -939,7 +983,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         <div className="lp-header-right">
           <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+          <Link href="/registry" className="lp-btn-primary">Open Registry</Link>
         </div>
       </header>
 
@@ -1026,6 +1070,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           )}
 
           <div className="prof-grid">
+            {/* Trust Check — the product, on every profile */}
+            {kya && <TrustCheckBlock kya={kya} slug={slug} />}
+
             {/* Scores */}
             {hasScores && (
               <section className="prof-section">
@@ -1132,7 +1179,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         <div className="lp-footer-inner">
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
             <Link href="/registry">Registry</Link>
             <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>

@@ -19,7 +19,6 @@ const navGroups = [
   {
     label: "Agent",
     items: [
-      { href: "/dashboard",  label: "My Agent",   icon: "manage_accounts" },
       { href: "/registry",   label: "Registry",   icon: "list_alt" },
     ],
   },
@@ -27,6 +26,7 @@ const navGroups = [
     label: "Build",
     items: [
       { href: "/developer",  label: "Developer",  icon: "code" },
+      { href: "/docs",       label: "Docs",       icon: "menu_book" },
     ],
   },
   {
@@ -38,9 +38,9 @@ const navGroups = [
 ];
 
 const pageNames: Record<string, string> = {
-  "/dashboard":  "My Agent",
   "/registry":   "Registry",
   "/developer":  "Developer",
+  "/docs":       "Docs",
   "/settings":   "Settings",
 };
 
@@ -167,7 +167,7 @@ export function StitchShell({ children }: { children: ReactNode }) {
           <img src="/logo.svg" alt="x402Books AI" width={32} height={32} style={{ borderRadius: "7px", flexShrink: 0 }} />
           <div>
             <strong>x402Books AI</strong>
-            <span>Onchain Ledger</span>
+            <span>Trust Infrastructure</span>
           </div>
           {/* Close button (mobile only) */}
           <button type="button" className="stitch-sidebar-close" onClick={closeSidebar} aria-label="Close menu">

@@ -27,24 +27,24 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.x402books.xyz"),
-  title: "x402Books AI",
+  title: "x402Books — Trust Infrastructure for Autonomous Agents",
   description:
-    "Readable books for the x402 economy. Turn Base USDC microtransactions into clean reports, categories, and agent-readable summaries.",
+    "Financial identity and trust infrastructure for autonomous agents. Verified wallets, trust scores, published methodology — and a Trust Check API any system can call before money moves.",
   icons: {
     icon: "/logo.svg",
     apple: "/logo.svg",
   },
   openGraph: {
-    title: "x402Books AI",
-    description: "The financial intelligence layer for the agent economy.",
+    title: "x402Books — Trust Infrastructure for Autonomous Agents",
+    description: "One API call before money moves: trust score, confidence, recommendation. Verified agent identity, public methodology.",
     url: "https://www.x402books.xyz",
-    siteName: "x402Books AI",
+    siteName: "x402Books",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "x402Books AI",
-    description: "The financial intelligence layer for the agent economy.",
+    title: "x402Books — Trust Infrastructure for Autonomous Agents",
+    description: "One API call before money moves: trust score, confidence, recommendation. Verified agent identity, public methodology.",
     site: "@x402Books",
     creator: "@x402Books",
   },
