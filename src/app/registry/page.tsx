@@ -318,12 +318,12 @@ function VerifyCTA() {
               {tab === "gitlawb" ? (
                 <div className="reg-gitlawb-panel">
                   <p className="reg-gitlawb-intro">
-                    Add a <code className="reg-code">.x402books/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
+                    Add a <code className="reg-code">.agent/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
                   </p>
 
                   <div className="reg-schema-wrap">
                     <div className="reg-schema-header">
-                      <span className="reg-schema-filename">.x402books/wallets.json</span>
+                      <span className="reg-schema-filename">.agent/wallets.json</span>
                       <button type="button" className="reg-copy-btn" onClick={copySchema}>
                         <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
                           {copied ? "check" : "content_copy"}

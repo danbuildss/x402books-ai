@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { normalizeWalletRole } from "@/lib/luca-classify";
 import { dbError } from "@/lib/api-utils";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { WalletLabel } from "@/app/registry/types";
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
@@ -13,6 +14,13 @@ const ROLE_TO_LABEL: Record<string, WalletLabel> = {
 };
 
 export async function POST(req: NextRequest) {
+  if (!rateLimit("registry-wallets", clientIp(req), 5, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Try again in 10 minutes." },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { dbError } from "@/lib/api-utils";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -14,6 +15,13 @@ function toSlug(name: string) {
 //
 // Body: { agent_slug: string, wallet_address: string }
 export async function POST(req: NextRequest) {
+  if (!rateLimit("registry-claim", clientIp(req), 5, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { ok: false, error: "Too many requests. Try again in 10 minutes." },
+      { status: 429 },
+    );
+  }
+
   let body: { agent_slug?: string; wallet_address?: string };
   try {
     body = await req.json();
@@ -101,6 +109,6 @@ export async function POST(req: NextRequest) {
     matched: walletMatched,
     message: walletMatched
       ? "Wallet matched — claim submitted for admin review. You'll be notified when approved."
-      : "Claim submitted. Wallet not found in current manifest — add it to your .x402books/wallets.json to strengthen your claim.",
+      : "Claim submitted. Wallet not found in current manifest — add it to your .agent/wallets.json to strengthen your claim.",
   });
 }

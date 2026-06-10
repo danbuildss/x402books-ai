@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logInferenceEvent } from "@/lib/inference-events";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,12 @@ export const dynamic = "force-dynamic";
 // Body: { agent_id, provider, model?, request_type?, cost_usd?, latency_ms?, status? }
 // Response: { ok: true, id: string }
 export async function POST(req: NextRequest) {
+  // High ceiling — legitimate machine traffic (Surplus) logs at volume;
+  // this only brakes floods.
+  if (!rateLimit("inference-log", clientIp(req), 240, 60 * 1000)) {
+    return NextResponse.json({ error: "Rate limit exceeded." }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
