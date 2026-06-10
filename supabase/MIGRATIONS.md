@@ -24,7 +24,8 @@ Confirmed 2026-06-10 against `information_schema.tables` (26 tables in public sc
 | `stage-1-ledger.sql` | ✅ 2026-06-10 | `users`, `wallets`, `transactions`, `reports` exist (legacy scanner era) |
 | `growth-schema.sql` / `growth-tables-safe.sql` | ✅ 2026-06-10 | `growth_events`, `daily_metrics`, `luca_events` exist (one of the two variants ran) |
 | `luca-verdicts-batch.sql` | ❓ data-only | One-off UPDATE batch — no table to check; verdicts are visibly live on profiles |
-| `wallet-metadata-migration.sql` | ⏳ confirm columns | Adds columns (not tables) — run the column check below |
+| `wallet-metadata-migration.sql` | ✅ 2026-06-10 | `chain`, `role`, `confidence`, `evidence_source` confirmed via column check |
+| `api-keys-ownership.sql` | ⏳ **PENDING — run before deploying session-bound keys** | Adds `owner_code_id`, `link_nonce`, `link_nonce_expires_at` to api_keys; also captures api_keys/api_usage schema in repo |
 
 ## Confirm wallet-metadata columns
 

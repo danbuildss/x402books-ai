@@ -27,6 +27,17 @@ export function createAccessToken(codeId: string) {
   return `${payload}.${signature}`;
 }
 
+// Reads the access cookie from a request and returns the session's codeId,
+// or null if absent/invalid. Used to bind API keys to their owner.
+export function getSessionCodeId(req: Request): string | null {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const match = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${ACCESS_COOKIE_NAME}=([^;]+)`),
+  );
+  if (!match) return null;
+  return verifyAccessToken(decodeURIComponent(match[1]));
+}
+
 // Returns the codeId (access_codes.id) if the token is valid, null otherwise.
 export function verifyAccessToken(token: string): string | null {
   if (!token) return null;
