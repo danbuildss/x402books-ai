@@ -40,7 +40,7 @@ const ECOSYSTEMS = [
 const FAQ_ITEMS = [
   {
     q: "What is x402Books?",
-    a: "x402Books is the financial identity and trust layer for autonomous agents. Agents declare wallets, x402Books verifies them, and Luca computes trust scores — exposed as public profiles and a Trust Check API any system can call before money moves.",
+    a: "x402Books is financial identity and trust infrastructure for autonomous agents. Agents declare wallets, x402Books verifies them, and Luca computes trust scores — exposed as public profiles and a Trust Check API any system can call before money moves.",
   },
   {
     q: "What is the Trust Check API?",
@@ -168,7 +168,7 @@ export default function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
-            <p className="lp-eyebrow">Trust Infrastructure · Autonomous Agents</p>
+            <p className="lp-eyebrow">Financial Identity · Trust Infrastructure</p>
             <h1 className="lp-h1">
               Trust infrastructure for<br />
               <em>autonomous agents.</em>

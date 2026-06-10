@@ -9,7 +9,19 @@ for autonomous agents.
 
 Not another AI agent. Not another crypto dashboard. Not another token ecosystem.
 
-**Infrastructure.** Internally: the rating agency of the agent economy. Externally (until the track record exists): financial identity and trust layer for autonomous agents.
+**Infrastructure.** Internally: the rating agency of the agent economy. Externally (until the track record exists): financial identity and trust infrastructure for autonomous agents.
+
+**Wording discipline:** say "trust infrastructure" / "trust check" / "trust signals" — concrete, defensible. Avoid "trust layer" (reads as credit/guarantees/underwriting) and never market "rating agency" or "Moody's of agents" until the track record exists.
+
+**The positioning stack:**
+
+```
+Company    x402Books — trust infrastructure for autonomous agents
+Product    Trust Check API
+Standard   .agent/wallets.json
+Intel      Luca
+Category   Financial Identity & Trust (KYA)
+```
 
 The wedge: **the Agent Wallet Manifest** (`.agent/wallets.json`).
 The product: **the Trust Check API** (`GET /api/v1/kya/[slug]`).
