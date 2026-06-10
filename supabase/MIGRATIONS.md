@@ -26,7 +26,6 @@ Confirmed 2026-06-10 against `information_schema.tables` (26 tables in public sc
 | `luca-verdicts-batch.sql` | ❓ data-only | One-off UPDATE batch — no table to check; verdicts are visibly live on profiles |
 | `wallet-metadata-migration.sql` | ✅ 2026-06-10 | `chain`, `role`, `confidence`, `evidence_source` confirmed via column check |
 | `api-keys-ownership.sql` | ⏳ **PENDING — run before deploying session-bound keys** | Adds `owner_code_id`, `link_nonce`, `link_nonce_expires_at` to api_keys; also captures api_keys/api_usage schema in repo |
-| `trust-score-history.sql` | ⏳ **PENDING — run, then schedule the snapshot cron** | Daily trust score snapshots (powers Most Improved on /trust). After running, schedule `GET /api/cron/snapshot-trust-scores` daily with the internal bearer |
 
 ## Confirm wallet-metadata columns
 

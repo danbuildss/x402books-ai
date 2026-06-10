@@ -110,7 +110,6 @@ export default function HomePage() {
         <a href="/" className="lp-brand"><Logo /></a>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry">Registry</Link>
-          <Link href="/trust">Trust</Link>
           <Link href="/luca">Luca</Link>
           <Link href="/developer">API</Link>
           <Link href="/methodology">Methodology</Link>
@@ -146,7 +145,6 @@ export default function HomePage() {
           </div>
           <nav className="lp-mobile-nav">
             <Link href="/registry" onClick={() => setMobileMenuOpen(false)}>Registry</Link>
-            <Link href="/trust" onClick={() => setMobileMenuOpen(false)}>Trust</Link>
             <Link href="/luca" onClick={() => setMobileMenuOpen(false)}>Luca</Link>
             <Link href="/developer" onClick={() => setMobileMenuOpen(false)}>API</Link>
             <Link href="/methodology" onClick={() => setMobileMenuOpen(false)}>Methodology</Link>
@@ -414,7 +412,6 @@ export default function HomePage() {
             <div>
               <h4>Product</h4>
               <Link href="/registry">Registry</Link>
-          <Link href="/trust">Trust</Link>
               <Link href="/luca">Luca</Link>
               <Link href="/developer">API</Link>
               <Link href="/docs">Docs</Link>
