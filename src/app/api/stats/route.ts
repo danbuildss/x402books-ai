@@ -121,6 +121,34 @@ function topEcosystem(
   return top;
 }
 
+// Trust Check adoption — the north-star metric: how many trust decisions
+// are being made through the API. Reads KYA usage from api_usage.
+async function buildTrustCheckStats(sb: ReturnType<typeof getSupabaseAdminClient>) {
+  const empty = { today: 0, last_7d: 0, unique_callers_7d: 0 };
+  try {
+    const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const todayStart = `${new Date().toISOString().slice(0, 10)}T00:00:00Z`;
+
+    const { data, error } = await sb
+      .from("api_usage")
+      .select("key_id, created_at")
+      .eq("endpoint", "/api/v1/kya")
+      .gte("created_at", since7d)
+      .limit(10_000);
+
+    if (error || !data) return empty;
+
+    const rows = data as Array<{ key_id: string | null; created_at: string }>;
+    return {
+      today: rows.filter((r) => r.created_at >= todayStart).length,
+      last_7d: rows.length,
+      unique_callers_7d: new Set(rows.map((r) => r.key_id ?? "anon")).size,
+    };
+  } catch {
+    return empty;
+  }
+}
+
 // GET /api/stats — public, no auth, 60s cache
 export async function GET() {
   // Live data from Supabase
@@ -132,7 +160,8 @@ export async function GET() {
 
     if (!error && data) {
       const stats = buildStats(data as AgentRow[]);
-      return NextResponse.json(stats, {
+      const trust_checks = await buildTrustCheckStats(sb);
+      return NextResponse.json({ ...stats, trust_checks }, {
         headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
       });
     }

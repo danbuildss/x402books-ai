@@ -33,6 +33,17 @@ Trust Check API → external integrations → dependency
 
 Coverage features (indexers, registries) feed the loop. They are never the product.
 
+**The north-star metric:**
+
+```
+how many agent-to-agent decisions
+used a Trust Check before money moved?
+```
+
+0 → 10 → 100 → 1,000 → 10,000 = infrastructure. Everything else supports that
+number. Instrumented live at `/api/stats` → `trust_checks` (today / 7d / unique
+callers). Watch that, not profiles indexed, not stars, not followers.
+
 ---
 
 ## The architecture
