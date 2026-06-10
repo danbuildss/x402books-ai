@@ -47,34 +47,67 @@ function TierBadge({ tier }: { tier: LucaTier }) {
   );
 }
 
+type EthProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
 function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
   keyId: string;
   currentWallet: string | null;
   currentTier: LucaTier;
   onLinked: (wallet: string, tier: LucaTier, balance: number) => void;
 }) {
-  const [wallet, setWallet] = useState(currentWallet ?? "");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("");
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ tier: LucaTier; balance: number } | null>(null);
 
+  // Connect → challenge → sign → verify. The wallet must prove control by
+  // signing; pasting an address you don't own no longer upgrades the tier.
   async function handleLink() {
-    if (!wallet.trim().startsWith("0x")) { setError("Enter a valid 0x wallet address."); return; }
     setLoading(true); setError("");
     try {
+      const eth = (window as unknown as { ethereum?: EthProvider }).ethereum;
+      if (!eth) {
+        setError("No wallet detected. Open this page in a wallet browser or install a wallet extension.");
+        return;
+      }
+
+      setStep("Connecting wallet…");
+      const accounts = await eth.request({ method: "eth_requestAccounts" }) as string[];
+      const account = accounts?.[0];
+      if (!account) { setError("No account connected."); return; }
+
+      setStep("Requesting challenge…");
+      const chRes = await fetch("/api/developer/verify-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyId, walletAddress: account }),
+      });
+      const chData = await chRes.json() as { challenge?: string; error?: string };
+      if (!chRes.ok || !chData.challenge) { setError(chData.error ?? "Could not get challenge."); return; }
+
+      setStep("Waiting for signature…");
+      const signature = await eth.request({
+        method: "personal_sign",
+        params: [chData.challenge, account],
+      }) as string;
+
+      setStep("Verifying…");
       const res = await fetch("/api/developer/verify-wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId, walletAddress: wallet.trim() }),
+        body: JSON.stringify({ keyId, walletAddress: account, signature }),
       });
       const data = await res.json() as { tier: LucaTier; luca_balance: number; error?: string };
       if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
       setResult({ tier: data.tier, balance: data.luca_balance });
-      onLinked(wallet.trim(), data.tier, data.luca_balance);
+      onLinked(account, data.tier, data.luca_balance);
     } catch {
-      setError("Network error — please try again.");
+      setError("Signature cancelled or network error — please try again.");
     } finally {
       setLoading(false);
+      setStep("");
     }
   }
 
@@ -82,20 +115,14 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
     <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
       <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
-        Link wallet to verify your access tier
+        {currentWallet
+          ? `Linked: ${currentWallet.slice(0, 8)}…${currentWallet.slice(-6)} — re-verify to refresh tier`
+          : "Connect and sign to verify your access tier"}
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <input
-          style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-surface)", color: "var(--st-text)", fontSize: 12, fontFamily: "var(--st-mono)" }}
-          placeholder="0x…"
-          value={wallet}
-          onChange={(e) => setWallet(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLink()}
-        />
-        <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
-          {loading ? "Checking…" : "Verify"}
-        </button>
-      </div>
+      <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
+        <span className="material-symbols-outlined" style={{ fontSize: 15 }}>account_balance_wallet</span>
+        {loading ? (step || "Working…") : "Connect wallet & sign"}
+      </button>
       {error && <p style={{ color: "var(--st-red)", fontSize: 12, marginTop: 6 }}>{error}</p>}
       {result && (
         <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
@@ -127,12 +154,20 @@ export default function DeveloperPage() {
   const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const [signedOut, setSignedOut] = useState(false);
+
   useEffect(() => { fetchKeys(); }, []);
 
   async function fetchKeys() {
     setLoading(true);
     try {
       const res = await fetch("/api/developer/keys");
+      if (res.status === 401) {
+        setSignedOut(true);
+        setKeys([]);
+        return;
+      }
+      setSignedOut(false);
       const data = await res.json() as { keys: ApiKeyRecord[] };
       setKeys(data.keys ?? []);
     } finally { setLoading(false); }
@@ -147,6 +182,11 @@ export default function DeveloperPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim() }),
       });
+      if (res.status === 401) {
+        setSignedOut(true);
+        setShowForm(false);
+        return;
+      }
       const data = await res.json() as { key: string; record: ApiKeyRecord };
       setNewKey(data.key);
       setKeys((prev) => [data.record, ...prev]);
@@ -224,6 +264,20 @@ export default function DeveloperPage() {
             </button>
             <button type="button" className="stitch-btn" onClick={() => setNewKey(null)} style={{ color: "var(--st-muted)" }}>Dismiss</button>
           </div>
+        </div>
+      )}
+
+      {/* Signed-out notice */}
+      {signedOut && (
+        <div className="stitch-card" style={{ borderColor: "var(--st-border)", textAlign: "center", padding: "28px 20px" }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--st-muted)", marginBottom: 8, display: "block" }}>key</span>
+          <p style={{ fontWeight: 600, marginBottom: 4 }}>Sign in to manage API keys</p>
+          <p style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 14 }}>
+            API keys are tied to your access session so only you can see and revoke them.
+          </p>
+          <a href="/access" className="stitch-btn" style={{ display: "inline-flex" }}>
+            Sign in with access code →
+          </a>
         </div>
       )}
 
