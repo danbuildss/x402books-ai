@@ -596,7 +596,7 @@ Content-Type: application/json
   "checked_at": "2026-06-10T12:00:00Z"
 }`}</pre>
               </div>
-              <p className="docs-p" style={{ marginTop: 8 }}><strong>trust_score</strong> is how good the agent looks; <strong>confidence</strong> is how much data underlies that. A high score with low confidence means &quot;looks fine, thin evidence.&quot; Recommendations: ALLOW · REVIEW · BLOCK (BLOCK only on explicit negative signals — absence of data is REVIEW, never BLOCK).</p>
+              <p className="docs-p" style={{ marginTop: 8 }}><strong>trust_score</strong> is how good the agent looks; <strong>confidence</strong> is how much data underlies that. A high score with low confidence means &quot;looks fine, thin evidence.&quot; Recommendations: ALLOW · REVIEW · BLOCK (BLOCK only on explicit negative signals — absence of data is REVIEW, never BLOCK). Full scoring breakdown: <a href="/methodology" style={{ color: "var(--accent)" }}>Trust Score Methodology →</a></p>
             </div>
 
             <h2 className="docs-h2">Financial Intelligence — API key required</h2>
