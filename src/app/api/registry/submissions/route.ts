@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return false;
-  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  return token === secret;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // GET /api/registry/submissions?status=pending
 export async function GET(req: NextRequest) {
@@ -23,7 +18,7 @@ export async function GET(req: NextRequest) {
   if (status !== "all") query = query.eq("status", status);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("registry/submissions", error);
 
   return NextResponse.json({ ok: true, submissions: data ?? [] });
 }

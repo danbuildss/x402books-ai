@@ -162,7 +162,7 @@ function buildSettlementVerdict(patterns: SettlementPattern[], signals: string[]
 }
 
 // ── Wallet role normalization ──────────────────────────────────────────────────
-// Normalizes wallet role strings from .x402books/wallets.json manifests
+// Normalizes wallet role strings from .agent/wallets.json manifests
 
 export type WalletRole = "treasury" | "fee" | "deployer" | "operator" | "unknown";
 

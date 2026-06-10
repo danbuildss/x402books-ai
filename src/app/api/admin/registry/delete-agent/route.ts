@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return false;
-  const header = req.headers.get("authorization") ?? "";
-  return header === `Bearer ${secret}`;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // POST /api/admin/registry/delete-agent
 // Body: { name: string }
@@ -41,7 +36,7 @@ export async function POST(req: NextRequest) {
     .eq("agent_name", name);
 
   if (walletError) {
-    return NextResponse.json({ ok: false, error: walletError.message }, { status: 500 });
+    return dbError("admin/delete-agent", walletError);
   }
 
   const { error: agentError, count } = await sb
@@ -50,7 +45,7 @@ export async function POST(req: NextRequest) {
     .eq("name", name);
 
   if (agentError) {
-    return NextResponse.json({ ok: false, error: agentError.message }, { status: 500 });
+    return dbError("admin/delete-agent", agentError);
   }
 
   return NextResponse.json({ ok: true, deleted: count ?? 0, name });

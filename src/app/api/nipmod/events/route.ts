@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { dbError } from "@/lib/api-utils";
 
 function authOk(req: NextRequest): boolean {
   const key = process.env.NIPMOD_API_KEY;
@@ -76,7 +77,7 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("nipmod/events", error);
   }
 
   return NextResponse.json({ ok: true, event_id: data.id });

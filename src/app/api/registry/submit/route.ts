@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
+  if (!rateLimit("registry-submit", clientIp(request), 5, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again in 10 minutes." },
+      { status: 429 },
+    );
+  }
+
   try {
     const { agent_name, wallet_address, x_handle, notes, gitlawb_repo } = await request.json();
 

@@ -1,24 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { normalizeWalletRole } from "@/lib/luca-classify";
+import { dbError } from "@/lib/api-utils";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import type { WalletLabel } from "@/app/registry/types";
-
-// 5 submissions per IP per 10 minutes
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT   = 5;
-const WINDOW_MS    = 10 * 60 * 1000;
-
-function checkRateLimit(ip: string): boolean {
-  const now   = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT) return false;
-  entry.count++;
-  return true;
-}
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
   treasury: "likely treasury",
@@ -28,6 +13,10 @@ const ROLE_TO_LABEL: Record<string, WalletLabel> = {
   unknown:  "unknown role",
 };
 
+// Manifest locations, checked in order. `.agent/` is the standard path;
+// `.x402books/` remains supported for existing adopters.
+const MANIFEST_PATHS = [".agent/wallets.json", ".x402books/wallets.json"];
+
 function repoToRawUrls(repoUrl: string): string[] {
   const url = repoUrl.trim().replace(/\/$/, "");
 
@@ -35,20 +24,20 @@ function repoToRawUrls(repoUrl: string): string[] {
   const ghMatch = url.match(/^https?:\/\/github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/);
   if (ghMatch) {
     const path = ghMatch[1];
-    return [
-      `https://raw.githubusercontent.com/${path}/main/.x402books/wallets.json`,
-      `https://raw.githubusercontent.com/${path}/master/.x402books/wallets.json`,
-    ];
+    return MANIFEST_PATHS.flatMap((mf) => [
+      `https://raw.githubusercontent.com/${path}/main/${mf}`,
+      `https://raw.githubusercontent.com/${path}/master/${mf}`,
+    ]);
   }
 
   // Gitlawb: https://gitlawb.com/org/repo
   const glMatch = url.match(/^https?:\/\/gitlawb\.com\/([^/]+\/[^/]+?)(?:\.git)?$/);
   if (glMatch) {
     const path = glMatch[1];
-    return [
-      `https://gitlawb.com/${path}/raw/branch/main/.x402books/wallets.json`,
-      `https://gitlawb.com/${path}/raw/branch/master/.x402books/wallets.json`,
-    ];
+    return MANIFEST_PATHS.flatMap((mf) => [
+      `https://gitlawb.com/${path}/raw/branch/main/${mf}`,
+      `https://gitlawb.com/${path}/raw/branch/master/${mf}`,
+    ]);
   }
 
   return [];
@@ -70,8 +59,7 @@ async function fetchManifest(urls: string[]): Promise<{ url: string; data: unkno
 }
 
 export async function POST(req: NextRequest) {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  if (!rateLimit("fetch-manifest", clientIp(req), 5, 10 * 60 * 1000)) {
     return NextResponse.json(
       { ok: false, error: "Too many requests. Try again in 10 minutes." },
       { status: 429 },
@@ -103,7 +91,7 @@ export async function POST(req: NextRequest) {
   if (!found) {
     return NextResponse.json({
       ok: false,
-      error: "Could not find .x402books/wallets.json in that repo. Make sure the file exists on the main or master branch.",
+      error: "Could not find .agent/wallets.json (or legacy .x402books/wallets.json) in that repo. Make sure the file exists on the main or master branch.",
     }, { status: 404 });
   }
 
@@ -166,7 +154,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("registry/fetch-manifest", error);
   }
 
   return NextResponse.json({

@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logAgentEvent } from "@/lib/agent-events";
 import type { AgentEventType, AgentEventDirection } from "@/lib/agent-events";
+import { internalAuth as authOk } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return true;
-  const header = req.headers.get("authorization") ?? "";
-  return header === `Bearer ${secret}`;
-}
 
 // POST /api/agent-events/log
 export async function POST(req: NextRequest) {

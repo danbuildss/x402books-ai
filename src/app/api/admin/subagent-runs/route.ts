@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const token  = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  return !!secret && token === secret;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // GET /api/admin/subagent-runs — list recent runs (last 100)
 export async function GET(req: NextRequest) {
@@ -24,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (subagent) query = query.eq("subagent_name", subagent);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("admin/subagent-runs", error);
   return NextResponse.json({ ok: true, runs: data ?? [] });
 }
 
