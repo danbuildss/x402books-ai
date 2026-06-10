@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const token  = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  return !!secret && token === secret;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // GET /api/admin/pending-replies — list replies; ?status=pending (default) | all
 export async function GET(req: NextRequest) {
@@ -24,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (status !== "all") query = query.eq("status", status);
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("admin/pending-replies", error);
   return NextResponse.json({ ok: true, replies: data ?? [] });
 }
 
@@ -57,6 +53,6 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single();
 
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("admin/pending-replies", error);
   return NextResponse.json({ ok: true, id: (data as { id: string }).id });
 }

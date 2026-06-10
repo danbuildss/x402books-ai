@@ -29,6 +29,24 @@ export function parseLedgerParams(request: Request) {
   return { wallet, range };
 }
 
+// Log the real error server-side; return a generic message to the client.
+// Raw DB/internal error text is included only in development.
+export function dbError(scope: string, error: unknown, status = 500) {
+  console.error(`[${scope}]`, error);
+  const message =
+    error instanceof Error
+      ? error.message
+      : (error as { message?: string } | null)?.message;
+  return NextResponse.json(
+    {
+      ok: false,
+      error: "Internal error.",
+      detail: process.env.NODE_ENV === "development" ? message : undefined,
+    },
+    { status },
+  );
+}
+
 export function ledgerErrorResponse(error: unknown) {
   if (error instanceof Error && error.message.includes("Alchemy API key")) {
     return NextResponse.json(

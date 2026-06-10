@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { normalizeWalletRole } from "@/lib/luca-classify";
+import { dbError } from "@/lib/api-utils";
 import type { WalletLabel } from "@/app/registry/types";
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
@@ -54,17 +55,17 @@ export async function POST(req: NextRequest) {
     agent_name:    agent.trim(),
     update_type:   "wallet_update",
     proposed_data: {
-      wallets: normalized.map((w) => ({ address: w.address, label: w.label, notes: w.notes })),
+      wallets: normalized.map((w) => ({ address: w.address, label: w.label, role: w.role, chain: w.chain, notes: w.notes })),
       xHandle:    xHandle ?? null,
       ecosystem:  ecosystem ?? null,
     },
     diff_summary: `Wallet manifest: ${wallets.length} wallet(s) — ${normalized.map((w) => w.role).join(", ")}`,
-    luca_notes:   "Submitted via .x402books/wallets.json manifest",
+    luca_notes:   "Submitted via wallet manifest API",
     status:       "pending",
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("registry/wallets", error);
   }
 
   return NextResponse.json({

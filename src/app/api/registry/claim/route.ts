@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { getRegistryAgents } from "@/lib/registry-db";
+import { dbError } from "@/lib/api-utils";
 
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("registry/claim", error);
   }
 
   return NextResponse.json({

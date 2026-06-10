@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // GET /api/admin/import-candidates?status=pending|approved|rejected
 export async function GET(req: NextRequest) {
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
     .eq("status", status)
     .order("created_at", { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return dbError("admin/import-candidates", error);
   return NextResponse.json({ candidates: data ?? [], count: (data ?? []).length });
 }
 
@@ -66,7 +67,7 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (insertErr) {
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
+      return dbError("admin/import-candidates", insertErr);
     }
   }
 
@@ -79,6 +80,6 @@ export async function PATCH(req: NextRequest) {
     })
     .eq("id", id);
 
-  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (updateErr) return dbError("admin/import-candidates", updateErr);
   return NextResponse.json({ ok: true });
 }

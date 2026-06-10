@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // GET /api/registry/claims — admin: list all claim requests
 export async function GET(req: NextRequest) {
@@ -19,7 +15,7 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("registry/claims", error);
   return NextResponse.json({ ok: true, claims: data ?? [] });
 }
 

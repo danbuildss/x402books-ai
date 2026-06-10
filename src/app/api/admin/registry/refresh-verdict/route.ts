@@ -8,12 +8,8 @@ import type { Agent } from "@/app/registry/types";
 import type { SettlementClassification } from "@/lib/luca-classify";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return false;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -174,7 +170,7 @@ export async function POST(req: NextRequest) {
     .eq("name", agent.name);
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("admin/refresh-verdict", error);
   }
 
   return NextResponse.json({ ok: true, agent: agent.name, verdict });

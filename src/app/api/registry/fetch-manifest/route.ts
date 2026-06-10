@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { normalizeWalletRole } from "@/lib/luca-classify";
+import { dbError } from "@/lib/api-utils";
 import type { WalletLabel } from "@/app/registry/types";
 
 // 5 submissions per IP per 10 minutes
@@ -166,7 +167,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+    return dbError("registry/fetch-manifest", error);
   }
 
   return NextResponse.json({

@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return false;
-  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  return token === secret;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
+import { dbError } from "@/lib/api-utils";
 
 // PATCH /api/registry/submissions/[id]
 // body: { status: "approved" | "rejected", admin_notes?: string }
@@ -26,7 +21,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .update({ status: body.status, admin_notes: body.admin_notes ?? null, reviewed_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  if (error) return dbError("registry/submissions/[id]", error);
 
   return NextResponse.json({ ok: true });
 }

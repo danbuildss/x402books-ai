@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { dbError } from "@/lib/api-utils";
 
 const toSlug = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
     .limit(10);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return dbError("registry/claim-status", error);
   }
 
   const updates = (data ?? []).map((row) => ({
