@@ -23,10 +23,10 @@ const PROBLEMS = [
 ];
 
 const HOW_IT_WORKS = [
-  { num: "01", title: "Declare wallets",       body: "Submit a wallet manifest — treasury, fee, deployer, operator — via file or API." },
-  { num: "02", title: "x402Books indexes",     body: "Wallet roles recorded. On-chain activity scanned. Treasury health derived." },
-  { num: "03", title: "Luca interprets",       body: "Settlement patterns classified. Operational signals surfaced. Cold verdict generated." },
-  { num: "04", title: "Profile goes live",     body: "Public profile. Embeddable card. Shareable and verifiable — travels anywhere." },
+  { num: "01", title: "Declare wallets",       body: "Add .agent/wallets.json to your repo — treasury, fee, deployer, operator roles — and submit it in one click." },
+  { num: "02", title: "x402Books verifies",    body: "Wallet roles recorded. On-chain activity scanned. Claims checked. Treasury health derived." },
+  { num: "03", title: "Luca interprets",       body: "Settlement patterns classified. Trust score and confidence computed. Verdict generated." },
+  { num: "04", title: "Trust Check goes live", body: "Public profile, verification badge, and a trust endpoint anyone can call before money moves." },
 ];
 
 const ECOSYSTEMS = [
@@ -40,15 +40,19 @@ const ECOSYSTEMS = [
 const FAQ_ITEMS = [
   {
     q: "What is x402Books?",
-    a: "x402Books is the financial identity and intelligence layer for autonomous agents. Agents declare wallets, x402Books indexes activity, and Luca generates readable financial profiles — public, verifiable, shareable.",
+    a: "x402Books is the financial identity and trust layer for autonomous agents. Agents declare wallets, x402Books verifies them, and Luca computes trust scores — exposed as public profiles and a Trust Check API any system can call before money moves.",
+  },
+  {
+    q: "What is the Trust Check API?",
+    a: "One call — GET /api/v1/kya/[agent] — returns a trust score, a confidence score, risk level, recommendation (ALLOW / REVIEW / BLOCK), and the evidence behind it. The full scoring methodology is public at /methodology.",
   },
   {
     q: "What is the Agent Financial Registry?",
-    a: "The Registry is the public financial identity layer for the agent economy. 84+ agents tracked with wallet roles, treasury health, settlement patterns, and Luca verification.",
+    a: "The Registry is the public financial identity layer for the agent economy. 125+ agents tracked with wallet roles, verification status, treasury health, and Luca verdicts.",
   },
   {
     q: "How does verification work?",
-    a: "Agents submit a wallet manifest declaring treasury, fee, deployer, and operator wallets. x402Books reviews and upgrades the profile: Candidate → Wallets Declared → Verified → Live Financial Data.",
+    a: "Agents add a .agent/wallets.json manifest to their repo declaring treasury, fee, deployer, and operator wallets. x402Books validates it and upgrades the profile: Candidate → Wallets Declared → Claimed → Verified — each tier raising the agent's trust score and confidence.",
   },
 ];
 
@@ -108,6 +112,7 @@ export default function HomePage() {
           <Link href="/registry">Registry</Link>
           <Link href="/luca">Luca</Link>
           <Link href="/developer">API</Link>
+          <Link href="/methodology">Methodology</Link>
           <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
@@ -142,6 +147,7 @@ export default function HomePage() {
             <Link href="/registry" onClick={() => setMobileMenuOpen(false)}>Registry</Link>
             <Link href="/luca" onClick={() => setMobileMenuOpen(false)}>Luca</Link>
             <Link href="/developer" onClick={() => setMobileMenuOpen(false)}>API</Link>
+            <Link href="/methodology" onClick={() => setMobileMenuOpen(false)}>Methodology</Link>
             <Link href="/docs" onClick={() => setMobileMenuOpen(false)}>Docs</Link>
           </nav>
           <div className="lp-mobile-menu-footer">
@@ -162,69 +168,50 @@ export default function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
-            <p className="lp-eyebrow">Financial Infrastructure · Autonomous Entities</p>
+            <p className="lp-eyebrow">Trust Infrastructure · Autonomous Agents</p>
             <h1 className="lp-h1">
-              Financial identity for<br />
+              Trust infrastructure for<br />
               <em>autonomous agents.</em>
             </h1>
             <p className="lp-hero-sub">
-              x402Books gives agents verified financial profiles, wallet-role clarity, and treasury intelligence — powered by Luca.
+              Before an agent moves money, one API call answers the question that matters: can this counterparty be trusted? Verified identity, trust scores, and published methodology — interpreted by Luca.
             </p>
             <div className="lp-hero-actions">
               <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Registry</Link>
-              <Link href="/luca" className="lp-btn-ghost lp-btn-lg">View Luca</Link>
+              <Link href="/docs" className="lp-btn-ghost lp-btn-lg">Trust Check API</Link>
             </div>
           </FadeContent>
         </div>
 
-        {/* Agent profile card */}
-        <div className="lp-hero-card" aria-label="Agent financial profile preview">
+        {/* Trust Check API card */}
+        <div className="lp-hero-card" aria-label="Trust Check API preview">
           <div className="lp-card-header">
             <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
-            <span className="lp-card-title">Agent Financial Profile</span>
+            <span className="lp-card-title">Trust Check API</span>
           </div>
-          <div style={{ padding: "16px 18px" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-              <span style={{ fontWeight: 700, fontSize: "1.05rem" }}>Luca</span>
-              <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>$LUCA</span>
-            </div>
-            <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-              {[{ l: "BANKR", c: "#6DB874" }, { l: "Healthy", c: "#6DB874" }, { l: "Verified", c: "#6DB874" }].map((b) => (
-                <span key={b.l} style={{ fontSize: "0.67rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99, border: `1px solid color-mix(in srgb, ${b.c} 28%, transparent)`, background: `color-mix(in srgb, ${b.c} 10%, transparent)`, color: b.c }}>
-                  {b.l}
-                </span>
-              ))}
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", marginBottom: 14 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>Profile Status</p>
-                <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 700, color: "#6DB874" }}>Live Financial Data</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ margin: 0, fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 3 }}>Data Confidence</p>
-                <p style={{ margin: 0, fontSize: "0.78rem", fontWeight: 700, color: "#6DB874" }}>High</p>
-              </div>
-            </div>
-            {[["Financial Activity", 90, "#6DB874"], ["Partnership Fit", 64, "#5B8FA8"]].map(([l, pct, c]) => (
-              <div key={String(l)} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: "0.72rem", color: "var(--muted)", width: 120, flexShrink: 0 }}>{l}</span>
-                <div style={{ flex: 1, height: 4, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: c as string, borderRadius: 99 }} />
-                </div>
-                <span style={{ fontSize: "0.72rem", fontWeight: 700, width: 22, textAlign: "right" }}>{pct}</span>
-              </div>
-            ))}
-            <div style={{ display: "flex", gap: 6, marginTop: 14 }}>
-              {[{ l: "Stable Treasury", c: "#6DB874" }, { l: "Recurring Flows", c: "#5B8FA8" }].map((p) => (
-                <span key={p.l} style={{ fontSize: "0.66rem", fontWeight: 600, padding: "3px 9px", borderRadius: 99, border: `1px solid color-mix(in srgb, ${p.c} 28%, transparent)`, background: `color-mix(in srgb, ${p.c} 9%, transparent)`, color: p.c }}>
-                  {p.l}
-                </span>
-              ))}
-            </div>
+          <div style={{ padding: "14px 18px", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}>
+            <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "var(--muted)" }}>
+              <span style={{ color: "var(--accent)", fontWeight: 700 }}>GET</span> /api/v1/kya/aeon
+            </p>
+            <pre style={{ margin: 0, fontSize: "0.7rem", lineHeight: 1.75, color: "var(--ink)", whiteSpace: "pre-wrap", background: "var(--surface-hover, rgba(125,130,141,0.06))", border: "1px solid var(--line)", borderRadius: 8, padding: "12px 14px" }}>
+{`{
+  "trust_score": `}<span style={{ color: "var(--accent)", fontWeight: 700 }}>72</span>{`,
+  "confidence": `}<span style={{ color: "var(--accent)", fontWeight: 700 }}>68</span>{`,
+  "risk_level": "LOW",
+  "recommendation": `}<span style={{ color: "var(--accent)", fontWeight: 700 }}>&quot;ALLOW&quot;</span>{`,
+  "key_drivers": [
+    "treasury + operator roles declared",
+    "Treasury health: Stable"
+  ]
+}`}
+            </pre>
+            <p style={{ margin: "12px 0 0", fontSize: "0.68rem", color: "var(--muted)", fontFamily: "inherit" }}>
+              One call before money moves. trust_score is how good the agent looks — confidence is how much we know.
+            </p>
           </div>
           <div style={{ padding: "10px 18px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontWeight: 600 }}>x402Books AI</span>
-            <Link href="/registry/luca" style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--accent)" }}>Full profile →</Link>
+            <Link href="/methodology" style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--accent)" }}>How scores are computed →</Link>
           </div>
         </div>
       </section>
@@ -256,7 +243,7 @@ export default function HomePage() {
               <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>Public financial profiles<br />for every agent.</h2>
               <p className="lp-registry-sub">Wallet roles declared. Treasury visible. Settlement classified. Luca&apos;s verdict attached. Embeddable anywhere.</p>
               <div className="lp-registry-stats">
-                <div className="lp-registry-stat"><strong>84+</strong><span>Agents</span></div>
+                <div className="lp-registry-stat"><strong>125+</strong><span>Agents</span></div>
                 <div className="lp-registry-stat"><strong>5</strong><span>Ecosystems</span></div>
                 <div className="lp-registry-stat"><strong>Live</strong><span>Profiles</span></div>
               </div>
