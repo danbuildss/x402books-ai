@@ -223,7 +223,7 @@ export default function DocsPage() {
           <div className="docs-header-right">
             <div className="docs-version-pill">v1 · Live</div>
             <a href="/" className="docs-back-link">← Back to home</a>
-            <Link href="/dashboard" className="docs-open-btn">Open App</Link>
+            <Link href="/registry" className="docs-open-btn">Open Registry</Link>
             <button
               type="button"
               className="docs-mobile-toggle"
@@ -261,7 +261,7 @@ export default function DocsPage() {
               </div>
             ))}
             <div className="docs-sidebar-cta-wrap">
-              <Link href="/dashboard" className="docs-sidebar-cta">Open App →</Link>
+              <Link href="/registry" className="docs-sidebar-cta">Open Registry →</Link>
               <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="docs-sidebar-link-ext">@x402Books on X</a>
             </div>
           </div>
@@ -743,7 +743,7 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="roadmap" className="docs-section">
             <span className="docs-tag">Vision</span>
             <h1 className="docs-h1">Roadmap</h1>
-            <p className="docs-lead">Six phases from v1 to the financial operating system for autonomous agents.</p>
+            <p className="docs-lead">Six phases from v1 to the trust infrastructure of the agent economy.</p>
 
             <div className="docs-roadmap">
               {ROADMAP.map((phase, i) => (
@@ -831,7 +831,7 @@ Authorization: Bearer xb_live_...`}</pre>
 
             <h2 className="docs-h2">What we are</h2>
             <p className="docs-p docs-p-large">
-              x402Books is the financial identity layer for the autonomous agent economy — not a wallet scanner, not a dashboard, not a token project.
+              x402Books is financial identity and trust infrastructure for the autonomous agent economy — not a wallet scanner, not a dashboard, not a token project.
             </p>
             <p className="docs-p">
               AI agents are becoming economic actors. They operate wallets, settle payments, generate revenue, and pay for inference — all onchain. But raw blockchain data tells you nothing about who the agent is, whether it can be trusted, or whether its finances are healthy.
@@ -878,7 +878,7 @@ These are three distinct things. Never blur them.`}</pre>
         <div className="lp-footer-inner">
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
             <Link href="/registry">Registry</Link>
             <Link href="/luca">Luca</Link>
           </div>

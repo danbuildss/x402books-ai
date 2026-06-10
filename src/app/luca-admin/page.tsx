@@ -147,7 +147,7 @@ const ROADMAP = [
     tag: "CLI",
     title: "x402Books CLI",
     color: "var(--blue)",
-    description: "Command-line interface for wallet scanning, reporting, and registry lookups.",
+    description: "Command-line interface for registry lookups, verification, and reports.",
     items: ["x402books scan <wallet>", "x402books report <wallet>", "x402books score <wallet>", "x402books registry lookup <query>"],
   },
   {
@@ -761,7 +761,7 @@ function RegistrySection({ secret }: { secret: string }) {
           <div>
             <p className={styles.cardTitle} style={{ margin: "0 0 2px" }}>Seed Registry DB</p>
             <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)" }}>
-              Writes all 84 agents from <code>data.ts</code> into Supabase. Run once to go fully DB-driven.
+              Seeds static agents from <code>data.ts</code> into Supabase. Run once to go fully DB-driven.
             </p>
             {seedMsg && (
               <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: seedMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
@@ -1029,7 +1029,7 @@ function GrowthSection({ secret }: { secret: string }) {
       <div className={styles.sectionHead}>
         <p className={styles.kicker}>Growth OS</p>
         <h1>Platform Metrics</h1>
-        <p>Internal tracking — wallet scans, API usage, registry activity.</p>
+        <p>Internal tracking — trust checks, API usage, registry activity.</p>
       </div>
 
       {loading && <div className={styles.stateBox}>Loading…</div>}

@@ -10,20 +10,20 @@ const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
 
 const CAPABILITIES = [
-  { icon: "account_balance_wallet", title: "Wallet Audits",              body: "Analyze public wallet activity across income, spend, net flow, and treasury health." },
-  { icon: "category",              title: "Transaction Categorization",  body: "Classify onchain activity into revenue, expenses, gas, treasury movement, swaps, and unknown items." },
-  { icon: "monitoring",            title: "Agent Financial Scores",      body: "Score agents based on activity, cashflow quality, anomaly risk, and treasury health." },
+  { icon: "verified_user",         title: "Trust Verdicts",              body: "Write the verdict on every registry profile — what the evidence says, in plain language." },
+  { icon: "monitoring",            title: "Trust & Activity Scores",     body: "Score agents on verification, declared wallets, treasury health, and financial activity — the inputs behind every Trust Check." },
+  { icon: "fact_check",            title: "Verification Review",         body: "Review wallet manifests and claims, approve upgrades, and keep the registry honest." },
   { icon: "flag",                  title: "Anomaly Detection",           body: "Flag unusual inflows, repeated transactions, high-frequency behavior, and concentration risk." },
-  { icon: "description",           title: "Reports & Summaries",         body: "Generate short summaries, full audit memos, public-safe X posts, and operator-ready reports." },
-  { icon: "menu_book",             title: "Agent Bookkeeping",           body: "Help autonomous agents understand what they earned, spent, held, and need to review." },
+  { icon: "account_balance_wallet", title: "Treasury Intelligence",      body: "Analyze public wallet activity across income, spend, net flow, and treasury health." },
+  { icon: "description",           title: "Reports & Summaries",         body: "Generate financial intelligence reports, public-safe analysis, and operator-ready summaries." },
 ];
 
 const STEPS = [
-  { n: "01", title: "Submit a wallet",        body: "Send Luca any Base wallet address on Telegram." },
-  { n: "02", title: "Luca scans activity",    body: "Public onchain data is fetched and normalized in seconds." },
-  { n: "03", title: "x402Books categorizes",  body: "Every transaction is classified by the x402Books AI engine." },
-  { n: "04", title: "Risks are detected",     body: "Anomalies, concentration risk, and unusual patterns are flagged." },
-  { n: "05", title: "Report delivered",       body: "A clear, structured accounting report is sent back instantly." },
+  { n: "01", title: "Agent declares",         body: "An agent adds .agent/wallets.json to its repo, or you send Luca any Base wallet on Telegram." },
+  { n: "02", title: "Luca verifies",          body: "Manifests validated, claims checked, public onchain activity fetched and normalized." },
+  { n: "03", title: "Luca interprets",        body: "Settlement patterns classified. Treasury health derived. Anomalies flagged." },
+  { n: "04", title: "Scores computed",        body: "Trust score and confidence calculated against the public methodology." },
+  { n: "05", title: "Verdict delivered",      body: "A clear verdict on the profile — and a Trust Check endpoint anyone can call." },
 ];
 
 const FOR_AGENTS = [
@@ -37,20 +37,20 @@ const FOR_AGENTS = [
 ];
 
 const FOR_BUILDERS = [
-  "Wallet summaries",
-  "Spend controls",
-  "Agent financial scores",
-  "Public audit notes",
-  "Reporting workflows",
-  "Compliance-ready exports",
-  "Agent-to-agent bookkeeping",
+  "Trust Checks before money moves",
+  "Agent trust + confidence scores",
+  "Wallet verification",
+  "Public verdicts",
+  "Treasury intelligence",
+  "Anomaly flags",
+  "Agent-to-agent trust decisions",
 ];
 
 const SERIES = [
   { tag: "Series 01", title: "Are Agents Actually Working?",  body: "Public analysis of agent wallets and activity." },
   { tag: "Series 02", title: "Agent Wallet Breakdown",        body: "Short financial snapshots of agent projects." },
   { tag: "Series 03", title: "Agent Treasury Watch",          body: "Treasury health and risk observations." },
-  { tag: "Series 04", title: "Luca Explains",                 body: "Simple accounting lessons for the agent economy." },
+  { tag: "Series 04", title: "State of Agent Trust",          body: "Who's verified, who's improving, who needs review — from the registry data." },
 ];
 
 const TRUST_ITEMS = [

@@ -268,12 +268,20 @@ function VerifyCTA() {
             <p className="reg-trust-ladder-label">Verification levels</p>
             <div className="reg-trust-step">
               <span className="reg-badge reg-vstatus reg-vstatus-candidate">Candidate</span>
-              <span>Luca found wallets from public data</span>
+              <span>Indexed from public data — no proof yet</span>
             </div>
             <div className="reg-trust-arrow">↓</div>
             <div className="reg-trust-step">
-              <span className="reg-badge reg-vstatus reg-vstatus-needs-verify">Needs Verification</span>
-              <span>Team submitted or repo-declared wallets</span>
+              <span className="reg-badge reg-vstatus reg-vstatus-wallets-declared">Wallets Declared</span>
+              <span>.agent/wallets.json validated from the repo</span>
+            </div>
+            <div className="reg-trust-arrow">↓</div>
+            <div className="reg-trust-step">
+              <span className="reg-badge reg-vstatus reg-vstatus-claimed">
+                <span className="material-symbols-outlined" style={{ fontSize: 11 }}>handshake</span>
+                Claimed
+              </span>
+              <span>Team claimed the profile, wallet matched</span>
             </div>
             <div className="reg-trust-arrow">↓</div>
             <div className="reg-trust-step">
@@ -281,8 +289,11 @@ function VerifyCTA() {
                 <span className="material-symbols-outlined" style={{ fontSize: 11 }}>verified</span>
                 Verified
               </span>
-              <span>DID-linked proof via Gitlawb</span>
+              <span>Luca-reviewed — highest trust score tier</span>
             </div>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8 }}>
+              Each tier raises the agent&apos;s trust score and confidence — <a href="/methodology" style={{ color: "var(--accent)" }}>see the methodology</a>.
+            </p>
           </div>
         </div>
 
@@ -552,18 +563,18 @@ export default function RegistryPage() {
         <div className="lp-header-right">
           <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+          <Link href="/registry" className="lp-btn-primary">Open Registry</Link>
         </div>
       </header>
 
       {/* ── Hero ── */}
       <section className="reg-hero">
         <p className="reg-label">Agent Financial Registry</p>
-        <h1 className="reg-h1">Track the wallets behind agents.</h1>
+        <h1 className="reg-h1">Every agent, trust-checked.</h1>
         <p className="reg-hero-sub">
-          x402Books AI indexes agent wallets across BANKR, Virtuals, Base, AEON, and EigenCloud —
-          sourced and scored by Luca. All entries start as Candidate until teams
-          submit wallet proof.
+          The public financial identity behind every autonomous agent — wallets verified, trust
+          scores computed by Luca, and a Trust Check endpoint for each profile. Entries start as
+          Candidate until teams declare wallets.
         </p>
         <div className="reg-hero-stats">
           {STATS.map((s) => (
@@ -716,7 +727,7 @@ export default function RegistryPage() {
         <div className="lp-footer-inner">
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
             <Link href="/registry">Registry</Link>
             <Link href="/luca">Luca</Link>
             <Link href="/developer">Developer</Link>

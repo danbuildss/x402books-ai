@@ -132,7 +132,7 @@ export default function SharedReportPage() {
         {error && !loading && (
           <div className="pub-report-error">
             <p>{error}</p>
-            <a href="/dashboard" className="pub-report-btn primary">Go to Dashboard</a>
+            <a href="/registry" className="pub-report-btn primary">Open Registry</a>
           </div>
         )}
 
@@ -213,7 +213,7 @@ export default function SharedReportPage() {
 
       <footer className="pub-report-footer">
         <span>x402Books AI · Onchain financial intelligence for Base USDC</span>
-        <a href="/dashboard">Open Dashboard →</a>
+        <a href="/registry">Open Registry →</a>
       </footer>
     </main>
   );
