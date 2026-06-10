@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import { generateAgentReport } from "@/lib/agent-report";
+import { internalAuth as authOk } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return true;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 function parsePeriod(p: string): number {
   const m = p.match(/^(\d+)d$/);
