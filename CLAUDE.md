@@ -3,15 +3,35 @@
 ## What we are building
 
 ```
-the financial operating system
-for autonomous entities.
+trust infrastructure
+for autonomous agents.
 ```
 
 Not another AI agent. Not another crypto dashboard. Not another token ecosystem.
 
-**Infrastructure.**
+**Infrastructure.** Internally: the rating agency of the agent economy. Externally (until the track record exists): financial identity and trust layer for autonomous agents.
 
-The wedge: **readable financial identity for autonomous systems.**
+The wedge: **the Agent Wallet Manifest** (`.agent/wallets.json`).
+The product: **the Trust Check API** (`GET /api/v1/kya/[slug]`).
+The moat: **Trust Dataset + Trust Methodology + Trust Distribution.** The manifest creates the dataset. The methodology (/methodology) creates credibility. The API creates distribution. All three, or none of it works.
+
+---
+
+## The platform question — ask this before every build
+
+```
+the indexer gives you more agents;
+the trust endpoint gives others a reason to depend on you.
+```
+
+Dependency is where infrastructure companies become valuable. The roadmap is a loop, not a ladder:
+
+```
+Trust Check API → external integrations → dependency
+→ more data → better trust decisions → more integrations
+```
+
+Coverage features (indexers, registries) feed the loop. They are never the product.
 
 ---
 
@@ -61,16 +81,21 @@ Financially self-aware agents. That's the loop.
 
 ---
 
-## 6-month execution plan (brick by brick)
+## Current 30-day plan (June 2026) — supersedes the old 6-month table
 
-| Month | Goal | KPI |
-|-------|------|-----|
-| 1 | Product clarity — registry + profiles + readability | 10–25 GOOD agents indexed |
-| 2 | Trust & distribution — verification, labels, reports, "State of Agent Finance" | Profiles being shared voluntarily |
-| 3 | Ecosystem embeds — AEON polish, Surplus logging, Virtuals onboarding | index → classify → report → display |
-| 4 | Financial intelligence — treasury health, settlement quality, runway, wallet-role intelligence | Move from tracking to interpreting |
-| 5 | Network effects — leaderboards, discovery, embeddable report cards | Projects asking "how do we get verified?" |
-| 6 | Real business model — verification, premium reports, API access, enterprise monitoring | B2B infrastructure revenue |
+| # | Item | Owner | Status |
+|---|------|-------|--------|
+| 1 | Ship Trust Check API (`/api/v1/kya/[slug]`) | code | ✅ done |
+| 2 | Publish scoring methodology (`/methodology`) | code | ✅ done |
+| 3 | AEON integration — "every AEON agent trust-checkable by default" | founder | pitch out |
+| 4 | First external API caller (GC founder = design partner, not customer) | founder | in conversation |
+| 5 | "Trust Check API" public announcement + How Trust Scores Work article | founder + Luca | after 3/4 |
+| 6 | ERC-8004 indexer — coverage feed into the trust endpoint | code | queued |
+| 7 | State of Agent Trust leaderboard | code | queued |
+
+**The milestone that matters: one external system calling `GET /api/v1/kya/...` before taking an action.** Not stars, not followers, not registry count. A real dependency.
+
+Company rebrand: only after the above — by then we know what we're becoming. (Name shortlist parked: Arbiter / Signet / Summa. "North" is dead — trademark conflict.)
 
 ---
 
@@ -104,13 +129,17 @@ Financially self-aware agents. That's the loop.
 - anything that frames success around $LUCA price
 
 **DO build:**
-- clean registry UI
-- public agent profiles
-- wallet manifest flow
-- readable reports
-- operational intelligence
-- trust signals
+- the Trust Check API and everything that feeds it
+- wallet manifest flow (the dataset)
+- published methodology (the credibility)
+- integrations that create dependency (the distribution)
 - verification infrastructure
+- public agent profiles + clean registry UI (the human surface)
+
+**Scoring discipline:**
+- /methodology documents the ACTUAL code in src/lib/kya.ts — if the code changes, the page changes in the same PR
+- trust_score and confidence stay separate numbers, always
+- BLOCK only on explicit negative signals — absence of data is REVIEW, never BLOCK
 
 ---
 
