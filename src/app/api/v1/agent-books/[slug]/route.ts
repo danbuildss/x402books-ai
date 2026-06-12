@@ -5,18 +5,15 @@
 // Agents without declared wallets get an honest no-books response.
 //
 // Auth: API key (Bearer / X-API-Key) or internal secret, via v1Auth.
+// Caching: 10-minute TTL per slug+period, managed by agent-books lib.
 
 import { NextRequest, NextResponse } from "next/server";
 import { v1Auth } from "@/lib/v1-auth";
 import { ledgerErrorResponse } from "@/lib/api-utils";
-import { buildAgentBooks, getAgentBySlug, type AgentBooks, type AgentBooksUnattributed } from "@/lib/agent-books";
+import { buildAgentBooks, getAgentBySlug } from "@/lib/agent-books";
 import type { TimeRange } from "@/lib/ledger";
 
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
-
-// Books are expensive (one Alchemy scan per wallet) — cache per slug+range
-const CACHE_TTL_MS = 10 * 60 * 1000;
-const cache = new Map<string, { expires: number; body: AgentBooks | AgentBooksUnattributed }>();
 
 export async function GET(
   request: NextRequest,
@@ -47,16 +44,7 @@ export async function GET(
       return res;
     }
 
-    const cacheKey = `${slug}:${period}`;
-    const cached = cache.get(cacheKey);
-    let body: AgentBooks | AgentBooksUnattributed;
-    if (cached && cached.expires > Date.now()) {
-      body = cached.body;
-    } else {
-      body = await buildAgentBooks(agent, period);
-      cache.set(cacheKey, { expires: Date.now() + CACHE_TTL_MS, body });
-    }
-
+    const body = await buildAgentBooks(agent, period);
     const res = NextResponse.json(body);
     auth.finish(200, Date.now() - start, endpoint);
     return res;

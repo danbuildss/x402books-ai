@@ -22,8 +22,9 @@ import {
 } from "@/lib/ledger";
 import type { Agent } from "@/app/registry/types";
 
-// Cap wallets scanned per agent to protect Alchemy quota
 const MAX_WALLETS = 6;
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type AgentBooks = {
   agent: { slug: string; name: string; ecosystem: string };
@@ -58,6 +59,13 @@ export type AgentBooksUnattributed = {
   reason: string;
 };
 
+// Module-level cache shared by API routes and server components.
+// Both callers benefit from the same 10-minute TTL per slug+period key.
+const BOOKS_CACHE = new Map<string, { expires: number; data: AgentBooks | AgentBooksUnattributed }>();
+const BOOKS_CACHE_TTL = 10 * 60 * 1000;
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export async function getAgentBySlug(slug: string): Promise<Agent | null> {
   const { agents } = await getRegistryAgents();
   return agents.find((a) => toSlug(a.name) === slug) ?? null;
@@ -68,6 +76,22 @@ export async function buildAgentBooks(
   period: TimeRange,
 ): Promise<AgentBooks | AgentBooksUnattributed> {
   const slug = toSlug(agent.name);
+  const cacheKey = `${slug}:${period}`;
+  const cached = BOOKS_CACHE.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.data;
+
+  const data = await computeAgentBooks(agent, period, slug);
+  BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data });
+  return data;
+}
+
+// ── Internal computation ──────────────────────────────────────────────────────
+
+async function computeAgentBooks(
+  agent: Agent,
+  period: TimeRange,
+  slug: string,
+): Promise<AgentBooks | AgentBooksUnattributed> {
   const agentMeta = { slug, name: agent.name, ecosystem: agent.ecosystem };
 
   const declared = (agent.wallets ?? []).filter((w) => isValidWalletAddress(w.address));
@@ -87,16 +111,14 @@ export async function buildAgentBooks(
 
   const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
 
-  // Scan every declared wallet through the existing ledger engine
   const scans = await Promise.all(
     scannable.map((w) =>
       buildLedgerScan({ wallet: w.address, range: period, persist: false }),
     ),
   );
 
-  // Merge transactions across wallets, deduplicating transfer legs that appear
-  // in two scans (a transfer between own wallets shows up in both the sender's
-  // and the receiver's scan).
+  // Merge transactions across wallets; deduplicate legs that appear in two
+  // scans when a transfer occurs between two of the agent's own wallets.
   const seen = new Set<string>();
   const merged: LedgerTransaction[] = [];
   for (const scan of scans) {
@@ -108,8 +130,8 @@ export async function buildAgentBooks(
     }
   }
 
-  // Internal transfers: both legs belong to this agent's declared wallets.
-  // These are treasury movement, never revenue or expenses.
+  // Internal transfers: both legs belong to this agent's declared wallets —
+  // treasury movement, never revenue or expenses.
   const internal: LedgerTransaction[] = [];
   const external: LedgerTransaction[] = [];
   for (const tx of merged) {
@@ -118,8 +140,8 @@ export async function buildAgentBooks(
     (isInternal ? internal : external).push(tx);
   }
 
-  // Swap detection: the same tx hash carrying both an inflow and an outflow is
-  // a token swap, not revenue or spend.
+  // Swap detection: same tx hash with both an inflow and outflow is a token
+  // swap, not revenue or spend.
   const directionsByHash = new Map<string, Set<string>>();
   for (const tx of external) {
     const set = directionsByHash.get(tx.txHash) ?? new Set<string>();
@@ -129,49 +151,41 @@ export async function buildAgentBooks(
   const isSwap = (tx: LedgerTransaction) =>
     (directionsByHash.get(tx.txHash)?.size ?? 0) > 1;
 
-  const usd = (tx: LedgerTransaction) => tx.usdValue ?? tx.amountUsdc;
+  const usdOf = (tx: LedgerTransaction) => tx.usdValue ?? tx.amountUsdc;
 
   const revenueTxs = external.filter((tx) => tx.direction === "income" && !isSwap(tx));
   const expenseTxs = external.filter((tx) => tx.direction === "expense" && !isSwap(tx));
 
-  const revenue = revenueTxs.reduce((sum, tx) => sum + usd(tx), 0);
-  const expenses = expenseTxs.reduce((sum, tx) => sum + usd(tx), 0);
+  const revenue = revenueTxs.reduce((sum, tx) => sum + usdOf(tx), 0);
+  const expenses = expenseTxs.reduce((sum, tx) => sum + usdOf(tx), 0);
   const netIncome = revenue - expenses;
 
-  // Revenue by source (counterparty)
   const bySource = new Map<string, { address: string; total_usd: number; tx_count: number }>();
   for (const tx of revenueTxs) {
     const addr = tx.counterparty || tx.from;
-    const entry = bySource.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
-    entry.total_usd += usd(tx);
-    entry.tx_count += 1;
-    bySource.set(addr, entry);
+    const e = bySource.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
+    e.total_usd += usdOf(tx);
+    e.tx_count += 1;
+    bySource.set(addr, e);
   }
 
-  // Expenses by category
   const byCategory = new Map<string, { category: string; label: string; total_usd: number; tx_count: number }>();
   for (const tx of expenseTxs) {
     const cat = tx.category ?? "unknown";
-    const entry = byCategory.get(cat) ?? {
-      category: cat,
-      label: formatCategory(cat),
-      total_usd: 0,
-      tx_count: 0,
-    };
-    entry.total_usd += usd(tx);
-    entry.tx_count += 1;
-    byCategory.set(cat, entry);
+    const e = byCategory.get(cat) ?? { category: cat, label: formatCategory(cat), total_usd: 0, tx_count: 0 };
+    e.total_usd += usdOf(tx);
+    e.tx_count += 1;
+    byCategory.set(cat, e);
   }
 
-  // Top counterparties across all external activity
   const byCounterparty = new Map<string, { address: string; total_usd: number; tx_count: number }>();
   for (const tx of external) {
     const addr = tx.counterparty;
     if (!addr) continue;
-    const entry = byCounterparty.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
-    entry.total_usd += usd(tx);
-    entry.tx_count += 1;
-    byCounterparty.set(addr, entry);
+    const e = byCounterparty.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
+    e.total_usd += usdOf(tx);
+    e.tx_count += 1;
+    byCounterparty.set(addr, e);
   }
 
   const round = (n: number) => Math.round(n * 100) / 100;
@@ -201,8 +215,7 @@ export async function buildAgentBooks(
       revenue_usd: round(revenue),
       expenses_usd: round(expenses),
       net_income_usd: round(netIncome),
-      // Balance tracking is not built yet — flows only. Never fabricate it.
-      treasury_balance_usd: null,
+      treasury_balance_usd: null, // flows only — balance tracking not yet built
       margin_pct: revenue > 0 ? round((netIncome / revenue) * 100) : null,
       tx_count: external.length,
     },
@@ -224,7 +237,9 @@ export async function buildAgentBooks(
       confidence,
       internal_transfers_removed: internal.length,
     },
-    luca_summary: buildSummary(agent.name, period, revenue, expenses, netIncome, external.length, internal.length),
+    luca_summary: buildSummary(
+      agent.name, period, revenue, expenses, netIncome, external.length, internal.length,
+    ),
     generated_at: new Date().toISOString(),
   };
 }
@@ -249,7 +264,9 @@ function buildSummary(
       : `Net income is negative at -${fmt(netIncome)} — spending exceeds revenue.`,
   ];
   if (internalCount > 0) {
-    parts.push(`${internalCount} internal transfer${internalCount === 1 ? "" : "s"} between declared wallets excluded from the statement.`);
+    parts.push(
+      `${internalCount} internal transfer${internalCount === 1 ? "" : "s"} between declared wallets excluded from the statement.`,
+    );
   }
   return parts.join(" ");
 }

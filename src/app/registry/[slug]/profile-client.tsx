@@ -11,6 +11,135 @@ import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
+import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
+
+// ── Agent Books block ─────────────────────────────────────────────────────────
+
+function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed }) {
+  const usd = (n: number) =>
+    "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  if (!books.attributed) {
+    return (
+      <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+        </div>
+        <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
+          No books yet. This agent needs declared wallets before x402Books can generate revenue, expense, and profitability data.
+        </p>
+        <a
+          href="https://docs.x402books.xyz/manifest"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            fontSize: "0.79rem", fontWeight: 600,
+            color: "var(--accent)", textDecoration: "none",
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add_circle</span>
+          Declare wallets with{" "}
+          <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 5px", borderRadius: 3 }}>
+            .agent/wallets.json
+          </code>
+        </a>
+      </section>
+    );
+  }
+
+  const f = books.financials;
+  const netPositive = f.net_income_usd >= 0;
+
+  return (
+    <section className="prof-section">
+      {/* Header row */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+        <span style={{
+          fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
+          background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)",
+          letterSpacing: "0.02em",
+        }}>
+          {books.period}
+        </span>
+      </div>
+
+      {/* Primary stats: Revenue / Expenses / Net Income */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
+        {([
+          { label: "Revenue",    value: usd(f.revenue_usd),     color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" },
+          { label: "Expenses",   value: usd(f.expenses_usd),    color: f.expenses_usd > 0 ? "#f87171"      : "var(--muted)" },
+          { label: "Net Income", value: (netPositive ? "+" : "−") + usd(f.net_income_usd), color: netPositive ? "var(--accent)" : "#f87171" },
+        ] as const).map(({ label, value, color }) => (
+          <div key={label} style={{
+            display: "flex", flexDirection: "column", gap: 4,
+            padding: "10px 12px", borderRadius: 8,
+            background: "var(--surface-soft)", border: "1px solid var(--line)",
+          }}>
+            <span style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 500 }}>
+              {label}
+            </span>
+            <span style={{ fontSize: "1.05rem", fontWeight: 700, color, letterSpacing: "-0.02em", fontFamily: "monospace" }}>
+              {value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Secondary stats */}
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: "0.77rem", color: "var(--muted)", marginBottom: 12 }}>
+        {f.margin_pct !== null && (
+          <span>
+            Margin{" "}
+            <strong style={{ color: f.margin_pct >= 0 ? "var(--ink)" : "#f87171" }}>
+              {f.margin_pct.toFixed(1)}%
+            </strong>
+          </span>
+        )}
+        <span>Transactions <strong style={{ color: "var(--ink)" }}>{f.tx_count}</strong></span>
+        <span>Wallets analyzed <strong style={{ color: "var(--ink)" }}>{books.wallets.analyzed}</strong></span>
+        {books.attribution.internal_transfers_removed > 0 && (
+          <span style={{ color: "var(--muted)" }}>
+            {books.attribution.internal_transfers_removed} internal transfers excluded
+          </span>
+        )}
+        <span style={{ marginLeft: "auto" }}>
+          Source{" "}
+          <strong style={{ color: "var(--ink)", textTransform: "capitalize" }}>
+            {books.attribution.source}
+          </strong>
+        </span>
+      </div>
+
+      {/* Expense breakdown */}
+      {books.breakdown.expenses_by_category.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600, marginBottom: 6 }}>
+            Expenses by Category
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {books.breakdown.expenses_by_category.slice(0, 4).map((e) => (
+              <div key={e.category} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
+                <span style={{ color: "var(--muted)" }}>{e.label}</span>
+                <span style={{ fontFamily: "monospace", color: "#f87171" }}>−{usd(e.total_usd)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Luca financial summary */}
+      {books.luca_summary && (
+        <p style={{
+          fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6,
+          paddingTop: 10, borderTop: "1px solid var(--line)",
+        }}>
+          <span style={{ fontWeight: 600, color: "var(--ink)" }}>Luca: </span>
+          {books.luca_summary}
+        </p>
+      )}
+    </section>
+  );
+}
 
 // ── Settlement pattern display ────────────────────────────────────────────────
 
@@ -882,7 +1011,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[] }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
   const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
@@ -975,12 +1104,15 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {/* Claim banner — top of body, unclaimed agents only */}
           <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
 
-          {/* Luca's Verdict */}
+          {/* Agent Books — the headline financial statement */}
+          {books && <AgentBooksBlock books={books} />}
+
+          {/* Luca's Notes — research and analysis by Luca */}
           {agent.adminNotes && (
             <div className="prof-verdict">
               <div className="prof-verdict-label">
                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
-                Luca&apos;s Verdict
+                Luca&apos;s Notes
               </div>
               <p className="prof-verdict-text">{agent.adminNotes}</p>
               {agent.lastChecked && (
@@ -993,7 +1125,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {/* Scores */}
             {hasScores && (
               <section className="prof-section">
-                <p className="prof-section-title">Luca Scores</p>
+                <p className="prof-section-title">Activity Scores</p>
                 {agent.financialActivityScore !== null && (
                   <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
                 )}
