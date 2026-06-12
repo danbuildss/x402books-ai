@@ -13,6 +13,8 @@ import { getToolDecisions } from "@/lib/tool-decisions";
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import { classifySettlementPattern } from "@/lib/luca-classify";
 import type { SettlementClassification } from "@/lib/luca-classify";
+import { buildAgentBooks } from "@/lib/agent-books";
+import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
@@ -32,17 +34,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const agent = await getAgent(slug);
   if (!agent) return { title: "Agent not found — x402Books Registry" };
 
-  const health = agent.treasuryHealth ?? "Pending";
-  const score = agent.financialActivityScore;
   const desc = agent.adminNotes
     ? `${agent.adminNotes.slice(0, 120)}…`
-    : `${agent.name} agent profile — treasury health: ${health}. Tracked by x402Books AI.`;
+    : `${agent.name} — financial intelligence from x402Books. Revenue, expenses, and profitability tracked on Base.`;
 
   return {
-    title: `${agent.name} (${agent.symbol}) — x402Books Registry`,
+    title: `${agent.name} (${agent.symbol}) — Agent Books · x402Books`,
     description: desc,
     openGraph: {
-      title: `${agent.name} — x402Books Agent Profile`,
+      title: `${agent.name} — Agent Books · x402Books`,
       description: desc,
       url: `https://www.x402books.xyz/registry/${slug}`,
       siteName: "x402Books AI",
@@ -50,9 +50,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     twitter: {
       card: "summary",
       title: `${agent.name} (${agent.symbol}) — x402Books`,
-      description: score
-        ? `Financial Activity Score: ${score}/100 · Treasury: ${health}`
-        : `Treasury: ${health} · Tracked by x402Books AI`,
+      description: desc,
     },
   };
 }
@@ -104,10 +102,28 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const economics         = slug === "luca" ? await getLucaEconomics() : undefined;
-  const inferenceActivity = await getInferenceActivity(slug);
-  const classification    = deriveClassification(agent);
-  const toolDecisions     = await getToolDecisions(slug);
+  const [economics, inferenceActivity, toolDecisions, books] = await Promise.all([
+    slug === "luca" ? getLucaEconomics() : Promise.resolve(undefined),
+    getInferenceActivity(slug),
+    getToolDecisions(slug),
+    buildAgentBooks(agent, "30d").catch((): AgentBooks | AgentBooksUnattributed => ({
+      agent: { slug, name: agent.name, ecosystem: agent.ecosystem },
+      attributed: false,
+      reason: "Books temporarily unavailable.",
+    })),
+  ]);
 
-  return <ProfileClient agent={agent} slug={slug} economics={economics} inferenceActivity={inferenceActivity} classification={classification} toolDecisions={toolDecisions} />;
+  const classification = deriveClassification(agent);
+
+  return (
+    <ProfileClient
+      agent={agent}
+      slug={slug}
+      economics={economics}
+      inferenceActivity={inferenceActivity}
+      classification={classification}
+      toolDecisions={toolDecisions}
+      books={books}
+    />
+  );
 }
