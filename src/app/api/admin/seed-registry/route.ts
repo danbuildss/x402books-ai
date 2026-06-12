@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { seedRegistryFromStaticData } from "@/lib/registry-db";
+import { internalAuth } from "@/lib/internal-auth";
 
 export async function POST(req: NextRequest) {
-  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret || token !== secret) {
+  if (!internalAuth(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

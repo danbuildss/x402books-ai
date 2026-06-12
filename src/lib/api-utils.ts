@@ -29,6 +29,21 @@ export function parseLedgerParams(request: Request) {
   return { wallet, range };
 }
 
+// Log the real error server-side; return a generic message to the client.
+// Raw DB error strings can leak table names, constraints, and queries.
+export function dbError(scope: string, error: unknown, status = 500) {
+  console.error(`[${scope}]`, error);
+  return NextResponse.json(
+    {
+      error: "Something went wrong. Please try again.",
+      detail: process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : undefined,
+    },
+    { status },
+  );
+}
+
 export function ledgerErrorResponse(error: unknown) {
   if (error instanceof Error && error.message.includes("Alchemy API key")) {
     return NextResponse.json(

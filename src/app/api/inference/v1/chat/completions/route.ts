@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logAgentEvent } from "@/lib/agent-events";
 import { logInferenceEvent } from "@/lib/inference-events";
+import { internalAuth as authOk } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +30,6 @@ function estimateCost(
     ((usage.prompt_tokens ?? 0) / 1_000_000) * inputRate +
     ((usage.completion_tokens ?? 0) / 1_000_000) * outputRate;
   return Math.round(cost * 10_000) / 10_000;
-}
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return true;
-  const header = req.headers.get("authorization") ?? "";
-  return header === `Bearer ${secret}`;
 }
 
 async function logInference(opts: {

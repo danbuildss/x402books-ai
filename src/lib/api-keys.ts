@@ -1,5 +1,7 @@
 // API key management: generation, validation, rate limiting, usage logging.
+// Keys are owned by the access-code session that created them (owner_code_id).
 
+import { verifyMessage } from "viem";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { type LucaTier, TIER_LIMITS, getWalletTier } from "@/lib/luca-token";
 
@@ -43,7 +45,10 @@ const SELECT_FIELDS = "id, key_prefix, name, is_active, tier, rate_limit_per_day
 
 // ── Create ────────────────────────────────────────────────────────────────────
 
-export async function createApiKey(name = "Default"): Promise<{ key: string; record: ApiKeyRecord } | null> {
+export async function createApiKey(
+  name = "Default",
+  ownerCodeId?: string,
+): Promise<{ key: string; record: ApiKeyRecord } | null> {
   if (!hasSupabaseAdminEnv()) return null;
 
   const raw = KEY_PREFIX + randomHex(20); // xb_live_ + 40 hex = 48 chars total
@@ -59,6 +64,7 @@ export async function createApiKey(name = "Default"): Promise<{ key: string; rec
       name,
       tier: "free",
       rate_limit_per_day: TIER_LIMITS.free,
+      owner_code_id: ownerCodeId ?? null,
     })
     .select(SELECT_FIELDS)
     .single();
@@ -156,45 +162,143 @@ export function recordUsage(params: {
 
 // ── List keys ─────────────────────────────────────────────────────────────────
 
-export async function listApiKeys(): Promise<ApiKeyRecord[]> {
+// When ownerCodeId is provided, only that session's keys are returned.
+// Without it (admin path), all active keys are returned — callers must
+// verify internal auth before omitting the owner filter.
+export async function listApiKeys(ownerCodeId?: string): Promise<ApiKeyRecord[]> {
   if (!hasSupabaseAdminEnv()) return [];
 
   const supabase = getSupabaseAdminClient();
-  const { data } = await supabase
+  let query = supabase
     .from("api_keys")
     .select(SELECT_FIELDS)
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
+  if (ownerCodeId) query = query.eq("owner_code_id", ownerCodeId);
+
+  const { data } = await query;
   return (data ?? []) as ApiKeyRecord[];
+}
+
+// ── Ownership check ───────────────────────────────────────────────────────────
+
+export async function keyBelongsTo(id: string, ownerCodeId: string): Promise<boolean> {
+  if (!hasSupabaseAdminEnv()) return false;
+
+  const supabase = getSupabaseAdminClient();
+  const { data } = await supabase
+    .from("api_keys")
+    .select("owner_code_id")
+    .eq("id", id)
+    .single();
+
+  return Boolean(data && data.owner_code_id === ownerCodeId);
 }
 
 // ── Revoke ────────────────────────────────────────────────────────────────────
 
-export async function revokeApiKey(id: string): Promise<boolean> {
+// When ownerCodeId is provided, the key is only revoked if that session owns
+// it. Without it (admin path), any key can be revoked.
+export async function revokeApiKey(id: string, ownerCodeId?: string): Promise<boolean> {
   if (!hasSupabaseAdminEnv()) return false;
 
   const supabase = getSupabaseAdminClient();
-  const { error } = await supabase
+  let query = supabase
     .from("api_keys")
     .update({ is_active: false })
     .eq("id", id);
 
-  return !error;
+  if (ownerCodeId) query = query.eq("owner_code_id", ownerCodeId);
+
+  const { error, data } = await query.select("id");
+  if (error) return false;
+  // With an owner filter, no matched rows means the session doesn't own this key
+  return ownerCodeId ? (data ?? []).length > 0 : true;
 }
 
-// ── Link wallet + refresh tier ────────────────────────────────────────────────
+// ── Wallet linking: signature challenge / verify ─────────────────────────────
+// Linking a wallet upgrades the key's rate-limit tier based on $LUCA balance,
+// so ownership must be proven with a signature — pasting someone else's
+// address must never work.
 
-export async function linkWalletToKey(
+const NONCE_TTL_MS = 10 * 60 * 1000;
+
+export function buildLinkMessage(keyId: string, walletAddress: string, nonce: string): string {
+  return [
+    "x402Books wallet verification",
+    "",
+    `Key: ${keyId}`,
+    `Wallet: ${walletAddress.toLowerCase()}`,
+    `Nonce: ${nonce}`,
+    "",
+    "Signing this message proves you control this wallet.",
+    "This signature does not authorize any transaction.",
+  ].join("\n");
+}
+
+export async function issueLinkChallenge(
   keyId: string,
   walletAddress: string,
-): Promise<{ tier: LucaTier; balance: number } | null> {
+): Promise<{ message: string } | null> {
   if (!hasSupabaseAdminEnv()) return null;
+
+  const nonce = randomHex(16);
+  const supabase = getSupabaseAdminClient();
+  const { error } = await supabase
+    .from("api_keys")
+    .update({
+      link_nonce: nonce,
+      link_nonce_expires_at: new Date(Date.now() + NONCE_TTL_MS).toISOString(),
+    })
+    .eq("id", keyId);
+
+  if (error) return null;
+  return { message: buildLinkMessage(keyId, walletAddress, nonce) };
+}
+
+export async function verifyAndLinkWallet(
+  keyId: string,
+  walletAddress: string,
+  signature: string,
+): Promise<{ tier: LucaTier; balance: number } | { error: string } | null> {
+  if (!hasSupabaseAdminEnv()) return null;
+
+  const supabase = getSupabaseAdminClient();
+  const { data } = await supabase
+    .from("api_keys")
+    .select("link_nonce, link_nonce_expires_at")
+    .eq("id", keyId)
+    .single();
+
+  if (!data?.link_nonce) return { error: "No pending challenge. Request a challenge first." };
+  if (data.link_nonce_expires_at && new Date(data.link_nonce_expires_at).getTime() < Date.now()) {
+    return { error: "Challenge expired. Request a new one." };
+  }
+
+  const message = buildLinkMessage(keyId, walletAddress, data.link_nonce);
+
+  let valid = false;
+  try {
+    valid = await verifyMessage({
+      address: walletAddress as `0x${string}`,
+      message,
+      signature: signature as `0x${string}`,
+    });
+  } catch {
+    valid = false;
+  }
+  if (!valid) return { error: "Signature verification failed." };
+
+  // Single-use nonce: clear before applying the upgrade
+  await supabase
+    .from("api_keys")
+    .update({ link_nonce: null, link_nonce_expires_at: null })
+    .eq("id", keyId);
 
   const { tier, balance } = await getWalletTier(walletAddress);
   const limit = TIER_LIMITS[tier];
 
-  const supabase = getSupabaseAdminClient();
   const { error } = await supabase
     .from("api_keys")
     .update({

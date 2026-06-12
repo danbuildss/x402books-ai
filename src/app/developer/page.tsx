@@ -47,55 +47,89 @@ function TierBadge({ tier }: { tier: LucaTier }) {
   );
 }
 
-function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
+type EthereumProvider = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+};
+
+function WalletLinker({ keyId, currentTier, onLinked }: {
   keyId: string;
   currentWallet: string | null;
   currentTier: LucaTier;
   onLinked: (wallet: string, tier: LucaTier, balance: number) => void;
 }) {
-  const [wallet, setWallet] = useState(currentWallet ?? "");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<"idle" | "connecting" | "signing" | "verifying">("idle");
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ tier: LucaTier; balance: number } | null>(null);
 
   async function handleLink() {
-    if (!wallet.trim().startsWith("0x")) { setError("Enter a valid 0x wallet address."); return; }
+    const ethereum = (window as unknown as { ethereum?: EthereumProvider }).ethereum;
+    if (!ethereum) {
+      setError("No wallet detected. Install MetaMask or another browser wallet.");
+      return;
+    }
     setLoading(true); setError("");
     try {
+      // 1. Connect
+      setStep("connecting");
+      const accounts = await ethereum.request({ method: "eth_requestAccounts" }) as string[];
+      const address = accounts?.[0];
+      if (!address) { setError("No account connected."); return; }
+
+      // 2. Request challenge
+      const chRes = await fetch("/api/developer/verify-wallet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyId, walletAddress: address }),
+      });
+      const chData = await chRes.json() as { message?: string; error?: string };
+      if (!chRes.ok || !chData.message) { setError(chData.error ?? "Could not get challenge."); return; }
+
+      // 3. Sign the challenge
+      setStep("signing");
+      const signature = await ethereum.request({
+        method: "personal_sign",
+        params: [chData.message, address],
+      }) as string;
+
+      // 4. Verify + link
+      setStep("verifying");
       const res = await fetch("/api/developer/verify-wallet", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId, walletAddress: wallet.trim() }),
+        body: JSON.stringify({ keyId, walletAddress: address, signature }),
       });
       const data = await res.json() as { tier: LucaTier; luca_balance: number; error?: string };
       if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
       setResult({ tier: data.tier, balance: data.luca_balance });
-      onLinked(wallet.trim(), data.tier, data.luca_balance);
-    } catch {
-      setError("Network error — please try again.");
+      onLinked(address, data.tier, data.luca_balance);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      setError(msg.includes("rejected") || msg.includes("denied")
+        ? "Signature request rejected."
+        : "Could not complete wallet verification.");
     } finally {
       setLoading(false);
+      setStep("idle");
     }
   }
+
+  const stepLabel =
+    step === "connecting" ? "Connecting…"
+    : step === "signing" ? "Sign in your wallet…"
+    : step === "verifying" ? "Verifying…"
+    : "Connect & Sign";
 
   return (
     <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
       <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
-        Link wallet to verify your access tier
+        Verify wallet ownership with a signature to unlock your access tier
       </div>
-      <div style={{ display: "flex", gap: 8 }}>
-        <input
-          style={{ flex: 1, padding: "7px 10px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-surface)", color: "var(--st-text)", fontSize: 12, fontFamily: "var(--st-mono)" }}
-          placeholder="0x…"
-          value={wallet}
-          onChange={(e) => setWallet(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLink()}
-        />
-        <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
-          {loading ? "Checking…" : "Verify"}
-        </button>
-      </div>
+      <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
+        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>account_balance_wallet</span>
+        {loading ? stepLabel : "Connect & Sign"}
+      </button>
       {error && <p style={{ color: "var(--st-red)", fontSize: 12, marginTop: 6 }}>{error}</p>}
       {result && (
         <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
@@ -109,7 +143,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
       )}
       {!result && currentTier === "free" && (
         <div style={{ marginTop: 8, fontSize: 11, color: "var(--st-muted)" }}>
-          Developer: 500 req/day &nbsp;·&nbsp; Enterprise: 2,000 req/day
+          Developer: 500 req/day &nbsp;·&nbsp; Enterprise: 2,000 req/day &nbsp;·&nbsp; The signature is free and authorizes no transaction.
         </div>
       )}
     </div>
@@ -119,6 +153,7 @@ function WalletLinker({ keyId, currentWallet, currentTier, onLinked }: {
 export default function DeveloperPage() {
   const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [signedOut, setSignedOut] = useState(false);
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
@@ -133,7 +168,13 @@ export default function DeveloperPage() {
     setLoading(true);
     try {
       const res = await fetch("/api/developer/keys");
+      if (res.status === 401) {
+        setSignedOut(true);
+        setKeys([]);
+        return;
+      }
       const data = await res.json() as { keys: ApiKeyRecord[] };
+      setSignedOut(false);
       setKeys(data.keys ?? []);
     } finally { setLoading(false); }
   }
@@ -147,9 +188,14 @@ export default function DeveloperPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim() }),
       });
-      const data = await res.json() as { key: string; record: ApiKeyRecord };
+      const data = await res.json() as { key?: string; record?: ApiKeyRecord; error?: string };
+      if (!res.ok || !data.key || !data.record) {
+        alert(data.error ?? "Could not create API key.");
+        if (res.status === 401) setSignedOut(true);
+        return;
+      }
       setNewKey(data.key);
-      setKeys((prev) => [data.record, ...prev]);
+      setKeys((prev) => [data.record!, ...prev]);
       setShowForm(false);
       setNewName("");
     } finally { setCreating(false); }
@@ -257,6 +303,14 @@ export default function DeveloperPage() {
 
         {loading ? (
           <div style={{ color: "var(--st-muted)", fontSize: 13, padding: "12px 0" }}>Loading keys…</div>
+        ) : signedOut ? (
+          <div style={{ padding: "16px 0", display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--st-muted)" }}>lock</span>
+            <div>
+              <div style={{ fontSize: 13, marginBottom: 2 }}>Sign in to manage your API keys.</div>
+              <a href="/access" style={{ fontSize: 12, color: "var(--st-blue)" }}>Go to sign in →</a>
+            </div>
+          </div>
         ) : keys.length === 0 ? (
           <StitchEmpty compact>No API keys yet. Create one to get started.</StitchEmpty>
         ) : (

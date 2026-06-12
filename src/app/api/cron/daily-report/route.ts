@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { internalAuth } from "@/lib/internal-auth";
 import {
   getTodayMetrics,
   getRecentFailedScans,
@@ -104,12 +105,9 @@ export async function GET(req: NextRequest) {
   const token = authHeader.replace("Bearer ", "");
 
   const cronSecret = process.env.CRON_SECRET;
-  const internalSecret = process.env.X402BOOKS_INTERNAL_SECRET;
+  const isVercelCron = Boolean(cronSecret && token === cronSecret);
 
-  const isVercelCron = cronSecret && token === cronSecret;
-  const isManualTrigger = internalSecret && token === internalSecret;
-
-  if (!isVercelCron && !isManualTrigger) {
+  if (!isVercelCron && !internalAuth(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 

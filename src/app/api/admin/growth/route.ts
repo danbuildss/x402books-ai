@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { internalAuth } from "@/lib/internal-auth";
 import {
   getTodayMetrics,
   get7DayMetrics,
@@ -8,9 +9,7 @@ import {
 } from "@/lib/growth-db";
 
 export async function GET(req: NextRequest) {
-  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret || token !== secret) {
+  if (!internalAuth(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
