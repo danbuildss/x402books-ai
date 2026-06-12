@@ -27,6 +27,19 @@ export function createAccessToken(codeId: string) {
   return `${payload}.${signature}`;
 }
 
+// Reads the session cookie from a request and returns the codeId
+// (access_codes.id) if the session is valid, null otherwise.
+export function getSessionCodeId(req: Request): string | null {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  const match = cookieHeader
+    .split(";")
+    .map((c) => c.trim())
+    .find((c) => c.startsWith(`${ACCESS_COOKIE_NAME}=`));
+  if (!match) return null;
+  const token = decodeURIComponent(match.slice(ACCESS_COOKIE_NAME.length + 1));
+  return verifyAccessToken(token);
+}
+
 // Returns the codeId (access_codes.id) if the token is valid, null otherwise.
 export function verifyAccessToken(token: string): string | null {
   if (!token) return null;

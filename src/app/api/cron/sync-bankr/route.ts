@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchBankrTopTokens } from "@/lib/dune";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { internalAuth as authOk } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return true;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
 
 export async function GET(req: NextRequest) {
   if (!authOk(req)) {

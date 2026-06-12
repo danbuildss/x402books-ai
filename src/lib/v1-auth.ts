@@ -3,6 +3,7 @@
 
 import { NextResponse } from "next/server";
 import { validateApiKey, recordUsage } from "@/lib/api-keys";
+import { internalAuth } from "@/lib/internal-auth";
 
 export type V1AuthOk = {
   ok: true;
@@ -17,9 +18,8 @@ export type V1AuthFail = {
 
 export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
   // BANKR x402 Cloud handlers authenticate with a shared internal secret
-  const internalSecret = request.headers.get("x-internal-secret");
-  const platformSecret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (internalSecret && platformSecret && internalSecret === platformSecret) {
+  // (timing-safe, fail-closed — only taken when the header is present)
+  if (request.headers.get("x-internal-secret") && internalAuth(request)) {
     return {
       ok: true,
       keyId: "bankr-x402",

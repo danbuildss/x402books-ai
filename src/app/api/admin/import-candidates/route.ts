@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-function authOk(req: NextRequest): boolean {
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  if (!secret) return true;
-  return req.headers.get("authorization") === `Bearer ${secret}`;
-}
+import { internalAuth as authOk } from "@/lib/internal-auth";
 
 // GET /api/admin/import-candidates?status=pending|approved|rejected
 export async function GET(req: NextRequest) {

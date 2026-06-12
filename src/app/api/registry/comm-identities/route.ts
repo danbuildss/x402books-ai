@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCommIdentities, createCommIdentity } from "@/lib/registry-db";
 import type { CommIdentityInput } from "@/lib/registry-db";
-
-function auth(req: NextRequest) {
-  const token = (req.headers.get("authorization") ?? "").replace("Bearer ", "");
-  const secret = process.env.X402BOOKS_INTERNAL_SECRET;
-  return secret && token === secret;
-}
+import { internalAuth as auth } from "@/lib/internal-auth";
 
 export async function GET(req: NextRequest) {
   if (!auth(req)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
