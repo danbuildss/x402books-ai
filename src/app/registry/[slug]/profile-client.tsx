@@ -1012,7 +1012,6 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 // ── Main profile ──────────────────────────────────────────────────────────────
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
-  const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
   const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
@@ -1122,32 +1121,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           )}
 
           <div className="prof-grid">
-            {/* Scores */}
-            {hasScores && (
-              <section className="prof-section">
-                <p className="prof-section-title">Activity Scores</p>
-                {agent.financialActivityScore !== null && (
-                  <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
-                )}
-                {agent.partnershipFitScore !== null && (
-                  <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />
-                )}
-              </section>
-            )}
-
-            {/* Settlement profile */}
-            {classification && <SettlementSection classification={classification} />}
-
-            {/* Inference Activity (any agent with data) */}
-            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
-
-            {/* Agent Economics (Luca self-profile only) */}
-            {economics && <AgentEconomicsBlock economics={economics} />}
-
-            {/* Tool Decisions (Nipmod integration) */}
-            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
-
-            {/* Wallets */}
+            {/* Wallets — attribution first */}
             <section className="prof-section">
               <p className="prof-section-title">Wallets</p>
               {agent.tokenAddress && (
@@ -1180,6 +1154,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               )}
             </section>
 
+            {/* Settlement profile */}
+            {classification && <SettlementSection classification={classification} />}
+
             {/* Evidence */}
             {agent.evidenceSources.length > 0 && (
               <section className="prof-section">
@@ -1191,6 +1168,15 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 </div>
               </section>
             )}
+
+            {/* Inference Activity (any agent with data) */}
+            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
+
+            {/* Agent Economics (Luca self-profile only) */}
+            {economics && <AgentEconomicsBlock economics={economics} />}
+
+            {/* Tool Decisions (Nipmod integration) */}
+            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
 
             {/* Report CTA */}
             {(agent.tokenAddress || (agent.wallets ?? []).length > 0) && (
