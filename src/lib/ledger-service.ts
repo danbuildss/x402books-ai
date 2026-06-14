@@ -68,11 +68,14 @@ export async function buildLedgerScan(params: {
     getEcosystemRegistrySafe(),
   ]);
 
-  // Collect unique non-stablecoin addresses for price lookup
+  // Collect unique non-stablecoin addresses for price lookup.
+  // ETH transfers come in as tokenAddress "eth" — swap for WETH on Base for price resolution.
+  const WETH_BASE = "0x4200000000000000000000000000000000000006";
+  const hasEth = rawTransactions.some((tx) => tx.tokenAddress === "eth");
   const nonStableAddresses = [
     ...new Set(
       rawTransactions
-        .map((tx) => tx.tokenAddress)
+        .map((tx) => tx.tokenAddress === "eth" ? WETH_BASE : tx.tokenAddress)
         .filter((a) => a && !isStablecoin(a)),
     ),
   ];
@@ -94,9 +97,10 @@ export async function buildLedgerScan(params: {
   }
 
   // Enrich each transaction with its USD value and agent token flag
+  const ethPrice = hasEth ? (metrics.get(WETH_BASE)?.price ?? 0) : 0;
   const priceEnriched = rawTransactions.map((tx) => {
     const addr = tx.tokenAddress.toLowerCase();
-    const price = isStablecoin(addr) ? 1 : (metrics.get(addr)?.price ?? 0);
+    const price = addr === "eth" ? ethPrice : isStablecoin(addr) ? 1 : (metrics.get(addr)?.price ?? 0);
     const isAgent =
       isAgentToken(tx.tokenSymbol) ||
       ecosystem.symbols.has(tx.tokenSymbol.toUpperCase()) ||
