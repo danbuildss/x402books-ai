@@ -242,7 +242,8 @@ export default async function HomePage() {
             <p style={{ color: "var(--muted)", marginTop: 24, fontSize: "0.85rem" }}>Financial data temporarily unavailable.</p>
           )}
           <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/registry" className="lp-btn-primary">Browse All Agent Books →</Link>
+            <Link href="/leaderboard" className="lp-btn-primary">Full Leaderboard →</Link>
+            <Link href="/registry" className="lp-btn-ghost">Browse All Agent Books</Link>
           </div>
         </FadeContent>
       </section>
@@ -366,10 +367,9 @@ export default async function HomePage() {
             ))}
           </div>
           <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="lp-btn-primary">Follow @x402Books →</a>
-            <a href="https://t.me/x402books" target="_blank" rel="noreferrer" className="lp-btn-ghost">Telegram</a>
+            <Link href="/research" className="lp-btn-primary">Read Reports →</Link>
+            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="lp-btn-ghost">Follow @x402Books</a>
           </div>
-          <p style={{ marginTop: 16, fontSize: "0.72rem", color: "var(--muted)" }}>Research reports coming soon. Follow for updates.</p>
         </FadeContent>
       </section>
 
@@ -452,7 +452,7 @@ export default async function HomePage() {
               <Link href="/registry">Registry</Link>
               <Link href="/registry">Agent Books</Link>
               <Link href="/#agent-gdp">Agent GDP</Link>
-              <Link href="/luca">Research</Link>
+              <Link href="/research">Research</Link>
               <Link href="/developer">API</Link>
             </div>
             <div>

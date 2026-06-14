@@ -30,7 +30,7 @@ const NAV_LINKS = [
   { href: "/registry", label: "Registry" },
   { href: "/registry", label: "Books" },
   { href: "/#agent-gdp", label: "Agent GDP" },
-  { href: "/luca", label: "Research" },
+  { href: "/research", label: "Research" },
   { href: "/developer", label: "API" },
   { href: "/luca", label: "Luca" },
 ];
