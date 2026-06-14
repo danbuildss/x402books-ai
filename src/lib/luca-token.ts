@@ -2,12 +2,13 @@
 // $LUCA is Luca's intelligence token — it unlocks Luca features, not x402Books API access.
 // Contract on Base: 0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
 
-export type LucaTier = "free" | "holder" | "whale";
+export type LucaTier = "free" | "holder" | "whale" | "luca";
 
 export const TIER_LIMITS: Record<LucaTier, number> = {
   free:   100,
   holder: 500,
   whale:  2_000,
+  luca:   2_000, // Luca's dedicated allocation — not $LUCA-gated
 };
 
 export const TIER_THRESHOLDS = {
@@ -19,6 +20,7 @@ export const TIER_LABELS: Record<LucaTier, string> = {
   free:   "Free",
   holder: "Developer",
   whale:  "Enterprise",
+  luca:   "Luca Agent",
 };
 
 export const LUCA_TOKEN_ADDRESS = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
