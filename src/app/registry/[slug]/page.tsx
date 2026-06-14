@@ -113,7 +113,21 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
     })),
   ]);
 
-  const classification = deriveClassification(agent);
+  // For attributed agents, derive classification from real books data
+  const classification = books.attributed
+    ? classifySettlementPattern({
+        totalInflow:         books.financials.revenue_usd,
+        totalOutflow:        books.financials.expenses_usd,
+        txCount:             books.financials.tx_count,
+        categories:          books.breakdown.expenses_by_category.map((e) => ({
+          category: e.category as import("@/lib/ledger").LedgerCategory,
+          label:    e.label,
+          count:    e.tx_count,
+          totalUsdc: e.total_usd,
+        })),
+        walletRolesDeclared: books.wallets.declared > 0,
+      })
+    : deriveClassification(agent);
 
   return (
     <ProfileClient

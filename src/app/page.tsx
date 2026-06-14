@@ -78,6 +78,82 @@ function GDPStat({
   );
 }
 
+function HeroAgentCard({ gdp }: { gdp: AgentGDP | null }) {
+  const top = gdp?.top_agents?.[0];
+
+  if (!top) {
+    // Static preview when no attributed agents yet
+    return (
+      <div className="lp-hero-card" aria-label="Agent Books preview">
+        <div className="lp-card-header">
+          <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
+          <span className="lp-card-title">Agent Books · 30d</span>
+        </div>
+        <div style={{ padding: "16px 18px" }}>
+          <p style={{ margin: "0 0 24px", fontSize: "0.8rem", color: "var(--muted)", fontStyle: "italic" }}>
+            Financial data loads as agents submit wallet manifests.
+          </p>
+          <Link href="/registry#verify" style={{ fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600 }}>
+            Submit your manifest →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const net = top.net_income_usd;
+  const netPositive = net >= 0;
+
+  return (
+    <div className="lp-hero-card" aria-label="Agent Books live data">
+      <div className="lp-card-header">
+        <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
+        <span className="lp-card-title">Agent Books · 30d</span>
+        <span style={{ marginLeft: "auto", fontSize: "0.6rem", fontWeight: 600, color: "#6DB874" }}>● Live</span>
+      </div>
+      <div style={{ padding: "16px 18px" }}>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+          <span style={{ fontWeight: 700, fontSize: "1.05rem" }}>{top.name}</span>
+          <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{top.ecosystem} Ecosystem</span>
+        </div>
+        <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
+          {[{ l: top.ecosystem, c: ECO_COLORS[top.ecosystem] ?? "var(--muted)" }, { l: "Wallets Declared", c: "#6DB874" }].map((b) => (
+            <span key={b.l} style={{ fontSize: "0.67rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99, border: `1px solid color-mix(in srgb, ${b.c} 28%, transparent)`, background: `color-mix(in srgb, ${b.c} 10%, transparent)`, color: b.c }}>
+              {b.l}
+            </span>
+          ))}
+        </div>
+        {[
+          { label: "Revenue",  value: fmtUSD(top.revenue_usd),  color: "#6DB874" },
+          { label: "Expenses", value: fmtUSD(top.expenses_usd), color: "var(--muted)" },
+        ].map((row) => (
+          <div key={row.label} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontSize: "0.76rem", color: "var(--muted)" }}>{row.label}</span>
+            <span style={{ fontSize: "0.82rem", fontWeight: 700, fontFamily: "monospace", color: row.color }}>{row.value}</span>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", marginBottom: 14 }}>
+          <span style={{ fontSize: "0.76rem", fontWeight: 700 }}>Net Income</span>
+          <span style={{ fontSize: "0.88rem", fontWeight: 700, fontFamily: "monospace", color: netColor(net) }}>
+            {netPositive ? "+" : ""}{fmtUSD(net)}
+          </span>
+        </div>
+        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5, fontStyle: "italic" }}>
+          {net > 0
+            ? "Revenue exceeds expenses. Settlement patterns indicate active operational finance."
+            : net < 0
+            ? "Expenses exceed revenue. Agent is in cash burn territory."
+            : "Revenue and expenses are balanced. Agent is at break-even."}
+        </p>
+      </div>
+      <div style={{ padding: "10px 18px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{top.tx_count} txs attributed · 30d</span>
+        <Link href={`/registry/${top.slug}`} style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--accent)" }}>Full Books →</Link>
+      </div>
+    </div>
+  );
+}
+
 function TopAgentsTable({ gdp }: { gdp: AgentGDP }) {
   if (gdp.top_agents.length === 0) {
     return (
@@ -166,46 +242,8 @@ export default async function HomePage() {
           </FadeContent>
         </div>
 
-        {/* Agent Books preview card */}
-        <div className="lp-hero-card" aria-label="Agent Books preview">
-          <div className="lp-card-header">
-            <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
-            <span className="lp-card-title">Agent Books · 30d</span>
-          </div>
-          <div style={{ padding: "16px 18px" }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
-              <span style={{ fontWeight: 700, fontSize: "1.05rem" }}>AEON</span>
-              <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>AEON Ecosystem</span>
-            </div>
-            <div style={{ display: "flex", gap: 6, marginBottom: 18 }}>
-              {[{ l: "AEON", c: "#8B5CF6" }, { l: "Wallets Declared", c: "#6DB874" }].map((b) => (
-                <span key={b.l} style={{ fontSize: "0.67rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99, border: `1px solid color-mix(in srgb, ${b.c} 28%, transparent)`, background: `color-mix(in srgb, ${b.c} 10%, transparent)`, color: b.c }}>
-                  {b.l}
-                </span>
-              ))}
-            </div>
-            {[
-              { label: "Revenue", value: "$18,240.00", color: "#6DB874" },
-              { label: "Expenses", value: "$11,820.00", color: "var(--muted)" },
-            ].map((row) => (
-              <div key={row.label} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: "1px solid var(--line)" }}>
-                <span style={{ fontSize: "0.76rem", color: "var(--muted)" }}>{row.label}</span>
-                <span style={{ fontSize: "0.82rem", fontWeight: 700, fontFamily: "monospace", color: row.color }}>{row.value}</span>
-              </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", marginBottom: 14 }}>
-              <span style={{ fontSize: "0.76rem", fontWeight: 700 }}>Net Income</span>
-              <span style={{ fontSize: "0.88rem", fontWeight: 700, fontFamily: "monospace", color: "#6DB874" }}>+$6,420.00</span>
-            </div>
-            <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5, fontStyle: "italic" }}>
-              &ldquo;Revenue exceeds expenses. Settlement patterns indicate active operational finance.&rdquo;
-            </p>
-          </div>
-          <div style={{ padding: "10px 18px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>3 wallets attributed · high confidence</span>
-            <Link href="/registry/aeon" style={{ fontSize: "0.68rem", fontWeight: 600, color: "var(--accent)" }}>Full Books →</Link>
-          </div>
-        </div>
+        {/* Agent Books preview card — live data from top attributed agent */}
+        <HeroAgentCard gdp={gdp} />
       </section>
 
       {/* ── Agent GDP ── */}
