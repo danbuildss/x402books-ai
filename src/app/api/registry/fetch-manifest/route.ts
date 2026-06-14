@@ -19,6 +19,10 @@ function repoToRawUrls(repoUrl: string): string[] {
   if (ghMatch) {
     const path = ghMatch[1];
     return [
+      // Standard path — try first
+      `https://raw.githubusercontent.com/${path}/main/.agent/wallets.json`,
+      `https://raw.githubusercontent.com/${path}/master/.agent/wallets.json`,
+      // Legacy fallback
       `https://raw.githubusercontent.com/${path}/main/.x402books/wallets.json`,
       `https://raw.githubusercontent.com/${path}/master/.x402books/wallets.json`,
     ];
@@ -29,6 +33,8 @@ function repoToRawUrls(repoUrl: string): string[] {
   if (glMatch) {
     const path = glMatch[1];
     return [
+      `https://gitlawb.com/${path}/raw/branch/main/.agent/wallets.json`,
+      `https://gitlawb.com/${path}/raw/branch/master/.agent/wallets.json`,
       `https://gitlawb.com/${path}/raw/branch/main/.x402books/wallets.json`,
       `https://gitlawb.com/${path}/raw/branch/master/.x402books/wallets.json`,
     ];
@@ -78,7 +84,7 @@ export async function POST(req: NextRequest) {
   if (!found) {
     return NextResponse.json({
       ok: false,
-      error: "Could not find .x402books/wallets.json in that repo. Make sure the file exists on the main or master branch.",
+      error: "Could not find .agent/wallets.json in that repo. Make sure the file exists on the main or master branch (legacy path .x402books/wallets.json is also checked).",
     }, { status: 404 });
   }
 
