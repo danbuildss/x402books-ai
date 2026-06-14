@@ -8,6 +8,7 @@ import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
+import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import { AGENTS } from "./data";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
@@ -105,9 +106,17 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtUSD(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${n.toFixed(2)}`;
+}
+
 // ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function AgentRow({ agent }: { agent: Agent }) {
+function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntry }) {
   const slug = toSlug(agent.name);
   return (
     <Link href={`/registry/${slug}`} className="reg-row">
@@ -124,7 +133,21 @@ function AgentRow({ agent }: { agent: Agent }) {
         <HealthBadge h={agent.treasuryHealth} />
       </div>
       <div className="reg-row-score-wrap">
-        {agent.financialActivityScore !== null ? (
+        {economics ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: "var(--fg)" }}>
+              {fmtUSD(economics.revenue_usd)}
+            </span>
+            <span style={{
+              fontSize: "0.7rem",
+              fontFamily: "monospace",
+              color: economics.net_income_usd >= 0 ? "#6DB874" : "#ef4444",
+            }}>
+              {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
+            </span>
+            <span className="reg-row-score-label">30d rev / net</span>
+          </div>
+        ) : agent.financialActivityScore !== null ? (
           <>
             <span className="reg-row-score">{agent.financialActivityScore}</span>
             <span className="reg-row-score-label">score</span>
@@ -475,6 +498,7 @@ type SortKey = "activity" | "verification" | "name" | "health";
 export default function RegistryPage() {
   const [agents, setAgents]         = useState<Agent[]>(AGENTS);
   const [fromSupabase, setFromSupabase] = useState(false);
+  const [economics, setEconomics]   = useState<Record<string, AgentGDPEntry>>({});
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
@@ -489,6 +513,15 @@ export default function RegistryPage() {
           setAgents(data.agents);
           setFromSupabase(data.fromSupabase ?? false);
         }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/registry/economics")
+      .then((r) => r.json())
+      .then((data: { ok?: boolean; economics?: Record<string, AgentGDPEntry> }) => {
+        if (data.ok && data.economics) setEconomics(data.economics);
       })
       .catch(() => {});
   }, []);
@@ -516,9 +549,13 @@ export default function RegistryPage() {
       case "name":
         return a.name.localeCompare(b.name);
       case "activity": {
-        const as = a.financialActivityScore ?? -1;
-        const bs = b.financialActivityScore ?? -1;
-        return bs - as;
+        const aEco = economics[toSlug(a.name)];
+        const bEco = economics[toSlug(b.name)];
+        // Agents with real revenue float above unattributed
+        if (aEco && !bEco) return -1;
+        if (!aEco && bEco) return 1;
+        if (aEco && bEco) return bEco.revenue_usd - aEco.revenue_usd;
+        return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
       }
       case "health":
         return (HEALTH_ORDER[a.treasuryHealth] ?? 99) - (HEALTH_ORDER[b.treasuryHealth] ?? 99);
@@ -667,7 +704,7 @@ export default function RegistryPage() {
           {paginated.length === 0 ? (
             <div className="reg-empty-cards">No agents match your filters.</div>
           ) : (
-            paginated.map((a) => <AgentRow key={a.name} agent={a} />)
+            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} />)
           )}
         </div>
 

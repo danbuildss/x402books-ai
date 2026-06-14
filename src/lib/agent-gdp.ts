@@ -19,7 +19,8 @@ export type AgentGDP = {
   attributed_agents: number;
   attributed_wallets: number;
   total_agents: number;
-  top_agents: AgentGDPEntry[];
+  top_agents: AgentGDPEntry[];       // top 6 for homepage
+  all_attributed: AgentGDPEntry[];   // all attributed, sorted by revenue
   generated_at: string;
 };
 
@@ -71,6 +72,7 @@ export async function getAgentGDP(): Promise<AgentGDP> {
     attributed_wallets: totalWallets,
     total_agents: agents.length,
     top_agents: topAgents.slice(0, 6),
+    all_attributed: topAgents,
     generated_at: new Date().toISOString(),
   };
 
