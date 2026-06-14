@@ -214,6 +214,22 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
           </div>
         )}
 
+        {/* Treasury balance + runway */}
+        {f.treasury_balance_usd !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Treasury (stables)</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--fg)" }}>{usd(f.treasury_balance_usd)}</span>
+          </div>
+        )}
+        {f.runway_months !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Runway</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.runway_months >= 3 ? "#6DB874" : f.runway_months >= 1 ? "#f59e0b" : "#ef4444" }}>
+              {f.runway_months < 1 ? "< 1 mo" : `${f.runway_months.toFixed(1)} mo`}
+            </span>
+          </div>
+        )}
+
         {/* Revenue concentration */}
         {topSource && topSourcePct !== null && (
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>

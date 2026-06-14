@@ -13,6 +13,7 @@
 
 import { getRegistryAgents } from "@/lib/registry-db";
 import { buildLedgerScan } from "@/lib/ledger-service";
+import { getWalletStableBalance } from "@/lib/treasury-balance";
 import { toSlug } from "@/app/registry/[slug]/slug";
 import {
   isValidWalletAddress,
@@ -36,6 +37,7 @@ export type AgentBooks = {
     expenses_usd: number;
     net_income_usd: number;
     treasury_balance_usd: number | null;
+    runway_months: number | null;
     margin_pct: number | null;
     tx_count: number;
   };
@@ -190,6 +192,18 @@ async function computeAgentBooks(
 
   const round = (n: number) => Math.round(n * 100) / 100;
 
+  // Fetch live stablecoin balance for treasury wallets.
+  const treasuryWallets = declared.filter((w) => w.role === "treasury" && isValidWalletAddress(w.address));
+  const treasuryBalances = await Promise.all(
+    treasuryWallets.map((w) => getWalletStableBalance(w.address).catch(() => 0)),
+  );
+  const treasuryBalance = treasuryBalances.length > 0
+    ? round(treasuryBalances.reduce((s, b) => s + b, 0))
+    : null;
+  const runwayMonths = treasuryBalance !== null && expenses > 0
+    ? round(treasuryBalance / expenses)
+    : null;
+
   const confidences = scannable.map((w) => (w.confidence ?? "").toLowerCase());
   const confidence: "high" | "medium" | "low" =
     confidences.length > 0 && confidences.every((c) => c === "verified")
@@ -215,7 +229,8 @@ async function computeAgentBooks(
       revenue_usd: round(revenue),
       expenses_usd: round(expenses),
       net_income_usd: round(netIncome),
-      treasury_balance_usd: null, // flows only — balance tracking not yet built
+      treasury_balance_usd: treasuryBalance,
+      runway_months: runwayMonths,
       margin_pct: revenue > 0 ? round((netIncome / revenue) * 100) : null,
       tx_count: external.length,
     },

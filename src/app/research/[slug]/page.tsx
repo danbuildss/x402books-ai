@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { HomeHeader } from "@/app/home-header";
 import { getReportBySlug, listReports } from "@/lib/research-db";
 
@@ -8,6 +9,43 @@ export const revalidate = 3600;
 export async function generateStaticParams() {
   const reports = await listReports(50);
   return reports.map((r) => ({ slug: r.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const report = await getReportBySlug(slug);
+  if (!report) return { title: "Report not found — x402Books" };
+
+  const ogUrl = new URL("https://www.x402books.xyz/api/og/report");
+  ogUrl.searchParams.set("title", report.title);
+  if (report.summary) ogUrl.searchParams.set("summary", report.summary.slice(0, 200));
+  if (report.agent_gdp_usd != null) ogUrl.searchParams.set("gdp", String(report.agent_gdp_usd));
+  if (report.attributed_agents != null) ogUrl.searchParams.set("agents", String(report.attributed_agents));
+  ogUrl.searchParams.set("type", report.type);
+
+  const desc = report.summary?.slice(0, 160) ?? `${report.title} — State of the Agent Economy by Luca`;
+
+  return {
+    title: `${report.title} — x402Books Research`,
+    description: desc,
+    openGraph: {
+      title: report.title,
+      description: desc,
+      url: `https://www.x402books.xyz/research/${slug}`,
+      siteName: "x402Books AI",
+      images: [{ url: ogUrl.toString(), width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: report.title,
+      description: desc,
+      images: [ogUrl.toString()],
+    },
+  };
 }
 
 function fmtUSD(n: number): string {

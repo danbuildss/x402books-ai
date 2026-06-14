@@ -3,6 +3,7 @@ import { internalAuth } from "@/lib/internal-auth";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { generateEconomyReport } from "@/lib/luca-research";
 import { saveReport, getReportBySlug } from "@/lib/research-db";
+import { saveGDPSnapshot } from "@/lib/gdp-history";
 
 export async function POST(req: NextRequest) {
   if (!internalAuth(req)) {
@@ -10,14 +11,27 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json().catch(() => ({})) as { type?: string; force?: boolean };
+    const body = await req.json().catch(() => ({})) as {
+      type?: string;
+      force?: boolean;
+      title?: string;
+      subtitle?: string;
+    };
     const type = (["weekly", "monthly", "quarterly"].includes(body.type ?? "")
       ? body.type
       : "weekly") as "weekly" | "monthly" | "quarterly";
     const force = body.force === true;
 
     const gdp = await getAgentGDP();
+
+    // Snapshot GDP alongside the report — same trigger, zero extra calls.
+    saveGDPSnapshot(gdp).catch(() => {});
+
     const report = await generateEconomyReport(gdp, type);
+
+    // Allow Luca to override the generated title/subtitle.
+    if (body.title) report.title = body.title;
+    if (body.subtitle) report.subtitle = body.subtitle;
 
     // Don't overwrite a same-day report unless forced
     if (!force) {
