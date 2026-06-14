@@ -8,6 +8,7 @@ import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
+import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import { AGENTS } from "./data";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
@@ -105,9 +106,17 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtUSD(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return `$${n.toFixed(2)}`;
+}
+
 // ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function AgentRow({ agent }: { agent: Agent }) {
+function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntry }) {
   const slug = toSlug(agent.name);
   return (
     <Link href={`/registry/${slug}`} className="reg-row">
@@ -124,7 +133,21 @@ function AgentRow({ agent }: { agent: Agent }) {
         <HealthBadge h={agent.treasuryHealth} />
       </div>
       <div className="reg-row-score-wrap">
-        {agent.financialActivityScore !== null ? (
+        {economics ? (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: "var(--fg)" }}>
+              {fmtUSD(economics.revenue_usd)}
+            </span>
+            <span style={{
+              fontSize: "0.7rem",
+              fontFamily: "monospace",
+              color: economics.net_income_usd >= 0 ? "#6DB874" : "#ef4444",
+            }}>
+              {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
+            </span>
+            <span className="reg-row-score-label">30d rev / net</span>
+          </div>
+        ) : agent.financialActivityScore !== null ? (
           <>
             <span className="reg-row-score">{agent.financialActivityScore}</span>
             <span className="reg-row-score-label">score</span>
@@ -470,15 +493,16 @@ function LucaExample() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type SortKey = "verification" | "name" | "activity" | "health";
+type SortKey = "activity" | "verification" | "name" | "health";
 
 export default function RegistryPage() {
   const [agents, setAgents]         = useState<Agent[]>(AGENTS);
   const [fromSupabase, setFromSupabase] = useState(false);
+  const [economics, setEconomics]   = useState<Record<string, AgentGDPEntry>>({});
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
-  const [sortBy, setSortBy]         = useState<SortKey>("verification");
+  const [sortBy, setSortBy]         = useState<SortKey>("activity");
   const [page, setPage]             = useState(1);
 
   useEffect(() => {
@@ -489,6 +513,15 @@ export default function RegistryPage() {
           setAgents(data.agents);
           setFromSupabase(data.fromSupabase ?? false);
         }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/registry/economics")
+      .then((r) => r.json())
+      .then((data: { ok?: boolean; economics?: Record<string, AgentGDPEntry> }) => {
+        if (data.ok && data.economics) setEconomics(data.economics);
       })
       .catch(() => {});
   }, []);
@@ -516,16 +549,25 @@ export default function RegistryPage() {
       case "name":
         return a.name.localeCompare(b.name);
       case "activity": {
-        const as = a.financialActivityScore ?? -1;
-        const bs = b.financialActivityScore ?? -1;
-        return bs - as;
+        const aEco = economics[toSlug(a.name)];
+        const bEco = economics[toSlug(b.name)];
+        // Agents with real revenue float above unattributed
+        if (aEco && !bEco) return -1;
+        if (!aEco && bEco) return 1;
+        if (aEco && bEco) return bEco.revenue_usd - aEco.revenue_usd;
+        return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
       }
       case "health":
         return (HEALTH_ORDER[a.treasuryHealth] ?? 99) - (HEALTH_ORDER[b.treasuryHealth] ?? 99);
-      default: {
+      case "verification": {
         const vdiff = VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
         if (vdiff !== 0) return vdiff;
         return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
+      }
+      default: {
+        const as2 = a.financialActivityScore ?? -1;
+        const bs2 = b.financialActivityScore ?? -1;
+        return bs2 - as2;
       }
     }
   });
@@ -544,9 +586,11 @@ export default function RegistryPage() {
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/registry">Books</Link>
+          <Link href="/#agent-gdp">Agent GDP</Link>
+          <Link href="/luca">Research</Link>
+          <Link href="/developer">API</Link>
           <Link href="/luca">Luca</Link>
-          <Link href="/docs#api">API</Link>
-          <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
           <ThemeToggle />
@@ -558,11 +602,10 @@ export default function RegistryPage() {
       {/* ── Hero ── */}
       <section className="reg-hero">
         <p className="reg-label">Agent Financial Registry</p>
-        <h1 className="reg-h1">Track the wallets behind agents.</h1>
+        <h1 className="reg-h1">Agent Books for the agent economy.</h1>
         <p className="reg-hero-sub">
-          x402Books AI indexes agent wallets across BANKR, Virtuals, Base, AEON, and EigenCloud —
-          sourced and scored by Luca. All entries start as Candidate until teams
-          submit wallet proof.
+          Revenue, expenses, net income, and treasury activity for {STATS[0]?.value ?? "84+"} indexed agents across BANKR, Virtuals, AEON, and Base.
+          Attribution requires a declared wallet manifest.
         </p>
         <div className="reg-hero-stats">
           {STATS.map((s) => (
@@ -573,8 +616,8 @@ export default function RegistryPage() {
           ))}
         </div>
         <div className="reg-hero-actions">
-          <a href="#verify" className="lp-btn-primary">Verify Your Agent</a>
-          <a href="#agents" className="lp-btn-ghost">Browse Registry</a>
+          <a href="#verify" className="lp-btn-primary">Submit Manifest</a>
+          <a href="#agents" className="lp-btn-ghost">Browse Agent Books</a>
         </div>
       </section>
 
@@ -629,10 +672,10 @@ export default function RegistryPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
             >
+              <option value="activity">Sort: Financial Activity</option>
+              <option value="health">Sort: Treasury Health</option>
               <option value="verification">Sort: Verification</option>
               <option value="name">Sort: Name A–Z</option>
-              <option value="activity">Sort: Activity Score</option>
-              <option value="health">Sort: Treasury Health</option>
             </select>
           </div>
         </div>
@@ -661,7 +704,7 @@ export default function RegistryPage() {
           {paginated.length === 0 ? (
             <div className="reg-empty-cards">No agents match your filters.</div>
           ) : (
-            paginated.map((a) => <AgentRow key={a.name} agent={a} />)
+            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} />)
           )}
         </div>
 

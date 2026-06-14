@@ -10783,3 +10783,10 @@ html, body {
   .reg-row-score-wrap { display: none; }
   .reg-row-arrow { order: 2; }
 }
+
+/* ── Leaderboard ─────────────────────────────────────────────────────────── */
+.ldb-row:hover { background: var(--surface-soft); }
+@media (max-width: 700px) {
+  .ldb-row { grid-template-columns: 28px 1fr 80px !important; }
+  .ldb-row > *:nth-child(n+4) { display: none; }
+}

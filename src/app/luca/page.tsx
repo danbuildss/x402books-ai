@@ -2,74 +2,45 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/effects";
+import { HomeHeader } from "@/app/home-header";
 
-const LUCA_CA  = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
+const LUCA_CA   = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
 
-const CAPABILITIES = [
-  { icon: "account_balance_wallet", title: "Wallet Audits",              body: "Analyze public wallet activity across income, spend, net flow, and treasury health." },
-  { icon: "category",              title: "Transaction Categorization",  body: "Classify onchain activity into revenue, expenses, gas, treasury movement, swaps, and unknown items." },
-  { icon: "monitoring",            title: "Agent Financial Scores",      body: "Score agents based on activity, cashflow quality, anomaly risk, and treasury health." },
-  { icon: "flag",                  title: "Anomaly Detection",           body: "Flag unusual inflows, repeated transactions, high-frequency behavior, and concentration risk." },
-  { icon: "description",           title: "Reports & Summaries",         body: "Generate short summaries, full audit memos, public-safe X posts, and operator-ready reports." },
-  { icon: "menu_book",             title: "Agent Bookkeeping",           body: "Help autonomous agents understand what they earned, spent, held, and need to review." },
+const WHAT_LUCA_COVERS = [
+  {
+    label: "Revenue Analysis",
+    body: "Top earners, growth rates, revenue concentration across attributed agents. Sourced from declared wallets — on-chain, confirmed.",
+  },
+  {
+    label: "Treasury Intelligence",
+    body: "Capital allocation, runway, treasury movements. Luca reads the books and flags what matters.",
+  },
+  {
+    label: "Expense Patterns",
+    body: "Spend categories, operational cost trends, gas analysis. Every outflow classified and contextualized.",
+  },
+  {
+    label: "Attribution Gap",
+    body: "What the unattributed portion of the economy might represent. How coverage changes as more agents declare wallets.",
+  },
 ];
 
-const STEPS = [
-  { n: "01", title: "Submit a wallet",        body: "Send Luca any Base wallet address on Telegram." },
-  { n: "02", title: "Luca scans activity",    body: "Public onchain data is fetched and normalized in seconds." },
-  { n: "03", title: "x402Books categorizes",  body: "Every transaction is classified by the x402Books AI engine." },
-  { n: "04", title: "Risks are detected",     body: "Anomalies, concentration risk, and unusual patterns are flagged." },
-  { n: "05", title: "Report delivered",       body: "A clear, structured accounting report is sent back instantly." },
+const REPORT_TYPES = [
+  { label: "Weekly",    desc: "Agent GDP snapshot, top performers, notable movements" },
+  { label: "Monthly",  desc: "Revenue trends, expense analysis, treasury patterns" },
+  { label: "Quarterly", desc: "Ecosystem breakdowns, growth observations, market analysis" },
 ];
 
-const FOR_AGENTS = [
-  "How much did I earn?",
-  "How much did I spend?",
-  "What did I spend on?",
-  "Is my treasury healthy?",
-  "Which transactions need review?",
-  "Am I revenue-generating or just active?",
-  "What should I report to users or operators?",
-];
-
-const FOR_BUILDERS = [
-  "Wallet summaries",
-  "Spend controls",
-  "Agent financial scores",
-  "Public audit notes",
-  "Reporting workflows",
-  "Compliance-ready exports",
-  "Agent-to-agent bookkeeping",
-];
-
-const SERIES = [
-  { tag: "Series 01", title: "Are Agents Actually Working?",  body: "Public analysis of agent wallets and activity." },
-  { tag: "Series 02", title: "Agent Wallet Breakdown",        body: "Short financial snapshots of agent projects." },
-  { tag: "Series 03", title: "Agent Treasury Watch",          body: "Treasury health and risk observations." },
-  { tag: "Series 04", title: "Luca Explains",                 body: "Simple accounting lessons for the agent economy." },
-];
-
-const TRUST_ITEMS = [
-  "Official x402Books AI agent",
-  "$LUCA powers Luca and x402Books AI",
-  "Ecosystem token on Base",
-  "Runs on Base",
-  "Powered by Claude AI",
-  "x402 protocol native",
-];
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── $LUCA Token ───────────────────────────────────────────────────────────────
 
 type TokenData = {
   price: number;
   change24h: number;
   mcap: number;
   volume24h: number;
-  dexUrl: string;
 };
 
 type SparkPoint = { ts: number; price: number };
@@ -117,14 +88,12 @@ function Sparkline({ points }: { points: SparkPoint[] }) {
   );
 }
 
-// ── Live $LUCA Token Section ──────────────────────────────────────────────────
-
 function LucaTokenSection() {
-  const [token, setToken]       = useState<TokenData | null>(null);
-  const [spark, setSpark]       = useState<SparkPoint[]>([]);
-  const [copied, setCopied]     = useState(false);
-  const [flashClass, setFlash]  = useState("");
-  const prevPrice               = useRef<number | null>(null);
+  const [token, setToken]      = useState<TokenData | null>(null);
+  const [spark, setSpark]      = useState<SparkPoint[]>([]);
+  const [copied, setCopied]    = useState(false);
+  const [flashClass, setFlash] = useState("");
+  const prevPrice              = useRef<number | null>(null);
 
   const fetchToken = useCallback(async () => {
     try {
@@ -137,7 +106,6 @@ function LucaTokenSection() {
       const data = await res.json() as { pairs?: DexPair[] };
       const pair = data.pairs?.[0];
       if (!pair) return;
-
       const price = parseFloat(pair.priceUsd ?? "0");
       if (price > 0 && prevPrice.current !== null && price !== prevPrice.current) {
         const cls = price > prevPrice.current ? "flash-up" : "flash-down";
@@ -145,14 +113,7 @@ function LucaTokenSection() {
         setTimeout(() => setFlash(""), 800);
       }
       prevPrice.current = price;
-
-      setToken({
-        price,
-        change24h: pair.priceChange?.h24 ?? 0,
-        mcap: pair.marketCap ?? pair.fdv ?? 0,
-        volume24h: pair.volume?.h24 ?? 0,
-        dexUrl: pair.url ?? `https://dexscreener.com/base/${LUCA_CA}`,
-      });
+      setToken({ price, change24h: pair.priceChange?.h24 ?? 0, mcap: pair.marketCap ?? pair.fdv ?? 0, volume24h: pair.volume?.h24 ?? 0 });
     } catch { /* silent */ }
   }, []);
 
@@ -181,20 +142,16 @@ function LucaTokenSection() {
   return (
     <section className="luca-section luca-section-alt" id="token">
       <div className="luca-section-head">
-        <p className="luca-label">Token</p>
+        <p className="luca-label">Ecosystem Token</p>
         <h2 className="luca-h2">$LUCA</h2>
-        <p className="luca-section-sub">
-          The unified ecosystem token powering Luca and x402Books AI.
-        </p>
+        <p className="luca-section-sub">The ecosystem asset powering x402Books and Luca.</p>
       </div>
-
       <div className="lp-token-card luca-lp-token-card">
-        {/* Left — identity */}
         <div className="lp-token-left">
           <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
           <h2 className="lp-token-name">$LUCA</h2>
           <p className="lp-token-desc">
-            $LUCA powers Luca and x402Books AI — the first AI accountant for the agent economy. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
+            $LUCA is the ecosystem asset for x402Books. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
           </p>
           <div className="lp-token-ca">
             <span className="lp-token-ca-label">CA</span>
@@ -206,16 +163,10 @@ function LucaTokenSection() {
             </button>
           </div>
           <div className="lp-token-links">
-            <a href={BANKR_BUY} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-primary">
-              Buy $LUCA
-            </a>
-            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-ghost">
-              DexScreener ↗
-            </a>
+            <a href={BANKR_BUY} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-primary">Buy $LUCA</a>
+            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-ghost">DexScreener ↗</a>
           </div>
         </div>
-
-        {/* Right — live data */}
         <div className="lp-token-right">
           {!token ? (
             <div className="lp-token-loading">
@@ -258,215 +209,187 @@ function LucaTokenSection() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LucaPage() {
-  const doubled = [...TRUST_ITEMS, ...TRUST_ITEMS];
-
   return (
-    <div className="luca-page">
+    <div className="lp-root">
+      <HomeHeader />
+
       {/* ── Hero ── */}
-      <section className="luca-hero">
-        <div className="luca-hero-topbar">
-          <Link href="/" className="luca-back-link">
-            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>arrow_back</span>
-            x402books.xyz
-          </Link>
-          <ThemeToggle />
-        </div>
-        <div className="luca-hero-inner">
-          <div className="luca-avatar-wrap">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/luca-avatar.png" alt="Luca" className="luca-avatar" />
+      <section className="lp-hero" style={{ minHeight: "auto", paddingBottom: "3rem" }}>
+        <div className="lp-hero-copy" style={{ maxWidth: 660 }}>
+          <p className="lp-eyebrow">Financial Analyst · x402Books</p>
+          <h1 className="lp-h1">
+            Luca reads<br />
+            <em>the books.</em>
+          </h1>
+          <p className="lp-hero-sub">
+            Luca is x402Books&rsquo; financial analyst. Revenue, expenses, treasury activity, attribution gaps —
+            interpreted from on-chain data, written in plain language. Bloomberg Intelligence for the agent economy.
+          </p>
+          <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap", marginTop: "1.5rem" }}>
+            <Link href="/research" className="lp-btn-primary lp-btn-lg">Read the Reports →</Link>
+            <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost lp-btn-lg">
+              @AskLucaBot
+            </a>
           </div>
-          <div className="luca-hero-text">
-            <div className="luca-powered-badge">Powered by x402Books AI</div>
-            <h1 className="luca-h1">Luca</h1>
-            <p className="luca-tagline">Financial Intelligence Agent.</p>
-            <p className="luca-hero-sub">
-              Luca interprets onchain activity for autonomous agents — classifying settlements,
-              reading treasury health, and turning wallet data into operational intelligence.
+        </div>
+      </section>
+
+      {/* ── What Luca Covers ── */}
+      <section className="lp-section lp-section-alt">
+        <div className="lp-section-head">
+          <p className="lp-section-label">Coverage</p>
+          <h2 className="lp-h2">What Luca analyzes.</h2>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginTop: 28 }}>
+          {WHAT_LUCA_COVERS.map((item) => (
+            <div key={item.label} style={{
+              padding: "18px 20px",
+              border: "1px solid var(--line)",
+              borderRadius: 10,
+              background: "var(--surface-soft)",
+            }}>
+              <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: "0.88rem" }}>{item.label}</p>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── State of the Agent Economy ── */}
+      <section className="lp-section">
+        <div className="lp-registry-inner">
+          <div className="lp-registry-text">
+            <p className="lp-section-label">Publication</p>
+            <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>State of the<br />Agent Economy.</h2>
+            <p className="lp-registry-sub">
+              Luca&rsquo;s flagship publication. Weekly, monthly, and quarterly reports on revenue, expenses,
+              treasury health, and the attribution gap across autonomous agents on Base.
+              Grounded entirely in on-chain data. No estimates. No synthetic numbers.
             </p>
-            <div className="luca-hero-btns">
-              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="luca-btn-primary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-                </svg>
-                Talk to Luca on Telegram
-              </a>
-              <a href={X_HANDLE} target="_blank" rel="noreferrer" className="luca-btn-ghost">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.261 5.632 5.903-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                </svg>
-                Follow on X
-              </a>
-              <span className="luca-btn-ghost luca-btn-soon">
-                Bankr Profile — Coming Soon
-              </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "20px 0" }}>
+              {REPORT_TYPES.map((r) => (
+                <div key={r.label} style={{ display: "flex", gap: 12, fontSize: "0.83rem", alignItems: "flex-start" }}>
+                  <span style={{ fontWeight: 700, color: "var(--accent)", width: 72, flexShrink: 0 }}>{r.label}</span>
+                  <span style={{ color: "var(--muted)" }}>{r.desc}</span>
+                </div>
+              ))}
             </div>
+            <Link href="/research" className="lp-btn-primary" style={{ display: "inline-block" }}>
+              Read All Reports →
+            </Link>
           </div>
-        </div>
-      </section>
 
-      {/* ── Trust marquee ── */}
-      <div className="luca-trust-strip">
-        <div className="luca-trust-track">
-          <div className="luca-trust-reel">
-            {doubled.map((item, i) => (
-              <div key={i} className="luca-trust-item">
-                <span className="luca-trust-dot" />
-                <span>{item}</span>
+          <div className="lp-registry-card">
+            <div className="lp-card-header">
+              <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
+              <span className="lp-card-title">Luca · Financial Analyst</span>
+            </div>
+            <div style={{ padding: "14px 16px" }}>
+              <p style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600, margin: "0 0 6px" }}>
+                Style
+              </p>
+              <p style={{ fontSize: "0.82rem", color: "var(--fg)", lineHeight: 1.6, margin: "0 0 14px", fontStyle: "italic" }}>
+                &ldquo;Bloomberg Intelligence analyst. Cold. Precise. Factual. No hype. No marketing language.&rdquo;
+              </p>
+              <p style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600, margin: "0 0 6px" }}>
+                Data Sources
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {[
+                  { label: "On-chain books", desc: "Declared wallet manifests → classified transactions → P&L" },
+                  { label: "Grok research", desc: "Real-time X/web context on agents and ecosystems" },
+                  { label: "Attribution index", desc: "Which agents are included and what the gap represents" },
+                ].map((item) => (
+                  <div key={item.label} style={{ padding: "8px 10px", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7 }}>
+                    <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: "0.75rem" }}>{item.label}</p>
+                    <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", lineHeight: 1.4 }}>{item.desc}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* ── What Luca Does ── */}
-      <section className="luca-section" id="capabilities">
-        <div className="luca-section-head">
-          <p className="luca-label">What Luca Does</p>
-          <h2 className="luca-h2">Six core accounting capabilities.</h2>
+      {/* ── Telegram terminal ── */}
+      <section className="lp-section lp-section-alt">
+        <div className="lp-section-head">
+          <p className="lp-section-label">Public Interface</p>
+          <h2 className="lp-h2">Luca on Telegram.</h2>
+          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
+            @AskLucaBot is Luca&rsquo;s public terminal. Submit a wallet address and Luca will return a
+            classified financial breakdown — revenue, expenses, net income, treasury health.
+          </p>
         </div>
-        <div className="luca-caps-grid">
-          {CAPABILITIES.map((c) => (
-            <div key={c.title} className="luca-cap-card">
-              <span className="material-symbols-outlined luca-cap-icon">{c.icon}</span>
-              <h3>{c.title}</h3>
-              <p>{c.body}</p>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}>
+          {[
+            "Submit any Base wallet address",
+            "Get revenue, expenses, net income",
+            "Treasury health classification",
+            "Settlement pattern detection",
+            "Ask questions about agent books",
+          ].map((item) => (
+            <div key={item} style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "10px 14px", border: "1px solid var(--line)", borderRadius: 8,
+              background: "var(--surface-soft)", fontSize: "0.82rem",
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--accent)" }}>check_circle</span>
+              {item}
             </div>
           ))}
         </div>
-      </section>
-
-      {/* ── How Luca Works ── */}
-      <section className="luca-section luca-section-alt" id="how">
-        <div className="luca-section-head">
-          <p className="luca-label">How Luca Works</p>
-          <h2 className="luca-h2">From wallet address to clean report.</h2>
-        </div>
-        <div className="luca-steps">
-          {STEPS.map((s) => (
-            <div key={s.n} className="luca-step">
-              <span className="luca-step-n">{s.n}</span>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
-            </div>
-          ))}
+        <div style={{ marginTop: 24 }}>
+          <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ verticalAlign: "middle", marginRight: 6 }} aria-hidden="true">
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+            </svg>
+            Open @AskLucaBot
+          </a>
+          <a href={X_HANDLE} target="_blank" rel="noreferrer" className="lp-btn-ghost" style={{ marginLeft: 10 }}>
+            Follow on X →
+          </a>
         </div>
       </section>
 
-      {/* ── Sample Report ── */}
-      <section className="luca-section" id="sample">
-        <div className="luca-section-head">
-          <p className="luca-label">Sample Output</p>
-          <h2 className="luca-h2">This is what Luca produces.</h2>
-        </div>
-        <div className="luca-report-wrap">
-          <div className="luca-report-header">
-            <span className="luca-report-tag">Agent Wallet Breakdown #001</span>
-            <span className="luca-report-by">by Luca · x402Books AI</span>
-          </div>
-          <div className="luca-report-body">
-            <div className="luca-report-row"><span>Agent</span><strong>Example Agent</strong></div>
-            <div className="luca-report-row"><span>Ecosystem</span><strong>Base</strong></div>
-            <div className="luca-report-row"><span>Wallet</span><strong>0x4e6c…0b07</strong></div>
-            <div className="luca-report-divider" />
-            <div className="luca-report-row"><span>Activity</span><strong>Medium</strong></div>
-            <div className="luca-report-row"><span>Total Inflow</span><strong className="luca-positive">+$1,884.70</strong></div>
-            <div className="luca-report-row"><span>Total Outflow</span><strong>$0.00</strong></div>
-            <div className="luca-report-row"><span>Net Flow</span><strong className="luca-positive">+$1,884.70</strong></div>
-            <div className="luca-report-row"><span>Treasury Health</span><strong className="luca-warn">Stable to Watch</strong></div>
-            <div className="luca-report-row"><span>Main Risk</span><strong>High value concentration in one token</strong></div>
-            <div className="luca-report-divider" />
-            <div className="luca-report-read">
-              <span className="luca-report-read-label">Luca&apos;s read</span>
-              <p>The wallet is cashflow-positive, but revenue quality needs verification because most activity lacks reliable USD valuation.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── For Agents + For Builders ── */}
-      <section className="luca-section luca-section-alt" id="use-cases">
-        <div className="luca-two-col">
-          <div className="luca-use-card">
-            <p className="luca-label">For Agents</p>
-            <h3>Questions Luca answers.</h3>
-            <ul className="luca-q-list">
-              {FOR_AGENTS.map((q) => (
-                <li key={q}>
-                  <span className="material-symbols-outlined">arrow_forward</span>
-                  {q}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="luca-use-card">
-            <p className="luca-label">For Builders</p>
-            <h3>Add financial intelligence.</h3>
-            <ul className="luca-q-list">
-              {FOR_BUILDERS.map((b) => (
-                <li key={b}>
-                  <span className="material-symbols-outlined">arrow_forward</span>
-                  {b}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Content Series ── */}
-      <section className="luca-section" id="series">
-        <div className="luca-section-head">
-          <p className="luca-label">Content Series</p>
-          <h2 className="luca-h2">Public intelligence from Luca.</h2>
-        </div>
-        <div className="luca-series-grid">
-          {SERIES.map((s) => (
-            <div key={s.title} className="luca-series-card">
-              <span className="luca-series-tag">{s.tag}</span>
-              <h3>{s.title}</h3>
-              <p>{s.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Live $LUCA Token ── */}
+      {/* ── $LUCA Token ── */}
       <LucaTokenSection />
 
-      {/* ── Disclaimer ── */}
-      <div className="luca-disclaimer">
-        Luca analyzes public onchain data and user-provided information. Reports may include estimates and assumptions. Luca does not provide legal, tax, or investment advice.
-      </div>
-
-      {/* ── Final CTA ── */}
-      <section className="luca-cta">
-        <p className="luca-cta-line">Agents are becoming economic actors.</p>
-        <p className="luca-cta-line">Now they need books.</p>
-        <h2 className="luca-cta-headline">Talk to Luca.</h2>
-        <a href={TELEGRAM} target="_blank" rel="noreferrer" className="luca-btn-primary luca-btn-lg">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.277-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-          </svg>
-          Open Telegram — @AskLucaBot
-        </a>
+      {/* ── CTA ── */}
+      <section className="lp-cta-section">
+        <h2 className="lp-h2">Get your agent in the report.</h2>
+        <p>Submit a wallet manifest and Luca will include your agent in the next State of the Agent Economy.</p>
+        <div style={{ display: "flex", gap: "0.85rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.5rem" }}>
+          <Link href="/registry#verify" className="lp-btn-primary lp-btn-lg">Submit Manifest →</Link>
+          <Link href="/research" className="lp-btn-ghost lp-btn-lg">Read Reports</Link>
+        </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="luca-footer">
-        <div className="luca-footer-inner">
-          <div className="luca-footer-brand">
-            <strong>Luca</strong>
-            <span>by x402Books AI</span>
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">Product</p>
+            <Link href="/dashboard">App</Link>
+            <Link href="/registry">Registry</Link>
+            <Link href="/research">Research</Link>
+            <Link href="/developer">Developer</Link>
           </div>
-          <div className="luca-footer-links">
-            <a href={TELEGRAM} target="_blank" rel="noreferrer">Telegram</a>
-            <a href={X_HANDLE} target="_blank" rel="noreferrer">X / Twitter</a>
-            <Link href="/">x402books.xyz</Link>
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">Luca</p>
+            <a href={TELEGRAM} target="_blank" rel="noreferrer">@AskLucaBot</a>
+            <a href={X_HANDLE} target="_blank" rel="noreferrer">Follow on X</a>
+            <Link href="/research">Reports</Link>
+          </div>
+          <div className="lp-footer-col">
+            <p className="lp-footer-heading">$LUCA</p>
             <a href={BANKR_BUY} target="_blank" rel="noreferrer">Buy $LUCA</a>
+            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer">DexScreener</a>
           </div>
         </div>
-        <p className="luca-footer-copy">© 2026 x402Books AI. Luca is an AI agent. Not financial advice.</p>
+        <div className="lp-footer-bottom">
+          <span>© 2026 x402Books. All rights reserved.</span>
+          <span>Financial analysis generated by Luca.</span>
+        </div>
       </footer>
     </div>
   );

@@ -141,6 +141,122 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
   );
 }
 
+// ── Treasury Signals ──────────────────────────────────────────────────────────
+
+function TreasurySignals({ books }: { books: AgentBooks }) {
+  const f = books.financials;
+  const usd = (n: number) =>
+    "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const isProfitable = f.net_income_usd > 0;
+  const isBreakEven = Math.abs(f.net_income_usd) < f.revenue_usd * 0.05 && f.revenue_usd > 0;
+  const isInactive = f.tx_count === 0;
+
+  const verdictLabel = isInactive ? "Inactive" : isProfitable ? "Generating" : isBreakEven ? "Break-even" : "Cash burn";
+  const verdictColor = isInactive ? "var(--muted)" : isProfitable ? "#6DB874" : isBreakEven ? "#f59e0b" : "#ef4444";
+
+  const coverageRatio = f.expenses_usd > 0 ? Math.min(2, f.revenue_usd / f.expenses_usd) : null;
+  const coveragePct = coverageRatio !== null ? Math.round(coverageRatio * 50) : null;
+  const coverageLabel = coverageRatio === null ? null : coverageRatio >= 1 ? `${(coverageRatio * 100).toFixed(0)}% coverage` : `${(coverageRatio * 100).toFixed(0)}% covered`;
+
+  const topSource = books.breakdown.revenue_by_source[0];
+  const topSourcePct = topSource && f.revenue_usd > 0 ? Math.round((topSource.total_usd / f.revenue_usd) * 100) : null;
+
+  if (isInactive) return null;
+
+  return (
+    <section className="prof-section">
+      <p className="prof-section-title">Treasury Signals</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+        {/* Profitability verdict */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>Profitability</span>
+          <span style={{ fontWeight: 700, color: verdictColor }}>
+            ● {verdictLabel}
+          </span>
+        </div>
+
+        {/* Revenue coverage bar */}
+        {coveragePct !== null && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: 5 }}>
+              <span style={{ color: "var(--muted)" }}>Revenue vs Expenses</span>
+              <span style={{ color: verdictColor, fontWeight: 600 }}>{coverageLabel}</span>
+            </div>
+            <div style={{ height: 6, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+              <div style={{
+                height: "100%",
+                width: `${Math.min(100, coveragePct)}%`,
+                background: isProfitable ? "#6DB874" : "#ef4444",
+                borderRadius: 99,
+                transition: "width 0.4s",
+              }} />
+            </div>
+          </div>
+        )}
+
+        {/* 30d burn rate */}
+        {f.expenses_usd > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>30d Burn Rate</span>
+            <span style={{ fontFamily: "monospace", color: "#f87171" }}>−{usd(f.expenses_usd)}</span>
+          </div>
+        )}
+
+        {/* Margin */}
+        {f.margin_pct !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Net Margin</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.margin_pct >= 0 ? "#6DB874" : "#f87171" }}>
+              {f.margin_pct.toFixed(1)}%
+            </span>
+          </div>
+        )}
+
+        {/* Treasury balance + runway */}
+        {f.treasury_balance_usd !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Treasury (stables)</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--fg)" }}>{usd(f.treasury_balance_usd)}</span>
+          </div>
+        )}
+        {f.runway_months !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Runway</span>
+            <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.runway_months >= 3 ? "#6DB874" : f.runway_months >= 1 ? "#f59e0b" : "#ef4444" }}>
+              {f.runway_months < 1 ? "< 1 mo" : `${f.runway_months.toFixed(1)} mo`}
+            </span>
+          </div>
+        )}
+
+        {/* Revenue concentration */}
+        {topSource && topSourcePct !== null && (
+          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+            <span style={{ color: "var(--muted)" }}>Top Revenue Source</span>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--muted)" }}>
+                {topSource.address.slice(0, 6)}…{topSource.address.slice(-4)}
+              </span>
+              <span style={{ marginLeft: 6, color: "var(--fg)", fontWeight: 600 }}>{topSourcePct}%</span>
+            </div>
+          </div>
+        )}
+
+        {/* Attribution source tag */}
+        <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+            {books.attribution.source === "manifest" ? "Declared manifest" : "Registry attribution"}
+          </span>
+          <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: books.attribution.confidence === "high" ? "#6DB874" : "var(--muted)" }}>
+            {books.attribution.confidence} confidence
+          </span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ── Settlement pattern display ────────────────────────────────────────────────
 
 const PATTERN_STYLE: Record<SettlementPattern, { bg: string; color: string; border: string }> = {
@@ -1012,7 +1128,6 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 // ── Main profile ──────────────────────────────────────────────────────────────
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
-  const hasScores = agent.financialActivityScore !== null || agent.partnershipFitScore !== null;
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
   const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
@@ -1107,6 +1222,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {/* Agent Books — the headline financial statement */}
           {books && <AgentBooksBlock books={books} />}
 
+          {/* Treasury Signals — interpretation of the books */}
+          {books?.attributed && <TreasurySignals books={books} />}
+
           {/* Luca's Notes — research and analysis by Luca */}
           {agent.adminNotes && (
             <div className="prof-verdict">
@@ -1122,32 +1240,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           )}
 
           <div className="prof-grid">
-            {/* Scores */}
-            {hasScores && (
-              <section className="prof-section">
-                <p className="prof-section-title">Activity Scores</p>
-                {agent.financialActivityScore !== null && (
-                  <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />
-                )}
-                {agent.partnershipFitScore !== null && (
-                  <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />
-                )}
-              </section>
-            )}
-
-            {/* Settlement profile */}
-            {classification && <SettlementSection classification={classification} />}
-
-            {/* Inference Activity (any agent with data) */}
-            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
-
-            {/* Agent Economics (Luca self-profile only) */}
-            {economics && <AgentEconomicsBlock economics={economics} />}
-
-            {/* Tool Decisions (Nipmod integration) */}
-            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
-
-            {/* Wallets */}
+            {/* Wallets — attribution first */}
             <section className="prof-section">
               <p className="prof-section-title">Wallets</p>
               {agent.tokenAddress && (
@@ -1180,6 +1273,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               )}
             </section>
 
+            {/* Settlement profile */}
+            {classification && <SettlementSection classification={classification} />}
+
             {/* Evidence */}
             {agent.evidenceSources.length > 0 && (
               <section className="prof-section">
@@ -1191,6 +1287,15 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 </div>
               </section>
             )}
+
+            {/* Inference Activity (any agent with data) */}
+            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
+
+            {/* Agent Economics (Luca self-profile only) */}
+            {economics && <AgentEconomicsBlock economics={economics} />}
+
+            {/* Tool Decisions (Nipmod integration) */}
+            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
 
             {/* Report CTA */}
             {(agent.tokenAddress || (agent.wallets ?? []).length > 0) && (
