@@ -470,7 +470,7 @@ function LucaExample() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type SortKey = "verification" | "name" | "activity" | "health";
+type SortKey = "activity" | "verification" | "name" | "health";
 
 export default function RegistryPage() {
   const [agents, setAgents]         = useState<Agent[]>(AGENTS);
@@ -478,7 +478,7 @@ export default function RegistryPage() {
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
-  const [sortBy, setSortBy]         = useState<SortKey>("verification");
+  const [sortBy, setSortBy]         = useState<SortKey>("activity");
   const [page, setPage]             = useState(1);
 
   useEffect(() => {
@@ -522,10 +522,15 @@ export default function RegistryPage() {
       }
       case "health":
         return (HEALTH_ORDER[a.treasuryHealth] ?? 99) - (HEALTH_ORDER[b.treasuryHealth] ?? 99);
-      default: {
+      case "verification": {
         const vdiff = VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
         if (vdiff !== 0) return vdiff;
         return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
+      }
+      default: {
+        const as2 = a.financialActivityScore ?? -1;
+        const bs2 = b.financialActivityScore ?? -1;
+        return bs2 - as2;
       }
     }
   });
@@ -544,9 +549,11 @@ export default function RegistryPage() {
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/registry">Books</Link>
+          <Link href="/#agent-gdp">Agent GDP</Link>
+          <Link href="/luca">Research</Link>
+          <Link href="/developer">API</Link>
           <Link href="/luca">Luca</Link>
-          <Link href="/docs#api">API</Link>
-          <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
           <ThemeToggle />
@@ -558,11 +565,10 @@ export default function RegistryPage() {
       {/* ── Hero ── */}
       <section className="reg-hero">
         <p className="reg-label">Agent Financial Registry</p>
-        <h1 className="reg-h1">Track the wallets behind agents.</h1>
+        <h1 className="reg-h1">Agent Books for the agent economy.</h1>
         <p className="reg-hero-sub">
-          x402Books AI indexes agent wallets across BANKR, Virtuals, Base, AEON, and EigenCloud —
-          sourced and scored by Luca. All entries start as Candidate until teams
-          submit wallet proof.
+          Revenue, expenses, net income, and treasury activity for {STATS[0]?.value ?? "84+"} indexed agents across BANKR, Virtuals, AEON, and Base.
+          Attribution requires a declared wallet manifest.
         </p>
         <div className="reg-hero-stats">
           {STATS.map((s) => (
@@ -573,8 +579,8 @@ export default function RegistryPage() {
           ))}
         </div>
         <div className="reg-hero-actions">
-          <a href="#verify" className="lp-btn-primary">Verify Your Agent</a>
-          <a href="#agents" className="lp-btn-ghost">Browse Registry</a>
+          <a href="#verify" className="lp-btn-primary">Submit Manifest</a>
+          <a href="#agents" className="lp-btn-ghost">Browse Agent Books</a>
         </div>
       </section>
 
@@ -629,10 +635,10 @@ export default function RegistryPage() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
             >
+              <option value="activity">Sort: Financial Activity</option>
+              <option value="health">Sort: Treasury Health</option>
               <option value="verification">Sort: Verification</option>
               <option value="name">Sort: Name A–Z</option>
-              <option value="activity">Sort: Activity Score</option>
-              <option value="health">Sort: Treasury Health</option>
             </select>
           </div>
         </div>
