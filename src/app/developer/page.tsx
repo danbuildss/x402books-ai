@@ -22,6 +22,7 @@ const TIER_COLORS: Record<LucaTier, string> = {
   free:   "var(--st-muted)",
   holder: "var(--st-blue)",
   whale:  "var(--st-green)",
+  luca:   "#8B5CF6",
 };
 
 function relDate(iso: string | null) {
