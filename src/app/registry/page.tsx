@@ -586,9 +586,8 @@ export default function RegistryPage() {
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
-          <Link href="/registry">Books</Link>
-          <Link href="/#agent-gdp">Agent GDP</Link>
-          <Link href="/luca">Research</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/research">Research</Link>
           <Link href="/developer">API</Link>
           <Link href="/luca">Luca</Link>
         </nav>
