@@ -381,7 +381,7 @@ function cardTreasuryScore(agent: Agent): number {
   return map[agent.treasuryHealth] ?? 0;
 }
 
-function cardTransparencyScore(agent: Agent): number {
+function cardAttributionScore(agent: Agent): number {
   let s = 0;
   const wallets = agent.wallets ?? [];
   if (wallets.length > 0) s += 30;
@@ -432,7 +432,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   const [downloading, setDownloading] = useState(false);
 
   const treasuryScore   = cardTreasuryScore(agent);
-  const transpScore     = cardTransparencyScore(agent);
+  const transpScore     = cardAttributionScore(agent);
   const verdict         = cardVerdictSnippet(agent);
   const vstatus         = cardStatusLabel(agent);
 
@@ -550,7 +550,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
               <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
                 {transpScore}
               </span>
-              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Transparency Score</span>
+              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Attribution Confidence</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
               <span style={{ fontSize: "0.82rem", fontWeight: 700, color: verifyColor, marginTop: 4 }}>
@@ -1129,9 +1129,9 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
   const [showShare, setShowShare] = useState(false);
-  const transparencyScore = cardTransparencyScore(agent);
-  const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
-  const tsBg    = transparencyScore >= 70 ? "var(--accent-soft)" : transparencyScore >= 40 ? "rgba(91,143,168,0.08)" : "rgba(125,130,141,0.06)";
+  const attributionScore = cardAttributionScore(agent);
+  const tsColor = attributionScore >= 70 ? "var(--accent)" : attributionScore >= 40 ? "var(--blue)" : "var(--muted)";
+  const tsBg    = attributionScore >= 70 ? "var(--accent-soft)" : attributionScore >= 40 ? "rgba(91,143,168,0.08)" : "rgba(125,130,141,0.06)";
 
   return (
     <div className="prof-page">
@@ -1202,10 +1202,13 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               gap: 2, marginBottom: 8,
             }}>
               <span style={{ fontSize: "1.5rem", fontWeight: 700, color: tsColor, lineHeight: 1, letterSpacing: "-0.02em" }}>
-                {transparencyScore}
+                {attributionScore}
               </span>
-              <span style={{ fontSize: "0.62rem", color: "var(--muted)", fontWeight: 500, textAlign: "center", whiteSpace: "nowrap" }}>
-                Transparency Score
+              <span
+                title="Attribution confidence — based on wallets declared, verification status, and evidence sources. Not a financial score."
+                style={{ fontSize: "0.62rem", color: "var(--muted)", fontWeight: 500, textAlign: "center", whiteSpace: "nowrap", cursor: "help" }}
+              >
+                Attribution Confidence
               </span>
             </div>
             <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
@@ -1302,11 +1305,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <section className="prof-section">
                 <p className="prof-section-title">Treasury Report</p>
                 <a
-                  href={`/report/${agent.tokenAddress ?? agent.wallets[0].address}`}
+                  href="/dashboard"
                   className="prof-report-btn"
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 15 }}>description</span>
-                  Get full treasury report →
+                  View treasury intelligence →
                 </a>
               </section>
             )}

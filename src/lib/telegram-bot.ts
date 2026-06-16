@@ -209,7 +209,7 @@ async function cmdScan(chatId: number, arg: string) {
       `<b>Top categories</b>`,
       catBlock,
       ``,
-      `📄 <a href="${APP_URL}/report/${address}">Full report →</a>`,
+      `📄 <a href="${APP_URL}/dashboard">Full report →</a>`,
     ].join("\n");
 
     if (msgId) await edit(chatId, msgId, text);
@@ -244,7 +244,7 @@ async function cmdSummary(chatId: number, arg: string) {
       `Status    ${budgetLabel(s.netFlow, s.totalSpend, s.totalIncome)}`,
       `Txns      <b>${s.transactionCount}</b>  ·  <b>${s.likelyX402Count}</b> x402`,
       ``,
-      `<a href="${APP_URL}/report/${address}">Full report →</a>`,
+      `<a href="${APP_URL}/dashboard">Full report →</a>`,
     ].join("\n");
 
     if (msgId) await edit(chatId, msgId, text);
@@ -261,7 +261,7 @@ async function cmdReport(chatId: number, walletArg: string) {
   if ("error" in parsed) return send(chatId, parsed.error);
 
   const { address } = parsed;
-  const reportUrl = `${APP_URL}/report/${address}`;
+  const reportUrl = `${APP_URL}/dashboard`;
 
   await send(
     chatId,
@@ -333,7 +333,7 @@ async function handleInlineQuery(inlineQuery: InlineQuery) {
       `<b>Top categories</b>`,
       catBlock,
       ``,
-      `📄 <a href="${APP_URL}/report/${address}">Full report →</a>`,
+      `📄 <a href="${APP_URL}/dashboard">Full report →</a>`,
     ].join("\n");
 
     await tg("answerInlineQuery", {
@@ -352,7 +352,7 @@ async function handleInlineQuery(inlineQuery: InlineQuery) {
           },
           reply_markup: {
             inline_keyboard: [[
-              { text: "📄 Full Report", url: `${APP_URL}/report/${address}` },
+              { text: "📄 Full Report", url: `${APP_URL}/dashboard` },
               { text: "🌐 x402Books AI", url: APP_URL },
             ]],
           },

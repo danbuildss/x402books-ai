@@ -1,8 +1,8 @@
 import { getRegistryAgents } from "@/lib/registry-db";
 import { getAgentGDP } from "@/lib/agent-gdp";
-import { toSlug } from "./[slug]/slug";
 import { AGENTS } from "./data";
 import { RegistryClient } from "./registry-client";
+import { toPublicAgent } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 
 export const revalidate = 300;
@@ -13,10 +13,13 @@ export default async function RegistryPage() {
     getAgentGDP(),
   ]);
 
-  const agents =
+  const rawAgents =
     agentsResult.status === "fulfilled" && agentsResult.value.agents.length > 0
       ? agentsResult.value.agents
       : AGENTS;
+
+  // Strip internal CRM fields before passing to client bundle
+  const agents = rawAgents.map(toPublicAgent);
 
   const economics: Record<string, AgentGDPEntry> = {};
   if (gdpResult.status === "fulfilled") {

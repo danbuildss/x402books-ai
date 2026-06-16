@@ -4,13 +4,8 @@ const ACCESS_COOKIE_NAME = "x402books_access";
 
 const protectedRoutes = [
   "/dashboard",
-  "/transactions",
-  "/categories",
-  "/reports",
-  "/wallets",
   "/api",
   "/settings",
-  "/report",
 ];
 
 function isProtectedPath(pathname: string) {

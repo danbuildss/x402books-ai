@@ -61,14 +61,50 @@ export type Agent = {
   wallets: AgentWallet[];
   verificationStatus: VerificationStatus;
   evidenceSources: string[];
-  financialActivityScore: number | null; // 0–100
-  treasuryHealth: Health;
-  partnershipFitScore: number | null;    // 0–100
-  outreachStatus: OutreachStatus | null;
+  financialActivityScore: number | null; // 0–100 — internal CRM, not exposed publicly
+  treasuryHealth: Health;                // manually set — not exposed publicly
+  partnershipFitScore: number | null;    // internal CRM, not exposed publicly
+  outreachStatus: OutreachStatus | null; // internal CRM, not exposed publicly
   lastChecked: string | null;
-  adminNotes: string | null;
-  priority: number;
+  adminNotes: string | null;             // internal — use lucaVerdict in PublicAgent
+  priority: number;                      // internal ranking, not exposed publicly
   pfp?: string;
   gitlawbRepo?: string;
-  communicationIdentities?: CommunicationIdentity[];
+  communicationIdentities?: CommunicationIdentity[]; // internal CRM, not exposed publicly
 };
+
+// PublicAgent — fields safe to pass to client JS bundle.
+// Internal CRM fields (scores, outreach, admin notes, priority) are stripped here.
+export type PublicAgent = {
+  name: string;
+  symbol: string;
+  ecosystem: Ecosystem;
+  xHandle: string;
+  website: string | null;
+  bankrProfile: string | null;
+  tokenAddress: string | null;
+  wallets: AgentWallet[];
+  verificationStatus: VerificationStatus;
+  evidenceSources: string[];
+  pfp?: string;
+  gitlawbRepo?: string;
+  lucaVerdict?: string | null; // product-level analysis, safe to display publicly
+};
+
+export function toPublicAgent(a: Agent): PublicAgent {
+  return {
+    name: a.name,
+    symbol: a.symbol,
+    ecosystem: a.ecosystem,
+    xHandle: a.xHandle,
+    website: a.website,
+    bankrProfile: a.bankrProfile,
+    tokenAddress: a.tokenAddress,
+    wallets: a.wallets,
+    verificationStatus: a.verificationStatus,
+    evidenceSources: a.evidenceSources,
+    pfp: a.pfp,
+    gitlawbRepo: a.gitlawbRepo,
+    lucaVerdict: a.adminNotes ?? null,
+  };
+}

@@ -7,7 +7,7 @@ import Image from "next/image";
 import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
-import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
+import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
@@ -21,24 +21,20 @@ const VSTATUS_ORDER: Record<VerificationStatus, number> = {
   "Candidate":          5,
 };
 
-const HEALTH_ORDER: Record<Health, number> = {
-  "Healthy": 0, "Stable": 1, "Watch": 2, "At Risk": 3, "Pending": 4,
-};
-
 const PAGE_SIZE = 25;
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
-function computeStats(agents: Agent[]) {
-  const walletCount = agents.filter(
+function computeStats(agents: PublicAgent[], economics: Record<string, AgentGDPEntry>) {
+  const walletCount  = agents.filter(
     (a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0
   ).length;
-  const reviewedCount = agents.filter((a) => a.financialActivityScore !== null).length;
+  const booksCount = Object.keys(economics).length;
   return [
     { label: "Agents Tracked",  value: String(agents.length) },
     { label: "Ecosystems",      value: "5"                   },
     { label: "Wallets Indexed", value: String(walletCount)   },
-    { label: "Luca Reviewed",   value: String(reviewedCount) },
+    { label: "With Books",      value: String(booksCount)    },
   ];
 }
 
@@ -50,7 +46,7 @@ function xPfpUrl(handle: string) {
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 
-function AgentAvatar({ agent, size = 32 }: { agent: Agent; size?: number }) {
+function AgentAvatar({ agent, size = 32 }: { agent: PublicAgent; size?: number }) {
   const [failed, setFailed] = useState(false);
   if (failed || !agent.xHandle) {
     return (
@@ -77,11 +73,6 @@ function AgentAvatar({ agent, size = 32 }: { agent: Agent; size?: number }) {
 
 function EcoBadge({ eco }: { eco: Ecosystem }) {
   return <span className={`reg-badge reg-eco reg-eco-${eco.toLowerCase()}`}>{eco}</span>;
-}
-
-function HealthBadge({ h }: { h: Health }) {
-  const cls = h === "Healthy" ? "healthy" : h === "Stable" ? "stable" : h === "Watch" ? "watch" : h === "At Risk" ? "risk" : "pending";
-  return <span className={`reg-health reg-health-${cls}`}>{h}</span>;
 }
 
 const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
@@ -115,7 +106,7 @@ function fmtUSD(n: number): string {
 
 // ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntry }) {
+function AgentRow({ agent, economics }: { agent: PublicAgent; economics?: AgentGDPEntry }) {
   const slug = toSlug(agent.name);
   return (
     <Link href={`/registry/${slug}`} className="reg-row">
@@ -129,7 +120,16 @@ function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntr
       <div className="reg-row-badges">
         <EcoBadge eco={agent.ecosystem} />
         <StatusBadge status={agent.verificationStatus} />
-        <HealthBadge h={agent.treasuryHealth} />
+        {economics && (
+          <span style={{
+            fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",
+            borderRadius: 99, background: "rgba(109,184,116,0.12)",
+            border: "1px solid rgba(109,184,116,0.3)", color: "#6DB874",
+            letterSpacing: "0.02em",
+          }}>
+            Books
+          </span>
+        )}
       </div>
       <div className="reg-row-score-wrap">
         {economics ? (
@@ -146,11 +146,6 @@ function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntr
             </span>
             <span className="reg-row-score-label">30d rev / net</span>
           </div>
-        ) : agent.financialActivityScore !== null ? (
-          <>
-            <span className="reg-row-score">{agent.financialActivityScore}</span>
-            <span className="reg-row-score-label">score</span>
-          </>
         ) : (
           <span className="reg-row-score-empty">—</span>
         )}
@@ -342,12 +337,12 @@ function VerifyCTA() {
               {tab === "gitlawb" ? (
                 <div className="reg-gitlawb-panel">
                   <p className="reg-gitlawb-intro">
-                    Add a <code className="reg-code">.x402books/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
+                    Add a <code className="reg-code">.agent/wallets.json</code> file to your GitHub or Gitlawb repo. Paste your repo URL below and Luca will read the manifest directly.
                   </p>
 
                   <div className="reg-schema-wrap">
                     <div className="reg-schema-header">
-                      <span className="reg-schema-filename">.x402books/wallets.json</span>
+                      <span className="reg-schema-filename">.agent/wallets.json</span>
                       <button type="button" className="reg-copy-btn" onClick={copySchema}>
                         <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
                           {copied ? "check" : "content_copy"}
@@ -465,10 +460,8 @@ function LucaExample() {
             <div className="reg-audit-row"><span>Status</span><StatusBadge status="Needs Verification" /></div>
             <div className="reg-audit-divider" />
             <div className="reg-audit-row"><span>Transactions (30d)</span><strong>48</strong></div>
-            <div className="reg-audit-row"><span>Net Flow (30d)</span><strong className="reg-positive">+$521.58</strong></div>
-            <div className="reg-audit-row"><span>Treasury Health</span><HealthBadge h="Stable" /></div>
-            <div className="reg-audit-row"><span>Financial Activity</span><strong>40 / 100</strong></div>
-            <div className="reg-audit-row"><span>Partnership Fit</span><strong>51 / 100</strong></div>
+            <div className="reg-audit-row"><span>Revenue (30d)</span><strong className="reg-positive">$521.58</strong></div>
+            <div className="reg-audit-row"><span>Net Income (30d)</span><strong className="reg-positive">+$112.44</strong></div>
             <div className="reg-audit-divider" />
             <div className="reg-audit-read">
               <span className="reg-audit-read-label">Luca&apos;s read</span>
@@ -492,16 +485,16 @@ function LucaExample() {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-type SortKey = "activity" | "verification" | "name" | "health";
+type SortKey = "activity" | "verification" | "name";
 
 export function RegistryClient({
   initialAgents,
   initialEconomics,
 }: {
-  initialAgents: Agent[];
+  initialAgents: PublicAgent[];
   initialEconomics: Record<string, AgentGDPEntry>;
 }) {
-  const [agents]    = useState<Agent[]>(initialAgents);
+  const [agents]    = useState<PublicAgent[]>(initialAgents);
   const [economics] = useState<Record<string, AgentGDPEntry>>(initialEconomics);
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
@@ -512,7 +505,7 @@ export function RegistryClient({
   // Reset to page 1 whenever filters or sort change
   useEffect(() => { setPage(1); }, [search, ecoFilter, statusFilter, sortBy]);
 
-  const STATS = computeStats(agents);
+  const STATS = computeStats(agents, economics);
 
   // Filter
   const filtered = agents.filter((a) => {
@@ -534,24 +527,18 @@ export function RegistryClient({
       case "activity": {
         const aEco = economics[toSlug(a.name)];
         const bEco = economics[toSlug(b.name)];
-        // Agents with real revenue float above unattributed
+        // Agents with real books float above unattributed
         if (aEco && !bEco) return -1;
         if (!aEco && bEco) return 1;
         if (aEco && bEco) return bEco.revenue_usd - aEco.revenue_usd;
-        return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
+        // Among unattributed: sort by verification level
+        return VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
       }
-      case "health":
-        return (HEALTH_ORDER[a.treasuryHealth] ?? 99) - (HEALTH_ORDER[b.treasuryHealth] ?? 99);
       case "verification": {
-        const vdiff = VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
-        if (vdiff !== 0) return vdiff;
-        return (b.financialActivityScore ?? -1) - (a.financialActivityScore ?? -1);
+        return VSTATUS_ORDER[a.verificationStatus] - VSTATUS_ORDER[b.verificationStatus];
       }
-      default: {
-        const as2 = a.financialActivityScore ?? -1;
-        const bs2 = b.financialActivityScore ?? -1;
-        return bs2 - as2;
-      }
+      default:
+        return a.name.localeCompare(b.name);
     }
   });
 
@@ -654,8 +641,7 @@ export function RegistryClient({
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
             >
-              <option value="activity">Sort: Financial Activity</option>
-              <option value="health">Sort: Treasury Health</option>
+              <option value="activity">Sort: Books First</option>
               <option value="verification">Sort: Verification</option>
               <option value="name">Sort: Name A–Z</option>
             </select>

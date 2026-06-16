@@ -1,22 +1,8 @@
-import { NextResponse } from "next/server";
-import { ledgerErrorResponse, parseLedgerParams } from "@/lib/api-utils";
-import { buildLedgerScan } from "@/lib/ledger-service";
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
-  const params = parseLedgerParams(request);
-  if (params.error) {
-    return params.error;
-  }
-
-  try {
-    const scan = await buildLedgerScan({
-      wallet: params.wallet,
-      range: params.range,
-      persist: true,
-    });
-
-    return NextResponse.json(scan);
-  } catch (error) {
-    return ledgerErrorResponse(error);
-  }
+// Legacy route — redirected to canonical v1 endpoint.
+export async function GET(req: NextRequest) {
+  const dest = new URL("/api/v1/scan", req.url);
+  dest.search = req.nextUrl.search;
+  return NextResponse.redirect(dest, 308);
 }
