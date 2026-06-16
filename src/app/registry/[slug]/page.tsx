@@ -15,6 +15,8 @@ import { classifySettlementPattern } from "@/lib/luca-classify";
 import type { SettlementClassification } from "@/lib/luca-classify";
 import { buildAgentBooks } from "@/lib/agent-books";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
+import { getAgentBooksHistory } from "@/lib/agent-books-history";
+import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
@@ -77,7 +79,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const [economics, inferenceActivity, toolDecisions, books] = await Promise.all([
+  const [economics, inferenceActivity, toolDecisions, books, booksHistory] = await Promise.all([
     slug === "luca" ? getLucaEconomics() : Promise.resolve(undefined),
     getInferenceActivity(slug),
     getToolDecisions(slug),
@@ -86,6 +88,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       attributed: false,
       reason: "Books temporarily unavailable.",
     })),
+    getAgentBooksHistory(slug, 90).catch((): AgentBooksSnapshot[] => []),
   ]);
 
   // Classification only derived from real on-chain data — never synthetic
@@ -113,6 +116,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       classification={classification}
       toolDecisions={toolDecisions}
       books={books}
+      booksHistory={booksHistory}
     />
   );
 }
