@@ -12,6 +12,7 @@ import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
+import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
@@ -1125,9 +1126,141 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   );
 }
 
+// ── Agent Books Trend (server-rendered SVG sparklines) ────────────────────────
+
+type BooksTrendField = "revenue_usd" | "expenses_usd" | "net_income_usd" | "treasury_usd";
+
+function AgentBooksSparkline({
+  snapshots,
+  field,
+  color,
+  width = 220,
+  height = 44,
+}: {
+  snapshots: AgentBooksSnapshot[];
+  field: BooksTrendField;
+  color: string;
+  width?: number;
+  height?: number;
+}) {
+  // For treasury_usd, filter out snapshots where the value is null
+  const validSnapshots = field === "treasury_usd"
+    ? snapshots.filter((s) => s[field] !== null)
+    : snapshots;
+
+  if (validSnapshots.length < 2) return null;
+
+  const values = validSnapshots.map((s) => (s[field] as number));
+  const min   = Math.min(...values);
+  const max   = Math.max(...values);
+  const range = max - min || 1;
+  const PAD   = 4;
+  const pts   = validSnapshots.map((s, i) => {
+    const x = PAD + (i / (validSnapshots.length - 1)) * (width - PAD * 2);
+    const y = height - PAD - ((s[field] as number - min) / range) * (height - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const first = values[0];
+  const last  = values[values.length - 1];
+  const pctChange = first !== 0 ? ((last - first) / Math.abs(first)) * 100 : 0;
+  const isUp = last >= first;
+
+  return (
+    <div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
+        style={{ display: "block", overflow: "visible" }}
+      >
+        <polyline
+          points={pts.join(" ")}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+        <circle
+          cx={pts[pts.length - 1].split(",")[0]}
+          cy={pts[pts.length - 1].split(",")[1]}
+          r="3"
+          fill={color}
+        />
+      </svg>
+      {first !== 0 && (
+        <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#6DB874" : "#ef4444", fontFamily: "monospace", fontWeight: 600 }}>
+          {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
+          <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
+            across {validSnapshots.length} snapshots
+          </span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[] }) {
+  if (snapshots.length < 2) return null;
+
+  const ordered = [...snapshots].sort(
+    (a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime(),
+  );
+
+  const oldest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const newest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  const hasTreasury = ordered.some((s) => s.treasury_usd !== null);
+
+  const usdFmt = (n: number) => {
+    if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+    if (Math.abs(n) >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
+    return "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const latest = ordered[ordered.length - 1];
+
+  const cols: Array<{ label: string; field: BooksTrendField; color: string; value: number | null }> = [
+    { label: "Revenue",    field: "revenue_usd",    color: "#6DB874", value: latest.revenue_usd },
+    { label: "Expenses",   field: "expenses_usd",   color: "#ef4444", value: latest.expenses_usd },
+    { label: "Net Income", field: "net_income_usd", color: "#5B8FA8", value: latest.net_income_usd },
+  ];
+
+  if (hasTreasury) {
+    cols.push({ label: "Treasury", field: "treasury_usd", color: "#8B5CF6", value: latest.treasury_usd });
+  }
+
+  return (
+    <div style={{
+      marginBottom: 24,
+      padding: "18px 20px",
+      background: "var(--surface-soft)",
+      border: "1px solid var(--line)",
+      borderRadius: 10,
+    }}>
+      <p style={{ margin: "0 0 14px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+        Agent Books · Historical Trend · {oldest} → {newest}
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+        {cols.map(({ label, field, color, value }) => (
+          <div key={label}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "var(--muted)", fontWeight: 500 }}>{label}</p>
+            <p style={{ margin: "0 0 6px", fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color }}>
+              {value !== null ? usdFmt(value) : "—"}
+            </p>
+            <AgentBooksSparkline snapshots={ordered} field={field} color={color} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
   const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
@@ -1224,6 +1357,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
           {/* Treasury Signals — interpretation of the books */}
           {books?.attributed && <TreasurySignals books={books} />}
+
+          {/* Agent Books Historical Trend — only shown when 2+ snapshots exist */}
+          {books?.attributed && booksHistory && booksHistory.length >= 2 && (
+            <AgentBooksTrendSection snapshots={booksHistory} />
+          )}
 
           {/* Luca's Notes — research and analysis by Luca */}
           {agent.adminNotes && (
