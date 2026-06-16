@@ -139,9 +139,12 @@ async function analyzeByAgentId(agentId: string) {
       role:     w.label,
       verified: walletsVerified,
     })),
+    // Internal CRM fields — never include in API responses or client bundles.
+    // These are stripped by toPublicAgent() before any data reaches the client.
+    // financial_activity_score is surfaced here as a derived activity signal (auth-gated partner API only).
+    // partnership_fit and outreach fields are strictly internal and must not appear in any response.
     scores: {
       financial_activity: agent.financialActivityScore ?? null,
-      partnership_fit:    agent.partnershipFitScore    ?? null,
     },
     verdict,
   });
@@ -223,9 +226,12 @@ async function analyzeByWallet(wallet: string) {
           new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()
         ).map((w) => ({ address: w.address, role: w.label, verified: agentVerified }))
       : [{ address: wallet, role: "unknown", verified: false }],
+    // Internal CRM fields — never include in API responses or client bundles.
+    // These are stripped by toPublicAgent() before any data reaches the client.
+    // financial_activity_score is surfaced here as a derived activity signal (auth-gated partner API only).
+    // partnership_fit and outreach fields are strictly internal and must not appear in any response.
     scores: {
       financial_activity: agent?.financialActivityScore ?? null,
-      partnership_fit:    agent?.partnershipFitScore    ?? null,
     },
     verdict,
   });
