@@ -106,7 +106,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
 
   return (
     <ProfileClient
-      agent={toPublicAgent(agent)}
+      agent={agent}
       slug={slug}
       economics={economics}
       inferenceActivity={inferenceActivity}
