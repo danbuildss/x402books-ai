@@ -138,7 +138,10 @@ export async function generateEconomyReport(
   const researchContext = await researchWithGrok(gdp.top_agents, gdp);
 
   // Phase 2: write
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  // LLM_API_KEY + LLM_BASE_URL allows routing through BANKR's LLM gateway
+  // (or any Anthropic-compatible endpoint) instead of Anthropic directly.
+  // LLM_MODEL sets the model; defaults to claude-sonnet-4-6.
+  const anthropicKey = process.env.LLM_API_KEY ?? process.env.ANTHROPIC_API_KEY;
 
   if (!anthropicKey) {
     const body = buildFallbackBody(gdp, label, unattributed, topAgentsText);
@@ -179,9 +182,13 @@ Format: Plain prose paragraphs, separated by blank lines. 5 to 7 paragraphs. No 
 After the body, on a new line write exactly:
 SUMMARY: [one sentence under 25 words capturing the key finding]`;
 
-  const client = new Anthropic({ apiKey: anthropicKey });
+  const clientOptions: ConstructorParameters<typeof Anthropic>[0] = { apiKey: anthropicKey };
+  if (process.env.LLM_BASE_URL) clientOptions.baseURL = process.env.LLM_BASE_URL;
+  const model = process.env.LLM_MODEL ?? "claude-sonnet-4-6";
+
+  const client = new Anthropic(clientOptions);
   const message = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model,
     max_tokens: 1400,
     messages: [{ role: "user", content: prompt }],
   });
