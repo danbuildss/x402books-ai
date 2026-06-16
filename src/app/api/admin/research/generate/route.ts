@@ -27,6 +27,16 @@ export async function POST(req: NextRequest) {
     // Snapshot GDP alongside the report — same trigger, zero extra calls.
     saveGDPSnapshot(gdp).catch(() => {});
 
+    // Trigger agent books snapshots fire-and-forget
+    fetch(new URL("/api/admin/books/snapshot", req.url).href, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.X402BOOKS_INTERNAL_SECRET ?? "",
+      },
+      body: JSON.stringify({}),
+    }).catch(() => {});
+
     const report = await generateEconomyReport(gdp, type);
 
     // Allow Luca to override the generated title/subtitle.
