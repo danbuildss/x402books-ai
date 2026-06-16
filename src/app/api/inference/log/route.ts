@@ -1,15 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logInferenceEvent } from "@/lib/inference-events";
+import { internalAuth } from "@/lib/internal-auth";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/inference/log
-// Public intake endpoint — called by Surplus (or any agent) to record inference economic events.
+// Internal intake endpoint — called by Surplus (or any agent) to record inference economic events.
+// Requires Authorization: Bearer <X402BOOKS_INTERNAL_SECRET> or X-Internal-Secret header.
 // Writes to inference_events table (Surplus-facing raw events, separate from agent_economic_events).
 //
 // Body: { agent_id, provider, model?, request_type?, cost_usd?, latency_ms?, status? }
 // Response: { ok: true, id: string }
 export async function POST(req: NextRequest) {
+  if (!internalAuth(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();

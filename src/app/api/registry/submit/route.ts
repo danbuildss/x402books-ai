@@ -1,7 +1,35 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import type { NextRequest } from "next/server";
 
-export async function POST(request: Request) {
+// IP-based rate limiting: max 5 submissions per 15 minutes per IP.
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+const ipSubmissions = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = ipSubmissions.get(ip);
+  if (!entry || now > entry.resetAt) {
+    ipSubmissions.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return true;
+  entry.count++;
+  return false;
+}
+
+export async function POST(request: NextRequest) {
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again later." },
+      { status: 429 },
+    );
+  }
+
   try {
     const { agent_name, wallet_address, x_handle, notes, gitlawb_repo } = await request.json();
 
