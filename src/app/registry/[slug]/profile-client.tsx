@@ -6,7 +6,7 @@ import Image from "next/image";
 import { toPng } from "html-to-image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
-import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
+import type { PublicAgent, Health, VerificationStatus } from "@/app/registry/types";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
 import type { SettlementClassification, SettlementPattern } from "@/lib/luca-classify";
@@ -376,35 +376,27 @@ const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
   incomplete_wallet_role:    "Roles Unverified",
 };
 
-function cardTreasuryScore(agent: Agent): number {
-  const map: Record<string, number> = { Healthy: 92, Stable: 78, Watch: 45, "At Risk": 18 };
-  return map[agent.treasuryHealth] ?? 0;
-}
-
-function cardTransparencyScore(agent: Agent): number {
+function cardTransparencyScore(agent: PublicAgent): number {
   let s = 0;
   const wallets = agent.wallets ?? [];
-  if (wallets.length > 0) s += 30;
-  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
-  else if (agent.verificationStatus === "Claimed")          s += 20;
-  else if (agent.verificationStatus === "Wallets Declared") s += 10;
-  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
-  if (agent.evidenceSources.length > 0) s += 10;
-  if (agent.adminNotes) s += 10;
+  if (wallets.length > 0) s += 40;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 40;
+  else if (agent.verificationStatus === "Claimed")          s += 25;
+  else if (agent.verificationStatus === "Wallets Declared") s += 15;
+  if (agent.evidenceSources.length > 0) s += 20;
   return Math.min(100, s);
 }
 
-
-function cardVerdictSnippet(agent: Agent): string {
-  if (!agent.adminNotes) return `${agent.name} is indexed in the registry. No verdict available yet.`;
-  const notes = agent.adminNotes.trim();
+function cardVerdictSnippet(agent: PublicAgent): string {
+  if (!agent.lucaVerdict) return `${agent.name} is indexed in the x402Books registry. Submit a wallet manifest to unlock Agent Books.`;
+  const notes = agent.lucaVerdict.trim();
   if (notes.length <= 180) return notes;
   const cut = notes.slice(0, 180);
   const lastDot = cut.lastIndexOf(".");
   return lastDot > 80 ? cut.slice(0, lastDot + 1) : cut + "…";
 }
 
-function cardStatusLabel(agent: Agent): string {
+function cardStatusLabel(agent: PublicAgent): string {
   const map: Record<string, string> = {
     "Verified": "Verified", "Luca Managed": "Luca Managed",
     "Claimed": "Claimed by Team", "Wallets Declared": "Wallets Declared",
@@ -413,7 +405,7 @@ function cardStatusLabel(agent: Agent): string {
   return map[agent.verificationStatus] ?? agent.verificationStatus;
 }
 
-function cardStatusColor(agent: Agent): string {
+function cardStatusColor(agent: PublicAgent): string {
   const s = agent.verificationStatus;
   if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#6DB874";
   if (s === "Wallets Declared") return "#5B8FA8";
@@ -423,7 +415,7 @@ function cardStatusColor(agent: Agent): string {
 // ── Share card modal ──────────────────────────────────────────────────────────
 
 function ShareCardModal({ agent, slug, classification, onClose }: {
-  agent: Agent;
+  agent: PublicAgent;
   slug: string;
   classification?: SettlementClassification;
   onClose: () => void;
@@ -431,15 +423,9 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
 
-  const treasuryScore   = cardTreasuryScore(agent);
-  const transpScore     = cardTransparencyScore(agent);
-  const verdict         = cardVerdictSnippet(agent);
-  const vstatus         = cardStatusLabel(agent);
-
-  const healthColor =
-    agent.treasuryHealth === "Healthy" || agent.treasuryHealth === "Stable" ? "#2d6e35"
-    : agent.treasuryHealth === "Watch"   ? "#a06020"
-    : agent.treasuryHealth === "At Risk" ? "#a03030" : "#888";
+  const transpScore = cardTransparencyScore(agent);
+  const verdict     = cardVerdictSnippet(agent);
+  const vstatus     = cardStatusLabel(agent);
 
   const verifyColor =
     agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
@@ -465,14 +451,14 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   }, [slug]);
 
   const shareToX = useCallback(() => {
-    const text = `${agent.name} · Treasury: ${agent.treasuryHealth} · ${vstatus} — tracked by x402Books AI`;
+    const text = `${agent.name} · ${vstatus} · ${agent.ecosystem} — tracked by x402Books AI`;
     const url  = `https://www.x402books.xyz/registry/${slug}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
       "_blank",
       "noopener,noreferrer",
     );
-  }, [agent.name, agent.treasuryHealth, vstatus, slug]);
+  }, [agent.name, agent.ecosystem, vstatus, slug]);
 
   // Prevent scroll-through on the body
   return (
@@ -528,35 +514,29 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
           </p>
 
           {/* Hero stat */}
-          <p style={{ fontSize: "3.2rem", fontWeight: 700, color: healthColor, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
-            {agent.treasuryHealth === "Pending" ? "—" : agent.treasuryHealth}
+          <p style={{ fontSize: "2.4rem", fontWeight: 700, color: verifyColor, letterSpacing: "-0.02em", lineHeight: 1, marginBottom: 4 }}>
+            {vstatus}
           </p>
           <p style={{ fontSize: "0.75rem", color: "#9a9180", marginBottom: 22 }}>
-            Treasury Health · Score {agent.treasuryHealth === "Pending" ? "—" : `${treasuryScore}/100`}
+            Verification Status · x402Books
           </p>
 
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(80,70,50,0.12)", marginBottom: 20 }} />
 
           {/* Stats columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, position: "relative", zIndex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 0, position: "relative", zIndex: 1 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
-                {agent.financialActivityScore ?? "—"}
-              </span>
-              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Financial Activity</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
               <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
                 {transpScore}
               </span>
               <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Transparency Score</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
-              <span style={{ fontSize: "0.82rem", fontWeight: 700, color: verifyColor, marginTop: 4 }}>
-                {vstatus}
+              <span style={{ fontSize: "0.82rem", fontWeight: 700, color: "#7a7364", marginTop: 4 }}>
+                {agent.ecosystem}
               </span>
-              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Verification</span>
+              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Ecosystem</span>
             </div>
           </div>
 
@@ -643,7 +623,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 
-function ProfileAvatar({ agent }: { agent: Agent }) {
+function ProfileAvatar({ agent }: { agent: PublicAgent }) {
   const [failed, setFailed] = useState(false);
   if (failed || !agent.xHandle) {
     return (
@@ -1080,7 +1060,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       {tab === "manifest" && (
         <>
           <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
-            Add a <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 4px", borderRadius: 3 }}>.x402books/wallets.json</code> file
+            Add a <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 4px", borderRadius: 3 }}>.agent/wallets.json</code> file
             to your agent&apos;s GitHub or Gitlawb repo, then paste the repo URL below.
             This is the fastest path to <strong style={{ color: "var(--ink)" }}>Wallets Declared</strong> status.
           </p>
@@ -1127,7 +1107,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books }: { agent: PublicAgent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed }) {
   const [showShare, setShowShare] = useState(false);
   const transparencyScore = cardTransparencyScore(agent);
   const tsColor = transparencyScore >= 70 ? "var(--accent)" : transparencyScore >= 40 ? "var(--blue)" : "var(--muted)";
@@ -1169,7 +1149,6 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             <div className="prof-badges">
               <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
               <StatusBadge status={agent.verificationStatus} />
-              <HealthBadge h={agent.treasuryHealth} />
             </div>
             <div className="prof-links">
               {agent.xHandle && (
@@ -1225,17 +1204,14 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {/* Treasury Signals — interpretation of the books */}
           {books?.attributed && <TreasurySignals books={books} />}
 
-          {/* Luca's Notes — research and analysis by Luca */}
-          {agent.adminNotes && (
+          {/* Luca's Notes — product-level analysis */}
+          {agent.lucaVerdict && (
             <div className="prof-verdict">
               <div className="prof-verdict-label">
                 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
                 Luca&apos;s Notes
               </div>
-              <p className="prof-verdict-text">{agent.adminNotes}</p>
-              {agent.lastChecked && (
-                <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>
-              )}
+              <p className="prof-verdict-text">{agent.lucaVerdict}</p>
             </div>
           )}
 

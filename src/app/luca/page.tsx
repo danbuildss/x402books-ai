@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 
-const LUCA_CA   = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
-const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
 
@@ -34,173 +31,40 @@ const REPORT_TYPES = [
   { label: "Quarterly", desc: "Ecosystem breakdowns, growth observations, market analysis" },
 ];
 
-// ── $LUCA Token ───────────────────────────────────────────────────────────────
+// ── $LUCA API Access ──────────────────────────────────────────────────────────
 
-type TokenData = {
-  price: number;
-  change24h: number;
-  mcap: number;
-  volume24h: number;
-};
-
-type SparkPoint = { ts: number; price: number };
-
-function formatUsd(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
-}
-
-function formatPrice(n: number): string {
-  if (n >= 1)        return `$${n.toFixed(4)}`;
-  if (n >= 0.001)    return `$${n.toFixed(5)}`;
-  if (n >= 0.000001) return `$${n.toFixed(8)}`;
-  return `$${n.toFixed(10)}`;
-}
-
-function Sparkline({ points }: { points: SparkPoint[] }) {
-  if (points.length < 2) return null;
-  const prices = points.map((p) => p.price);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  const range = max - min || 1;
-  const W = 400, H = 56, PAD = 2;
-  const coords = points.map((p, i) => {
-    const x = PAD + (i / (points.length - 1)) * (W - PAD * 2);
-    const y = H - PAD - ((p.price - min) / range) * (H - PAD * 2);
-    return `${x},${y}`;
-  });
-  const isUp = prices[prices.length - 1] >= prices[0];
-  const color = isUp ? "#6DB874" : "#e05252";
-  const firstX = PAD, lastX = W - PAD;
-  const fill = `${coords[0]} L ${coords.join(" L ")} L ${lastX},${H} L ${firstX},${H} Z`;
+function LucaAccessSection() {
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="luca-token-sparkline" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="luca-spark-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`M ${fill}`} fill="url(#luca-spark-fill)" />
-      <polyline points={coords.join(" ")} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function LucaTokenSection() {
-  const [token, setToken]      = useState<TokenData | null>(null);
-  const [spark, setSpark]      = useState<SparkPoint[]>([]);
-  const [copied, setCopied]    = useState(false);
-  const [flashClass, setFlash] = useState("");
-  const prevPrice              = useRef<number | null>(null);
-
-  const fetchToken = useCallback(async () => {
-    try {
-      const res = await fetch(
-        `https://api.dexscreener.com/latest/dex/tokens/${LUCA_CA}`,
-        { signal: AbortSignal.timeout(6_000) },
-      );
-      if (!res.ok) return;
-      type DexPair = { priceUsd?: string; priceChange?: { h24?: number }; volume?: { h24?: number }; fdv?: number; marketCap?: number; url?: string };
-      const data = await res.json() as { pairs?: DexPair[] };
-      const pair = data.pairs?.[0];
-      if (!pair) return;
-      const price = parseFloat(pair.priceUsd ?? "0");
-      if (price > 0 && prevPrice.current !== null && price !== prevPrice.current) {
-        const cls = price > prevPrice.current ? "flash-up" : "flash-down";
-        setFlash(cls);
-        setTimeout(() => setFlash(""), 800);
-      }
-      prevPrice.current = price;
-      setToken({ price, change24h: pair.priceChange?.h24 ?? 0, mcap: pair.marketCap ?? pair.fdv ?? 0, volume24h: pair.volume?.h24 ?? 0 });
-    } catch { /* silent */ }
-  }, []);
-
-  useEffect(() => {
-    fetchToken();
-    const iv = setInterval(fetchToken, 30_000);
-    return () => clearInterval(iv);
-  }, [fetchToken]);
-
-  useEffect(() => {
-    fetch(`/api/token/chart?address=${LUCA_CA}`)
-      .then((r) => r.json())
-      .then((d: { prices?: SparkPoint[] }) => { if (d.prices?.length) setSpark(d.prices); })
-      .catch(() => {});
-  }, []);
-
-  function copy() {
-    navigator.clipboard.writeText(LUCA_CA).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  const changeDir = !token ? "flat" : token.change24h > 0 ? "up" : token.change24h < 0 ? "down" : "flat";
-
-  return (
-    <section className="luca-section luca-section-alt" id="token">
-      <div className="luca-section-head">
-        <p className="luca-label">Ecosystem Token</p>
-        <h2 className="luca-h2">$LUCA</h2>
-        <p className="luca-section-sub">The ecosystem asset powering x402Books and Luca.</p>
+    <section className="lp-section lp-section-alt" id="access">
+      <div className="lp-section-head">
+        <p className="lp-section-label">API Access</p>
+        <h2 className="lp-h2">Developer access.</h2>
+        <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
+          The x402Books API is open. Hold $LUCA to unlock higher rate limits.
+          Free tier: 100 requests/day. $LUCA holders: up to 2,000 requests/day.
+        </p>
       </div>
-      <div className="lp-token-card luca-lp-token-card">
-        <div className="lp-token-left">
-          <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
-          <h2 className="lp-token-name">$LUCA</h2>
-          <p className="lp-token-desc">
-            $LUCA is the ecosystem asset for x402Books. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
-          </p>
-          <div className="lp-token-ca">
-            <span className="lp-token-ca-label">CA</span>
-            <span className="lp-token-ca-addr">{LUCA_CA}</span>
-            <button type="button" className="lp-token-ca-copy" onClick={copy} title="Copy contract address">
-              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
-                {copied ? "check" : "content_copy"}
-              </span>
-            </button>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}>
+        {[
+          { tier: "Free", limit: "100 req/day", desc: "No token required" },
+          { tier: "Holder",   limit: "500 req/day",   desc: "Hold ≥1,000 $LUCA" },
+          { tier: "Enterprise",    limit: "2,000 req/day",  desc: "Hold ≥10,000 $LUCA" },
+        ].map((t) => (
+          <div key={t.tier} style={{
+            flex: "1 1 180px",
+            padding: "16px 20px",
+            border: "1px solid var(--line)",
+            borderRadius: 10,
+            background: "var(--surface-soft)",
+          }}>
+            <p style={{ margin: "0 0 4px", fontWeight: 700, fontSize: "0.88rem" }}>{t.tier}</p>
+            <p style={{ margin: "0 0 4px", fontFamily: "monospace", fontSize: "1rem", fontWeight: 700, color: "var(--accent)" }}>{t.limit}</p>
+            <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)" }}>{t.desc}</p>
           </div>
-          <div className="lp-token-links">
-            <a href={BANKR_BUY} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-primary">Buy $LUCA</a>
-            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer" className="lp-token-link lp-token-link-ghost">DexScreener ↗</a>
-          </div>
-        </div>
-        <div className="lp-token-right">
-          {!token ? (
-            <div className="lp-token-loading">
-              <div className="lp-token-loading-bar" />
-              <div className="lp-token-loading-bar" style={{ width: "60%" }} />
-              <div className="lp-token-loading-bar" style={{ width: "80%" }} />
-            </div>
-          ) : (
-            <>
-              <div className="lp-token-price-row">
-                <span className={`lp-token-price ${flashClass}`}>{formatPrice(token.price)}</span>
-                <span className={`lp-token-change ${changeDir}`}>
-                  {token.change24h > 0 ? "+" : ""}{token.change24h.toFixed(2)}% 24h
-                </span>
-              </div>
-              <Sparkline points={spark} />
-              <p className="lp-token-spark-label">7-day price chart</p>
-              <div className="lp-token-stats">
-                <div className="lp-token-stat">
-                  <span className="lp-token-stat-label">Market Cap</span>
-                  <span className="lp-token-stat-value">{token.mcap > 0 ? formatUsd(token.mcap) : "—"}</span>
-                </div>
-                <div className="lp-token-stat">
-                  <span className="lp-token-stat-label">Volume 24h</span>
-                  <span className="lp-token-stat-value">{token.volume24h > 0 ? formatUsd(token.volume24h) : "—"}</span>
-                </div>
-              </div>
-              <div className="lp-token-live">
-                <span className="lp-token-live-dot" />
-                Live · updates every 30s
-              </div>
-            </>
-          )}
-        </div>
+        ))}
+      </div>
+      <div style={{ marginTop: 24 }}>
+        <Link href="/developer" className="lp-btn-primary">Get API Key →</Link>
       </div>
     </section>
   );
@@ -352,8 +216,8 @@ export default function LucaPage() {
         </div>
       </section>
 
-      {/* ── $LUCA Token ── */}
-      <LucaTokenSection />
+      {/* ── API Access ── */}
+      <LucaAccessSection />
 
       {/* ── CTA ── */}
       <section className="lp-cta-section">
@@ -381,9 +245,9 @@ export default function LucaPage() {
             <Link href="/research">Reports</Link>
           </div>
           <div className="lp-footer-col">
-            <p className="lp-footer-heading">$LUCA</p>
-            <a href={BANKR_BUY} target="_blank" rel="noreferrer">Buy $LUCA</a>
-            <a href={`https://dexscreener.com/base/${LUCA_CA}`} target="_blank" rel="noreferrer">DexScreener</a>
+            <p className="lp-footer-heading">Developer</p>
+            <Link href="/developer">API Keys</Link>
+            <Link href="/docs">Documentation</Link>
           </div>
         </div>
         <div className="lp-footer-bottom">
