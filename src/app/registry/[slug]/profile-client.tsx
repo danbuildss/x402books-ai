@@ -1278,11 +1278,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <section className="prof-section">
                 <p className="prof-section-title">Treasury Report</p>
                 <a
-                  href={`/report/${agent.tokenAddress ?? agent.wallets[0].address}`}
+                  href="/dashboard"
                   className="prof-report-btn"
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 15 }}>description</span>
-                  Get full treasury report →
+                  View treasury intelligence →
                 </a>
               </section>
             )}
