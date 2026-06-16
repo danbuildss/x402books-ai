@@ -9,6 +9,7 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { Agent, Ecosystem, Health, VerificationStatus } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
+import type { AgentMomentum } from "@/lib/agent-momentum";
 import { AGENTS } from "./data";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
@@ -106,6 +107,26 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
+function MomentumBadge({ m }: { m: AgentMomentum }) {
+  const rev   = m.revenue;
+  const icon  = rev.direction === "growing" ? "↑" : rev.direction === "declining" ? "↓" : "→";
+  const color = rev.direction === "growing" ? "#6DB874" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
+  const label = rev.direction === "stable" ? "stable" : `${Math.abs(rev.pct).toFixed(0)}%`;
+  return (
+    <span
+      title={`Revenue momentum (30d): ${rev.direction}`}
+      style={{
+        fontSize: "0.67rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
+        border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
+        background: `color-mix(in srgb, ${color} 10%, transparent)`,
+        color, fontFamily: "monospace",
+      }}
+    >
+      {icon} {label}
+    </span>
+  );
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtUSD(n: number): string {
@@ -116,7 +137,7 @@ function fmtUSD(n: number): string {
 
 // ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntry }) {
+function AgentRow({ agent, economics, momentum }: { agent: Agent; economics?: AgentGDPEntry; momentum?: AgentMomentum }) {
   const slug = toSlug(agent.name);
   return (
     <Link href={`/registry/${slug}`} className="reg-row">
@@ -131,6 +152,17 @@ function AgentRow({ agent, economics }: { agent: Agent; economics?: AgentGDPEntr
         <EcoBadge eco={agent.ecosystem} />
         <StatusBadge status={agent.verificationStatus} />
         <HealthBadge h={agent.treasuryHealth} />
+        {economics && (
+          <span style={{
+            fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",
+            borderRadius: 99, background: "rgba(109,184,116,0.12)",
+            border: "1px solid rgba(109,184,116,0.3)", color: "#6DB874",
+            letterSpacing: "0.02em",
+          }}>
+            Books
+          </span>
+        )}
+        {momentum && <MomentumBadge m={momentum} />}
       </div>
       <div className="reg-row-score-wrap">
         {economics ? (
@@ -499,6 +531,7 @@ export default function RegistryPage() {
   const [agents, setAgents]         = useState<Agent[]>(AGENTS);
   const [fromSupabase, setFromSupabase] = useState(false);
   const [economics, setEconomics]   = useState<Record<string, AgentGDPEntry>>({});
+  const [momentum, setMomentum]     = useState<Record<string, AgentMomentum>>({});
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
@@ -522,6 +555,15 @@ export default function RegistryPage() {
       .then((r) => r.json())
       .then((data: { ok?: boolean; economics?: Record<string, AgentGDPEntry> }) => {
         if (data.ok && data.economics) setEconomics(data.economics);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/registry/momentum")
+      .then((r) => r.json())
+      .then((data: { ok?: boolean; momentum?: Record<string, AgentMomentum> }) => {
+        if (data.ok && data.momentum) setMomentum(data.momentum);
       })
       .catch(() => {});
   }, []);
@@ -704,7 +746,7 @@ export default function RegistryPage() {
           {paginated.length === 0 ? (
             <div className="reg-empty-cards">No agents match your filters.</div>
           ) : (
-            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} />)
+            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} momentum={momentum[toSlug(a.name)]} />)
           )}
         </div>
 

@@ -69,3 +69,36 @@ export async function getAgentBooksHistory(
 
   return (data ?? []) as AgentBooksSnapshot[];
 }
+
+// Returns first+last snapshot per agent within windowDays.
+// One DB round-trip for the entire registry.
+export async function getFirstLastSnapshotsPerAgent(
+  windowDays = 30,
+): Promise<Record<string, { first: AgentBooksSnapshot; last: AgentBooksSnapshot; count: number }>> {
+  if (!hasSupabaseAdminEnv()) return {};
+  const sb = getSupabaseAdminClient();
+
+  const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await sb
+    .from("agent_books_history")
+    .select("*")
+    .gte("snapshotted_at", since)
+    .order("snapshotted_at", { ascending: true })
+    .limit(5000);
+
+  if (error || !data) return {};
+
+  const grouped: Record<string, AgentBooksSnapshot[]> = {};
+  for (const row of data) {
+    if (!grouped[row.agent_slug]) grouped[row.agent_slug] = [];
+    grouped[row.agent_slug].push(row as AgentBooksSnapshot);
+  }
+
+  const result: Record<string, { first: AgentBooksSnapshot; last: AgentBooksSnapshot; count: number }> = {};
+  for (const [slug, snaps] of Object.entries(grouped)) {
+    if (snaps.length < 2) continue;
+    result[slug] = { first: snaps[0], last: snaps[snaps.length - 1], count: snaps.length };
+  }
+  return result;
+}
