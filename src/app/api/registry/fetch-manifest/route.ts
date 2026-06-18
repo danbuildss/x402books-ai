@@ -43,14 +43,44 @@ function repoToRawUrls(repoUrl: string): string[] {
   return [];
 }
 
-async function fetchManifest(urls: string[]): Promise<{ url: string; data: unknown } | null> {
+const MAX_MANIFEST_BYTES = 51200; // 50KB
+
+async function fetchManifest(urls: string[]): Promise<{ url: string; data: unknown } | { error: string } | null> {
   for (const url of urls) {
     try {
-      const res = await fetch(url, { headers: { "Accept": "application/json" }, signal: AbortSignal.timeout(8000) });
-      if (res.ok) {
-        const data: unknown = await res.json();
-        return { url, data };
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      let res: Response;
+      try {
+        res = await fetch(url, { headers: { "Accept": "application/json" }, signal: controller.signal });
+        clearTimeout(timeout);
+      } catch (e) {
+        clearTimeout(timeout);
+        if ((e as Error).name === "AbortError") {
+          return { error: "Manifest fetch timed out (5s)" };
+        }
+        continue; // try next URL
       }
+      if (!res.ok) continue;
+
+      // Check content-length header first
+      const contentLength = res.headers.get("content-length");
+      if (contentLength && parseInt(contentLength) > MAX_MANIFEST_BYTES) {
+        return { error: "Manifest file too large (max 50KB)" };
+      }
+
+      const text = await res.text();
+      if (text.length > MAX_MANIFEST_BYTES) {
+        return { error: "Manifest file too large (max 50KB)" };
+      }
+
+      let data: unknown;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        continue; // not valid JSON, try next URL
+      }
+      return { url, data };
     } catch {
       // try next URL
     }
@@ -81,6 +111,9 @@ export async function POST(req: NextRequest) {
   }
 
   const found = await fetchManifest(rawUrls);
+  if (found && "error" in found) {
+    return NextResponse.json({ ok: false, error: found.error }, { status: 400 });
+  }
   if (!found) {
     return NextResponse.json({
       ok: false,

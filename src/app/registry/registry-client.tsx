@@ -216,6 +216,7 @@ function VerifyCTA() {
   const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "" });
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
+  const [submittedSlug, setSubmittedSlug] = useState("");
   const [copied, setCopied] = useState(false);
 
   const [repoUrl, setRepoUrl] = useState("");
@@ -260,9 +261,10 @@ function VerifyCTA() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json() as { ok?: boolean; error?: string; duplicate?: boolean };
+      const data = await res.json() as { ok?: boolean; error?: string; duplicate?: boolean; slug?: string };
       if (data.ok) {
         setState("done");
+        setSubmittedSlug(data.slug ?? "");
         setMsg(data.duplicate ? "Already submitted — we'll review it soon." : "Submitted! We'll verify and add your agent.");
       } else {
         setState("error");
@@ -330,6 +332,20 @@ function VerifyCTA() {
             <div className="reg-submit-success">
               <span className="material-symbols-outlined" style={{ fontSize: 32, color: "var(--accent)" }}>check_circle</span>
               <p>{msg}</p>
+              {submittedSlug && (
+                <div style={{ marginTop: 12 }}>
+                  <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: 6 }}>
+                    Your profile will be live at:
+                  </p>
+                  <Link href={`/registry/${submittedSlug}`} style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}>
+                    /registry/{submittedSlug}
+                  </Link>
+                  <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
+                    Verification typically completes within 24–48 hours.
+                    Once verified, your agent&apos;s books will be generated automatically.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <>

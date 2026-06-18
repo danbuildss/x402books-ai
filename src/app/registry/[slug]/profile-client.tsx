@@ -24,6 +24,29 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
     "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (!books.attributed) {
+    if (books.reason === "wallets_declared_not_scannable") {
+      return (
+        <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+          </div>
+          <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
+            Wallets declared but not currently scannable. Verify that declared addresses are agent operational wallets on Base, not token contracts.
+          </p>
+          <a
+            href="/developer#manifest"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              fontSize: "0.79rem", fontWeight: 600,
+              color: "var(--accent)", textDecoration: "none",
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>help_outline</span>
+            Wallet manifest guide
+          </a>
+        </section>
+      );
+    }
     return (
       <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
@@ -33,7 +56,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           No books yet. This agent needs declared wallets before x402Books can generate revenue, expense, and profitability data.
         </p>
         <a
-          href="https://docs.x402books.xyz/manifest"
+          href="/developer#manifest"
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             fontSize: "0.79rem", fontWeight: 600,
@@ -219,12 +242,13 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
         )}
 
         {/* Treasury balance + runway */}
-        {f.treasury_balance_usd !== null && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Treasury (stables)</span>
-            <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--fg)" }}>{usd(f.treasury_balance_usd)}</span>
-          </div>
-        )}
+        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
+          <span style={{ color: "var(--muted)" }}>Treasury (stables)</span>
+          {f.treasury_balance_usd !== null
+            ? <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--fg)" }}>{usd(f.treasury_balance_usd)}</span>
+            : <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>— <span style={{ fontSize: "0.7rem" }}>No stablecoin balance detected</span></span>
+          }
+        </div>
         {f.runway_months !== null && (
           <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
             <span style={{ color: "var(--muted)" }}>Runway</span>
@@ -314,7 +338,8 @@ function xPfpUrl(handle: string) {
 // ── Shared badge components ───────────────────────────────────────────────────
 
 function HealthBadge({ h }: { h: Health }) {
-  const cls = h === "Healthy" ? "healthy" : h === "Stable" ? "stable" : h === "Watch" ? "watch" : h === "At Risk" ? "risk" : "pending";
+  // Descriptive status only — based on on-chain activity patterns
+  const cls = h === "Active" ? "healthy" : h === "Stable" ? "stable" : h === "Inactive" ? "risk" : h === "Unverified" ? "watch" : "pending";
   return <span className={`reg-health reg-health-${cls}`}>{h}</span>;
 }
 
@@ -363,7 +388,7 @@ const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
 };
 
 function cardTreasuryScore(agent: Agent): number {
-  const map: Record<string, number> = { Healthy: 92, Stable: 78, Watch: 45, "At Risk": 18 };
+  const map: Record<string, number> = { Active: 92, Stable: 78, Unverified: 45, Inactive: 18 };
   return map[agent.treasuryHealth] ?? 0;
 }
 
@@ -371,11 +396,10 @@ function cardAttributionScore(agent: Agent): number {
   let s = 0;
   const wallets = agent.wallets ?? [];
   if (wallets.length > 0) s += 30;
-  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
-  else if (agent.verificationStatus === "Claimed")          s += 20;
-  else if (agent.verificationStatus === "Wallets Declared") s += 10;
-  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
-  if (agent.evidenceSources.length > 0) s += 10;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 40;
+  else if (agent.verificationStatus === "Claimed")          s += 30;
+  else if (agent.verificationStatus === "Wallets Declared") s += 20;
+  if (agent.evidenceSources.length > 0) s += 20;
   if (agent.adminNotes) s += 10;
   return Math.min(100, s);
 }
@@ -422,11 +446,6 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   const verdict         = cardVerdictSnippet(agent);
   const vstatus         = cardStatusLabel(agent);
 
-  const healthColor =
-    agent.treasuryHealth === "Healthy" || agent.treasuryHealth === "Stable" ? "#2d6e35"
-    : agent.treasuryHealth === "Watch"   ? "#a06020"
-    : agent.treasuryHealth === "At Risk" ? "#a03030" : "#888";
-
   const verifyColor =
     agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
       ? "#2d6e35"
@@ -451,7 +470,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   }, [slug]);
 
   const shareToX = useCallback(() => {
-    const text = `${agent.name} · Treasury: ${agent.treasuryHealth} · ${vstatus} — tracked by x402Books AI`;
+    const text = `${agent.name} · Status: ${vstatus} — tracked by x402Books AI`;
     const url  = `https://www.x402books.xyz/registry/${slug}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
@@ -514,25 +533,19 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
           </p>
 
           {/* Hero stat */}
-          <p style={{ fontSize: "3.2rem", fontWeight: 700, color: healthColor, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
-            {agent.treasuryHealth === "Pending" ? "—" : agent.treasuryHealth}
+          <p style={{ fontSize: "3.2rem", fontWeight: 700, color: verifyColor, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: 4 }}>
+            {vstatus}
           </p>
           <p style={{ fontSize: "0.75rem", color: "#9a9180", marginBottom: 22 }}>
-            Treasury Health · Score {agent.treasuryHealth === "Pending" ? "—" : `${treasuryScore}/100`}
+            Verification Status
           </p>
 
           {/* Divider */}
           <div style={{ height: 1, background: "rgba(80,70,50,0.12)", marginBottom: 20 }} />
 
           {/* Stats columns */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0, position: "relative", zIndex: 1 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 0, position: "relative", zIndex: 1 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
-                {agent.financialActivityScore ?? "—"}
-              </span>
-              <span style={{ fontSize: "0.68rem", color: "#9a9180" }}>Financial Activity</span>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 3, borderLeft: "1px solid rgba(80,70,50,0.1)", paddingLeft: 20 }}>
               <span style={{ fontSize: "1.4rem", fontWeight: 600, color: "#3c3830", letterSpacing: "-0.02em" }}>
                 {transpScore}
               </span>

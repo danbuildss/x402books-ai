@@ -61,6 +61,8 @@ export type AgentBooksUnattributed = {
   agent: { slug: string; name: string; ecosystem: string };
   attributed: false;
   reason: string;
+  message?: string;
+  wallets?: { declared: number; analyzed: number };
 };
 
 // Module-level cache shared by API routes and server components.
@@ -123,6 +125,18 @@ async function computeAgentBooks(
   const scannable = declared
     .filter((w) => !w.chain || w.chain.toLowerCase() === "base")
     .slice(0, MAX_WALLETS);
+
+  // If wallets were declared but none are scannable (e.g., all non-Base chains),
+  // surface a specific error rather than silently returning no data.
+  if (declared.length > 0 && scannable.length === 0) {
+    return {
+      agent: agentMeta,
+      attributed: false,
+      reason: "wallets_declared_not_scannable",
+      message: "Wallets declared but none are scannable. Verify declared addresses are agent operational wallets, not token contracts.",
+      wallets: { declared: declared.length, analyzed: 0 },
+    };
+  }
 
   const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
 

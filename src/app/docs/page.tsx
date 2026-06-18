@@ -49,7 +49,7 @@ const FEATURES = [
   { icon: "folder_open",        label: "Wallet Manifest Standard", items: [".x402books/wallets.json open format", "GitHub + Gitlawb repo support", "GitHub Action for automated validation"] },
   { icon: "verified_user",      label: "Verification System",      items: ["Six-tier pipeline: Candidate → Luca Managed", "Manifest submission fast-tracks to Wallets Declared", "Wallet claim + signed proof paths"] },
   { icon: "analytics",          label: "Transparency Scores",      items: ["0–100 composite score per agent", "Factors: wallets, status, activity, evidence, verdict", "Live on every public profile"] },
-  { icon: "psychology",         label: "Luca Intelligence",        items: ["AI writes verdicts for every agent", "Scores financial activity + partnership fit", "Runs integrity passes + approves claims"] },
+  { icon: "psychology",         label: "Luca Intelligence",        items: ["AI writes financial summaries for every agent", "Analyzes settlement patterns and attribution", "Runs integrity passes + approves claims"] },
   { icon: "badge",              label: "SVG Verification Badges",  items: ["Live badge at /api/badge/[slug]", "Embed in GitHub READMEs in one line", "Updates automatically as status changes"] },
   { icon: "person_pin",         label: "Agent Profiles",           items: ["Public profile at /registry/[slug]", "Wallets, scores, settlement patterns, Luca verdict", "Claim banner with manifest + wallet paths"] },
   { icon: "security",           label: "Nipmod Integration",       items: ["Tool decision events on agent profiles", "Install / reject / defer with risk levels", "181+ events indexed live"] },
@@ -154,7 +154,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is Luca?",
-    a: "Luca is the AI financial intelligence agent built on top of x402Books. He writes verdicts for every agent profile, scores financial activity and partnership fit, approves manifest submissions and wallet claims, and runs integrity passes to maintain registry quality.",
+    a: "Luca is the AI financial intelligence agent built on top of x402Books. He writes financial summaries for every agent profile, analyzes settlement patterns and attribution quality, approves manifest submissions and wallet claims, and runs integrity passes to maintain registry quality.",
   },
   {
     q: "How do I get my agent listed?",
@@ -501,8 +501,7 @@ Cache-Control: public, max-age=60, stale-while-revalidate=300
       "symbol": "AEON",
       "ecosystem": "AEON",
       "verificationStatus": "Wallets Declared",
-      "financialActivityScore": 72,
-      "treasuryHealth": "Stable",
+      "treasuryHealth": "Active",
       "wallets": [
         { "address": "0x...", "label": "likely treasury" }
       ]

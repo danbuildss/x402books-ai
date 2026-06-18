@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import type { NextRequest } from "next/server";
 
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 // IP-based rate limiting: max 5 submissions per 15 minutes per IP.
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -44,8 +48,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Enter a valid Base wallet address (0x…)." }, { status: 400 });
     }
 
+    const agentSlug = toSlug(name);
+
     if (!hasSupabaseAdminEnv()) {
-      return NextResponse.json({ ok: true, queued: true }, { status: 201 });
+      return NextResponse.json({ ok: true, slug: agentSlug, queued: true, message: "Submitted for verification." }, { status: 201 });
     }
 
     const supabase = getSupabaseAdminClient();
@@ -58,13 +64,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (error?.code === "23505") {
-      return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
+      return NextResponse.json({ ok: true, slug: agentSlug, duplicate: true }, { status: 200 });
     }
     if (error) {
       return NextResponse.json({ error: "Could not submit. Please try again." }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true }, { status: 201 });
+    return NextResponse.json({ ok: true, slug: agentSlug, message: "Submitted for verification." }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }

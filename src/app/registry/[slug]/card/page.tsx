@@ -10,7 +10,7 @@ import { toSlug } from "../slug";
 export const revalidate = 60;
 
 function deriveTreasuryScore(agent: Agent): number {
-  const map: Record<string, number> = { Healthy: 92, Stable: 78, Watch: 45, "At Risk": 18 };
+  const map: Record<string, number> = { Active: 92, Stable: 78, Unverified: 45, Inactive: 18 };
   return map[agent.treasuryHealth] ?? 0;
 }
 
@@ -18,11 +18,10 @@ function deriveTransparencyScore(agent: Agent): number {
   let s = 0;
   const wallets = agent.wallets ?? [];
   if (wallets.length > 0) s += 30;
-  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 30;
-  else if (agent.verificationStatus === "Claimed")          s += 20;
-  else if (agent.verificationStatus === "Wallets Declared") s += 10;
-  if ((agent.financialActivityScore ?? 0) > 0) s += 20;
-  if (agent.evidenceSources.length > 0) s += 10;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 40;
+  else if (agent.verificationStatus === "Claimed")          s += 30;
+  else if (agent.verificationStatus === "Wallets Declared") s += 20;
+  if (agent.evidenceSources.length > 0) s += 20;
   if (agent.adminNotes) s += 10;
   return Math.min(100, s);
 }
@@ -60,7 +59,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!agent) return { title: "Agent not found" };
   return {
     title: `${agent.name} — x402Books Registry Card`,
-    description: `${agent.name} · Treasury: ${agent.treasuryHealth} · ${statusLabel(agent)} · Tracked by x402Books AI.`,
+    description: `${agent.name} · ${statusLabel(agent)} · Tracked by x402Books AI.`,
   };
 }
 
@@ -69,28 +68,20 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const score             = agent.financialActivityScore ?? 0;
-  const isActive          = score >= 10;
+  const isActive          = (agent.wallets ?? []).length > 0;
   const treasuryScore     = deriveTreasuryScore(agent);
   const transparencyScore = deriveTransparencyScore(agent);
   const vstatus           = statusLabel(agent);
   const verdict           = lucaVerdict(agent);
 
-  const healthColor =
-    agent.treasuryHealth === "Healthy" || agent.treasuryHealth === "Stable" ? "#2d6e35"
-    : agent.treasuryHealth === "Watch"   ? "#a06020"
-    : agent.treasuryHealth === "At Risk" ? "#a03030" : "#888";
-
-  const verifyColor =
-    agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
-      ? "#2d6e35"
-      : agent.verificationStatus === "Wallets Declared" ? "#376e8a"
-      : "#888";
+  const statusColor =
+    agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed" ? "#2d6e35"
+    : agent.verificationStatus === "Wallets Declared" ? "#376e8a" : "#888";
 
   const classification = classifySettlementPattern({
     totalInflow:         isActive ? 100 : 0,
-    totalOutflow:        isActive ? 100 * (({ Healthy: 0.72, Stable: 0.95, Watch: 1.35, "At Risk": 1.90 } as Record<string, number>)[agent.treasuryHealth] ?? 1) : 0,
-    txCount:             isActive ? Math.max(10, score) : 0,
+    totalOutflow:        isActive ? 100 * (({ Active: 0.72, Stable: 0.95, Unverified: 1.35, Inactive: 1.90 } as Record<string, number>)[agent.treasuryHealth] ?? 1) : 0,
+    txCount:             isActive ? 10 : 0,
     categories:          [],
     walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });
@@ -180,7 +171,7 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
 
           .card-hero {
             font-size: 3.6rem; font-weight: 700;
-            color: ${healthColor};
+            color: ${statusColor};
             letter-spacing: -0.03em;
             line-height: 1;
             margin-bottom: 6px;
@@ -274,25 +265,25 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
             <strong>{agent.name}</strong> is tracked by x402Books
           </p>
           <p className="card-hero">
-            {agent.treasuryHealth === "Pending" ? "—" : agent.treasuryHealth}
+            {vstatus}
           </p>
-          <p className="card-hero-label">Treasury Health · Score {treasuryScore}/100</p>
+          <p className="card-hero-label">Verification Status</p>
 
           <div className="card-divider" />
 
           {/* Stats */}
           <div className="card-stats">
             <div className="stat-col">
-              <span className="stat-num">{agent.financialActivityScore ?? "—"}</span>
-              <span className="stat-label">Financial Activity</span>
-            </div>
-            <div className="stat-col" style={{ paddingLeft: 20 }}>
               <span className="stat-num">{transparencyScore}</span>
-              <span className="stat-label">Transparency Score</span>
+              <span className="stat-label">Attribution Confidence</span>
             </div>
             <div className="stat-col" style={{ paddingLeft: 20 }}>
-              <span className="stat-num" style={{ fontSize: "0.85rem", color: verifyColor, marginTop: 4 }}>{vstatus}</span>
-              <span className="stat-label">Verification</span>
+              <span className="stat-num">{treasuryScore}</span>
+              <span className="stat-label">Activity Score</span>
+            </div>
+            <div className="stat-col" style={{ paddingLeft: 20 }}>
+              <span className="stat-num" style={{ fontSize: "0.85rem", color: statusColor, marginTop: 4 }}>{agent.ecosystem}</span>
+              <span className="stat-label">Ecosystem</span>
             </div>
           </div>
 
