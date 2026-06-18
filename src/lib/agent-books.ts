@@ -98,7 +98,18 @@ async function computeAgentBooks(
 ): Promise<AgentBooks | AgentBooksUnattributed> {
   const agentMeta = { slug, name: agent.name, ecosystem: agent.ecosystem };
 
-  const declared = (agent.wallets ?? []).filter((w) => isValidWalletAddress(w.address));
+  const declared = (agent.wallets ?? []).filter((w) => {
+    if (!isValidWalletAddress(w.address)) return false;
+    // Token contract addresses must never be scanned as operational wallets.
+    if (
+      agent.tokenAddress &&
+      w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
+    ) return false;
+    // Explicitly-labelled token contract roles are also excluded.
+    const role = (w.role ?? "").toLowerCase();
+    if (role === "token_contract" || role === "token") return false;
+    return true;
+  });
   if (declared.length === 0) {
     return {
       agent: agentMeta,

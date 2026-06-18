@@ -244,8 +244,8 @@ export default async function LeaderboardPage() {
             Economic Leaderboard
           </h1>
           <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.9rem", maxWidth: 560, lineHeight: 1.65 }}>
-            Autonomous agents ranked by 30-day revenue. Only agents with declared wallet manifests are included.
-            Attribution is the prerequisite.
+            Ranked by 30-day revenue. Only agents with declared wallet manifests are included —{" "}
+            {gdp ? `${gdp.attributed_agents} of ${gdp.total_agents} indexed agents are attributed.` : "attribution is the prerequisite."}
           </p>
         </div>
 
@@ -278,6 +278,25 @@ export default async function LeaderboardPage() {
 
         {/* GDP Trend */}
         <GDPTrendSection snapshots={history} />
+
+        {/* Attribution gap — shown above the table so the scope is clear upfront */}
+        {gdp && gdp.total_agents > gdp.attributed_agents && (
+          <div style={{
+            marginBottom: 16,
+            padding: "12px 16px",
+            border: "1px solid var(--line)",
+            borderRadius: 8,
+            background: "var(--surface-soft)",
+            fontSize: "0.78rem",
+            color: "var(--muted)",
+            lineHeight: 1.6,
+          }}>
+            <strong style={{ color: "var(--fg)" }}>Attribution gap: </strong>
+            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents are unattributed and excluded from this leaderboard.
+            Their economic activity is real but unreadable until they declare wallets.{" "}
+            <Link href="/registry#verify" style={{ color: "var(--accent)" }}>Submit a manifest →</Link>
+          </div>
+        )}
 
         {/* Table */}
         {hasData ? (
@@ -332,25 +351,6 @@ export default async function LeaderboardPage() {
               Agents appear here once they declare a wallet manifest. Attribution is the prerequisite for inclusion.
             </p>
             <Link href="/registry#verify" className="lp-btn-primary">Submit Manifest →</Link>
-          </div>
-        )}
-
-        {/* Attribution note */}
-        {gdp && gdp.total_agents > gdp.attributed_agents && (
-          <div style={{
-            marginTop: 20,
-            padding: "12px 16px",
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            background: "var(--surface-soft)",
-            fontSize: "0.78rem",
-            color: "var(--muted)",
-            lineHeight: 1.6,
-          }}>
-            <strong style={{ color: "var(--fg)" }}>Attribution gap: </strong>
-            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents are unattributed and excluded from this leaderboard.
-            Their economic activity is real but unreadable until they declare wallets.{" "}
-            <Link href="/registry#verify" style={{ color: "var(--accent)" }}>Submit a manifest →</Link>
           </div>
         )}
 

@@ -289,31 +289,13 @@ const PATTERN_LABEL: Record<SettlementPattern, string> = {
 };
 
 function SettlementSection({ classification }: { classification: SettlementClassification }) {
-  const visible = classification.patterns.filter((p) => p !== "active_operational");
+  if (classification.signals.length === 0) return null;
   return (
     <section className="prof-section">
       <p className="prof-section-title">Settlement Profile</p>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: classification.signals.length > 0 ? 10 : 0 }}>
-        {classification.patterns.map((p) => {
-          const s = PATTERN_STYLE[p];
-          return (
-            <span key={p} style={{ fontSize: "0.72rem", padding: "3px 9px", borderRadius: 99, background: s.bg, color: s.color, border: `1px solid ${s.border}`, fontWeight: 500 }}>
-              {PATTERN_LABEL[p]}
-            </span>
-          );
-        })}
-      </div>
-      {classification.signals.length > 0 && (
-        <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55, marginTop: 4 }}>
-          {classification.signals.join(" · ")}
-        </p>
-      )}
-      {visible.includes("incomplete_wallet_role") && (
-        <a href="/registry#verify" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.75rem", color: "var(--accent)", marginTop: 8, textDecoration: "none" }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>add_circle</span>
-          Declare wallet roles to unlock full classification
-        </a>
-      )}
+      <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55 }}>
+        {classification.signals.slice(0, 2).join(" · ")}
+      </p>
     </section>
   );
 }
@@ -1308,9 +1290,6 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
   const [showShare, setShowShare] = useState(false);
-  const attributionScore = cardAttributionScore(agent);
-  const tsColor = attributionScore >= 70 ? "var(--accent)" : attributionScore >= 40 ? "var(--blue)" : "var(--muted)";
-  const tsBg    = attributionScore >= 70 ? "var(--accent-soft)" : attributionScore >= 40 ? "rgba(91,143,168,0.08)" : "rgba(125,130,141,0.06)";
 
   return (
     <div className="prof-page">
@@ -1373,23 +1352,6 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </div>
           </div>
           <div className="prof-share-wrap">
-            <div style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              padding: "10px 16px", borderRadius: 10,
-              background: tsBg,
-              border: `1px solid ${tsColor}22`,
-              gap: 2, marginBottom: 8,
-            }}>
-              <span style={{ fontSize: "1.5rem", fontWeight: 700, color: tsColor, lineHeight: 1, letterSpacing: "-0.02em" }}>
-                {attributionScore}
-              </span>
-              <span
-                title="Attribution confidence — based on wallets declared, verification status, and evidence sources. Not a financial score."
-                style={{ fontSize: "0.62rem", color: "var(--muted)", fontWeight: 500, textAlign: "center", whiteSpace: "nowrap", cursor: "help" }}
-              >
-                Attribution Confidence
-              </span>
-            </div>
             <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
               Share
@@ -1468,18 +1430,6 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {/* Settlement profile */}
             {classification && <SettlementSection classification={classification} />}
 
-            {/* Evidence */}
-            {agent.evidenceSources.length > 0 && (
-              <section className="prof-section">
-                <p className="prof-section-title">Evidence Sources</p>
-                <div className="prof-pills">
-                  {agent.evidenceSources.map((s) => (
-                    <span key={s} className="reg-source-pill">{s}</span>
-                  ))}
-                </div>
-              </section>
-            )}
-
             {/* Inference Activity (any agent with data) */}
             {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
 
@@ -1494,11 +1444,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <section className="prof-section">
                 <p className="prof-section-title">Treasury Report</p>
                 <a
-                  href="/dashboard"
+                  href="/research"
                   className="prof-report-btn"
                 >
                   <span className="material-symbols-outlined" style={{ fontSize: 15 }}>description</span>
-                  View treasury intelligence →
+                  View financial report →
                 </a>
               </section>
             )}
