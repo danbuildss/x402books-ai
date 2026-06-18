@@ -284,6 +284,16 @@ export default async function LeaderboardPage() {
           </div>
         )}
 
+        {/* Last updated + methodology link */}
+        {gdp && (
+          <p style={{ margin: "-24px 0 20px", fontSize: "0.7rem", color: "var(--muted)" }}>
+            Last updated{" "}
+            {new Date(gdp.generated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+            {" · "}
+            <Link href="/methodology" style={{ color: "var(--accent)" }}>How this is calculated →</Link>
+          </p>
+        )}
+
         {/* GDP Trend */}
         <GDPTrendSection snapshots={history} />
 
@@ -300,8 +310,10 @@ export default async function LeaderboardPage() {
             lineHeight: 1.6,
           }}>
             <strong style={{ color: "var(--fg)" }}>Attribution gap: </strong>
-            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents are unattributed and excluded from this leaderboard.
-            Their economic activity is real but unreadable until they declare wallets.{" "}
+            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents have not declared wallet manifests and are excluded from this leaderboard.
+            Their on-chain activity is real but unreadable without attribution.{" "}
+            <Link href="/methodology" style={{ color: "var(--accent)" }}>Why attribution is required →</Link>
+            {"  "}
             <Link href="/registry#verify" style={{ color: "var(--accent)" }}>Submit a manifest →</Link>
           </div>
         )}

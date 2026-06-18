@@ -90,6 +90,13 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </span>
       </div>
 
+      {/* No activity notice */}
+      {f.tx_count === 0 && f.revenue_usd === 0 && f.expenses_usd === 0 && (
+        <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)", fontStyle: "italic", lineHeight: 1.6 }}>
+          No attributed on-chain activity in this 30-day period. Books will update as activity is detected.
+        </p>
+      )}
+
       {/* Primary stats: Revenue / Expenses / Net Income */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
         {([

@@ -217,11 +217,20 @@ export default async function HomePage() {
               <em>for Autonomous Agents.</em>
             </h1>
             <p className="lp-hero-sub">
-              Autonomous agents need financial records. x402Books is the attribution layer that turns wallet activity into auditable books — revenue, expenses, treasury, and net income per agent.
+              Autonomous agents are software that earns, spends, and manages capital on-chain — independently. x402Books is the attribution layer that turns their wallet activity into auditable books: revenue, expenses, treasury, and net income per agent.
             </p>
+            {gdp && (
+              <p style={{ margin: "0 0 20px", fontSize: "0.75rem", color: "var(--muted)", fontFamily: "monospace" }}>
+                <span style={{ color: "#6DB874", fontWeight: 600 }}>●</span>
+                {" "}{gdp.total_agents} agents indexed
+                {" · "}
+                <span style={{ color: "#6DB874" }}>{fmtUSD(gdp.total_revenue_usd)}</span> attributed activity
+                {" · "}updated hourly
+              </p>
+            )}
             <div className="lp-hero-actions">
               <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Agent Books</Link>
-              <Link href="/developer" className="lp-btn-ghost lp-btn-lg">View API</Link>
+              <Link href="/registry#verify" className="lp-btn-ghost lp-btn-lg">Submit Your Agent</Link>
             </div>
           </FadeContent>
         </div>
