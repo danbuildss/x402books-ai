@@ -227,13 +227,13 @@ export default async function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
-            <p className="lp-eyebrow">x402Books · Agent Economy Intelligence</p>
+            <p className="lp-eyebrow">x402Books · Financial Identity for Autonomous Agents</p>
             <h1 className="lp-h1">
-              Financial Intelligence<br />
-              <em>for the Agent Economy.</em>
+              Financial Identity<br />
+              <em>for Autonomous Agents.</em>
             </h1>
             <p className="lp-hero-sub">
-              Track revenue, expenses, treasury activity, and financial history across autonomous agents. Every agent. Every wallet. Every dollar.
+              Autonomous agents need financial records. x402Books is the attribution layer that turns wallet activity into auditable books — revenue, expenses, treasury, and net income per agent.
             </p>
             <div className="lp-hero-actions">
               <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Agent Books</Link>
@@ -299,7 +299,7 @@ export default async function HomePage() {
             { num: "01", title: "Wallet Attribution", body: "Operators declare wallet roles — treasury, revenue, operator, fee, deployer. The manifest is the source of attribution." },
             { num: "02", title: "Registry", body: "Agent identity is indexed. Wallets are attributed. Roles are established. The registry is Layer 1." },
             { num: "03", title: "Agent Books", body: "Revenue, expenses, net income, and financial history are generated per agent. Internal transfers between own wallets are excluded." },
-            { num: "04", title: "Financial Intelligence", body: "Luca interprets the books. Revenue trends, expense concentration, treasury behavior, anomalies, growth signals." },
+            { num: "04", title: "Financial Intelligence", body: "Luca, an AI analyst, reads the attributed books and produces readable summaries — revenue trends, expense concentration, treasury health, growth signals." },
           ].map((s, i) => (
             <FadeContent key={s.num} delay={i * 80}>
               <div className="lp-step">
