@@ -20,7 +20,7 @@ import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
-export const revalidate = 30;
+export const revalidate = 300; // 5 minutes — books are DB-cached for 4h, no need to ISR every 30s
 
 async function getAgent(slug: string): Promise<Agent | null> {
   try {
