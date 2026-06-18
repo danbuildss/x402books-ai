@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies";
+type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -168,8 +168,9 @@ const ROADMAP = [
 
 const NAV: { section: Section; label: string; group: string }[] = [
   { section: "overview",   label: "Overview",    group: "main" },
-  { section: "registry",   label: "Registry",    group: "ops" },
-  { section: "economics",  label: "Economics",   group: "ops" },
+  { section: "registry",     label: "Registry",     group: "ops" },
+  { section: "attribution",  label: "Attribution",  group: "ops" },
+  { section: "economics",    label: "Economics",    group: "ops" },
   { section: "growth",     label: "Growth OS",   group: "ops" },
   { section: "reports",    label: "Reports",     group: "ops" },
   { section: "comm",            label: "Comm Intel",      group: "intel" },
@@ -883,6 +884,178 @@ function RegistrySection({ secret }: { secret: string }) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Attribution Section ───────────────────────────────────────────────────────
+
+type AttributionEntry = {
+  name: string;
+  slug: string;
+  ecosystem: string;
+  wallets_declared: number;
+  attributed: boolean | null;
+  reason: string | null;
+  revenue_usd: number | null;
+  expenses_usd: number | null;
+  tx_count: number | null;
+  last_refresh: string | null;
+};
+
+type AttributionData = {
+  ok: boolean;
+  total_indexed: number;
+  total_attributed: number;
+  total_unattributed_with_wallets: number;
+  total_no_wallets: number;
+  agents: AttributionEntry[];
+  generated_at: string;
+};
+
+function AttributionSection({ secret }: { secret: string }) {
+  const [data, setData]       = useState<AttributionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+  const [filter, setFilter]   = useState<"all" | "attributed" | "anomaly" | "no-wallets">("all");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/attribution", {
+        headers: { "x-internal-secret": secret },
+      });
+      const json = await res.json() as AttributionData;
+      if (!json.ok) throw new Error("API returned ok: false");
+      setData(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
+  }, [secret]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const fmtUSD = (n: number | null) => {
+    if (n == null) return "—";
+    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
+    return `$${n.toFixed(2)}`;
+  };
+
+  const fmtTime = (s: string | null) => {
+    if (!s) return "—";
+    return new Date(s).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+  };
+
+  const filtered = (data?.agents ?? []).filter((a) => {
+    if (filter === "attributed")  return a.attributed === true;
+    if (filter === "anomaly")     return a.attributed === false && a.wallets_declared > 0;
+    if (filter === "no-wallets")  return a.wallets_declared === 0;
+    return true;
+  });
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <h2>Attribution Dashboard</h2>
+        <p>Per-agent attribution status — which agents are being tracked and why some are not.</p>
+      </div>
+
+      {/* Summary tiles */}
+      {data && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 20 }}>
+          {[
+            { label: "Total Indexed",    value: data.total_indexed,                     color: "var(--fg)" },
+            { label: "Attributed",       value: data.total_attributed,                  color: "#6DB874" },
+            { label: "Anomaly (wallets, not attributed)", value: data.total_unattributed_with_wallets, color: "#f59e0b" },
+            { label: "No Wallets",       value: data.total_no_wallets,                  color: "var(--muted)" },
+          ].map((t) => (
+            <div key={t.label} style={{ padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
+              <p style={{ margin: "0 0 4px", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)", fontWeight: 600 }}>{t.label}</p>
+              <p style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700, fontFamily: "monospace", color: t.color }}>{t.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+        {(["all", "attributed", "anomaly", "no-wallets"] as const).map((f) => (
+          <button
+            key={f}
+            type="button"
+            onClick={() => setFilter(f)}
+            style={{
+              padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)",
+              background: filter === f ? "var(--accent)" : "var(--surface-soft)",
+              color: filter === f ? "#fff" : "var(--fg)",
+              fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            {f === "all" ? "All" : f === "attributed" ? "Attributed" : f === "anomaly" ? "Anomaly" : "No Wallets"}
+            {data && (
+              <span style={{ marginLeft: 6, opacity: 0.7 }}>
+                {f === "all"        ? data.total_indexed
+                : f === "attributed" ? data.total_attributed
+                : f === "anomaly"    ? data.total_unattributed_with_wallets
+                : data.total_no_wallets}
+              </span>
+            )}
+          </button>
+        ))}
+        <button type="button" onClick={load} style={{ marginLeft: "auto", padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--fg)", fontSize: "0.75rem", cursor: "pointer" }}>
+          ↺ Refresh
+        </button>
+      </div>
+
+      {loading && <div className={styles.stateBox}>Loading attribution data…</div>}
+      {error   && <div className={styles.stateBox} style={{ color: "#ef4444" }}>Error: {error}</div>}
+
+      {!loading && !error && (
+        <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+          {/* Header */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 90px 110px 110px 140px", gap: 10, padding: "8px 14px", background: "var(--surface-soft)", borderBottom: "1px solid var(--line)" }}>
+            {["Agent", "Wallets", "Status", "Revenue", "Expenses", "Txs", "Last Refresh"].map((h) => (
+              <span key={h} style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)" }}>{h}</span>
+            ))}
+          </div>
+
+          {filtered.length === 0 && (
+            <div style={{ padding: "24px 14px", textAlign: "center", color: "var(--muted)", fontSize: "0.83rem" }}>No agents in this filter.</div>
+          )}
+
+          {filtered.map((a) => {
+            const statusColor = a.attributed === true ? "#6DB874" : a.attributed === false && a.wallets_declared > 0 ? "#f59e0b" : "var(--muted)";
+            const statusLabel = a.attributed === true ? "✓ attributed" : a.attributed === false ? "✗ not attributed" : "not scanned";
+            return (
+              <div key={a.slug} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 90px 110px 110px 140px", gap: 10, padding: "10px 14px", borderBottom: "1px solid var(--line)", alignItems: "center" }}>
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>{a.name}</span>
+                  <span style={{ marginLeft: 8, fontSize: "0.7rem", color: "var(--muted)" }}>{a.ecosystem}</span>
+                  {a.reason && (
+                    <div style={{ fontSize: "0.68rem", color: "#f59e0b", marginTop: 2 }}>{a.reason}</div>
+                  )}
+                </div>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.wallets_declared}</span>
+                <span style={{ fontSize: "0.72rem", fontWeight: 600, color: statusColor }}>{statusLabel}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6DB874" }}>{fmtUSD(a.revenue_usd)}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{fmtUSD(a.expenses_usd)}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.tx_count?.toLocaleString() ?? "—"}</span>
+                <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{fmtTime(a.last_refresh)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {data && (
+        <p style={{ marginTop: 10, fontSize: "0.68rem", color: "var(--muted)", fontStyle: "italic" }}>
+          Generated {fmtTime(data.generated_at)} · Reflects DB cache state. Trigger a refresh to update.
+        </p>
+      )}
     </div>
   );
 }
@@ -2000,8 +2173,9 @@ export default function LucaAdminPage() {
         {/* Workspace */}
         <main className={styles.workspace}>
           {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
-          {section === "registry"  && <RegistrySection secret={secret} />}
-          {section === "economics" && <EconomicsSection />}
+          {section === "registry"    && <RegistrySection secret={secret} />}
+          {section === "attribution" && <AttributionSection secret={secret} />}
+          {section === "economics"   && <EconomicsSection />}
           {section === "growth"    && <GrowthSection secret={secret} />}
           {section === "reports"   && <ReportsSection secret={secret} />}
           {section === "comm"      && <CommIntelSection secret={secret} />}
