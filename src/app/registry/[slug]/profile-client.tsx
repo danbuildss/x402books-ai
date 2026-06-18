@@ -15,6 +15,7 @@ import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { computeMomentum } from "@/lib/agent-momentum";
 import type { AgentMomentum } from "@/lib/agent-momentum";
+import { SiteFooter } from "@/components/site-footer";
 
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
   const netPositive = f.net_income_usd >= 0;
 
   return (
-    <section className="prof-section">
+    <section id="agent-books" className="prof-section">
       {/* Header row */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
@@ -292,7 +293,7 @@ function SettlementSection({ classification }: { classification: SettlementClass
   if (classification.signals.length === 0) return null;
   return (
     <section className="prof-section">
-      <p className="prof-section-title">Settlement Profile</p>
+      <p className="prof-section-title">Activity Pattern</p>
       <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55 }}>
         {classification.signals.slice(0, 2).join(" · ")}
       </p>
@@ -1298,9 +1299,10 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         <Link href="/" className="lp-brand"><Logo /></Link>
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/research">Research</Link>
+          <Link href="/developer">API</Link>
           <Link href="/luca">Luca</Link>
-          <Link href="/docs#api">API</Link>
-          <Link href="/docs">Docs</Link>
         </nav>
         <div className="lp-header-right">
           <ThemeToggle />
@@ -1442,13 +1444,13 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {/* Report CTA */}
             {(agent.tokenAddress || (agent.wallets ?? []).length > 0) && (
               <section className="prof-section">
-                <p className="prof-section-title">Treasury Report</p>
+                <p className="prof-section-title">Agent Books</p>
                 <a
-                  href="/research"
+                  href="#agent-books"
                   className="prof-report-btn"
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>description</span>
-                  View financial report →
+                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>account_balance</span>
+                  View Agent Books →
                 </a>
               </section>
             )}
@@ -1471,29 +1473,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         />
       )}
 
-      <footer className="lp-footer">
-        <div className="lp-footer-inner">
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
-            <Link href="/registry">Registry</Link>
-            <Link href="/luca">Luca</Link>
-            <Link href="/developer">Developer</Link>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Docs</p>
-            <Link href="/docs#api">API Reference</Link>
-            <Link href="/docs#agent">Agent Guide</Link>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Community</p>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
-          </div>
-        </div>
-        <p className="lp-footer-copy">© 2026 x402Books AI. Not financial advice.</p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
