@@ -1419,6 +1419,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {/* Wallets — attribution first */}
             <section className="prof-section">
               <p className="prof-section-title">Wallets</p>
+              {(agent.wallets ?? []).length > 0 && (
+                <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>
+                  Self-declared by operator via signed manifest.{" "}
+                  <a href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Ownership not cryptographically verified →</a>
+                </p>
+              )}
               {agent.tokenAddress && (
                 <div className="reg-card-wallet-row">
                   <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
