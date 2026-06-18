@@ -1,61 +1,63 @@
-# x402Books AI
+# x402Books
 
-**Readable books for the agent economy.**
+**Financial intelligence for the agent economy.**
 
-x402Books AI is an onchain accounting platform for autonomous agents and their operators. It turns Base wallet activity into clean financial reports, categorized transactions, financial health scores, and agent-readable summaries — powered by the x402 payment protocol.
+x402Books is the financial identity layer for autonomous agents. It indexes declared wallet manifests, classifies on-chain activity into operational finance (revenue, expenses, treasury movement), and publishes readable books — per-agent P&L, treasury health, and economic reports — built on Base.
 
-Live at **[x402books.xyz](https://x402books.xyz)**
-
----
-
-## Ecosystem
-
-| Layer | Role |
-|-------|------|
-| **x402Books AI** | The platform — wallet audits, reports, financial intelligence |
-| **Luca** | The AI accountant agent — Telegram, onchain, conversational |
-| **$LUCA** | The unified ecosystem token — API tiers, premium features, agent credits |
+Live at **[x402books.xyz](https://www.x402books.xyz)**
 
 ---
 
-## What It Does
+## Architecture
 
-- **Wallet Audits** — Scan any Base wallet address and get a complete financial breakdown
-- **Transaction Categorization** — AI classifies every onchain transaction: revenue, expenses, gas, swaps, treasury movement
-- **Financial Scoring** — Treasury health scores, inflow/outflow analysis, anomaly detection
-- **Agent Reports** — Structured summaries built for agents, operators, and on-chain bookkeeping
-- **Portfolio Tracking** — Live token balances across BANKR and Virtuals ecosystems + stablecoins (USDC, USDT, DAI, EURC)
-- **CSV & PDF Export** — Download full transaction history or formatted reports
-- **Shareable Reports** — Public-facing report links at `/report/[wallet]`
+```
+x402Books  =  infrastructure  (index, classify, interpret, display)
+Luca       =  intelligence    (analyst interface on top of x402Books)
+$LUCA      =  ecosystem asset (not the product, not the narrative)
+```
+
+x402Books sees: wallet A sent USDC to wallet B.
+Luca interprets: "recurring settlement activity detected."
 
 ---
 
-## Key Features
+## Product
 
-### App (Authenticated)
-- **Dashboard** — Financial stats, sparkline charts, AI insight cards, agent search
-- **Transactions** — Full ledger with date filtering, category editing, transaction notes, flagging
-- **Portfolio** — Live token balances with 24h price changes across ecosystem + stablecoins
-- **Reports** — Pre-built views: summary, cashflow, categories, flagged items
-- **Wallets** — Multi-wallet support, add/remove wallets
-- **Categories** — Custom category management
-- **Developer** — API key management, $LUCA token-gated rate limits, usage logs, wallet linking
+### Registry — `/registry`
 
-### Landing Page (`/`)
-- How it works, features, $LUCA utilities, $LUCA token card, x402 API section
-- Luca section — meet the AI accountant agent
-- FAQ, CTA
+Public financial directory for autonomous agents. Each agent profile shows:
+- Declared wallet manifest (roles: treasury / fee / deployer / operator)
+- Verification status and evidence sources
+- Settlement pattern classification (active, stable, dormant, etc.)
+- Ecosystem (BANKR, Virtuals, AEON, EigenCloud, Base)
 
-### Luca Page (`/luca`)
-- Standalone marketing page for [Luca](https://t.me/AskLucaBot) — the AI accountant agent
-- Capabilities, how it works, sample report, For Agents / For Builders use cases
-- Content series, $LUCA token card with live price and copy contract address
-- SEO metadata (OG + Twitter card)
+### Agent Books — `/registry/[slug]`
 
-### Agent Financial Registry (`/registry`)
-- Public directory of 20+ AI agents indexed by Luca
-- Confidence labels, wallet data, ecosystem filters, Luca's research notes
-- Agent verification CTA powered by $LUCA
+Per-agent financial statements generated from on-chain data:
+- **Revenue** — external inflows to declared wallets
+- **Expenses** — categorized outflows (inference, fees, operations, gas)
+- **Net income** — revenue minus expenses, 30-day rolling
+- **Treasury balance** — live USDC + USDT stablecoin balance on Base
+- **Runway** — treasury balance ÷ 30-day burn rate
+- Internal transfers between an agent's own wallets are excluded — treasury movement is not revenue
+
+Attribution is the prerequisite. No declared wallets → no books.
+
+### Economic Leaderboard — `/leaderboard`
+
+All attributed agents ranked by 30-day revenue. Includes Agent GDP aggregate (total revenue, expenses, net income across all attributed agents).
+
+### Research — `/research`
+
+"State of the Agent Economy" reports written by Luca. Two-phase generation:
+1. **Grok** — real-time research on X and the web for live agent context
+2. **Claude** — Bloomberg-style report prose using x402Books financial data + Grok findings
+
+Reports are published via the admin generate endpoint and live permanently at `/research/[slug]`.
+
+### Luca — `/luca`
+
+Financial analyst interface. Luca reads the books, writes the reports, and runs on Hermes (OpenAI). He is not a chatbot — he is the intelligence layer on top of x402Books data.
 
 ---
 
@@ -63,47 +65,35 @@ Live at **[x402books.xyz](https://x402books.xyz)**
 
 Public REST API with key-based auth and $LUCA token-gated rate limits.
 
-| Tier | Requirement | Requests/day |
-|------|-------------|-------------|
-| Free | Any API key | 100 |
-| LUCA Holder | ≥ 1,000 $LUCA | 500 |
-| LUCA Whale | ≥ 10,000 $LUCA | 2,000 |
-
-**Base URL:** `https://x402books.xyz/api/v1`
+**Base URL:** `https://www.x402books.xyz/api/v1`
 
 **Auth:** `X-API-Key: xb_live_...` header
 
-### Endpoints
+| Tier | Requirement | Requests/day |
+|------|-------------|--------------|
+| Free | Any key | 100 |
+| LUCA Holder | ≥ 1,000 $LUCA | 500 |
+| LUCA Whale | ≥ 10,000 $LUCA | 2,000 |
 
 ```
-GET  /api/v1/agent-financial-state?wallet=0x...   Agent financial state summary
-GET  /api/v1/full-report?wallet=0x...             Full audit report
-GET  /api/v1/transactions?wallet=0x...            Paginated transaction list
-GET  /api/v1/ledger-summary?wallet=0x...          Ledger totals
-GET  /api/v1/categorize?wallet=0x...              Category breakdown
+GET  /api/v1/agent-financial-state   Agent financial state summary
+GET  /api/v1/full-report             Full audit report for a wallet
+GET  /api/v1/transactions            Paginated transaction list
+GET  /api/v1/ledger-summary          Ledger totals
+GET  /api/v1/categorize              Category breakdown
 ```
 
-Get your API key at [x402books.xyz/developer](https://x402books.xyz/developer).
-
----
-
-## Luca — AI Accountant Agent
-
-**Luca** is the official x402Books AI agent, powered by $LUCA. He lives on Telegram and answers financial questions about any Base wallet.
-
-- Telegram: [@AskLucaBot](https://t.me/AskLucaBot)
-- X: [@AskLucaAI](https://x.com/AskLucaAI)
-- Page: [x402books.xyz/luca](https://x402books.xyz/luca)
-
-Luca is powered by the x402Books API (LUCA Whale tier). Agent runtime: [Hermes](https://hermes.ai) on local Mac with skill file at `~/.hermes/skills/finance/x402books/SKILL.md`.
+Get an API key at [x402books.xyz/developer](https://www.x402books.xyz/developer).
 
 ---
 
 ## Token
 
-| Token | Contract | Network | Purpose |
-|-------|----------|---------|---------|
-| $LUCA | `0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3` | Base | Unified ecosystem token — API tiers, premium features, agent intelligence credits |
+| Token | Contract | Network |
+|-------|----------|---------|
+| $LUCA | `0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3` | Base |
+
+$LUCA gates API rate limits. It is the ecosystem asset — not the product, not the narrative.
 
 ---
 
@@ -111,15 +101,14 @@ Luca is powered by the x402Books API (LUCA Whale tier). Agent runtime: [Hermes](
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router) |
-| Auth | Privy |
+| Framework | Next.js 15 (App Router, ISR) |
 | Database | Supabase (PostgreSQL) |
+| Blockchain | Base — Alchemy API |
+| AI — Reports | Claude (Anthropic) — report writing |
+| AI — Research | Grok API — real-time X/web research |
+| AI — Luca | OpenAI on Hermes |
 | Styling | Custom CSS design system (dark/light mode) |
-| Blockchain | Base — Alchemy API, BANKR API, Virtuals Protocol API, Dune Analytics |
-| AI | Claude (Anthropic) — categorization, summaries, insights |
-| Payments | x402 protocol — HTTP 402, USDC on Base, BANKR x402 Cloud |
-| Analytics | Vercel Analytics |
-| Deploy | Vercel |
+| Auth | Privy |
 
 ---
 
@@ -127,30 +116,69 @@ Luca is powered by the x402Books API (LUCA Whale tier). Agent runtime: [Hermes](
 
 ```bash
 # Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 
 # Auth
-NEXT_PUBLIC_PRIVY_APP_ID=your_privy_app_id
+NEXT_PUBLIC_PRIVY_APP_ID=
 
 # Blockchain
-NEXT_PUBLIC_ALCHEMY_API_KEY=your_alchemy_key
+ALCHEMY_API_KEY=               # treasury balance + token data (server-side)
+NEXT_PUBLIC_ALCHEMY_API_KEY=   # client-side wallet scanning
 
 # AI
-ANTHROPIC_API_KEY=your_anthropic_key
+ANTHROPIC_API_KEY=             # report writing (Claude)
+GROK_API_KEY=                  # optional — research phase (Grok); reports generate without it
 
-# x402 / BANKR
-BANKR_X402_API_KEY=your_bankr_key
-X402BOOKS_INTERNAL_SECRET=your_internal_secret   # shared secret for BANKR x402 Cloud proxy auth
+# Internal
+X402BOOKS_INTERNAL_SECRET=     # bearer token for /api/admin/* routes — fail-closed when unset
 
-# $LUCA token — ecosystem token on Base
+# $LUCA
 LUCA_TOKEN_ADDRESS=0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
 
-# Dune Analytics (BANKR ecosystem token registry)
-DUNE_API_KEY=your_dune_key
+# Optional
+BANKR_X402_API_KEY=
+DUNE_API_KEY=
 ```
+
+---
+
+## Supabase Migrations
+
+Run in order from the Supabase SQL editor (`supabase/` directory). All files are idempotent.
+
+| File | Purpose |
+|------|---------|
+| `registry-schema.sql` | Agent registry tables |
+| `stage-1-ledger.sql` | Ledger and transaction tables |
+| `inference-events.sql` | Inference spend tracking |
+| `tool-decision-events-v2.sql` | Tool decision log |
+| `agent-economic-events.sql` | Economic event log |
+| `research-reports.sql` | Published research reports |
+| `agent-gdp-history.sql` | GDP snapshots for trend tracking |
+| `api-keys-ownership.sql` | API key wallet ownership |
+
+---
+
+## Admin Endpoints
+
+All admin routes require `Authorization: Bearer <X402BOOKS_INTERNAL_SECRET>`.
+
+### Generate a research report
+
+```bash
+POST /api/admin/research/generate
+{
+  "type": "weekly",                         # weekly | monthly | quarterly
+  "title": "State of the Agent Economy #1", # optional — overrides auto-generated title
+  "subtitle": "...",                        # optional
+  "force": false                            # set true to overwrite a same-day report
+}
+```
+
+Luca calls this from Hermes on his own schedule. No Vercel Cron required.
 
 ---
 
@@ -165,29 +193,10 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Deploy
-
-1. Push to GitHub
-2. Import repo in [Vercel](https://vercel.com)
-3. Add environment variables in Vercel Project Settings
-4. Deploy
-
----
-
-## Supabase Schema
-
-Key tables:
-
-- `users` — Privy user records (privy_id, email, x_handle, last_seen_at)
-- `api_keys` — API key records with tier, usage counters, wallet linking
-- `api_usage` — per-request usage logs
-- `agent_submissions` — registry verification requests
-- RPC `increment_api_key_usage` — atomic daily counter increment
-
----
-
 ## Security
 
+- `X402BOOKS_INTERNAL_SECRET` must be set in production — routes fail closed when missing
 - API keys stored as SHA-256 hashes — raw keys are never persisted
-- Service role key is server-side only (never exposed to client)
-- Rotate any exposed Supabase keys immediately in Supabase Dashboard
+- Timing-safe comparisons on all token/secret checks
+- `SUPABASE_SERVICE_ROLE_KEY` is server-side only — never exposed to client
+- Never commit `.env` files

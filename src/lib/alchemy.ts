@@ -122,7 +122,7 @@ async function fetchAlchemyTransfers(params: {
       params: [
         {
           ...addressParam,
-          category: ["erc20"],
+          category: ["erc20", "external"],
           excludeZeroValue: true,
           fromBlock: "0x0",
           maxCount: "0x3e8",
@@ -192,8 +192,9 @@ export async function fetchBaseErc20Transfers(params: {
         from === wallet && to === wallet ? "internal" : to === wallet ? "income" : "expense";
       const timestamp = transfer.metadata?.blockTimestamp || new Date().toISOString();
 
-      const tokenAddress = (transfer.rawContract?.address || "").toLowerCase();
       const tokenSymbol = transfer.asset || "UNKNOWN";
+      // ETH (external category) has no rawContract.address — use the native ETH sentinel
+      const tokenAddress = (transfer.rawContract?.address || "").toLowerCase() || (tokenSymbol === "ETH" ? "eth" : "");
       return {
         txHash: transfer.hash,
         timestamp,

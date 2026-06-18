@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { getAgentGDP } from "@/lib/agent-gdp";
+import { getGDPHistory } from "@/lib/gdp-history";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
+import type { GDPSnapshot } from "@/lib/gdp-history";
 
 export const revalidate = 3600;
 
@@ -36,6 +38,110 @@ function EcoBadge({ eco }: { eco: string }) {
     }}>
       {eco}
     </span>
+  );
+}
+
+// ── GDP Trend Chart (server-rendered SVG) ────────────────────────────────────
+
+type TrendField = "total_revenue_usd" | "total_expenses_usd" | "total_net_income_usd";
+
+function GDPSparkline({
+  snapshots,
+  field,
+  color,
+  width = 260,
+  height = 48,
+}: {
+  snapshots: GDPSnapshot[];
+  field: TrendField;
+  color: string;
+  width?: number;
+  height?: number;
+}) {
+  if (snapshots.length < 2) return null;
+  const values = snapshots.map((s) => s[field]);
+  const min    = Math.min(...values);
+  const max    = Math.max(...values);
+  const range  = max - min || 1;
+  const PAD    = 4;
+  const pts    = snapshots.map((s, i) => {
+    const x = PAD + (i / (snapshots.length - 1)) * (width - PAD * 2);
+    const y = height - PAD - ((s[field] - min) / range) * (height - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const first = values[0], last = values[values.length - 1];
+  const pctChange = first > 0 ? ((last - first) / first) * 100 : 0;
+  const isUp = last >= first;
+  return (
+    <div>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width={width}
+        height={height}
+        style={{ display: "block", overflow: "visible" }}
+      >
+        <polyline
+          points={pts.join(" ")}
+          fill="none"
+          stroke={color}
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          opacity="0.85"
+        />
+        {/* End dot */}
+        <circle
+          cx={pts[pts.length - 1].split(",")[0]}
+          cy={pts[pts.length - 1].split(",")[1]}
+          r="3"
+          fill={color}
+        />
+      </svg>
+      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#6DB874" : "#ef4444", fontFamily: "monospace", fontWeight: 600 }}>
+        {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
+        <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
+          across {snapshots.length} snapshots
+        </span>
+      </p>
+    </div>
+  );
+}
+
+function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
+  if (snapshots.length < 2) return null;
+  const ordered = [...snapshots].sort(
+    (a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime(),
+  );
+  const oldest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const newest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+  return (
+    <div style={{
+      marginBottom: 24,
+      padding: "18px 20px",
+      background: "var(--surface-soft)",
+      border: "1px solid var(--line)",
+      borderRadius: 10,
+    }}>
+      <p style={{ margin: "0 0 14px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+        Agent GDP Trend · {oldest} → {newest}
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
+        {([
+          { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "#6DB874" },
+          { label: "Expenses",   field: "total_expenses_usd"   as TrendField, color: "#ef4444" },
+          { label: "Net Income", field: "total_net_income_usd" as TrendField, color: "#5B8FA8" },
+        ]).map(({ label, field, color }) => (
+          <div key={label}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "var(--muted)", fontWeight: 500 }}>{label}</p>
+            <p style={{ margin: "0 0 6px", fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color }}>
+              {fmtUSD(ordered[ordered.length - 1][field])}
+            </p>
+            <GDPSparkline snapshots={ordered} field={field} color={color} />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -111,6 +217,8 @@ export default async function LeaderboardPage() {
     // renders empty state
   }
 
+  const history = await getGDPHistory(90).catch(() => [] as import("@/lib/gdp-history").GDPSnapshot[]);
+
   const agents = gdp?.all_attributed ?? [];
   const hasData = agents.length > 0;
 
@@ -167,6 +275,9 @@ export default async function LeaderboardPage() {
             ))}
           </div>
         )}
+
+        {/* GDP Trend */}
+        <GDPTrendSection snapshots={history} />
 
         {/* Table */}
         {hasData ? (

@@ -488,9 +488,8 @@ export default async function HomePage() {
             <div>
               <h4>Product</h4>
               <Link href="/registry">Registry</Link>
-              <Link href="/registry">Agent Books</Link>
-              <Link href="/#agent-gdp">Agent GDP</Link>
-              <Link href="/research">Research</Link>
+              <Link href="/leaderboard">Leaderboard</Link>
+              <Link href="/research">State of the Agent Economy</Link>
               <Link href="/developer">API</Link>
             </div>
             <div>

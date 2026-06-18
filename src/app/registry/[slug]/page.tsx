@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
-import type { Health } from "@/app/registry/types";
+import { toPublicAgent } from "@/app/registry/types";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import { getInferenceEvents, summarizeInferenceEvents } from "@/lib/inference-events";
@@ -36,9 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const agent = await getAgent(slug);
   if (!agent) return { title: "Agent not found — x402Books Registry" };
 
-  const desc = agent.adminNotes
-    ? `${agent.adminNotes.slice(0, 120)}…`
-    : `${agent.name} — financial intelligence from x402Books. Revenue, expenses, and profitability tracked on Base.`;
+  const desc = `${agent.name} — financial intelligence from x402Books. Revenue, expenses, and profitability tracked on Base.`;
 
   return {
     title: `${agent.name} (${agent.symbol}) — Agent Books · x402Books`,
@@ -76,29 +74,6 @@ async function getInferenceActivity(agentId: string): Promise<InferenceSummary |
   }
 }
 
-const HEALTH_RATIO: Partial<Record<Health, number>> = {
-  "Healthy":  0.72,
-  "Stable":   0.95,
-  "Watch":    1.35,
-  "At Risk":  1.90,
-};
-
-function deriveClassification(agent: Agent): SettlementClassification {
-  const score      = agent.financialActivityScore ?? 0;
-  const isActive   = score >= 10;
-  const ratio      = HEALTH_RATIO[agent.treasuryHealth] ?? 1.0;
-  const totalInflow  = isActive ? 100 : 0;
-  const totalOutflow = totalInflow * ratio;
-
-  return classifySettlementPattern({
-    totalInflow,
-    totalOutflow,
-    txCount:             isActive ? Math.max(10, score) : 0,
-    categories:          [],
-    walletRolesDeclared: (agent.wallets ?? []).length > 0,
-  });
-}
-
 export default async function AgentProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const agent = await getAgent(slug);
@@ -116,7 +91,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
     getAgentBooksHistory(slug, 90).catch((): AgentBooksSnapshot[] => []),
   ]);
 
-  // For attributed agents, derive classification from real books data
+  // Classification only derived from real on-chain data — never synthetic
   const classification = books.attributed
     ? classifySettlementPattern({
         totalInflow:         books.financials.revenue_usd,
@@ -130,7 +105,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
         })),
         walletRolesDeclared: books.wallets.declared > 0,
       })
-    : deriveClassification(agent);
+    : undefined;
 
   return (
     <ProfileClient

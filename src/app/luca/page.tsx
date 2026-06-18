@@ -318,14 +318,14 @@ export default function LucaPage() {
           <h2 className="lp-h2">Luca on Telegram.</h2>
           <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
             @AskLucaBot is Luca&rsquo;s public terminal. Submit a wallet address and Luca will return a
-            classified financial breakdown — revenue, expenses, net income, treasury health.
+            financial analysis — revenue, expenses, net income, treasury activity summary.
           </p>
         </div>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}>
           {[
             "Submit any Base wallet address",
             "Get revenue, expenses, net income",
-            "Treasury health classification",
+            "Treasury analysis summary",
             "Settlement pattern detection",
             "Ask questions about agent books",
           ].map((item) => (

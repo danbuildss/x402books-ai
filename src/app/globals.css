@@ -9290,12 +9290,13 @@ html, body {
 .reg-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
+  gap: 3px;
+  padding: 1px 7px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
+  letter-spacing: 0.01em;
 }
 
 /* Confidence */
@@ -10652,30 +10653,30 @@ html, body {
 .reg-row {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
+  gap: 10px;
+  padding: 9px 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   background: var(--surface);
   text-decoration: none;
   color: var(--ink);
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.12s, background 0.12s;
 }
 .reg-row:hover {
-  border-color: rgba(109,184,116,0.3);
+  border-color: rgba(109,184,116,0.25);
   background: var(--surface-soft);
 }
 
 .reg-row-name {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: baseline;
+  gap: 5px;
   min-width: 0;
-  flex: 0 0 160px;
+  flex: 0 0 150px;
 }
 
 .reg-row-agent-name {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink);
   white-space: nowrap;
@@ -10684,29 +10685,30 @@ html, body {
 }
 
 .reg-row-sym {
-  font-size: 0.7rem;
+  font-size: 0.67rem;
   color: var(--muted);
   font-weight: 400;
+  flex-shrink: 0;
 }
 
 .reg-row-badges {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex: 1;
-  flex-wrap: wrap;
   align-items: center;
+  overflow: hidden;
 }
 
 .reg-row-score-wrap {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  min-width: 36px;
+  min-width: 64px;
   flex-shrink: 0;
 }
 
 .reg-row-score {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--ink);
   line-height: 1;
@@ -10714,21 +10716,27 @@ html, body {
 }
 
 .reg-row-score-label {
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--muted);
-  line-height: 1;
+  line-height: 1.2;
+  margin-top: 1px;
 }
 
 .reg-row-score-empty {
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   color: var(--muted);
   font-weight: 400;
 }
 
 .reg-row-arrow {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--muted);
   flex-shrink: 0;
+  opacity: 0.5;
+}
+.reg-row:hover .reg-row-arrow {
+  opacity: 1;
+  color: var(--accent);
 }
 
 /* Filter + sort selects */
