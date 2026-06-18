@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
   for (const agent of attributed) {
     const slug = toSlug(agent.name);
     try {
-      // Clear in-memory cache so buildAgentBooks() runs a fresh Alchemy scan
-      invalidateBooksCache(slug, "30d");
+      // Clear both in-memory and DB cache so buildAgentBooks() runs a fresh scan
+      await invalidateBooksCache(slug, "30d");
       // Build fresh books (will update DB cache automatically)
       const books = await buildAgentBooks(agent, "30d");
       if (books.attributed) {

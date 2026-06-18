@@ -141,10 +141,13 @@ export async function buildAgentBooks(
   return data;
 }
 
-// Invalidate both in-memory and (via TTL expiry) the DB cache for a specific
-// slug+period. Call this before a force-refresh to ensure a fresh Alchemy scan.
-export function invalidateBooksCache(slug: string, period = "30d"): void {
+// Invalidate in-memory AND DB cache for a slug+period.
+// Must be awaited before calling buildAgentBooks() to guarantee a fresh scan.
+export async function invalidateBooksCache(slug: string, period = "30d"): Promise<void> {
   BOOKS_CACHE.delete(`${slug}:${period}`);
+  if (!hasSupabaseAdminEnv()) return;
+  const sb = getSupabaseAdminClient();
+  await sb.from("agent_books_cache").delete().eq("agent_slug", slug).eq("period", period);
 }
 
 // ── Internal computation ──────────────────────────────────────────────────────
