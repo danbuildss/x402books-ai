@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/effects";
 import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
+import { SiteFooter } from "@/components/site-footer";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
 
@@ -732,29 +733,7 @@ export function RegistryClient({
       <VerifyCTA />
 
       {/* ── Footer ── */}
-      <footer className="lp-footer">
-        <div className="lp-footer-inner">
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
-            <Link href="/registry">Registry</Link>
-            <Link href="/luca">Luca</Link>
-            <Link href="/developer">Developer</Link>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Docs</p>
-            <Link href="/docs#api">API Reference</Link>
-            <Link href="/docs#agent">Agent Guide</Link>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Community</p>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
-          </div>
-        </div>
-        <p className="lp-footer-copy">© 2026 x402Books AI. Not financial advice.</p>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
