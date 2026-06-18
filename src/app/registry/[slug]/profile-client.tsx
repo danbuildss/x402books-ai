@@ -13,6 +13,8 @@ import type { SettlementClassification, SettlementPattern } from "@/lib/luca-cla
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
+import { computeMomentum } from "@/lib/agent-momentum";
+import type { AgentMomentum } from "@/lib/agent-momentum";
 
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
@@ -1202,6 +1204,50 @@ function AgentBooksSparkline({
   );
 }
 
+function MomentumSection({ history }: { history: AgentBooksSnapshot[] }) {
+  const m = computeMomentum(history, 30);
+  if (!m) return null;
+
+  const rows = [
+    { label: "Revenue",    metric: m.revenue    },
+    { label: "Net Income", metric: m.net_income },
+    { label: "Expenses",   metric: m.expenses,  note: "lower is better" },
+    { label: "Treasury",   metric: m.treasury   },
+  ].filter((r): r is { label: string; metric: NonNullable<typeof r.metric>; note?: string } => r.metric !== null);
+
+  return (
+    <div style={{
+      padding: "16px 20px",
+      border: "1px solid var(--line)",
+      borderRadius: 10,
+      background: "var(--surface-soft)",
+      marginTop: 16,
+    }}>
+      <p style={{ margin: "0 0 14px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+        30-Day Momentum · {m.snapshot_count} snapshots
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
+        {rows.map(({ label, metric, note }) => {
+          const icon  = metric.direction === "growing" ? "↑" : metric.direction === "declining" ? "↓" : "→";
+          const color = metric.direction === "growing" ? "#6DB874" : metric.direction === "declining" ? "#ef4444" : "var(--muted)";
+          const pctLabel = metric.direction === "stable"
+            ? "stable"
+            : `${metric.pct > 0 ? "+" : ""}${metric.pct.toFixed(1)}%`;
+          return (
+            <div key={label}>
+              <p style={{ margin: "0 0 2px", fontSize: "0.72rem", color: "var(--muted)", fontWeight: 500 }}>{label}</p>
+              <p style={{ margin: 0, fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color }}>
+                {icon} {pctLabel}
+              </p>
+              {note && <p style={{ margin: "2px 0 0", fontSize: "0.62rem", color: "var(--muted)" }}>{note}</p>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[] }) {
   if (snapshots.length < 2) return null;
 
@@ -1364,6 +1410,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {/* Agent Books Historical Trend — only shown when 2+ snapshots exist */}
           {books?.attributed && booksHistory && booksHistory.length >= 2 && (
             <AgentBooksTrendSection snapshots={booksHistory} />
+          )}
+
+          {/* 30-Day Momentum — derived from snapshot history, never synthetic */}
+          {books?.attributed && booksHistory && booksHistory.length >= 2 && (
+            <MomentumSection history={booksHistory} />
           )}
 
           {/* Luca's Notes — research and analysis by Luca */}

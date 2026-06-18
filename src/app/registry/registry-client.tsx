@@ -9,6 +9,7 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
+import type { AgentMomentum } from "@/lib/agent-momentum";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
 
@@ -106,7 +107,24 @@ function fmtUSD(n: number): string {
 
 // ── Agent Row ─────────────────────────────────────────────────────────────────
 
-function AgentRow({ agent, economics }: { agent: PublicAgent; economics?: AgentGDPEntry }) {
+function MomentumBadge({ m }: { m: AgentMomentum }) {
+  const rev   = m.revenue;
+  const icon  = rev.direction === "growing" ? "↑" : rev.direction === "declining" ? "↓" : "→";
+  const color = rev.direction === "growing" ? "#6DB874" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
+  const label = rev.direction === "stable" ? "stable" : `${Math.abs(rev.pct).toFixed(0)}%`;
+  return (
+    <span title={`Revenue momentum (30d): ${rev.direction}`} style={{
+      fontSize: "0.67rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
+      border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
+      background: `color-mix(in srgb, ${color} 10%, transparent)`,
+      color, fontFamily: "monospace",
+    }}>
+      {icon} {label}
+    </span>
+  );
+}
+
+function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economics?: AgentGDPEntry; momentum?: AgentMomentum }) {
   const slug = toSlug(agent.name);
   return (
     <Link href={`/registry/${slug}`} className="reg-row">
@@ -130,6 +148,7 @@ function AgentRow({ agent, economics }: { agent: PublicAgent; economics?: AgentG
             Books
           </span>
         )}
+        {momentum && <MomentumBadge m={momentum} />}
       </div>
       <div className="reg-row-score-wrap">
         {economics ? (
@@ -496,11 +515,21 @@ export function RegistryClient({
 }) {
   const [agents]    = useState<PublicAgent[]>(initialAgents);
   const [economics] = useState<Record<string, AgentGDPEntry>>(initialEconomics);
+  const [momentum, setMomentum] = useState<Record<string, AgentMomentum>>({});
   const [search, setSearch]         = useState("");
   const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
   const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
   const [sortBy, setSortBy]         = useState<SortKey>("activity");
   const [page, setPage]             = useState(1);
+
+  useEffect(() => {
+    fetch("/api/registry/momentum")
+      .then((r) => r.json())
+      .then((data: { ok?: boolean; momentum?: Record<string, AgentMomentum> }) => {
+        if (data.ok && data.momentum) setMomentum(data.momentum);
+      })
+      .catch(() => {});
+  }, []);
 
   // Reset to page 1 whenever filters or sort change
   useEffect(() => { setPage(1); }, [search, ecoFilter, statusFilter, sortBy]);
@@ -662,7 +691,7 @@ export function RegistryClient({
           {paginated.length === 0 ? (
             <div className="reg-empty-cards">No agents match your filters.</div>
           ) : (
-            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} />)
+            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} momentum={momentum[toSlug(a.name)]} />)
           )}
         </div>
 

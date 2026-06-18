@@ -22,6 +22,8 @@ import {
   type TimeRange,
 } from "@/lib/ledger";
 import type { Agent } from "@/app/registry/types";
+import { computeMomentum } from "./agent-momentum";
+import type { AgentBooksSnapshot } from "./agent-books-history";
 
 const MAX_WALLETS = 6;
 
@@ -267,6 +269,7 @@ function buildSummary(
   netIncome: number,
   txCount: number,
   internalCount: number,
+  history?: AgentBooksSnapshot[],
 ): string {
   if (txCount === 0 && internalCount === 0) {
     return "No attributed financial activity detected yet.";
@@ -283,5 +286,31 @@ function buildSummary(
       `${internalCount} internal transfer${internalCount === 1 ? "" : "s"} between declared wallets excluded from the statement.`,
     );
   }
-  return parts.join(" ");
+  let summary = parts.join(" ");
+
+  if (history && history.length >= 2) {
+    const m = computeMomentum(history, 30);
+    if (m) {
+      const momentumParts: string[] = [];
+      if (m.revenue.direction !== "stable") {
+        const verb = m.revenue.direction === "growing" ? "grew" : "declined";
+        momentumParts.push(`Revenue ${verb} ${Math.abs(m.revenue.pct).toFixed(0)}% over 30 days.`);
+      }
+      if (m.expenses.direction !== "stable") {
+        const verb = m.expenses.direction === "growing" ? "increased" : "decreased";
+        momentumParts.push(`Expenses ${verb} ${Math.abs(m.expenses.pct).toFixed(0)}%.`);
+      }
+      if (m.net_income.direction !== "stable") {
+        const verb = m.net_income.direction === "growing" ? "expanded" : "contracted";
+        momentumParts.push(`Net income ${verb} ${Math.abs(m.net_income.pct).toFixed(0)}%.`);
+      }
+      if (m.treasury && m.treasury.direction !== "stable") {
+        const verb = m.treasury.direction === "growing" ? "grew" : "shrank";
+        momentumParts.push(`Treasury ${verb} ${Math.abs(m.treasury.pct).toFixed(0)}%.`);
+      }
+      if (momentumParts.length > 0) summary += " " + momentumParts.join(" ");
+    }
+  }
+
+  return summary;
 }
