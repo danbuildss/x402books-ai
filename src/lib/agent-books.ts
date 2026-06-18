@@ -24,6 +24,8 @@ import {
 import type { Agent } from "@/app/registry/types";
 import { computeMomentum } from "./agent-momentum";
 import type { AgentBooksSnapshot } from "./agent-books-history";
+import { isContractAddress } from "@/lib/alchemy";
+import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 
 const MAX_WALLETS = 6;
 
@@ -70,6 +72,46 @@ export type AgentBooksUnattributed = {
 const BOOKS_CACHE = new Map<string, { expires: number; data: AgentBooks | AgentBooksUnattributed }>();
 const BOOKS_CACHE_TTL = 10 * 60 * 1000;
 
+// DB cache TTL: 4 hours. Cron refreshes every 4h so this keeps data fresh
+// without triggering live Alchemy scans on every profile page load.
+const DB_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
+
+async function getDbCachedBooks(
+  slug: string,
+  period: string,
+): Promise<AgentBooks | AgentBooksUnattributed | null> {
+  if (!hasSupabaseAdminEnv()) return null;
+  const sb = getSupabaseAdminClient();
+  const { data } = await sb
+    .from("agent_books_cache")
+    .select("books_json, computed_at")
+    .eq("agent_slug", slug)
+    .eq("period", period)
+    .single();
+  if (!data) return null;
+  const age = Date.now() - new Date(data.computed_at as string).getTime();
+  if (age > DB_CACHE_TTL_MS) return null;
+  return data.books_json as AgentBooks | AgentBooksUnattributed;
+}
+
+async function setDbCachedBooks(
+  slug: string,
+  period: string,
+  books: AgentBooks | AgentBooksUnattributed,
+): Promise<void> {
+  if (!hasSupabaseAdminEnv()) return;
+  const sb = getSupabaseAdminClient();
+  await sb.from("agent_books_cache").upsert(
+    {
+      agent_slug: slug,
+      period,
+      books_json: books as unknown as Record<string, unknown>,
+      computed_at: new Date().toISOString(),
+    },
+    { onConflict: "agent_slug,period" },
+  );
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 export async function getAgentBySlug(slug: string): Promise<Agent | null> {
@@ -86,9 +128,24 @@ export async function buildAgentBooks(
   const cached = BOOKS_CACHE.get(cacheKey);
   if (cached && cached.expires > Date.now()) return cached.data;
 
+  // Check persistent DB cache before running a live Alchemy scan
+  const dbCached = await getDbCachedBooks(slug, period);
+  if (dbCached) {
+    BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data: dbCached });
+    return dbCached;
+  }
+
   const data = await computeAgentBooks(agent, period, slug);
   BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data });
+  // Persist to DB cache (fire-and-forget)
+  setDbCachedBooks(slug, period, data).catch(() => {});
   return data;
+}
+
+// Invalidate both in-memory and (via TTL expiry) the DB cache for a specific
+// slug+period. Call this before a force-refresh to ensure a fresh Alchemy scan.
+export function invalidateBooksCache(slug: string, period = "30d"): void {
+  BOOKS_CACHE.delete(`${slug}:${period}`);
 }
 
 // ── Internal computation ──────────────────────────────────────────────────────
@@ -138,10 +195,38 @@ async function computeAgentBooks(
     };
   }
 
+  // Check each wallet is an EOA, not a smart contract.
+  // Runs in parallel (~200ms overhead on first scan; cached reads skip this).
+  const apiKey = process.env.ALCHEMY_API_KEY ?? "";
+  const contractFlags = await Promise.all(
+    scannable.map((w) => isContractAddress(w.address, apiKey)),
+  );
+  const eoaWallets = scannable.filter((_, i) => !contractFlags[i]);
+
+  // Log any skipped contracts so they're visible in Vercel logs
+  const skippedContracts = scannable.filter((_, i) => contractFlags[i]);
+  if (skippedContracts.length > 0) {
+    console.warn(
+      `[books] Skipped ${skippedContracts.length} contract address(es) for ${agent.name}:`,
+      skippedContracts.map((w) => w.address),
+    );
+  }
+
+  // If contract detection removed every wallet, surface a clear error
+  if (eoaWallets.length === 0) {
+    return {
+      agent: agentMeta,
+      attributed: false,
+      reason: "wallets_declared_not_scannable",
+      message: "All declared wallets are smart contracts, not EOA wallets. Verify declared addresses.",
+      wallets: { declared: declared.length, analyzed: 0 },
+    };
+  }
+
   const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
 
   const scans = await Promise.all(
-    scannable.map((w) =>
+    eoaWallets.map((w) =>
       buildLedgerScan({ wallet: w.address, range: period, persist: false }),
     ),
   );
@@ -231,7 +316,7 @@ async function computeAgentBooks(
     ? round(treasuryBalance / expenses)
     : null;
 
-  const confidences = scannable.map((w) => (w.confidence ?? "").toLowerCase());
+  const confidences = eoaWallets.map((w) => (w.confidence ?? "").toLowerCase());
   const confidence: "high" | "medium" | "low" =
     confidences.length > 0 && confidences.every((c) => c === "verified")
       ? "high"
@@ -239,7 +324,7 @@ async function computeAgentBooks(
         ? "medium"
         : "low";
 
-  const fromManifest = scannable.some(
+  const fromManifest = eoaWallets.some(
     (w) => (w.evidenceSource ?? "").toLowerCase() === "manifest",
   );
 
@@ -249,8 +334,8 @@ async function computeAgentBooks(
     period,
     wallets: {
       declared: declared.length,
-      analyzed: scannable.length,
-      roles: [...new Set(scannable.map((w) => w.role ?? "unknown"))],
+      analyzed: eoaWallets.length,
+      roles: [...new Set(eoaWallets.map((w) => w.role ?? "unknown"))],
     },
     financials: {
       revenue_usd: round(revenue),

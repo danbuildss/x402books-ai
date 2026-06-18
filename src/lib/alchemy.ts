@@ -83,6 +83,28 @@ type AlchemyResponse = {
 
 const BASE_ALCHEMY_URL = "https://base-mainnet.g.alchemy.com/v2";
 
+// Returns true if the address is a deployed smart contract on Base.
+// On any fetch error, returns false — never block a legitimate EOA wallet.
+export async function isContractAddress(address: string, apiKey: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_ALCHEMY_URL}/${apiKey}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "eth_getCode",
+        params: [address, "latest"],
+      }),
+    });
+    const json = await res.json() as { result?: string };
+    const code = json.result ?? "0x";
+    return code !== "0x" && code !== "0x0";
+  } catch {
+    return false; // On error, assume EOA — don't block legitimate wallets
+  }
+}
+
 function parseTokenAmount(transfer: AlchemyTransfer) {
   const rawValue = transfer.rawContract?.value;
   // Default to 18 decimals (ERC-20 standard). USDC/USDT are exceptions at 6.
