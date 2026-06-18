@@ -1,6 +1,6 @@
 // GET /api/cron/refresh-books — refresh books for all attributed agents.
 //
-// Called every 4 hours by Vercel Cron (schedule: "0 */4 * * *").
+// Called daily at 2am UTC by Vercel Cron (schedule: "0 2 * * *").
 // Also callable manually via internal secret for testing.
 //
 // For each agent with declared wallets:
@@ -14,8 +14,6 @@ import { buildAgentBooks, invalidateBooksCache } from "@/lib/agent-books";
 import { saveAgentBooksSnapshot } from "@/lib/agent-books-history";
 import { internalAuth } from "@/lib/internal-auth";
 import { toSlug } from "@/app/registry/[slug]/slug";
-
-export const maxDuration = 300; // 5 min max (Vercel Pro)
 
 export async function GET(req: NextRequest) {
   // Accept Vercel cron secret OR internal secret
