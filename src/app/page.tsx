@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { FadeContent } from "@/components/effects";
 import { HomeHeader } from "./home-header";
+import { SiteFooter } from "@/components/site-footer";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import type { AgentGDP } from "@/lib/agent-gdp";
 
@@ -28,27 +29,6 @@ const ECO_COLORS: Record<string, string> = {
   EigenCloud: "#F97316",
   Base: "#4F46E5",
 };
-
-const SOCIAL = [
-  {
-    href: "https://x.com/x402Books",
-    label: "X (Twitter)",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.255 2.25H8.08l4.259 5.63L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z" />
-      </svg>
-    ),
-  },
-  {
-    href: "https://t.me/x402books",
-    label: "Telegram",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
-      </svg>
-    ),
-  },
-];
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -227,13 +207,13 @@ export default async function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
-            <p className="lp-eyebrow">x402Books · Agent Economy Intelligence</p>
+            <p className="lp-eyebrow">x402Books · Financial Identity for Autonomous Agents</p>
             <h1 className="lp-h1">
-              Financial Intelligence<br />
-              <em>for the Agent Economy.</em>
+              Financial Identity<br />
+              <em>for Autonomous Agents.</em>
             </h1>
             <p className="lp-hero-sub">
-              Track revenue, expenses, treasury activity, and financial history across autonomous agents. Every agent. Every wallet. Every dollar.
+              Autonomous agents need financial records. x402Books is the attribution layer that turns wallet activity into auditable books — revenue, expenses, treasury, and net income per agent.
             </p>
             <div className="lp-hero-actions">
               <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Agent Books</Link>
@@ -299,7 +279,7 @@ export default async function HomePage() {
             { num: "01", title: "Wallet Attribution", body: "Operators declare wallet roles — treasury, revenue, operator, fee, deployer. The manifest is the source of attribution." },
             { num: "02", title: "Registry", body: "Agent identity is indexed. Wallets are attributed. Roles are established. The registry is Layer 1." },
             { num: "03", title: "Agent Books", body: "Revenue, expenses, net income, and financial history are generated per agent. Internal transfers between own wallets are excluded." },
-            { num: "04", title: "Financial Intelligence", body: "Luca interprets the books. Revenue trends, expense concentration, treasury behavior, anomalies, growth signals." },
+            { num: "04", title: "Financial Intelligence", body: "Luca, an AI analyst, reads the attributed books and produces readable summaries — revenue trends, expense concentration, treasury health, growth signals." },
           ].map((s, i) => (
             <FadeContent key={s.num} delay={i * 80}>
               <div className="lp-step">
@@ -472,47 +452,7 @@ export default async function HomePage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="lp-footer">
-        <div className="lp-footer-top">
-          <div className="lp-footer-brand">
-            <a href="/" className="lp-brand lp-brand-sm" style={{ fontWeight: 700, fontSize: "1rem" }}>x402Books</a>
-            <p>Financial intelligence for the agent economy.</p>
-            <p className="lp-footer-builder">Built by <a href="https://x.com/danbuildss" target="_blank" rel="noreferrer">@danbuildss</a></p>
-            <div className="lp-footer-social">
-              {SOCIAL.map((s) => (
-                <a key={s.href} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="lp-social-icon">{s.icon}</a>
-              ))}
-            </div>
-          </div>
-          <div className="lp-footer-links">
-            <div>
-              <h4>Product</h4>
-              <Link href="/registry">Registry</Link>
-              <Link href="/leaderboard">Leaderboard</Link>
-              <Link href="/research">State of the Agent Economy</Link>
-              <Link href="/developer">API</Link>
-            </div>
-            <div>
-              <h4>Registry</h4>
-              <Link href="/registry">Browse agents</Link>
-              <Link href="/registry#verify">Claim profile</Link>
-              <Link href="/registry#verify">Submit Manifest</Link>
-              <Link href="/registry?eco=AEON">AEON</Link>
-              <Link href="/registry?eco=BANKR">BANKR</Link>
-            </div>
-            <div>
-              <h4>Community</h4>
-              <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
-              <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
-              <a href="https://t.me/x402books" target="_blank" rel="noreferrer">Telegram</a>
-            </div>
-          </div>
-        </div>
-        <div className="lp-footer-bottom">
-          <span>© 2026 x402Books. All rights reserved.</span>
-          <span>Financial analysis generated by Luca.</span>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
