@@ -1,7 +1,7 @@
 // GET /api/cron/refresh-books — refresh books for all attributed agents.
 //
-// Called daily at 2am UTC by Vercel Cron (schedule: "0 2 * * *").
-// Also callable manually via internal secret for testing.
+// Called by Hermes (external scheduler) via x-internal-secret header.
+// Also callable manually for testing with the same header.
 //
 // For each agent with declared wallets:
 //   1. Invalidates the in-memory cache entry so the next build triggers a fresh scan
@@ -16,13 +16,7 @@ import { internalAuth } from "@/lib/internal-auth";
 import { toSlug } from "@/app/registry/[slug]/slug";
 
 export async function GET(req: NextRequest) {
-  // Accept Vercel cron secret OR internal secret
-  const cronSecret = process.env.CRON_SECRET;
-  const authHeader = req.headers.get("authorization") ?? "";
-  const bearerToken = authHeader.replace("Bearer ", "");
-  const isVercelCron = Boolean(cronSecret && bearerToken === cronSecret);
-
-  if (!isVercelCron && !internalAuth(req)) {
+  if (!internalAuth(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
