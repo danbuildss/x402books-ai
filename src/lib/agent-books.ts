@@ -24,7 +24,6 @@ import {
 import type { Agent } from "@/app/registry/types";
 import { computeMomentum } from "./agent-momentum";
 import type { AgentBooksSnapshot } from "./agent-books-history";
-import { isContractAddress } from "@/lib/alchemy";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 
 const MAX_WALLETS = 6;
@@ -195,38 +194,10 @@ async function computeAgentBooks(
     };
   }
 
-  // Check each wallet is an EOA, not a smart contract.
-  // Runs in parallel (~200ms overhead on first scan; cached reads skip this).
-  const apiKey = process.env.ALCHEMY_API_KEY ?? "";
-  const contractFlags = await Promise.all(
-    scannable.map((w) => isContractAddress(w.address, apiKey)),
-  );
-  const eoaWallets = scannable.filter((_, i) => !contractFlags[i]);
-
-  // Log any skipped contracts so they're visible in Vercel logs
-  const skippedContracts = scannable.filter((_, i) => contractFlags[i]);
-  if (skippedContracts.length > 0) {
-    console.warn(
-      `[books] Skipped ${skippedContracts.length} contract address(es) for ${agent.name}:`,
-      skippedContracts.map((w) => w.address),
-    );
-  }
-
-  // If contract detection removed every wallet, surface a clear error
-  if (eoaWallets.length === 0) {
-    return {
-      agent: agentMeta,
-      attributed: false,
-      reason: "wallets_declared_not_scannable",
-      message: "All declared wallets are smart contracts, not EOA wallets. Verify declared addresses.",
-      wallets: { declared: declared.length, analyzed: 0 },
-    };
-  }
-
   const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
 
   const scans = await Promise.all(
-    eoaWallets.map((w) =>
+    scannable.map((w) =>
       buildLedgerScan({ wallet: w.address, range: period, persist: false }),
     ),
   );
@@ -316,7 +287,7 @@ async function computeAgentBooks(
     ? round(treasuryBalance / expenses)
     : null;
 
-  const confidences = eoaWallets.map((w) => (w.confidence ?? "").toLowerCase());
+  const confidences = scannable.map((w) => (w.confidence ?? "").toLowerCase());
   const confidence: "high" | "medium" | "low" =
     confidences.length > 0 && confidences.every((c) => c === "verified")
       ? "high"
@@ -324,7 +295,7 @@ async function computeAgentBooks(
         ? "medium"
         : "low";
 
-  const fromManifest = eoaWallets.some(
+  const fromManifest = scannable.some(
     (w) => (w.evidenceSource ?? "").toLowerCase() === "manifest",
   );
 
@@ -334,8 +305,8 @@ async function computeAgentBooks(
     period,
     wallets: {
       declared: declared.length,
-      analyzed: eoaWallets.length,
-      roles: [...new Set(eoaWallets.map((w) => w.role ?? "unknown"))],
+      analyzed: scannable.length,
+      roles: [...new Set(scannable.map((w) => w.role ?? "unknown"))],
     },
     financials: {
       revenue_usd: round(revenue),
