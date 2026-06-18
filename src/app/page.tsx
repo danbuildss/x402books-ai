@@ -119,11 +119,13 @@ function HeroAgentCard({ gdp }: { gdp: AgentGDP | null }) {
           </span>
         </div>
         <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5, fontStyle: "italic" }}>
-          {net > 0
-            ? "Revenue exceeds expenses. Settlement patterns indicate active operational finance."
+          {top.tx_count === 0 || (top.revenue_usd === 0 && top.expenses_usd === 0)
+            ? "No attributed activity in this period."
+            : net > 0
+            ? "Revenue exceeds expenses. Agent is operating at a surplus."
             : net < 0
-            ? "Expenses exceed revenue. Agent is in cash burn territory."
-            : "Revenue and expenses are balanced. Agent is at break-even."}
+            ? "Expenses exceed revenue. Agent is operating at a deficit."
+            : "Revenue and expenses are balanced."}
         </p>
       </div>
       <div style={{ padding: "10px 18px", borderTop: "1px solid var(--line)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -193,9 +195,11 @@ function TopAgentsTable({ gdp }: { gdp: AgentGDP }) {
 
 export default async function HomePage() {
   let gdp: AgentGDP | null = null;
+  let gdpFailed = false;
   try {
     gdp = await getAgentGDP();
   } catch {
+    gdpFailed = true;
     // GDP unavailable — page still renders without live numbers
   }
 
@@ -244,6 +248,11 @@ export default async function HomePage() {
           <p style={{ marginTop: 16, fontSize: "0.72rem", color: "var(--muted)" }}>
             Live data from attributed agents. Updated hourly. Attribution requires a declared wallet manifest.
           </p>
+          {gdpFailed && (
+            <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 8 }}>
+              Economic data temporarily unavailable. Updated hourly.
+            </p>
+          )}
         </FadeContent>
       </section>
 

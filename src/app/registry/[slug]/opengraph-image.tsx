@@ -18,11 +18,11 @@ async function getAgent(slug: string): Promise<Agent | null> {
 }
 
 const HEALTH_COLOR: Record<string, string> = {
-  Healthy:  "#16a34a",
-  Stable:   "#2563eb",
-  Watch:    "#d97706",
-  "At Risk": "#dc2626",
-  Pending:  "#52525b",
+  Active:     "#16a34a",
+  Stable:     "#2563eb",
+  Unverified: "#d97706",
+  Inactive:   "#dc2626",
+  Pending:    "#52525b",
 };
 
 export default async function OgImage({
@@ -53,7 +53,6 @@ export default async function OgImage({
 
   const health = agent.treasuryHealth ?? "Pending";
   const healthColor = HEALTH_COLOR[health] ?? "#52525b";
-  const score = agent.financialActivityScore;
   const verdict = agent.adminNotes
     ? agent.adminNotes.slice(0, 180) + (agent.adminNotes.length > 180 ? "…" : "")
     : null;
@@ -162,17 +161,12 @@ export default async function OgImage({
           alignItems: "center",
         }}
       >
-        {score !== null ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ color: "#555", fontSize: 17 }}>Financial Activity</span>
-            <span style={{ color: "#fff", fontSize: 30, fontWeight: 700 }}>
-              {score}
-              <span style={{ color: "#555", fontSize: 20, fontWeight: 400 }}>/100</span>
-            </span>
-          </div>
-        ) : (
-          <span style={{ color: "#333", fontSize: 17 }}>Pending review</span>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ color: "#555", fontSize: 17 }}>Status</span>
+          <span style={{ color: healthColor, fontSize: 22, fontWeight: 700 }}>
+            {agent.verificationStatus}
+          </span>
+        </div>
         <span style={{ color: "#333", fontSize: 17 }}>x402books.xyz</span>
       </div>
     </div>,

@@ -15,10 +15,10 @@ function toSlug(name: string) {
 }
 
 const HEALTH_RATIO: Record<string, number> = {
-  Healthy:  0.72,
-  Stable:   0.95,
-  Watch:    1.35,
-  "At Risk": 1.90,
+  Active:     0.72,
+  Stable:     0.95,
+  Unverified: 1.35,
+  Inactive:   1.90,
 };
 
 function buildVerdict(
@@ -35,14 +35,14 @@ function buildVerdict(
     parts.push(firstNote + ".");
   }
 
-  // Treasury health
+  // Treasury activity status (descriptive only)
   const health = agent.treasuryHealth;
   if (health && health !== "Pending") {
     const healthMap: Record<string, string> = {
-      Healthy:  "Treasury healthy.",
-      Stable:   "Treasury stable.",
-      Watch:    "Treasury under watch — elevated outflow ratio.",
-      "At Risk": "Treasury at risk — outflows significantly exceed inflows.",
+      Active:     "Treasury activity detected.",
+      Stable:     "Treasury stable.",
+      Unverified: "Treasury activity unverified — elevated outflow ratio.",
+      Inactive:   "No treasury activity detected — outflows significantly exceed inflows.",
     };
     if (healthMap[health]) parts.push(healthMap[health]);
   }
@@ -79,19 +79,6 @@ function buildVerdict(
   // Inference activity
   if (inference && inference.requestCount > 0) {
     parts.push(`Inference activity: ${inference.requestCount} request${inference.requestCount !== 1 ? "s" : ""} in 30d via ${inference.primaryProvider ?? "unknown provider"}.`);
-  }
-
-  // Financial activity score
-  const score = agent.financialActivityScore;
-  if (score !== null) {
-    const label = score >= 70 ? "High" : score >= 40 ? "Moderate" : "Low";
-    parts.push(`${label} financial activity — ${score}/100.`);
-  }
-
-  // Partnership fit
-  const fit = agent.partnershipFitScore;
-  if (fit !== null && fit >= 80) {
-    parts.push(`Strong partnership fit score: ${fit}/100.`);
   }
 
   return parts.length > 0
@@ -145,15 +132,14 @@ export async function POST(req: NextRequest) {
   const inference = inferenceEvents.length > 0 ? summarizeInferenceEvents(slug, inferenceEvents, 30) : null;
 
   // Derive classification
-  const score       = agent.financialActivityScore ?? 0;
-  const isActive    = score >= 10;
+  const isActive    = (agent.wallets ?? []).length > 0;
   const ratio       = HEALTH_RATIO[agent.treasuryHealth ?? ""] ?? 1.0;
   const totalInflow = isActive ? 100 : 0;
 
   const classification = classifySettlementPattern({
     totalInflow,
     totalOutflow:        totalInflow * ratio,
-    txCount:             isActive ? Math.max(10, score) : 0,
+    txCount:             isActive ? 10 : 0,
     categories:          [],
     walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });

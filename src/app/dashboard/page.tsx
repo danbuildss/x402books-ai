@@ -12,8 +12,6 @@ type AgentProfile = {
   ecosystem: string | null;
   verificationStatus: string;
   treasuryHealth: string;
-  financialActivityScore: number | null;
-  partnershipFitScore: number | null;
   wallets: { address: string; label: string }[];
   xHandle: string | null;
 };
@@ -25,11 +23,13 @@ const STATUS_COLOR: Record<string, string> = {
   Candidate:      "var(--st-muted)",
 };
 
+// Descriptive status — no judgment implied
 const HEALTH_COLOR: Record<string, string> = {
-  Healthy:  "var(--st-green)",
-  Stable:   "var(--st-green)",
-  Watch:    "#f59e0b",
-  "At Risk": "#ef4444",
+  Active:     "var(--st-green)",
+  Stable:     "var(--st-green)",
+  Inactive:   "var(--st-muted)",
+  Unverified: "#f59e0b",
+  Pending:    "var(--st-muted)",
 };
 
 function StatusPill({ status }: { status: string }) {
@@ -42,19 +42,6 @@ function StatusPill({ status }: { status: string }) {
     }}>
       {status}
     </span>
-  );
-}
-
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const color = value >= 70 ? "var(--st-green)" : value >= 40 ? "var(--st-blue)" : "var(--st-muted)";
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 12, color: "var(--st-muted)", width: 130, flexShrink: 0 }}>{label}</span>
-      <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.07)", borderRadius: 99, overflow: "hidden" }}>
-        <div style={{ width: `${value}%`, height: "100%", background: color, borderRadius: 99 }} />
-      </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--st-text)", width: 24, textAlign: "right" }}>{value}</span>
-    </div>
   );
 }
 
@@ -85,14 +72,6 @@ function AgentCard({ agent }: { agent: AgentProfile }) {
         </div>
       </div>
 
-      {/* Scores */}
-      {(agent.financialActivityScore !== null || agent.partnershipFitScore !== null) && (
-        <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--st-border)", display: "flex", flexDirection: "column", gap: 8 }}>
-          {agent.financialActivityScore !== null && <ScoreBar label="Financial Activity" value={agent.financialActivityScore} />}
-          {agent.partnershipFitScore !== null && <ScoreBar label="Partnership Fit" value={agent.partnershipFitScore} />}
-        </div>
-      )}
-
       {/* Wallets */}
       {agent.wallets.length > 0 && (
         <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--st-border)" }}>
@@ -115,10 +94,6 @@ function AgentCard({ agent }: { agent: AgentProfile }) {
         <Link href={`/registry/${slug}`} target="_blank"
           style={{ fontSize: 12, fontWeight: 600, color: "var(--st-green)", textDecoration: "none", padding: "5px 12px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "color-mix(in srgb, var(--st-green) 8%, transparent)" }}>
           View public profile →
-        </Link>
-        <Link href={`/registry/${slug}/card`} target="_blank"
-          style={{ fontSize: 12, fontWeight: 600, color: "var(--st-muted)", textDecoration: "none", padding: "5px 12px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-bg)" }}>
-          Embeddable card
         </Link>
       </div>
     </div>

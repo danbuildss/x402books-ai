@@ -28,7 +28,9 @@ export type CommunicationIdentity = {
   labels: CommLabel[];
   notes?: string | null;
 };
-export type Health = "Healthy" | "Stable" | "Watch" | "At Risk" | "Pending";
+// Health values are purely descriptive — based on on-chain activity patterns only.
+// No judgment or rating implied.
+export type Health = "Active" | "Inactive" | "Unverified" | "Pending" | "Stable";
 export type VerificationStatus = "Candidate" | "Needs Verification" | "Wallets Declared" | "Claimed" | "Verified" | "Luca Managed";
 export type WalletLabel =
   | "candidate wallet"
@@ -61,9 +63,7 @@ export type Agent = {
   wallets: AgentWallet[];
   verificationStatus: VerificationStatus;
   evidenceSources: string[];
-  financialActivityScore: number | null; // 0–100 — internal CRM, not exposed publicly
-  treasuryHealth: Health;                // manually set — not exposed publicly
-  partnershipFitScore: number | null;    // internal CRM, not exposed publicly
+  treasuryHealth: Health;                // descriptive activity status — not a rating
   outreachStatus: OutreachStatus | null; // internal CRM, not exposed publicly
   lastChecked: string | null;
   adminNotes: string | null;             // internal — use lucaVerdict in PublicAgent

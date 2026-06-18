@@ -142,7 +142,7 @@ export async function GET() {
   const rows: AgentRow[] = AGENTS.map((a) => ({
     verification_status:      a.verificationStatus,
     ecosystem:                a.ecosystem,
-    financial_activity_score: a.financialActivityScore,
+    financial_activity_score: null,
     last_checked:             null,
   }));
 

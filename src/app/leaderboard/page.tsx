@@ -212,13 +212,20 @@ function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number })
 
 export default async function LeaderboardPage() {
   let gdp = null;
+  let gdpFailed = false;
   try {
     gdp = await getAgentGDP();
   } catch {
+    gdpFailed = true;
     // renders empty state
   }
 
-  const history = await getGDPHistory(90).catch(() => [] as import("@/lib/gdp-history").GDPSnapshot[]);
+  const historyPromise = getGDPHistory(90);
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("timeout")), 5000)
+  );
+  const history = await Promise.race([historyPromise, timeoutPromise])
+    .catch(() => [] as GDPSnapshot[]);
 
   const agents = gdp?.all_attributed ?? [];
   const hasData = agents.length > 0;
@@ -354,6 +361,23 @@ export default async function LeaderboardPage() {
             <Link href="/registry#verify" className="lp-btn-primary">Submit Manifest →</Link>
           </div>
         )}
+
+
+        {/* GDP failure note */}
+        {gdpFailed && (
+          <div style={{
+            marginTop: 20,
+            padding: "12px 16px",
+            border: "1px solid var(--line)",
+            borderRadius: 8,
+            background: "var(--surface-soft)",
+            fontSize: "0.78rem",
+            color: "var(--muted)",
+          }}>
+            Economic data temporarily unavailable. Updated hourly.
+          </div>
+        )}
+
 
         {/* Period note */}
         <p style={{ marginTop: 14, fontSize: "0.7rem", color: "var(--muted)", fontStyle: "italic" }}>

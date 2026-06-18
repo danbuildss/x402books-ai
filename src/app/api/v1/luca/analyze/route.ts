@@ -16,6 +16,20 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+// ── Attribution confidence score (replaces financial_activity_score) ─────────
+
+function transparencyScoreForAgent(agent: Agent): number {
+  let s = 0;
+  const wallets = agent.wallets ?? [];
+  if (wallets.length > 0) s += 30;
+  if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 40;
+  else if (agent.verificationStatus === "Claimed")          s += 30;
+  else if (agent.verificationStatus === "Wallets Declared") s += 20;
+  if (agent.evidenceSources.length > 0) s += 20;
+  if (agent.adminNotes) s += 10;
+  return Math.min(100, s);
+}
+
 // ── Registry helpers ──────────────────────────────────────────────────────────
 
 async function findAgentBySlug(slug: string): Promise<Agent | null> {
@@ -43,10 +57,10 @@ async function findAgentByWallet(wallet: string): Promise<Agent | null> {
 // ── Health ratio (from profile page pattern) ──────────────────────────────────
 
 const HEALTH_RATIO: Record<string, number> = {
-  "Healthy": 0.72,
-  "Stable":  0.95,
-  "Watch":   1.35,
-  "At Risk": 1.90,
+  "Active":     0.72,
+  "Stable":     0.95,
+  "Unverified": 1.35,
+  "Inactive":   1.90,
 };
 
 // ── Agent-ID path (fast: registry + DB only, no wallet scan) ─────────────────
@@ -74,8 +88,7 @@ async function analyzeByAgentId(agentId: string) {
     : null;
 
   // Derive classification from registry health signal
-  const score      = agent.financialActivityScore ?? 0;
-  const isActive   = score >= 10;
+  const isActive   = (agent.wallets ?? []).length > 0;
   const ratio      = HEALTH_RATIO[agent.treasuryHealth ?? ""] ?? 1.0;
   const totalInflow  = isActive ? 100 : 0;
   const totalOutflow = totalInflow * ratio;
@@ -83,7 +96,7 @@ async function analyzeByAgentId(agentId: string) {
   const classification = classifySettlementPattern({
     totalInflow,
     totalOutflow,
-    txCount:             isActive ? Math.max(10, score) : 0,
+    txCount:             isActive ? 10 : 0,
     categories:          [],
     walletRolesDeclared: agent.wallets.length > 0,
   });
@@ -121,7 +134,6 @@ async function analyzeByAgentId(agentId: string) {
       net:     economicSummary?.netAgentPosition ?? null,
     },
     activity: {
-      score:   agent.financialActivityScore ?? null,
       pattern: classification.patterns[0] ?? "dormant",
       signals: classification.signals,
     },
@@ -139,12 +151,8 @@ async function analyzeByAgentId(agentId: string) {
       role:     w.label,
       verified: walletsVerified,
     })),
-    // Internal CRM fields — never include in API responses or client bundles.
-    // These are stripped by toPublicAgent() before any data reaches the client.
-    // financial_activity_score is surfaced here as a derived activity signal (auth-gated partner API only).
-    // partnership_fit and outreach fields are strictly internal and must not appear in any response.
     scores: {
-      financial_activity: agent.financialActivityScore ?? null,
+      attribution_confidence: transparencyScoreForAgent(agent),
     },
     verdict,
   });
@@ -210,7 +218,6 @@ async function analyzeByWallet(wallet: string) {
       net:     scan.summary.netFlow,
     },
     activity: {
-      score:   agent?.financialActivityScore ?? null,
       pattern: classification.patterns[0] ?? "dormant",
       signals: classification.signals,
     },
@@ -226,12 +233,8 @@ async function analyzeByWallet(wallet: string) {
           new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()
         ).map((w) => ({ address: w.address, role: w.label, verified: agentVerified }))
       : [{ address: wallet, role: "unknown", verified: false }],
-    // Internal CRM fields — never include in API responses or client bundles.
-    // These are stripped by toPublicAgent() before any data reaches the client.
-    // financial_activity_score is surfaced here as a derived activity signal (auth-gated partner API only).
-    // partnership_fit and outreach fields are strictly internal and must not appear in any response.
     scores: {
-      financial_activity: agent?.financialActivityScore ?? null,
+      attribution_confidence: agent ? transparencyScoreForAgent(agent) : null,
     },
     verdict,
   });
