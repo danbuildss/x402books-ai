@@ -10161,7 +10161,9 @@ html, body {
   .reg-card-header { gap: 8px; padding: 10px 10px; }
   .reg-card-name-group { min-width: 80px; }
   .reg-card-badges { gap: 4px; }
-  .reg-card-score-hint { display: none; }
+  .reg-card-score-hint { min-width: 28px; }
+  .reg-score-hint-val  { font-size: 11px; }
+  .reg-score-hint-label { display: none; }
   .reg-score-label { min-width: 110px; font-size: 11px; }
   .reg-status-filter { display: none; }
 }
@@ -10795,6 +10797,8 @@ html, body {
 /* ── Leaderboard ─────────────────────────────────────────────────────────── */
 .ldb-row:hover { background: var(--surface-soft); }
 @media (max-width: 700px) {
-  .ldb-row { grid-template-columns: 28px 1fr 80px !important; }
-  .ldb-row > *:nth-child(n+4) { display: none; }
+  .ldb-row    { grid-template-columns: 28px 1fr 80px !important; }
+  .ldb-header { grid-template-columns: 28px 1fr 80px !important; }
+  .ldb-row    > *:nth-child(n+4) { display: none; }
+  .ldb-header > *:nth-child(n+4) { display: none; }
 }

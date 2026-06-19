@@ -279,13 +279,30 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
         )}
 
         {/* Attribution source tag */}
-        <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
             {books.attribution.source === "manifest" ? "Declared manifest" : "Registry attribution"}
           </span>
-          <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: books.attribution.confidence === "high" ? "#6DB874" : "var(--muted)" }}>
-            {books.attribution.confidence} confidence
-          </span>
+          {(() => {
+            const c = books.attribution.confidence;
+            const color = c === "high" ? "#6DB874" : c === "medium" ? "#F59E0B" : "#ef4444";
+            const icon  = c === "high" ? "✓" : c === "medium" ? "~" : "⚠";
+            const tip   = c === "high"
+              ? "Wallets declared via signed manifest"
+              : c === "medium"
+              ? "Wallets inferred from public data"
+              : "Unverified — declaration unconfirmed";
+            return (
+              <span title={tip} style={{
+                fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, cursor: "default",
+                background: `color-mix(in srgb, ${color} 10%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+                color,
+              }}>
+                {icon} {c} confidence
+              </span>
+            );
+          })()}
         </div>
       </div>
     </section>
