@@ -60,8 +60,12 @@ export function stripMention(text: string): string {
 }
 
 export function isGenuineQuestion(text: string): boolean {
-  // Strip salutations ("Hey, analyze AEON" → "analyze AEON") before scoring
-  const clean = stripMention(text).replace(SALUTATION, "").replace(/\s+/g, " ").trim();
+  // Strip salutations and leading punctuation ("hey , analyze AEON" → "analyze AEON")
+  const clean = stripMention(text)
+    .replace(SALUTATION, "")
+    .replace(/^[^a-zA-Z0-9]+/, "")  // strip orphaned commas/punctuation left by mention removal
+    .replace(/\s+/g, " ")
+    .trim();
   const words = clean.split(/\s+/).filter(Boolean);
 
   if (words.length < 2) return false;
