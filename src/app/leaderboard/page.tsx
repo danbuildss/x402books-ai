@@ -323,7 +323,7 @@ export default async function LeaderboardPage() {
           <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
 
             {/* Table header */}
-            <div style={{
+            <div className="ldb-header" style={{
               display: "grid",
               gridTemplateColumns: "40px 1fr 100px 110px 110px 100px 70px",
               gap: 12,
