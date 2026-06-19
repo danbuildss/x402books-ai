@@ -164,7 +164,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
             }}>
               {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
             </span>
-            <span className="reg-row-score-label">30d rev / net</span>
+            <span className="reg-row-score-label">30d op. rev / net</span>
           </div>
         ) : (
           <span className="reg-row-score-empty">—</span>
