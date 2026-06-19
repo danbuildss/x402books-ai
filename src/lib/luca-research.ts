@@ -155,14 +155,24 @@ export async function generateEconomyReport(
 
 You are writing the ${type} "State of the Agent Economy" report for ${label}.
 
-── ON-CHAIN FINANCIAL DATA (x402Books, last 30 days) ──
-Total Revenue: ${fmtUSD(gdp.total_revenue_usd)}
+── CRITICAL FINANCIAL ACCURACY RULES ──
+ALL revenue figures below are operating revenue only. They have already been filtered to exclude:
+- Capital injections (single inflows > $10,000 from counterparties with fewer than 3 prior interactions)
+- Bridge transfers (cross-chain capital movement via Across, Stargate, Hop, Wormhole, deBridge, Base bridge)
+- Ecosystem grants (Base Grants, OP Foundation, Virtuals treasury inflows)
+- Token distributions (airdrops, LP reward claims, non-stablecoin distributions)
+- DEX swaps (Uniswap, Aerodrome, 1inch, Odos, Paraswap, PancakeSwap flows)
+
+NEVER present gross inflow as revenue. NEVER describe quarantined amounts as revenue. The numbers below are conservative by design — they represent confirmed operating activity only. If revenue appears low, this may reflect attribution coverage (only ${gdp.attributed_agents} of ${gdp.total_agents} indexed agents have declared wallet manifests), not actual economic inactivity. State this explicitly when relevant.
+
+── ON-CHAIN FINANCIAL DATA (x402Books, last 30 days — operating revenue only) ──
+Total Operating Revenue: ${fmtUSD(gdp.total_revenue_usd)}
 Total Expenses: ${fmtUSD(gdp.total_expenses_usd)}
 Net Income: ${fmtUSD(gdp.total_net_income_usd)}
-Attributed Agents: ${gdp.attributed_agents} of ${gdp.total_agents} indexed (${unattributed} unattributed)
+Attributed Agents: ${gdp.attributed_agents} of ${gdp.total_agents} indexed (${unattributed} unattributed — excluded from all figures)
 Attributed Wallets: ${gdp.attributed_wallets}
 
-Top Agents by Revenue:
+Top Agents by Operating Revenue:
 ${topAgentsText}
 
 ${researchContext ? `── REAL-TIME RESEARCH (Grok) ──\n${researchContext}\n\nUse this context to add real-world color to the report. Cross-reference with on-chain data. Prioritize on-chain numbers over any figures from external sources.\n` : ""}
@@ -171,7 +181,7 @@ Style: Bloomberg Intelligence analyst. Cold. Precise. Factual. No hype. No marke
 Write as Luca — an analyst who has read both the books and the news.
 
 Structure (prose only — no headers, no bullets, no markdown):
-1. Opening paragraph: Agent GDP figure, what it represents, attribution coverage context
+1. Opening paragraph: Agent GDP figure (operating revenue only), what it represents, attribution coverage context
 2. Top performers: specific revenue/expense/net income for named agents${researchContext ? "; weave in relevant real-world context from the research" : ""}
 3. Expense or treasury patterns visible in the on-chain data${researchContext ? "; any ecosystem news that explains or contextualizes the numbers" : ""}
 4. Attribution gap: ${unattributed} of ${gdp.total_agents} agents are unattributed — what this means for the completeness of the data

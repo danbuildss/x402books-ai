@@ -317,7 +317,7 @@ async function computeAgentBooks(
 
   for (const tx of allIncomeTxs) {
     const counterparty = (tx.counterparty || tx.from).toLowerCase();
-    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 1;
+    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 0;
     const isStablecoin = STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase());
     const usd = usdOf(tx);
 
@@ -496,6 +496,7 @@ async function computeAgentBooks(
     },
     luca_summary: buildSummary(
       agent.name, period, revenue, expenses, netIncome, operational.length, internal.length,
+      undefined, quarantinedUsd, overallConfidence,
     ),
     generated_at: new Date().toISOString(),
   };
@@ -510,21 +511,33 @@ function buildSummary(
   txCount: number,
   internalCount: number,
   history?: AgentBooksSnapshot[],
+  quarantinedUsd?: number,
+  overallConfidence?: BooksConfidence,
 ): string {
   if (txCount === 0 && internalCount === 0) {
     return "No attributed financial activity detected yet.";
   }
   const fmt = (n: number) => `$${Math.abs(n).toFixed(2)}`;
   const parts = [
-    `${name} recorded ${fmt(revenue)} in revenue and ${fmt(expenses)} in expenses over ${period} (${txCount} transactions).`,
+    `${name} recorded ${fmt(revenue)} in operating revenue and ${fmt(expenses)} in expenses over ${period} (${txCount} transactions).`,
     netIncome >= 0
       ? `Net income is positive at ${fmt(netIncome)}.`
       : `Net income is negative at -${fmt(netIncome)} — spending exceeds revenue.`,
   ];
+  if (quarantinedUsd && quarantinedUsd > 0) {
+    parts.push(
+      `${fmt(quarantinedUsd)} quarantined from gross inflows — not counted as operating revenue.`,
+    );
+  }
   if (internalCount > 0) {
     parts.push(
       `${internalCount} internal transfer${internalCount === 1 ? "" : "s"} between declared wallets excluded from the statement.`,
     );
+  }
+  if (overallConfidence === "low") {
+    parts.push("Data confidence is low — figures are directional, not precise.");
+  } else if (overallConfidence === "medium") {
+    parts.push("Data confidence is medium — verify wallet roles for higher precision.");
   }
   let summary = parts.join(" ");
 
