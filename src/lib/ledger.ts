@@ -46,14 +46,20 @@ export type LedgerCategory =
   | "fallback_provider_spend"
   | "api_cost"
   | "agent_revenue"
-  | "unknown_agent_activity";
+  | "unknown_agent_activity"
+  | "bridge_transfer"
+  | "dex_swap";
 
 export type LedgerRiskFlag =
   | "none"
   | "duplicate"
   | "unusual_amount"
   | "high_frequency"
-  | "unknown_counterparty";
+  | "unknown_counterparty"
+  | "suspected_capital_injection"
+  | "grant_inflow"
+  | "bridge_receipt"
+  | "token_distribution";
 
 export type CounterpartySummary = {
   address: string;
@@ -119,6 +125,8 @@ export const categoryLabels: Record<LedgerCategory, string> = {
   api_cost:                "API Cost",
   agent_revenue:           "Agent Revenue",
   unknown_agent_activity:  "Unknown Agent Activity",
+  bridge_transfer:         "Bridge Transfer",
+  dex_swap:                "DEX Swap",
 };
 
 export function isValidWalletAddress(address: string) {
