@@ -46,15 +46,25 @@ export function tierLabel(tier: ResponseTier): string {
 const QUESTION_WORD = /^(what|how|why|when|who|where|can|does|is|are|will|would|should|could|tell|explain|do|has|have|did|analyze|show|give)\b/i;
 const NOISE_PATTERN = /^(gm|gm!|wagmi|lfg|let'?s go|congrats|congratulations|nice|lol|wow|amazing|great|awesome|love this|based|bullish|bearish|🚀|💎|🔥|\+1)/i;
 
+const SALUTATION = /^(hey|hi|hello|yo)[,!]?\s*/i;
+
 export function stripMention(text: string): string {
-  return text.replace(/@AskLucaAI/gi, "").replace(/@\w+/g, "").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/@AskLucaAI/gi, "")
+    .replace(/@\w+/g, "")
+    .replace(/,\s*,/g, ",")   // "Hey, , analyze" → "Hey, analyze"
+    .replace(/,\s*$/, "")     // trailing comma
+    .replace(/^\s*,\s*/, "")  // leading comma
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function isGenuineQuestion(text: string): boolean {
-  const clean = stripMention(text);
+  // Strip salutations ("Hey, analyze AEON" → "analyze AEON") before scoring
+  const clean = stripMention(text).replace(SALUTATION, "").replace(/\s+/g, " ").trim();
   const words = clean.split(/\s+/).filter(Boolean);
 
-  if (words.length < 5) return false;
+  if (words.length < 2) return false;
   if (NOISE_PATTERN.test(clean)) return false;
 
   const hasMark = clean.includes("?");
@@ -62,10 +72,10 @@ export function isGenuineQuestion(text: string): boolean {
 
   if (!hasMark && !hasWord) return false;
 
-  // Reject "What an amazing project!" — question word without ? needs 3+ words of substance
+  // Reject "What an amazing project!" — command without ? needs at least 1 word of subject
   if (hasWord && !hasMark) {
     const afterQWord = clean.replace(QUESTION_WORD, "").trim();
-    if (afterQWord.split(/\s+/).length < 3) return false;
+    if (afterQWord.split(/\s+/).length < 1) return false;
   }
 
   return true;
