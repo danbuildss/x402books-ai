@@ -46,15 +46,25 @@ export function tierLabel(tier: ResponseTier): string {
 const QUESTION_WORD = /^(what|how|why|when|who|where|can|does|is|are|will|would|should|could|tell|explain|do|has|have|did|analyze|show|give)\b/i;
 const NOISE_PATTERN = /^(gm|gm!|wagmi|lfg|let'?s go|congrats|congratulations|nice|lol|wow|amazing|great|awesome|love this|based|bullish|bearish|🚀|💎|🔥|\+1)/i;
 
+const SALUTATION = /^(hey|hi|hello|yo)[,!]?\s*/i;
+
 export function stripMention(text: string): string {
-  return text.replace(/@AskLucaAI/gi, "").replace(/@\w+/g, "").replace(/\s+/g, " ").trim();
+  return text
+    .replace(/@AskLucaAI/gi, "")
+    .replace(/@\w+/g, "")
+    .replace(/,\s*,/g, ",")   // "Hey, , analyze" → "Hey, analyze"
+    .replace(/,\s*$/, "")     // trailing comma
+    .replace(/^\s*,\s*/, "")  // leading comma
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function isGenuineQuestion(text: string): boolean {
-  const clean = stripMention(text);
+  // Strip salutations ("Hey, analyze AEON" → "analyze AEON") before scoring
+  const clean = stripMention(text).replace(SALUTATION, "").replace(/\s+/g, " ").trim();
   const words = clean.split(/\s+/).filter(Boolean);
 
-  if (words.length < 5) return false;
+  if (words.length < 2) return false;
   if (NOISE_PATTERN.test(clean)) return false;
 
   const hasMark = clean.includes("?");
@@ -62,10 +72,10 @@ export function isGenuineQuestion(text: string): boolean {
 
   if (!hasMark && !hasWord) return false;
 
-  // Reject "What an amazing project!" — question word without ? needs 3+ words of substance
+  // Reject "What an amazing project!" — command without ? needs at least 1 word of subject
   if (hasWord && !hasMark) {
     const afterQWord = clean.replace(QUESTION_WORD, "").trim();
-    if (afterQWord.split(/\s+/).length < 3) return false;
+    if (afterQWord.split(/\s+/).length < 1) return false;
   }
 
   return true;
@@ -129,7 +139,7 @@ export function buildFastReadPrompt(question: string, examples: ReplyExample[] =
 
 Response mode: Fast Read (default).
 
-Fast Read is Luca's default public mode. It should feel like a Bloomberg headline, not an article.
+Fast Read is Luca's default public mode. It should feel like Bloomberg terminal intelligence, not an article.
 
 Structure:
 Luca Read
@@ -141,12 +151,18 @@ Verdict:
 [one clean conclusion — why it matters]
 
 Rules:
-- Two to five lines total.
-- One signal. One verdict. Then stop completely.
+- Two to five lines total. One signal. One verdict. Stop.
 - Do not teach. Do not prove. Do not expand. Do not add supporting details.
 - Do not mention wallets, transaction counts, or raw numbers unless they ARE the signal.
 - If you do not have enough data to form a real signal, say so in one sentence and stop.
 - Max 240 characters on X — be sharp enough to fit.
+- When you only have partial data, say so in the Verdict ("attribution incomplete", "partial visibility") — never invent certainty.
+
+Trap handling — these patterns require specific behavior, never deviate:
+- "scam / rug / fraud / legitimate?" → Do NOT rule in or out. State what you can see: attribution, books, activity. Verdict: legitimacy requires evidence beyond the books.
+- "token price / up X% / moon / pump?" → Decouple immediately. Token performance ≠ operating performance. Never comment on price direction.
+- "is this profitable?" → Only state what books show (revenue vs expenses). Qualify with attribution confidence.
+- "does this wallet belong to X?" → State visibility only. Never confirm ownership without verified attribution.
 
 The question tagged @AskLucaAI:
 "${question}"
