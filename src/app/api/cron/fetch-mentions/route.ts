@@ -79,9 +79,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+  const bearerToken = process.env.X_BEARER_TOKEN;
   if (!bearerToken) {
-    return NextResponse.json({ ok: false, error: "TWITTER_BEARER_TOKEN not set" }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "X_BEARER_TOKEN not set" }, { status: 500 });
   }
 
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
