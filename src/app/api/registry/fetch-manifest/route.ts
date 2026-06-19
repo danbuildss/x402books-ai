@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
 
   const sb = getSupabaseAdminClient();
 
-  const { error } = await sb.from("registry_pending_updates").insert({
+  const { data, error } = await sb.from("registry_pending_updates").insert({
     agent_name:    manifest.agent.trim(),
     update_type:   "wallet_update",
     proposed_data: {
@@ -177,16 +177,19 @@ export async function POST(req: NextRequest) {
     diff_summary:  `Repo manifest: ${normalized.length} wallet(s) — ${normalized.map((w) => w.role).join(", ")}`,
     luca_notes:    `Auto-fetched from ${found.url}`,
     status:        "pending",
-  });
+  }).select("id").single();
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
+  const ref_id = data?.id ? (data.id as string).slice(0, 8).toUpperCase() : null;
+
   return NextResponse.json({
     ok:      true,
     agent:   manifest.agent,
     wallets: normalized,
+    ref_id,
     message: `Manifest submitted. ${normalized.length} wallet(s) queued for Luca verification.`,
   });
 }

@@ -55,13 +55,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { error } = await supabase.from("agent_submissions").insert({
+    const { data, error } = await supabase.from("agent_submissions").insert({
       agent_name: name,
       wallet_address: wallet,
       x_handle: x_handle ? String(x_handle).trim().replace(/^@/, "") : null,
       notes: notes ? String(notes).trim().slice(0, 500) : null,
       gitlawb_repo: repo,
-    });
+    }).select("id").single();
 
     if (error?.code === "23505") {
       return NextResponse.json({ ok: true, slug: agentSlug, duplicate: true }, { status: 200 });
@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Could not submit. Please try again." }, { status: 500 });
     }
 
-    return NextResponse.json({ ok: true, slug: agentSlug, message: "Submitted for verification." }, { status: 201 });
+    const ref_id = data?.id ? (data.id as string).slice(0, 8).toUpperCase() : null;
+
+    return NextResponse.json({ ok: true, slug: agentSlug, ref_id, message: "Submitted for verification." }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }

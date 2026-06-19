@@ -217,6 +217,8 @@ function VerifyCTA() {
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [submittedSlug, setSubmittedSlug] = useState("");
+  const [submittedRef, setSubmittedRef] = useState("");
+  const [refCopied, setRefCopied] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const [repoUrl, setRepoUrl] = useState("");
@@ -224,6 +226,7 @@ function VerifyCTA() {
   const [repoMsg, setRepoMsg] = useState("");
   const [fetchedWallets, setFetchedWallets] = useState<FetchedWallet[] | null>(null);
   const [fetchedAgent, setFetchedAgent] = useState("");
+  const [fetchedRef, setFetchedRef] = useState("");
 
   async function submitRepo(e: React.FormEvent) {
     e.preventDefault();
@@ -236,12 +239,13 @@ function VerifyCTA() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repo_url: repoUrl }),
       });
-      const data = await res.json() as { ok?: boolean; error?: string; agent?: string; wallets?: FetchedWallet[]; message?: string };
+      const data = await res.json() as { ok?: boolean; error?: string; agent?: string; wallets?: FetchedWallet[]; message?: string; ref_id?: string };
       if (data.ok) {
         setRepoState("done");
         setRepoMsg(data.message ?? "Manifest submitted successfully.");
         setFetchedWallets(data.wallets ?? null);
         setFetchedAgent(data.agent ?? "");
+        setFetchedRef(data.ref_id ?? "");
       } else {
         setRepoState("error");
         setRepoMsg(data.error ?? "Something went wrong.");
@@ -261,10 +265,11 @@ function VerifyCTA() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
       });
-      const data = await res.json() as { ok?: boolean; error?: string; duplicate?: boolean; slug?: string };
+      const data = await res.json() as { ok?: boolean; error?: string; duplicate?: boolean; slug?: string; ref_id?: string };
       if (data.ok) {
         setState("done");
         setSubmittedSlug(data.slug ?? "");
+        setSubmittedRef(data.ref_id ?? "");
         setMsg(data.duplicate ? "Already submitted — we'll review it soon." : "Submitted! We'll verify and add your agent.");
       } else {
         setState("error");
@@ -331,21 +336,48 @@ function VerifyCTA() {
           {state === "done" ? (
             <div className="reg-submit-success">
               <span className="material-symbols-outlined" style={{ fontSize: 32, color: "var(--accent)" }}>check_circle</span>
-              <p>{msg}</p>
+              <p style={{ fontWeight: 600, marginBottom: 4 }}>{msg}</p>
+              {submittedRef && (
+                <div style={{
+                  margin: "12px 0",
+                  padding: "12px 14px",
+                  background: "var(--surface-soft)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                }}>
+                  <div>
+                    <p style={{ margin: "0 0 2px", fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Reference ID</p>
+                    <p style={{ margin: 0, fontFamily: "monospace", fontWeight: 700, fontSize: "1rem", color: "var(--fg)", letterSpacing: "0.05em" }}>{submittedRef}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { navigator.clipboard.writeText(submittedRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 2000); }}
+                    style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", cursor: "pointer", fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 4 }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{refCopied ? "check" : "content_copy"}</span>
+                    {refCopied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              )}
               {submittedSlug && (
-                <div style={{ marginTop: 12 }}>
-                  <p style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: 6 }}>
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 6 }}>
                     Your profile will be live at:
                   </p>
                   <Link href={`/registry/${submittedSlug}`} style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}>
                     /registry/{submittedSlug}
                   </Link>
-                  <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
-                    Verification typically completes within 24–48 hours.
-                    Once verified, your agent&apos;s books will be generated automatically.
-                  </p>
                 </div>
               )}
+              <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10, lineHeight: 1.6 }}>
+                Verification typically completes within 24–48 hours.
+                Once approved, your agent&apos;s books are generated automatically.
+                {submittedRef && " Keep your reference ID to track this submission."}
+              </p>
             </div>
           ) : (
             <>
@@ -396,7 +428,7 @@ function VerifyCTA() {
                       <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 10 }}>
                         {fetchedWallets.length} wallet{fetchedWallets.length !== 1 ? "s" : ""} queued for Luca verification.
                       </p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
                         {fetchedWallets.map((w) => (
                           <div key={w.address} style={{ display: "flex", gap: 8, alignItems: "center", fontSize: "0.75rem" }}>
                             <span style={{ color: "var(--accent)", fontWeight: 600, minWidth: 72 }}>{w.role}</span>
@@ -404,6 +436,34 @@ function VerifyCTA() {
                           </div>
                         ))}
                       </div>
+                      {fetchedRef && (
+                        <div style={{
+                          padding: "10px 14px",
+                          background: "var(--surface-soft)",
+                          border: "1px solid var(--line)",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 12,
+                        }}>
+                          <div>
+                            <p style={{ margin: "0 0 2px", fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Reference ID</p>
+                            <p style={{ margin: 0, fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color: "var(--fg)", letterSpacing: "0.05em" }}>{fetchedRef}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { navigator.clipboard.writeText(fetchedRef); setRefCopied(true); setTimeout(() => setRefCopied(false), 2000); }}
+                            style={{ padding: "5px 9px", borderRadius: 6, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", cursor: "pointer", fontSize: "0.72rem", display: "flex", alignItems: "center", gap: 4 }}
+                          >
+                            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{refCopied ? "check" : "content_copy"}</span>
+                            {refCopied ? "Copied" : "Copy"}
+                          </button>
+                        </div>
+                      )}
+                      <p style={{ fontSize: "0.7rem", color: "var(--muted)", marginTop: 10, lineHeight: 1.6 }}>
+                        Verification typically completes within 24–48 hours. Keep your reference ID.
+                      </p>
                     </div>
                   ) : (
                     <form className="reg-verify-form" onSubmit={submitRepo}>
