@@ -26,6 +26,7 @@ import {
   buildPrompt,
   tierLabel,
   type ResponseTier,
+  type ReplyExample,
 } from "@/lib/luca-x-doctrine";
 
 // ── Draft generation ──────────────────────────────────────────────────────────
@@ -41,10 +42,24 @@ async function generateDraft(
   mention: XMention,
   tier: ResponseTier,
   apiKey: string,
+  sb: ReturnType<typeof getSupabaseAdminClient>,
 ): Promise<string> {
   const question = stripMention(mention.text);
-  const prompt   = buildPrompt(question, tier);
   const maxChars = TIER_MAX[tier];
+
+  // Fetch last 5 approved examples for this tier to inject as few-shot context
+  let examples: ReplyExample[] = [];
+  try {
+    const { data } = await sb
+      .from("luca_reply_examples")
+      .select("question, reply")
+      .eq("tier", tier)
+      .order("created_at", { ascending: false })
+      .limit(5);
+    examples = (data ?? []) as ReplyExample[];
+  } catch {}
+
+  const prompt = buildPrompt(question, tier, examples);
 
   const client = new Anthropic({ apiKey });
   const msg = await client.messages.create({
@@ -142,12 +157,13 @@ export async function GET(req: NextRequest) {
       const clean = stripMention(mention.text);
       const tier  = detectTier(mention.text);
       const risk  = classifyRisk(mention.text);
-      const draft = await generateDraft(mention, tier, anthropicKey);
+      const draft = await generateDraft(mention, tier, anthropicKey, sb);
 
       const { error } = await sb.from("luca_pending_replies").insert({
         target_user:     mention.author_username,
         target_post_url: mention.url,
         target_post_id:  mention.id,
+        question:        clean,
         draft_reply:     draft,
         risk_level:      risk,
         recommendation:  `[${tierLabel(tier)}] @${mention.author_username}: "${clean.slice(0, 120)}${clean.length > 120 ? "…" : ""}"`,

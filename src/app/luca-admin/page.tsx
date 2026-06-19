@@ -84,8 +84,10 @@ type PendingReply = {
   draft_reply: string;
   risk_level: "low" | "medium" | "high";
   recommendation: string | null;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "posted";
   reviewer_notes: string | null;
+  reviewed_at: string | null;
+  posted_at: string | null;
   created_at: string;
 };
 
@@ -1846,12 +1848,20 @@ const RISK_COLOR: Record<string, string> = {
   high:   "#f87171",
 };
 
+const STATUS_BG: Record<string, string> = {
+  approved: "var(--accent)",
+  rejected: "#f87171",
+  posted:   "#22c55e",
+};
+
 function PendingRepliesSection({ secret }: { secret: string }) {
-  const [replies, setReplies]   = useState<PendingReply[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState<"pending" | "all">("pending");
-  const [notes, setNotes]       = useState<Record<string, string>>({});
-  const [acting, setActing]     = useState<string | null>(null);
+  const [replies, setReplies]       = useState<PendingReply[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [filter, setFilter]         = useState<"pending" | "approved" | "all">("pending");
+  const [notes, setNotes]           = useState<Record<string, string>>({});
+  const [editedDrafts, setEdited]   = useState<Record<string, string>>({});
+  const [acting, setActing]         = useState<string | null>(null);
+  const [copied, setCopied]         = useState<string | null>(null);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -1863,15 +1873,27 @@ function PendingRepliesSection({ secret }: { secret: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function act(id: string, action: "approve" | "reject") {
+  async function act(id: string, action: "approve" | "reject" | "post") {
     setActing(id);
     await fetch(`/api/admin/pending-replies/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
-      body: JSON.stringify({ action, reviewer_notes: notes[id] ?? null }),
+      body: JSON.stringify({
+        action,
+        reviewer_notes: notes[id] ?? null,
+        edited_reply:   editedDrafts[id] ?? null,
+      }),
     });
     setActing(null);
     load();
+  }
+
+  function copyReply(id: string, draft: string) {
+    const text = editedDrafts[id] ?? draft;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(id);
+      setTimeout(() => setCopied((c) => (c === id ? null : c)), 2000);
+    }).catch(() => {});
   }
 
   const pendingCount = replies.filter((r) => r.status === "pending").length;
@@ -1881,24 +1903,24 @@ function PendingRepliesSection({ secret }: { secret: string }) {
       <div className={styles.sectionHead}>
         <p className={styles.kicker}>Luca Intelligence</p>
         <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          Pending X Replies
+          X Reply Queue
           {pendingCount > 0 && (
             <span style={{ fontSize: "0.6em", background: "#f87171", color: "#fff", borderRadius: 99, padding: "2px 8px" }}>
               {pendingCount}
             </span>
           )}
         </h2>
-        <p>Luca queues draft replies here. Nothing posts until you approve.</p>
+        <p>Luca drafts replies here. Edit, copy to X manually, then mark as posted. Nothing auto-posts.</p>
       </div>
 
       <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
-        {(["pending", "all"] as const).map((f) => (
+        {(["pending", "approved", "all"] as const).map((f) => (
           <button key={f} type="button" onClick={() => setFilter(f)} style={{
             padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
             background: filter === f ? "var(--accent)" : "var(--surface)",
-            color: filter === f ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600,
+            color: filter === f ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600, textTransform: "capitalize",
           }}>
-            {f === "pending" ? "Pending" : "All"}
+            {f}
           </button>
         ))}
       </div>
@@ -1909,97 +1931,153 @@ function PendingRepliesSection({ secret }: { secret: string }) {
         <div className={styles.stateBox}>
           {filter === "pending"
             ? "No pending replies. Luca will queue drafts here before anything posts publicly."
+            : filter === "approved"
+            ? "No approved replies awaiting posting."
             : "No replies logged yet."}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {replies.map((reply) => (
-            <div key={reply.id} className={styles.card} style={{ padding: "14px 16px" }}>
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                {reply.target_user && (
-                  <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--ink)" }}>
-                    @{reply.target_user.replace("@", "")}
-                  </span>
-                )}
-                {reply.target_post_url && (
-                  <a href={reply.target_post_url} target="_blank" rel="noreferrer"
-                    style={{ fontSize: "0.72rem", color: "var(--blue)", textDecoration: "none" }}>
-                    View post ↗
-                  </a>
-                )}
-                <span style={{ marginLeft: "auto", fontSize: "0.68rem", fontWeight: 600,
-                  padding: "2px 7px", borderRadius: 99, border: "1px solid var(--line)",
-                  textTransform: "capitalize", color: RISK_COLOR[reply.risk_level],
-                }}>
-                  {reply.risk_level} risk
-                </span>
-                {reply.status !== "pending" && (
-                  <span style={{
-                    fontSize: "0.68rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
-                    background: reply.status === "approved" ? "var(--accent)" : "#f87171",
-                    color: "#fff", textTransform: "capitalize",
+          {replies.map((reply) => {
+            const draftText  = editedDrafts[reply.id] ?? reply.draft_reply;
+            const isEdited   = editedDrafts[reply.id] !== undefined && editedDrafts[reply.id] !== reply.draft_reply;
+            const isPending  = reply.status === "pending";
+            const isApproved = reply.status === "approved";
+
+            return (
+              <div key={reply.id} className={styles.card} style={{ padding: "14px 16px" }}>
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                  {reply.target_user && (
+                    <span style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--ink)" }}>
+                      @{reply.target_user.replace("@", "")}
+                    </span>
+                  )}
+                  {reply.target_post_url && (
+                    <a href={reply.target_post_url} target="_blank" rel="noreferrer"
+                      style={{ fontSize: "0.72rem", color: "var(--blue)", textDecoration: "none" }}>
+                      View post ↗
+                    </a>
+                  )}
+                  <span style={{ marginLeft: "auto", fontSize: "0.68rem", fontWeight: 600,
+                    padding: "2px 7px", borderRadius: 99, border: "1px solid var(--line)",
+                    textTransform: "capitalize", color: RISK_COLOR[reply.risk_level],
                   }}>
-                    {reply.status}
+                    {reply.risk_level} risk
                   </span>
-                )}
-              </div>
+                  {reply.status !== "pending" && (
+                    <span style={{
+                      fontSize: "0.68rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
+                      background: STATUS_BG[reply.status] ?? "var(--muted)",
+                      color: "#fff", textTransform: "capitalize",
+                    }}>
+                      {reply.status}
+                    </span>
+                  )}
+                </div>
 
-              {/* Draft */}
-              <div style={{
-                background: "var(--surface-soft)", border: "1px solid var(--line)",
-                borderRadius: 8, padding: "10px 12px", marginBottom: 10,
-                fontSize: "0.85rem", color: "var(--ink)", lineHeight: 1.65, whiteSpace: "pre-wrap",
-              }}>
-                {reply.draft_reply}
-              </div>
-
-              {/* Recommendation */}
-              {reply.recommendation && (
-                <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginBottom: 10, fontStyle: "italic" }}>
-                  Luca: {reply.recommendation}
-                </p>
-              )}
-
-              {/* Approve / Reject */}
-              {reply.status === "pending" && (
-                <>
-                  <input
-                    type="text"
-                    placeholder="Reviewer note (optional)…"
-                    value={notes[reply.id] ?? ""}
-                    onChange={(e) => setNotes((prev) => ({ ...prev, [reply.id]: e.target.value }))}
+                {/* Editable draft */}
+                <div style={{ position: "relative", marginBottom: 8 }}>
+                  <textarea
+                    value={draftText}
+                    readOnly={!isPending && !isApproved}
+                    onChange={(e) => setEdited((prev) => ({ ...prev, [reply.id]: e.target.value }))}
+                    rows={4}
                     style={{
-                      width: "100%", padding: "6px 10px", marginBottom: 8,
-                      border: "1px solid var(--line)", borderRadius: 6,
-                      background: "var(--surface)", color: "var(--ink)", fontSize: "0.8rem", outline: "none",
+                      width: "100%", boxSizing: "border-box",
+                      background: "var(--surface-soft)", border: `1px solid ${isEdited ? "var(--accent)" : "var(--line)"}`,
+                      borderRadius: 8, padding: "10px 12px",
+                      fontSize: "0.85rem", color: "var(--ink)", lineHeight: 1.65,
+                      resize: "vertical", outline: "none", fontFamily: "inherit",
+                      cursor: !isPending && !isApproved ? "default" : "text",
                     }}
                   />
-                  <div style={{ display: "flex", gap: 8 }}>
+                  {isEdited && (
+                    <span style={{ position: "absolute", top: 8, right: 10, fontSize: "0.65rem", color: "var(--accent)", fontWeight: 600 }}>
+                      edited
+                    </span>
+                  )}
+                </div>
+
+                {/* Copy button */}
+                <div style={{ marginBottom: 10 }}>
+                  <button type="button" onClick={() => copyReply(reply.id, reply.draft_reply)}
+                    style={{
+                      padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
+                      background: copied === reply.id ? "#22c55e" : "var(--surface)",
+                      color: copied === reply.id ? "#fff" : "var(--muted)",
+                      fontSize: "0.75rem", fontWeight: 600, transition: "background 0.2s",
+                    }}>
+                    {copied === reply.id ? "Copied!" : "Copy Reply"}
+                  </button>
+                  <span style={{ marginLeft: 8, fontSize: "0.68rem", color: "var(--muted)" }}>
+                    — paste this on X as @AskLucaAI
+                  </span>
+                </div>
+
+                {/* Recommendation */}
+                {reply.recommendation && (
+                  <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginBottom: 10, fontStyle: "italic" }}>
+                    {reply.recommendation}
+                  </p>
+                )}
+
+                {/* Approve / Reject (pending only) */}
+                {isPending && (
+                  <>
+                    <input
+                      type="text"
+                      placeholder="Reviewer note (optional)…"
+                      value={notes[reply.id] ?? ""}
+                      onChange={(e) => setNotes((prev) => ({ ...prev, [reply.id]: e.target.value }))}
+                      style={{
+                        width: "100%", padding: "6px 10px", marginBottom: 8,
+                        border: "1px solid var(--line)", borderRadius: 6,
+                        background: "var(--surface)", color: "var(--ink)", fontSize: "0.8rem", outline: "none",
+                      }}
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button type="button" disabled={acting === reply.id}
+                        onClick={() => act(reply.id, "approve")} className={styles.actionBtn}>
+                        {acting === reply.id ? "…" : "Approve"}
+                      </button>
+                      <button type="button" disabled={acting === reply.id}
+                        onClick={() => act(reply.id, "reject")} className={styles.ghostBtn}
+                        style={{ color: "#f87171", borderColor: "#f87171" }}>
+                        Reject
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {/* Mark as Posted (approved only) */}
+                {isApproved && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button type="button" disabled={acting === reply.id}
-                      onClick={() => act(reply.id, "approve")} className={styles.actionBtn}>
-                      {acting === reply.id ? "…" : "Approve"}
+                      onClick={() => act(reply.id, "post")} className={styles.actionBtn}
+                      style={{ background: "#22c55e", borderColor: "#22c55e" }}>
+                      {acting === reply.id ? "…" : "Mark as Posted"}
                     </button>
-                    <button type="button" disabled={acting === reply.id}
-                      onClick={() => act(reply.id, "reject")} className={styles.ghostBtn}
-                      style={{ color: "#f87171", borderColor: "#f87171" }}>
-                      Reject
-                    </button>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
+                      Copy the reply first, then confirm you posted it on X.
+                    </span>
                   </div>
-                </>
-              )}
+                )}
 
-              {reply.status !== "pending" && reply.reviewer_notes && (
-                <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 8 }}>
-                  Note: {reply.reviewer_notes}
+                {reply.reviewer_notes && (
+                  <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 8 }}>
+                    Note: {reply.reviewer_notes}
+                  </p>
+                )}
+
+                <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 8 }}>
+                  {new Date(reply.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {reply.posted_at && (
+                    <> · Posted {new Date(reply.posted_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</>
+                  )}
                 </p>
-              )}
-
-              <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 8 }}>
-                {new Date(reply.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              </p>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
