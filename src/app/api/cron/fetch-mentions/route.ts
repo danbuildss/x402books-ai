@@ -1,12 +1,12 @@
 // GET /api/cron/fetch-mentions — @AskLucaAI X mention pipeline.
 //
-// Called by Hermes on a recurring schedule (e.g. every 30 minutes).
+// Called by Hermes on a recurring schedule (e.g. every 6 hours).
 //
 // Pipeline:
 //   1. Fetch recent @AskLucaAI mentions from X API v2
 //   2. Filter to genuine questions (noise / vague tags are skipped)
 //   3. Detect response tier: Fast Read (default) | Analyst Read | Full Report
-//   4. Generate draft reply via Claude using luca-x-doctrine prompts
+//   4. Generate draft reply via Bankr LLM API (OpenAI-compatible, Claude Haiku)
 //   5. Deduplicate against existing DB records by target_post_id
 //   6. Write draft to luca_pending_replies (status: pending)
 //   7. Notify admin via Telegram
@@ -14,7 +14,6 @@
 // Never auto-posts. Every draft requires human approval in /luca-admin.
 
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { internalAuth } from "@/lib/internal-auth";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { fetchRecentMentions, type XMention } from "@/lib/x-mentions";
@@ -28,6 +27,9 @@ import {
   type ResponseTier,
   type ReplyExample,
 } from "@/lib/luca-x-doctrine";
+
+const BANKR_BASE_URL = "https://llm.bankr.bot/v1";
+const BANKR_MODEL    = "claude-haiku-4-5-20251001";
 
 // ── Draft generation ──────────────────────────────────────────────────────────
 
@@ -61,15 +63,25 @@ async function generateDraft(
 
   const prompt = buildPrompt(question, tier, examples);
 
-  const client = new Anthropic({ apiKey });
-  const msg = await client.messages.create({
-    model:      "claude-haiku-4-5-20251001",
-    max_tokens: 200,
-    messages:   [{ role: "user", content: prompt }],
+  const res = await fetch(`${BANKR_BASE_URL}/chat/completions`, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model:      BANKR_MODEL,
+      max_tokens: 200,
+      messages:   [{ role: "user", content: prompt }],
+    }),
   });
 
-  const text = msg.content[0]?.type === "text" ? msg.content[0].text.trim() : null;
-  if (!text) throw new Error("empty Claude response");
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`${res.status} ${body.slice(0, 200)}`);
+  }
+
+  type ChatResponse = { choices?: Array<{ message?: { content?: string } }> };
+  const json: ChatResponse = await res.json();
+  const text = json.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error("empty LLM response");
 
   return text.length > maxChars + 3 ? text.slice(0, maxChars) + "…" : text;
 }
@@ -99,9 +111,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "X_BEARER_TOKEN not set" }, { status: 500 });
   }
 
-  const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  if (!anthropicKey) {
-    return NextResponse.json({ ok: false, error: "ANTHROPIC_API_KEY not set" }, { status: 500 });
+  const llmKey = process.env.LLM_API_KEY;
+  if (!llmKey) {
+    return NextResponse.json({ ok: false, error: "LLM_API_KEY not set" }, { status: 500 });
   }
 
   if (!hasSupabaseAdminEnv()) {
@@ -157,7 +169,7 @@ export async function GET(req: NextRequest) {
       const clean = stripMention(mention.text);
       const tier  = detectTier(mention.text);
       const risk  = classifyRisk(mention.text);
-      const draft = await generateDraft(mention, tier, anthropicKey, sb);
+      const draft = await generateDraft(mention, tier, llmKey, sb);
 
       const { error } = await sb.from("luca_pending_replies").insert({
         target_user:     mention.author_username,
