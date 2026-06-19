@@ -286,12 +286,17 @@ export default async function LeaderboardPage() {
 
         {/* Last updated + methodology link */}
         {gdp && (
-          <p style={{ margin: "-24px 0 20px", fontSize: "0.7rem", color: "var(--muted)" }}>
-            Last updated{" "}
-            {new Date(gdp.generated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
-            {" · "}
-            <Link href="/methodology" style={{ color: "var(--accent)" }}>How this is calculated →</Link>
-          </p>
+          <div style={{ margin: "-24px 0 20px" }}>
+            <p style={{ margin: "0 0 4px", fontSize: "0.7rem", color: "var(--muted)" }}>
+              Last updated{" "}
+              {new Date(gdp.generated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true })}
+              {" · "}
+              <Link href="/methodology" style={{ color: "var(--accent)" }}>How this is calculated →</Link>
+            </p>
+            <p style={{ margin: 0, fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.55 }}>
+              Revenue reflects operating inflows only. Capital injections, bridge transfers, grants, token distributions, and swaps are excluded or quarantined.
+            </p>
+          </div>
         )}
 
         {/* GDP Trend */}

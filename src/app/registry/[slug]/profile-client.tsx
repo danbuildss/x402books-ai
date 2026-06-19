@@ -144,6 +144,76 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </span>
       </div>
 
+      {/* Confidence scores */}
+      <div style={{ marginBottom: 12 }}>
+        <p style={{ margin: "0 0 6px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
+          Data Confidence
+        </p>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {(
+            [
+              { label: "Revenue",  value: books.confidence.revenue  },
+              { label: "Expenses", value: books.confidence.expenses },
+              { label: "Treasury", value: books.confidence.treasury },
+              { label: "Overall",  value: books.confidence.overall  },
+            ] as const
+          ).map(({ label, value }) => {
+            const color = value === "high" ? "#6DB874" : value === "medium" ? "#F59E0B" : "#ef4444";
+            return (
+              <span key={label} style={{
+                fontSize: "0.68rem", padding: "2px 9px", borderRadius: 99,
+                background: `color-mix(in srgb, ${color} 10%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
+                color,
+                fontWeight: 600,
+              }}>
+                {label}: {value.charAt(0).toUpperCase() + value.slice(1)}
+              </span>
+            );
+          })}
+        </div>
+        {books.confidence.flags.length > 0 && (
+          <p style={{ margin: "5px 0 0", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.5 }}>
+            {books.confidence.flags.map((f) => f.replace(/_/g, " ")).join(" · ")}
+          </p>
+        )}
+      </div>
+
+      {/* Quarantine disclosure */}
+      {books.classification.quarantined_inflows_usd > 0 && (
+        <div style={{
+          marginBottom: 12,
+          padding: "10px 12px",
+          borderRadius: 8,
+          border: "1px solid rgba(245,158,11,0.28)",
+          background: "rgba(245,158,11,0.06)",
+        }}>
+          <p style={{ margin: "0 0 7px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#F59E0B" }}>
+            Classification · Quarantined Inflows
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
+              <span style={{ color: "var(--muted)" }}>Operating Revenue</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" }}>
+                {usd(f.revenue_usd)}
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
+              <span style={{ color: "var(--muted)" }}>Quarantined Inflows</span>
+              <span style={{ fontFamily: "monospace", color: "#F59E0B" }}>
+                {usd(books.classification.quarantined_inflows_usd)}
+              </span>
+            </div>
+          </div>
+          {books.classification.quarantined_events.length > 0 && (
+            <p style={{ margin: "6px 0 0", fontSize: "0.7rem", color: "var(--muted)", lineHeight: 1.5 }}>
+              Reason:{" "}
+              {[...new Set(books.classification.quarantined_events.map((e) => e.reason.replace(/_/g, " ")))].join(", ")}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Expense breakdown */}
       {books.breakdown.expenses_by_category.length > 0 && (
         <div style={{ marginBottom: 12 }}>
@@ -171,6 +241,12 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           {books.luca_summary}
         </p>
       )}
+
+      {/* Methodology note */}
+      <p style={{ margin: "10px 0 0", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.55 }}>
+        Revenue reflects operating inflows only. Capital injections, bridge transfers, grants, token distributions, and swaps are excluded or quarantined.{" "}
+        <Link href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Methodology →</Link>
+      </p>
     </section>
   );
 }
