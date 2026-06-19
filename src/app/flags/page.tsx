@@ -28,11 +28,15 @@ function writeReviewed(set: Set<string>) {
 }
 
 const FLAG_META: Record<LedgerRiskFlag, { label: string; icon: string; tone: string }> = {
-  none:                  { label: "None",                icon: "check_circle",  tone: "green" },
-  duplicate:             { label: "Duplicate",           icon: "content_copy",  tone: "red" },
-  unusual_amount:        { label: "Unusual Amount",      icon: "error",         tone: "red" },
-  high_frequency:        { label: "High Frequency",      icon: "speed",         tone: "orange" },
-  unknown_counterparty:  { label: "Unknown Counterparty",icon: "help",          tone: "yellow" },
+  none:                         { label: "None",                    icon: "check_circle",  tone: "green" },
+  duplicate:                    { label: "Duplicate",               icon: "content_copy",  tone: "red" },
+  unusual_amount:               { label: "Unusual Amount",          icon: "error",         tone: "red" },
+  high_frequency:               { label: "High Frequency",          icon: "speed",         tone: "orange" },
+  unknown_counterparty:         { label: "Unknown Counterparty",    icon: "help",          tone: "yellow" },
+  suspected_capital_injection:  { label: "Capital Injection",       icon: "account_balance",tone: "red" },
+  grant_inflow:                 { label: "Grant Inflow",            icon: "volunteer_activism", tone: "orange" },
+  bridge_receipt:               { label: "Bridge Receipt",          icon: "swap_horiz",    tone: "yellow" },
+  token_distribution:           { label: "Token Distribution",      icon: "token",         tone: "yellow" },
 };
 
 const TONE_COLORS: Record<string, string> = {

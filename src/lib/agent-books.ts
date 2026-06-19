@@ -21,14 +21,32 @@ import {
   type LedgerTransaction,
   type TimeRange,
 } from "@/lib/ledger";
+import {
+  isBridgeContract,
+  isDexRouter,
+  getQuarantineReason,
+  type QuarantineReason,
+  CAPITAL_INJECTION_THRESHOLD_USD,
+  KNOWN_COUNTERPARTY_MIN_INTERACTIONS,
+} from "@/lib/classification-filters";
 import type { Agent } from "@/app/registry/types";
 import { computeMomentum } from "./agent-momentum";
 import type { AgentBooksSnapshot } from "./agent-books-history";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 
-const MAX_WALLETS = 6;
+const MAX_WALLETS = 20;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+export type QuarantinedInflow = {
+  txHash: string;
+  amount_usd: number;
+  reason: QuarantineReason;
+  counterparty: string;
+  timestamp: string;
+};
+
+export type BooksConfidence = "high" | "medium" | "low";
 
 export type AgentBooks = {
   agent: { slug: string; name: string; ecosystem: string };
@@ -36,13 +54,28 @@ export type AgentBooks = {
   period: TimeRange;
   wallets: { declared: number; analyzed: number; roles: string[] };
   financials: {
-    revenue_usd: number;
+    revenue_usd: number;           // operating revenue only (quarantined excluded)
+    gross_inflow_usd: number;      // all inflows before classification
     expenses_usd: number;
     net_income_usd: number;
     treasury_balance_usd: number | null;
     runway_months: number | null;
     margin_pct: number | null;
     tx_count: number;
+  };
+  classification: {
+    operating_revenue_usd: number;
+    quarantined_inflows_usd: number;
+    bridge_excluded_expense_usd: number;
+    dex_excluded_usd: number;
+    quarantined_events: QuarantinedInflow[];
+  };
+  confidence: {
+    revenue: BooksConfidence;
+    expenses: BooksConfidence;
+    treasury: BooksConfidence;
+    overall: BooksConfidence;
+    flags: string[];
   };
   breakdown: {
     revenue_by_source: Array<{ address: string; total_usd: number; tx_count: number }>;
@@ -228,28 +261,90 @@ async function computeAgentBooks(
     (isInternal ? internal : external).push(tx);
   }
 
-  // Swap detection: same tx hash with both an inflow and outflow is a token
-  // swap, not revenue or spend.
+  // ── Swap detection (v2) ───────────────────────────────────────────────────
+  // P0 fix: txHash dual-direction check + DEX router address check.
   const directionsByHash = new Map<string, Set<string>>();
   for (const tx of external) {
     const set = directionsByHash.get(tx.txHash) ?? new Set<string>();
     set.add(tx.direction);
     directionsByHash.set(tx.txHash, set);
   }
-  const isSwap = (tx: LedgerTransaction) =>
+  const isSwapByHash = (tx: LedgerTransaction) =>
     (directionsByHash.get(tx.txHash)?.size ?? 0) > 1;
+  const isSwapByRouter = (tx: LedgerTransaction) =>
+    isDexRouter(tx.from) || isDexRouter(tx.to) || isDexRouter(tx.counterparty ?? "");
+  const isSwap = (tx: LedgerTransaction) => isSwapByHash(tx) || isSwapByRouter(tx);
+
+  // ── Bridge detection ──────────────────────────────────────────────────────
+  // P0 fix: bridge transfers excluded from both revenue and expenses.
+  const isBridge = (tx: LedgerTransaction) =>
+    isBridgeContract(tx.from) || isBridgeContract(tx.to) || isBridgeContract(tx.counterparty ?? "");
 
   const usdOf = (tx: LedgerTransaction) => tx.usdValue ?? tx.amountUsdc;
 
-  const revenueTxs = external.filter((tx) => tx.direction === "income" && !isSwap(tx));
-  const expenseTxs = external.filter((tx) => tx.direction === "expense" && !isSwap(tx));
+  // Pre-filter: remove swaps and bridge transfers from all financial calculations
+  const operational = external.filter((tx) => !isSwap(tx) && !isBridge(tx));
+  const dexExcluded = external.filter((tx) => isSwap(tx));
+  const bridgeExcluded = external.filter((tx) => !isSwap(tx) && isBridge(tx));
 
-  const revenue = revenueTxs.reduce((sum, tx) => sum + usdOf(tx), 0);
-  const expenses = expenseTxs.reduce((sum, tx) => sum + usdOf(tx), 0);
+  const dexExcludedUsd = dexExcluded.reduce((s, tx) => s + usdOf(tx), 0);
+  const bridgeExcludedExpenseUsd = bridgeExcluded
+    .filter((tx) => tx.direction === "expense")
+    .reduce((s, tx) => s + usdOf(tx), 0);
+
+  const round = (n: number) => Math.round(n * 100) / 100;
+
+  // ── Counterparty interaction counts (for capital injection detection) ─────
+  const counterpartyInteractions = new Map<string, number>();
+  for (const tx of operational) {
+    const addr = (tx.counterparty || tx.from).toLowerCase();
+    counterpartyInteractions.set(addr, (counterpartyInteractions.get(addr) ?? 0) + 1);
+  }
+
+  // ── Revenue classification (P0: capital injection + grant + token dist) ───
+  const allIncomeTxs = operational.filter((tx) => tx.direction === "income");
+  const grossInflowUsd = allIncomeTxs.reduce((s, tx) => s + usdOf(tx), 0);
+
+  const operatingRevenueTxs: LedgerTransaction[] = [];
+  const quarantinedEvents: QuarantinedInflow[] = [];
+
+  const STABLECOINS = new Set([
+    "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC
+    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2", // USDT
+    "0x50c5725949a6f0c72e6c4a641f24049a917db0cb", // DAI
+    "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC
+  ]);
+
+  for (const tx of allIncomeTxs) {
+    const counterparty = (tx.counterparty || tx.from).toLowerCase();
+    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 1;
+    const isStablecoin = STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase());
+    const usd = usdOf(tx);
+
+    const reason = getQuarantineReason(counterparty, usd, priorInteractions, isStablecoin);
+    if (reason) {
+      quarantinedEvents.push({
+        txHash: tx.txHash,
+        amount_usd: round(usd),
+        reason,
+        counterparty,
+        timestamp: tx.timestamp,
+      });
+    } else {
+      operatingRevenueTxs.push(tx);
+    }
+  }
+
+  const expenseTxs = operational.filter((tx) => tx.direction === "expense");
+
+  const revenue  = operatingRevenueTxs.reduce((s, tx) => s + usdOf(tx), 0);
+  const expenses = expenseTxs.reduce((s, tx) => s + usdOf(tx), 0);
+  const quarantinedUsd = quarantinedEvents.reduce((s, e) => s + e.amount_usd, 0);
   const netIncome = revenue - expenses;
 
+  // ── Breakdown maps ────────────────────────────────────────────────────────
   const bySource = new Map<string, { address: string; total_usd: number; tx_count: number }>();
-  for (const tx of revenueTxs) {
+  for (const tx of operatingRevenueTxs) {
     const addr = tx.counterparty || tx.from;
     const e = bySource.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
     e.total_usd += usdOf(tx);
@@ -267,7 +362,7 @@ async function computeAgentBooks(
   }
 
   const byCounterparty = new Map<string, { address: string; total_usd: number; tx_count: number }>();
-  for (const tx of external) {
+  for (const tx of operational) {
     const addr = tx.counterparty;
     if (!addr) continue;
     const e = byCounterparty.get(addr) ?? { address: addr, total_usd: 0, tx_count: 0 };
@@ -276,9 +371,7 @@ async function computeAgentBooks(
     byCounterparty.set(addr, e);
   }
 
-  const round = (n: number) => Math.round(n * 100) / 100;
-
-  // Fetch live stablecoin balance for treasury wallets.
+  // ── Treasury ──────────────────────────────────────────────────────────────
   const treasuryWallets = declared.filter((w) => w.role === "treasury" && isValidWalletAddress(w.address));
   const treasuryBalances = await Promise.all(
     treasuryWallets.map((w) => getWalletStableBalance(w.address).catch(() => 0)),
@@ -290,13 +383,61 @@ async function computeAgentBooks(
     ? round(treasuryBalance / expenses)
     : null;
 
-  const confidences = scannable.map((w) => (w.confidence ?? "").toLowerCase());
-  const confidence: "high" | "medium" | "low" =
-    confidences.length > 0 && confidences.every((c) => c === "verified")
+  // ── Attribution confidence (wallet-level) ─────────────────────────────────
+  const walletConfidences = scannable.map((w) => (w.confidence ?? "").toLowerCase());
+  const attributionConfidence: "high" | "medium" | "low" =
+    walletConfidences.length > 0 && walletConfidences.every((c) => c === "verified")
       ? "high"
-      : confidences.some((c) => c === "declared" || c === "verified")
+      : walletConfidences.some((c) => c === "declared" || c === "verified")
         ? "medium"
         : "low";
+
+  // ── Per-metric confidence scoring (P0) ───────────────────────────────────
+  const confidenceFlags: string[] = [];
+
+  const hasMultipleWallets = scannable.length >= 2;
+  const hasTreasuryRole = treasuryWallets.length > 0;
+  const hasExpenseWallet = scannable.some((w) =>
+    ["fee", "operator", "deployer"].includes((w.role ?? "").toLowerCase()),
+  );
+  const hasQuarantinedEvents = quarantinedEvents.length > 0;
+  const walletCoverage = scannable.length / Math.max(declared.length, 1);
+
+  if (!hasMultipleWallets) confidenceFlags.push("single_wallet_only");
+  if (!hasTreasuryRole) confidenceFlags.push("no_treasury_wallet");
+  if (!hasExpenseWallet) confidenceFlags.push("no_expense_wallet");
+  if (hasQuarantinedEvents) confidenceFlags.push(`${quarantinedEvents.length}_quarantined_inflows`);
+  if (walletCoverage < 0.8) confidenceFlags.push("wallet_coverage_below_80pct");
+  if (attributionConfidence === "low") confidenceFlags.push("low_wallet_attestation");
+
+  const revenueConfidence: BooksConfidence =
+    hasQuarantinedEvents && quarantinedUsd > revenue
+      ? "low"
+      : attributionConfidence === "low" || !hasMultipleWallets
+        ? "medium"
+        : "high";
+
+  const expenseConfidence: BooksConfidence =
+    !hasExpenseWallet
+      ? "low"
+      : attributionConfidence === "low"
+        ? "medium"
+        : "high";
+
+  const treasuryConfidence: BooksConfidence =
+    !hasTreasuryRole
+      ? "low"
+      : attributionConfidence === "low"
+        ? "medium"
+        : "high";
+
+  const confidenceScores = [revenueConfidence, expenseConfidence, treasuryConfidence];
+  const overallConfidence: BooksConfidence =
+    confidenceScores.every((c) => c === "high")
+      ? "high"
+      : confidenceScores.some((c) => c === "low")
+        ? "low"
+        : "medium";
 
   const fromManifest = scannable.some(
     (w) => (w.evidenceSource ?? "").toLowerCase() === "manifest",
@@ -312,13 +453,28 @@ async function computeAgentBooks(
       roles: [...new Set(scannable.map((w) => w.role ?? "unknown"))],
     },
     financials: {
-      revenue_usd: round(revenue),
-      expenses_usd: round(expenses),
-      net_income_usd: round(netIncome),
+      revenue_usd:          round(revenue),
+      gross_inflow_usd:     round(grossInflowUsd),
+      expenses_usd:         round(expenses),
+      net_income_usd:       round(netIncome),
       treasury_balance_usd: treasuryBalance,
-      runway_months: runwayMonths,
-      margin_pct: revenue > 0 ? round((netIncome / revenue) * 100) : null,
-      tx_count: external.length,
+      runway_months:        runwayMonths,
+      margin_pct:           revenue > 0 ? round((netIncome / revenue) * 100) : null,
+      tx_count:             operational.length,
+    },
+    classification: {
+      operating_revenue_usd:        round(revenue),
+      quarantined_inflows_usd:      round(quarantinedUsd),
+      bridge_excluded_expense_usd:  round(bridgeExcludedExpenseUsd),
+      dex_excluded_usd:             round(dexExcludedUsd),
+      quarantined_events:           quarantinedEvents.slice(0, 20),
+    },
+    confidence: {
+      revenue:  revenueConfidence,
+      expenses: expenseConfidence,
+      treasury: treasuryConfidence,
+      overall:  overallConfidence,
+      flags:    confidenceFlags,
     },
     breakdown: {
       revenue_by_source: [...bySource.values()]
@@ -334,12 +490,12 @@ async function computeAgentBooks(
         .map((e) => ({ ...e, total_usd: round(e.total_usd) })),
     },
     attribution: {
-      source: fromManifest ? "manifest" : "registry",
-      confidence,
+      source:                    fromManifest ? "manifest" : "registry",
+      confidence:                attributionConfidence,
       internal_transfers_removed: internal.length,
     },
     luca_summary: buildSummary(
-      agent.name, period, revenue, expenses, netIncome, external.length, internal.length,
+      agent.name, period, revenue, expenses, netIncome, operational.length, internal.length,
     ),
     generated_at: new Date().toISOString(),
   };
