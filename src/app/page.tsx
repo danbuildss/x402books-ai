@@ -247,7 +247,7 @@ export default async function HomePage() {
             <h2 className="lp-h2">Attributed economic activity<br />across the agent economy.</h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 14, marginTop: 32 }}>
-            <GDPStat label="Total Revenue" value={gdp ? fmtUSD(gdp.total_revenue_usd) : "—"} accent="#6DB874" />
+            <GDPStat label="Operating Revenue" value={gdp ? fmtUSD(gdp.total_revenue_usd) : "—"} accent="#6DB874" />
             <GDPStat label="Total Expenses" value={gdp ? fmtUSD(gdp.total_expenses_usd) : "—"} />
             <GDPStat label="Net Income" value={gdp ? fmtUSD(gdp.total_net_income_usd) : "—"} accent={gdp && gdp.total_net_income_usd >= 0 ? "#6DB874" : "#ef4444"} />
             <GDPStat label="Attributed Agents" value={gdp ? String(gdp.attributed_agents) : "—"} />
@@ -255,7 +255,7 @@ export default async function HomePage() {
             <GDPStat label="Total Indexed" value={gdp ? `${gdp.total_agents}+` : "—"} />
           </div>
           <p style={{ marginTop: 16, fontSize: "0.72rem", color: "var(--muted)" }}>
-            Live data from attributed agents. Updated hourly. Attribution requires a declared wallet manifest.
+            Operating revenue only — capital injections, bridge transfers, grants, and swaps excluded. Updated hourly.
           </p>
           {gdpFailed && (
             <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 8 }}>
