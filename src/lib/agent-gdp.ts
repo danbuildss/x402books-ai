@@ -68,7 +68,7 @@ export async function getAgentGDP(): Promise<AgentGDP> {
     total_revenue_usd: round(totalRevenue),
     total_expenses_usd: round(totalExpenses),
     total_net_income_usd: round(totalRevenue - totalExpenses),
-    attributed_agents: withWallets.length,
+    attributed_agents: topAgents.length,
     attributed_wallets: totalWallets,
     total_agents: agents.length,
     top_agents: topAgents.slice(0, 6),

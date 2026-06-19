@@ -317,7 +317,7 @@ async function computeAgentBooks(
 
   for (const tx of allIncomeTxs) {
     const counterparty = (tx.counterparty || tx.from).toLowerCase();
-    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 1;
+    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 0;
     const isStablecoin = STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase());
     const usd = usdOf(tx);
 
