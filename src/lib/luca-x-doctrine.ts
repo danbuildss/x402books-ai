@@ -111,10 +111,21 @@ Confidence framework — always separate these:
 
 Never present inference as fact.`;
 
+// ── Few-shot examples ─────────────────────────────────────────────────────────
+
+export type ReplyExample = { question: string; reply: string };
+
+function injectExamples(examples: ReplyExample[]): string {
+  if (examples.length === 0) return "";
+  return `\nApproved examples — match this style, not the facts:\n${examples
+    .map((e, i) => `Example ${i + 1}:\nQ: ${e.question}\nA: ${e.reply}`)
+    .join("\n\n")}\n`;
+}
+
 // ── Fast Read prompt ──────────────────────────────────────────────────────────
 
-export function buildFastReadPrompt(question: string): string {
-  return `${SHARED_DOCTRINE}
+export function buildFastReadPrompt(question: string, examples: ReplyExample[] = []): string {
+  return `${SHARED_DOCTRINE}${injectExamples(examples)}
 
 Response mode: Fast Read (default).
 
@@ -145,8 +156,8 @@ Write the Fast Read. Signal. Verdict. End.`;
 
 // ── Analyst Read prompt ───────────────────────────────────────────────────────
 
-export function buildAnalystReadPrompt(question: string): string {
-  return `${SHARED_DOCTRINE}
+export function buildAnalystReadPrompt(question: string, examples: ReplyExample[] = []): string {
+  return `${SHARED_DOCTRINE}${injectExamples(examples)}
 
 Response mode: Analyst Read (user asked for more detail).
 
@@ -174,8 +185,8 @@ Write the Analyst Read. Hierarchy. Signal. Verdict.`;
 
 // ── Full Report prompt ────────────────────────────────────────────────────────
 
-export function buildFullReportPrompt(question: string): string {
-  return `${SHARED_DOCTRINE}
+export function buildFullReportPrompt(question: string, examples: ReplyExample[] = []): string {
+  return `${SHARED_DOCTRINE}${injectExamples(examples)}
 
 Response mode: Full Report (explicit audit / deep dive request).
 
@@ -212,8 +223,8 @@ Write the Full Report. Complete analyst framework.`;
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
 
-export function buildPrompt(question: string, tier: ResponseTier): string {
-  if (tier === "analyst_read") return buildAnalystReadPrompt(question);
-  if (tier === "full_report")  return buildFullReportPrompt(question);
-  return buildFastReadPrompt(question);
+export function buildPrompt(question: string, tier: ResponseTier, examples: ReplyExample[] = []): string {
+  if (tier === "analyst_read") return buildAnalystReadPrompt(question, examples);
+  if (tier === "full_report")  return buildFullReportPrompt(question, examples);
+  return buildFastReadPrompt(question, examples);
 }
