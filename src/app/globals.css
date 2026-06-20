@@ -10820,3 +10820,157 @@ html, body {
   .ldb-row    > *:nth-child(n+4) { display: none; }
   .ldb-header > *:nth-child(n+4) { display: none; }
 }
+
+/* ================================================================
+   Zetta Dashboard & Bloomberg Landing — New UI
+   ================================================================ */
+
+/* Globe visual */
+.zetta-globe-wrap { position: relative; width: 100%; max-width: 480px; aspect-ratio: 1; }
+.zetta-globe {
+  position: absolute; inset: 10%;
+  background: radial-gradient(circle at 38% 35%, #1a2f1e 0%, #0a120b 60%, #060a07 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(109,184,116,0.08), 0 0 80px 20px rgba(109,184,116,0.10), 0 0 200px 60px rgba(109,184,116,0.05);
+}
+.zetta-globe-agent {
+  position: absolute; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px; font-size: 0.7rem; font-family: var(--font-mono);
+  white-space: nowrap; backdrop-filter: blur(8px);
+}
+.zetta-globe-agent-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; margin-right: 5px; }
+
+/* Stat chips */
+.zetta-stat-chip { padding: 16px 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-soft); }
+.zetta-stat-label { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin: 0 0 6px; }
+.zetta-stat-value { font-size: 1.5rem; font-weight: 700; font-family: var(--font-mono); color: var(--ink); margin: 0 0 4px; }
+.zetta-stat-delta { font-size: 0.72rem; font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
+
+/* Signal rows */
+.zetta-signal-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--line); font-size: 0.82rem;
+}
+.zetta-signal-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.zetta-signal-time { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+
+/* Ecosystem health bars */
+.zetta-health-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.8rem; }
+.zetta-health-bar-bg { flex: 1; height: 4px; background: var(--surface-soft); border-radius: 99px; overflow: hidden; }
+.zetta-health-bar-fill { height: 100%; border-radius: 99px; background: var(--accent); }
+
+/* Dashboard layout */
+.zetta-dashboard { display: flex; min-height: 100vh; background: var(--bg); }
+.zetta-sidebar {
+  width: 220px; min-height: 100vh; position: fixed; top: 0; left: 0;
+  background: var(--surface); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; padding: 0; z-index: 50;
+}
+.zetta-sidebar-inner { display: flex; flex-direction: column; height: 100vh; padding: 20px 14px; }
+.zetta-main { margin-left: 220px; flex: 1; min-height: 100vh; }
+.zetta-nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  border-radius: 7px; font-size: 0.85rem; font-weight: 500; color: var(--muted);
+  text-decoration: none; transition: background 0.1s, color 0.1s;
+}
+.zetta-nav-item:hover, .zetta-nav-item.active {
+  background: var(--surface-soft); color: var(--ink);
+}
+.zetta-nav-icon { width: 16px; height: 16px; opacity: 0.7; flex-shrink: 0; }
+.zetta-submit-btn {
+  display: block; width: 100%; padding: 9px 14px; text-align: center;
+  background: var(--accent); color: #fff; border-radius: 8px; font-weight: 600;
+  font-size: 0.82rem; text-decoration: none; margin: 12px 0;
+}
+.zetta-luca-card {
+  padding: 12px 14px; background: var(--surface-soft);
+  border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px;
+}
+
+/* Bloomberg stats bar */
+.zetta-stats-bar {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  margin: 0;
+}
+.zetta-stats-bar-item {
+  padding: 16px 24px; border-right: 1px solid var(--line);
+}
+.zetta-stats-bar-item:last-child { border-right: none; }
+
+/* Data grid */
+.zetta-data-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;
+  padding: 32px 40px;
+}
+.zetta-data-panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 20px; overflow: hidden;
+}
+.zetta-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.zetta-panel-title { font-size: 0.82rem; font-weight: 700; color: var(--ink); }
+.zetta-panel-link { font-size: 0.72rem; color: var(--accent); }
+
+/* Agent table in dashboard */
+.zetta-agent-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+.zetta-agent-table th {
+  text-align: left; padding: 6px 8px;
+  font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.zetta-agent-table td { padding: 8px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.zetta-agent-table tr:last-child td { border-bottom: none; }
+
+/* Research report cards */
+.zetta-report-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.zetta-report-item:last-child { border-bottom: none; }
+.zetta-type-badge {
+  display: inline-block; font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.07em; padding: 2px 7px; border-radius: 4px;
+  background: var(--surface-soft); color: var(--muted); margin-bottom: 5px;
+}
+
+/* Hero section override for bloomberg style */
+.zetta-hero-section {
+  display: grid; grid-template-columns: 1fr 420px; align-items: start;
+  gap: 40px; padding: 64px 40px 48px; max-width: 1200px; margin: 0 auto;
+}
+
+/* Economy overview card */
+.zetta-economy-card {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; padding: 20px;
+}
+.zetta-economy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+.zetta-economy-stat {
+  background: var(--surface-soft); border: 1px solid var(--line);
+  border-radius: 8px; padding: 12px;
+}
+
+/* Trusted by row */
+.zetta-trusted-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+.zetta-trusted-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.zetta-trusted-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+.zetta-trusted-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* Bottom grid */
+.zetta-bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 40px 40px; max-width: 1200px; margin: 0 auto; }
+.zetta-bottom-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 22px; }
+
+/* Feature pills */
+.zetta-feature-pill { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.zetta-feature-icon { width: 28px; height: 28px; border-radius: 7px; background: var(--surface-soft); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent); }
+
+/* Responsive dashboard */
+@media (max-width: 900px) {
+  .zetta-sidebar { display: none; }
+  .zetta-main { margin-left: 0; }
+  .zetta-data-grid { grid-template-columns: 1fr; padding: 20px; }
+  .zetta-hero-section { grid-template-columns: 1fr; }
+  .zetta-stats-bar { grid-template-columns: 1fr 1fr; }
+  .zetta-bottom-grid { grid-template-columns: 1fr; padding: 0 20px 32px; }
+}
