@@ -152,12 +152,12 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
   const topAgents = gdp?.top_agents ?? [];
 
   const navItems = [
-    { href: "/dashboard", label: "Home", icon: <IconHome /> },
-    { href: "/registry", label: "Registry", icon: <IconGrid /> },
-    { href: "/leaderboard", label: "Leaderboard", icon: <IconBar /> },
-    { href: "/research", label: "Research", icon: <IconDoc /> },
-    { href: "/developer", label: "API", icon: <IconCode /> },
-    { href: "/luca", label: "Luca", icon: <IconBot /> },
+    { href: "/dashboard", label: "Home", icon: <IconHome />, soon: false },
+    { href: "/registry", label: "Registry", icon: <IconGrid />, soon: false },
+    { href: "/leaderboard", label: "Leaderboard", icon: <IconBar />, soon: false },
+    { href: "/research", label: "Research", icon: <IconDoc />, soon: false },
+    { href: "/developer", label: "API", icon: <IconCode />, soon: false },
+    { href: "/luca", label: "Luca", icon: <IconBot />, soon: true },
   ];
 
   const lucaTake = reports[0]?.summary
@@ -184,9 +184,15 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                 key={item.href}
                 href={item.href}
                 className={`zetta-nav-item${pathname === item.href ? " active" : ""}`}
+                style={{ justifyContent: "space-between" }}
               >
-                {item.icon}
-                {item.label}
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  {item.icon}
+                  {item.label}
+                </span>
+                {item.soon && (
+                  <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(109,184,116,0.12)", color: "#6DB874", letterSpacing: "0.05em", textTransform: "uppercase" }}>Soon</span>
+                )}
               </Link>
             ))}
           </nav>
@@ -199,9 +205,14 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
 
           {/* Luca card */}
           <div className="zetta-luca-card">
-            <p style={{ margin: "0 0 2px", fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)" }}>Luca by Zetta</p>
-            <p style={{ margin: "0 0 8px", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.45 }}>Financial analyst for the agent economy.</p>
-            <Link href="/luca" style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--accent)" }}>Ask Luca →</Link>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)" }}>Luca by Zetta</p>
+              <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(109,184,116,0.12)", color: "#6DB874", textTransform: "uppercase", letterSpacing: "0.05em" }}>Soon</span>
+            </div>
+            <p style={{ margin: "0 0 8px", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.45 }}>
+              Chat with Luca — your financial analyst for agent books.
+            </p>
+            <Link href="/luca" style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--accent)" }}>Preview →</Link>
           </div>
 
           {/* Bottom identity */}

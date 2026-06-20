@@ -223,7 +223,7 @@ export default function LucaPage() {
             <em>the books.</em>
           </h1>
           <p className="lp-hero-sub">
-            Luca is Zetta&rsquo; financial analyst. Revenue, expenses, treasury activity, attribution gaps —
+            Luca is Zetta&rsquo;s financial analyst. Revenue, expenses, treasury activity, attribution gaps —
             interpreted from on-chain data, written in plain language. Bloomberg Intelligence for the agent economy.
           </p>
           <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap", marginTop: "1.5rem" }}>
@@ -231,6 +231,59 @@ export default function LucaPage() {
             <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost lp-btn-lg">
               @AskLucaBot
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Chat Interface — Coming Soon ── */}
+      <section className="lp-section lp-section-alt">
+        <div className="luca-chat-wrap">
+          <div className="luca-chat-header">
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div className="luca-chat-avatar">L</div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem" }}>Luca by Zetta</p>
+                <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6DB874", display: "inline-block" }} />
+                  Financial Analyst · Agent Economy
+                </p>
+              </div>
+            </div>
+            <span className="luca-cs-badge">Coming Soon</span>
+          </div>
+          <div className="luca-chat-body">
+            <div className="luca-chat-bubble luca-chat-luca">
+              How is AEON&rsquo;s revenue trend compared to last month?
+            </div>
+            <div className="luca-chat-bubble luca-chat-reply">
+              AEON&rsquo;s operating revenue is up <strong>24.6%</strong> in the last 30 days compared to the previous 30 days. The growth is driven by increased on-chain activity and ecosystem adoption. Treasury remains healthy at $8.7M — no capital injections detected.
+              <br /><br />
+              <span style={{ color: "#6DB874", fontWeight: 600 }}>High confidence.</span> Based on 4 attributed wallets.
+            </div>
+            <div className="luca-chat-bubble luca-chat-luca">
+              What&rsquo;s the net income for BANKR this quarter?
+            </div>
+            <div className="luca-chat-cs-overlay">
+              <div className="luca-chat-cs-inner">
+                <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: "0.95rem" }}>Luca Chat · Coming Soon</p>
+                <p style={{ margin: "0 0 16px", fontSize: "0.82rem", color: "var(--muted)" }}>
+                  Ask Luca anything about agent financials. Revenue, treasury, expenses, attribution — in plain language.
+                </p>
+                <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary" style={{ fontSize: "0.82rem" }}>
+                  Try @AskLucaBot on Telegram →
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="luca-chat-input-row">
+            <div className="luca-chat-input" aria-disabled="true">
+              Ask Luca about any agent&rsquo;s financials…
+            </div>
+            <button type="button" className="luca-chat-send" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
           </div>
         </div>
       </section>

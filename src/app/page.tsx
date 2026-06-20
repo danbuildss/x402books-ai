@@ -2,6 +2,8 @@ import Link from "next/link";
 import { FadeContent } from "@/components/effects";
 import { HomeHeader } from "./home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { AnimatedGlobe } from "@/components/animated-globe";
+import { HomeSignals } from "@/components/home-signals";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { listReports } from "@/lib/research-db";
 import { getGDPHistory } from "@/lib/gdp-history";
@@ -33,12 +35,6 @@ const ECO_COLORS: Record<string, string> = {
   Base: "#4F46E5",
 };
 
-const STATIC_SIGNALS = [
-  { eco: "AEON", color: "#8B5CF6", text: "Operating revenue increased 32.5% in the last 30 days.", ago: "12m ago" },
-  { eco: "BANKR", color: "#6DB874", text: "Treasury inflows up 18.1% with multi-sig activity detected.", ago: "34m ago" },
-  { eco: "VIRTUALS", color: "#5B8FA8", text: "New attribution detected: 0x8f…a3c9", ago: "1h ago" },
-  { eco: "GAME", color: "#F97316", text: "Ecosystem partnerships announced.", ago: "2h ago" },
-];
 
 function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
   const pts = "2,14 8,10 14,12 20,7 26,9 32,4 38,6";
@@ -49,21 +45,6 @@ function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
   );
 }
 
-function GlobeLines() {
-  return (
-    <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }} viewBox="0 0 400 400">
-      <line x1="200" y1="200" x2="300" y2="100" stroke="#6DB874" strokeWidth="0.8" opacity="0.4" />
-      <line x1="200" y1="200" x2="100" y2="150" stroke="#6DB874" strokeWidth="0.8" opacity="0.3" />
-      <line x1="200" y1="200" x2="280" y2="280" stroke="#6DB874" strokeWidth="0.8" opacity="0.35" />
-      <line x1="200" y1="200" x2="130" y2="300" stroke="#6DB874" strokeWidth="0.8" opacity="0.25" />
-      <circle cx="300" cy="100" r="3" fill="#6DB874" opacity="0.8" />
-      <circle cx="100" cy="150" r="3" fill="#6DB874" opacity="0.8" />
-      <circle cx="280" cy="280" r="3" fill="#6DB874" opacity="0.8" />
-      <circle cx="130" cy="300" r="2.5" fill="#6DB874" opacity="0.6" />
-      <circle cx="200" cy="200" r="4" fill="#6DB874" opacity="0.9" />
-    </svg>
-  );
-}
 
 function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
   if (snapshots.length < 2) {
@@ -124,10 +105,11 @@ export default async function HomePage() {
           {/* Left: Copy */}
           <div>
             <FadeContent>
-              <p className="lp-eyebrow">Zetta · Financial Identity for Autonomous Agents</p>
+              <p className="lp-eyebrow">Zetta · Financial Intelligence Platform</p>
               <h1 className="lp-h1" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", maxWidth: 540 }}>
-                The financial operating system for the{" "}
-                <em style={{ fontStyle: "italic", color: "#6DB874" }}>agent economy.</em>
+                Financial Intelligence<br />
+                for the{" "}
+                <em style={{ fontStyle: "italic", color: "#6DB874" }}>Agent Economy.</em>
               </h1>
               <p className="lp-hero-sub">
                 Autonomous agents earn, spend, and manage capital on-chain. Zetta is the attribution layer that turns wallet activity into auditable books: revenue, expenses, treasury, and net income — per agent.
@@ -158,25 +140,8 @@ export default async function HomePage() {
 
           {/* Right: Globe + card */}
           <div style={{ position: "relative" }}>
-            {/* Globe */}
-            <div className="zetta-globe-wrap">
-              <div className="zetta-globe">
-                <GlobeLines />
-              </div>
-              {/* Floating agent chips */}
-              <div className="zetta-globe-agent" style={{ top: "8%", right: "2%" }}>
-                <span className="zetta-globe-agent-dot" />
-                AEON · $18.2K rev
-              </div>
-              <div className="zetta-globe-agent" style={{ bottom: "20%", left: "0%" }}>
-                <span className="zetta-globe-agent-dot" style={{ background: "#8B5CF6" }} />
-                BANKR · $12.4K rev
-              </div>
-              <div className="zetta-globe-agent" style={{ bottom: "5%", right: "10%" }}>
-                <span className="zetta-globe-agent-dot" style={{ background: "#5B8FA8" }} />
-                Virtuals · $9.1K rev
-              </div>
-            </div>
+            {/* Animated Globe */}
+            <AnimatedGlobe />
 
             {/* Economy Overview card */}
             <div className="zetta-economy-card" style={{ marginTop: 16 }}>
@@ -378,28 +343,13 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* ── LIVE SIGNALS ── */}
-      <div style={{ maxWidth: 1200, margin: "24px auto 0", padding: "0 40px" }}>
-        <div className="zetta-data-panel">
-          <div className="zetta-panel-header">
-            <span className="zetta-panel-title">Live Signals</span>
-            <span style={{ fontSize: "0.65rem", color: "#6DB874", fontFamily: "var(--font-mono)" }}>&#9679; Updated hourly</span>
-          </div>
-          {(topAgents.length > 0 ? topAgents.slice(0, 4).map((agent, i) => ({
-            eco: agent.ecosystem,
-            color: ECO_COLORS[agent.ecosystem] ?? "#6DB874",
-            text: `${agent.name} attributed ${fmtUSD(agent.revenue_usd)} in operating revenue over 30 days.`,
-            ago: `${(i + 1) * 12}m ago`,
-          })) : STATIC_SIGNALS).map((sig, i) => (
-            <div key={i} className="zetta-signal-row">
-              <span className="zetta-signal-dot" style={{ background: sig.color }} />
-              <span style={{ fontWeight: 600, fontSize: "0.75rem", color: "var(--muted)", minWidth: 80 }}>{sig.eco}</span>
-              <span style={{ color: "var(--ink)", flex: 1, fontSize: "0.82rem" }}>{sig.text}</span>
-              <span className="zetta-signal-time">{sig.ago}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* ── LIVE SIGNALS (tabbed) ── */}
+      <HomeSignals liveSignals={topAgents.length > 0 ? topAgents.slice(0, 4).map((agent, i) => ({
+        eco: agent.ecosystem,
+        color: ECO_COLORS[agent.ecosystem] ?? "#6DB874",
+        text: `${agent.name} attributed ${fmtUSD(agent.revenue_usd)} in operating revenue over 30 days.`,
+        ago: `${(i + 1) * 12}m ago`,
+      })) : undefined} />
 
       <div style={{ height: 48 }} />
 
