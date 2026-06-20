@@ -10,22 +10,46 @@ const BANKR_BUY = "https://bankr.bot/launches/0xb2b335f832fd3f43461ebd1cd9831d93
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
 
-const WHAT_LUCA_COVERS = [
+const CAPABILITIES = [
+  { label: "Analyze Agent",           desc: "Full financial analysis for any attributed agent. Revenue, expenses, net income, treasury, confidence signal." },
+  { label: "Compare Agents",          desc: "Side-by-side financial comparison across agents or ecosystems. Which is growing faster. Which has better margin." },
+  { label: "Explain Treasury",        desc: "Treasury movements classified and contextualized. Capital injections separated from operational inflows." },
+  { label: "Explain Revenue",         desc: "Revenue sources broken down by category. Inference, settlement, fee — each classified and attributed." },
+  { label: "Explain GDP Changes",     desc: "What is driving Agent GDP up or down. Which agents are contributing. What the attribution gap represents." },
+  { label: "Explain Wallet Activity", desc: "Submit any Base wallet. Luca analyzes it against the agent books and returns a financial summary." },
+];
+
+const SUGGESTED_PROMPTS = [
+  "How is AEON's revenue trending?",
+  "Compare BANKR and VIRTUALS treasury",
+  "What drove agent GDP this month?",
+  "Explain AEON's inference spend",
+  "What is the attribution gap?",
+  "Show GAME's net income trend",
+];
+
+const EXAMPLE_ANALYSES = [
   {
-    label: "Revenue Analysis",
-    body: "Top earners, growth rates, revenue concentration across attributed agents. Sourced from declared wallets — on-chain, confirmed.",
+    query: "How is AEON's revenue trending compared to last month?",
+    rows: [
+      { field: "ATTRIBUTION", value: "4 wallets declared · verified · Base · last updated 2h ago", positive: false },
+      { field: "BOOKS",       value: "$18.2K revenue · $4.1K expenses · $14.1K net income · 47 txs", positive: false },
+      { field: "HISTORY",     value: "+24.6% vs prior 30d · expense ratio stable at 22.5% · net margin expanding", positive: true },
+      { field: "SIGNAL",      value: "Inference spend rising proportionally · treasury at $8.7M unchanged · no capital injections", positive: false },
+    ],
+    verdict: "Strong operational performance. Revenue acceleration driven by ecosystem adoption. Expense efficiency maintained. No risk signals.",
+    confidence: "HIGH",
   },
   {
-    label: "Treasury Intelligence",
-    body: "Capital allocation, runway, treasury movements. Luca reads the books and flags what matters.",
-  },
-  {
-    label: "Expense Patterns",
-    body: "Spend categories, operational cost trends, gas analysis. Every outflow classified and contextualized.",
-  },
-  {
-    label: "Attribution Gap",
-    body: "What the unattributed portion of the economy might represent. How coverage changes as more agents declare wallets.",
+    query: "What is BANKR's treasury position and runway?",
+    rows: [
+      { field: "ATTRIBUTION", value: "2 wallets declared · verified · Base · fee wallet + treasury wallet", positive: false },
+      { field: "BOOKS",       value: "$12.4K revenue · $3.1K expenses · $9.3K net income · 31 txs", positive: false },
+      { field: "HISTORY",     value: "Treasury grew 18.1% over 30d · multi-sig inflow confirmed · 3 consecutive profitable periods", positive: true },
+      { field: "SIGNAL",      value: "Fee wallet receiving consistent settlement · stablecoin reserves diversified · no unusual outflows", positive: false },
+    ],
+    verdict: "Treasury is healthy. Operating surplus maintained across three consecutive periods. Attribution coverage complete across declared wallets.",
+    confidence: "HIGH",
   },
 ];
 
@@ -210,6 +234,8 @@ function LucaTokenSection() {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LucaPage() {
+  const [activeExample, setActiveExample] = useState(0);
+
   return (
     <div className="lp-root">
       <HomeHeader />
@@ -235,78 +261,108 @@ export default function LucaPage() {
         </div>
       </section>
 
-      {/* ── Chat Interface — Coming Soon ── */}
-      <section className="lp-section lp-section-alt">
-        <div className="luca-chat-wrap">
-          <div className="luca-chat-header">
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div className="luca-chat-avatar">L</div>
-              <div>
-                <p style={{ margin: 0, fontWeight: 700, fontSize: "0.85rem" }}>Luca by Zetta</p>
-                <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#6DB874", display: "inline-block" }} />
-                  Financial Analyst · Agent Economy
-                </p>
-              </div>
-            </div>
-            <span className="luca-cs-badge">Coming Soon</span>
-          </div>
-          <div className="luca-chat-body">
-            <div className="luca-chat-bubble luca-chat-luca">
-              How is AEON&rsquo;s revenue trend compared to last month?
-            </div>
-            <div className="luca-chat-bubble luca-chat-reply">
-              AEON&rsquo;s operating revenue is up <strong>24.6%</strong> in the last 30 days compared to the previous 30 days. The growth is driven by increased on-chain activity and ecosystem adoption. Treasury remains healthy at $8.7M — no capital injections detected.
-              <br /><br />
-              <span style={{ color: "#6DB874", fontWeight: 600 }}>High confidence.</span> Based on 4 attributed wallets.
-            </div>
-            <div className="luca-chat-bubble luca-chat-luca">
-              What&rsquo;s the net income for BANKR this quarter?
-            </div>
-            <div className="luca-chat-cs-overlay">
-              <div className="luca-chat-cs-inner">
-                <p style={{ margin: "0 0 6px", fontWeight: 700, fontSize: "0.95rem" }}>Luca Chat · Coming Soon</p>
-                <p style={{ margin: "0 0 16px", fontSize: "0.82rem", color: "var(--muted)" }}>
-                  Ask Luca anything about agent financials. Revenue, treasury, expenses, attribution — in plain language.
-                </p>
-                <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary" style={{ fontSize: "0.82rem" }}>
-                  Try @AskLucaBot on Telegram →
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="luca-chat-input-row">
-            <div className="luca-chat-input" aria-disabled="true">
-              Ask Luca about any agent&rsquo;s financials…
-            </div>
-            <button type="button" className="luca-chat-send" disabled>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── What Luca Covers ── */}
+      {/* ── Capabilities ── */}
       <section className="lp-section lp-section-alt">
         <div className="lp-section-head">
-          <p className="lp-section-label">Coverage</p>
+          <p className="lp-section-label">Capabilities</p>
           <h2 className="lp-h2">What Luca analyzes.</h2>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14, marginTop: 28 }}>
-          {WHAT_LUCA_COVERS.map((item) => (
-            <div key={item.label} style={{
-              padding: "18px 20px",
-              border: "1px solid var(--line)",
-              borderRadius: 10,
-              background: "var(--surface-soft)",
-            }}>
-              <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: "0.88rem" }}>{item.label}</p>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>{item.body}</p>
+        <div className="lt-capabilities">
+          {CAPABILITIES.map((item, i) => (
+            <div key={item.label} className="lt-cap-card">
+              <span className="lt-cap-num">{String(i + 1).padStart(2, "0")}</span>
+              <p className="lt-cap-label">{item.label}</p>
+              <p className="lt-cap-desc">{item.desc}</p>
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── Analysis Terminal ── */}
+      <section className="lp-section">
+        <div className="lp-section-head" style={{ marginBottom: 28 }}>
+          <p className="lp-section-label">Analysis Terminal</p>
+          <h2 className="lp-h2">Financial intelligence, structured.</h2>
+          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
+            Every Luca analysis follows the same structure: Attribution → Books → History → Signal → Verdict.
+            Data first, interpretation second, confidence always declared.
+          </p>
+        </div>
+
+        {/* Suggested prompts */}
+        <div className="lt-prompts">
+          {SUGGESTED_PROMPTS.map((p, i) => (
+            <button
+              key={p}
+              type="button"
+              className={`lt-prompt${activeExample === (i < 2 ? i : -1) ? " lt-prompt-active" : ""}`}
+              onClick={() => setActiveExample(i < 2 ? i : 0)}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {/* Terminal panel */}
+        <div className="lt-terminal">
+          <div className="lt-terminal-head">
+            <div className="lt-terminal-dots">
+              <span /><span /><span />
+            </div>
+            <span className="lt-terminal-label">LUCA · FINANCIAL ANALYSIS TERMINAL</span>
+            <span className="lt-terminal-badge">PREVIEW</span>
+          </div>
+
+          <div className="lt-query-row">
+            <span className="lt-field-label">QUERY</span>
+            <span className="lt-query-text">{EXAMPLE_ANALYSES[activeExample].query}</span>
+          </div>
+
+          <div className="lt-output-rows">
+            {EXAMPLE_ANALYSES[activeExample].rows.map((row) => (
+              <div key={row.field} className="lt-output-row">
+                <span className="lt-field-label">{row.field}</span>
+                <span className={`lt-output-value${row.positive ? " lt-positive" : ""}`}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="lt-verdict-block">
+            <div className="lt-verdict-left">
+              <span className="lt-field-label">VERDICT</span>
+              <p className="lt-verdict-text">{EXAMPLE_ANALYSES[activeExample].verdict}</p>
+            </div>
+            <div className="lt-confidence-block">
+              <span className="lt-field-label">CONFIDENCE</span>
+              <span className="lt-confidence-val">{EXAMPLE_ANALYSES[activeExample].confidence}</span>
+            </div>
+          </div>
+
+          <div className="lt-terminal-footer">
+            <span>Analysis based on attributed wallets · on-chain events · 30d window · no synthetic data</span>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <button
+                type="button"
+                className={`lt-ex-switch${activeExample === 0 ? " active" : ""}`}
+                onClick={() => setActiveExample(0)}
+              >AEON</button>
+              <button
+                type="button"
+                className={`lt-ex-switch${activeExample === 1 ? " active" : ""}`}
+                onClick={() => setActiveExample(1)}
+              >BANKR</button>
+              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lt-tg-link">
+                Try on Telegram →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <p style={{ marginTop: 16, fontSize: "0.74rem", color: "var(--muted)", textAlign: "center" }}>
+          Live terminal access coming soon. For now, use{" "}
+          <a href={TELEGRAM} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>@AskLucaBot</a> on Telegram.
+          {" "}<Link href="/methodology" style={{ color: "var(--accent)" }}>Read the methodology →</Link>
+        </p>
       </section>
 
       {/* ── State of the Agent Economy ── */}

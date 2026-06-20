@@ -184,6 +184,31 @@ export default async function HomePage() {
         ))}
       </div>
 
+      {/* ── ZETTA STACK ── */}
+      <section className="zetta-stack-section">
+        <div className="zetta-stack-inner">
+          <p className="zetta-stack-eyebrow">How Zetta Works</p>
+          <div className="zetta-stack-flow">
+            {[
+              { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#6DB874" },
+              { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B8FA8" },
+              { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B5CF6" },
+              { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F97316" },
+              { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#6DB874" },
+            ].map((item, i, arr) => (
+              <div key={item.step} className="zetta-stack-item">
+                <div className="zetta-stack-step-head">
+                  <span className="zetta-stack-num" style={{ color: item.color }}>{String(i + 1).padStart(2, "0")}</span>
+                  <span className="zetta-stack-label" style={{ color: item.color }}>{item.step}</span>
+                </div>
+                <p className="zetta-stack-desc">{item.desc}</p>
+                {i < arr.length - 1 && <span className="zetta-stack-arrow" aria-hidden="true">→</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── THREE-COLUMN DATA GRID ── */}
       <div className="zetta-data-grid" style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 40px" }}>
 
