@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 70" width="80" height="70">
-  <g transform="translate(37,2) skewX(-28)">
-    <rect x="0" y="0"  width="42" height="14" rx="4" fill="#1A1C1A"/>
-    <rect x="0" y="21" width="42" height="14" rx="4" fill="#6DB874"/>
-    <rect x="0" y="42" width="42" height="11" rx="4" fill="#1A1C1A"/>
-    <rect x="0" y="56" width="42" height="10" rx="4" fill="#1A1C1A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 126" width="120" height="126">
+  <g transform="matrix(0.985,-0.174,-0.423,0.906,53,12)">
+    <rect x="0" y="0"   width="68" height="14" rx="6" fill="#1A1C1A"/>
+    <rect x="0" y="37"  width="68" height="14" rx="6" fill="#6DB874"/>
+    <rect x="0" y="74"  width="68" height="14" rx="6" fill="#1A1C1A"/>
+    <rect x="0" y="111" width="68" height="14" rx="6" fill="#1A1C1A"/>
   </g>
 </svg>

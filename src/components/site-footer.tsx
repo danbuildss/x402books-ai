@@ -1,11 +1,17 @@
 import Link from "next/link";
+import { LogoMark } from "@/components/logo";
 
 export function SiteFooter() {
   return (
     <footer className="lp-footer">
       <div className="lp-footer-top">
         <div className="lp-footer-brand">
-          <a href="/" className="lp-brand lp-brand-sm" style={{ fontWeight: 700, fontSize: "1rem" }}>Zetta</a>
+          <a href="/" className="lp-brand lp-brand-sm" aria-label="Zetta">
+            <span className="brand" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <LogoMark size={20} />
+              <span style={{ fontWeight: 700, fontSize: "1rem" }}>zetta</span>
+            </span>
+          </a>
           <p>Financial intelligence for the agent economy.</p>
         </div>
         <div className="lp-footer-links">
