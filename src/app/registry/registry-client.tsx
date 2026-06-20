@@ -301,7 +301,7 @@ function VerifyCTA() {
             {[
               "Verified badge on your listing",
               "Luca-powered audit example",
-              "Listed across x402Books platform",
+              "Listed across Zetta platform",
             ].map((p) => (
               <div key={p} className="reg-verify-perk">
                 <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--accent)" }}>check_circle</span>
@@ -545,7 +545,7 @@ function LucaExample() {
           <div className="reg-audit-header">
             <div className="reg-audit-header-left">
               <span className="reg-audit-tag">Agent Wallet Audit</span>
-              <span className="reg-audit-by">by Luca · x402Books AI</span>
+              <span className="reg-audit-by">by Luca · Zetta</span>
             </div>
             <EcoBadge eco="Base" />
           </div>

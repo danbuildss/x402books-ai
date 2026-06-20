@@ -60,7 +60,7 @@ export function HomeHeader() {
           </div>
           <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/registry" className="lp-btn-primary">Explore Books</Link>
+          <Link href="/registry" className="lp-btn-primary">Explore Registry</Link>
           <button type="button" className="lp-hamburger" aria-label="Open menu" onClick={() => setOpen(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -92,7 +92,7 @@ export function HomeHeader() {
             </div>
             <div className="lp-mobile-ctas">
               <Link href="/access" className="lp-btn-ghost" onClick={() => setOpen(false)}>Sign In</Link>
-              <Link href="/registry" className="lp-btn-primary" onClick={() => setOpen(false)}>Explore Books</Link>
+              <Link href="/registry" className="lp-btn-primary" onClick={() => setOpen(false)}>Explore Registry</Link>
             </div>
           </div>
         </div>

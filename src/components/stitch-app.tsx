@@ -164,9 +164,9 @@ export function StitchShell({ children }: { children: ReactNode }) {
 
       <aside className={`stitch-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="stitch-brand">
-          <img src="/logo.svg" alt="x402Books AI" width={32} height={32} style={{ borderRadius: "7px", flexShrink: 0 }} />
+          <img src="/logo.svg" alt="Zetta" width={32} height={32} style={{ borderRadius: "7px", flexShrink: 0 }} />
           <div>
-            <strong>x402Books AI</strong>
+            <strong>Zetta</strong>
             <span>Onchain Ledger</span>
           </div>
           {/* Close button (mobile only) */}
@@ -841,7 +841,7 @@ export function StitchJsonDrawer({
       <div className={`stitch-json-drawer ${open ? "open" : ""}`}>
         <div className="stitch-json-inner">
           <div className="stitch-json-toolbar">
-            <span>Agent-Readable JSON · x402Books AI</span>
+            <span>Agent-Readable JSON · Zetta</span>
             <button type="button" onClick={() => onCopy(json, "json-drawer")}>
               <StitchIcon name={copied === "json-drawer" ? "check" : "content_copy"} />
               {copied === "json-drawer" ? "Copied!" : "Copy JSON"}

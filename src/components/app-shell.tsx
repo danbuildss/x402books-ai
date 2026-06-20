@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-account">
           <span>xB</span>
           <div>
-            <strong>x402Books AI</strong>
+            <strong>Zetta</strong>
             <p>Financial identity layer</p>
           </div>
           <small>⌄</small>

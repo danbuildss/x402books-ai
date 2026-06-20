@@ -10,8 +10,8 @@ import type { InferenceEvent, InferenceSummary, MonthlyStatement, ProviderStat }
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Luca Inference Ledger — x402Books AI",
-  description: "Real-time inference economics for Luca. Powered by x402Books — the financial record layer for autonomous agents.",
+  title: "Luca Inference Ledger — Zetta",
+  description: "Real-time inference economics for Luca. Powered by Zetta — the financial record layer for autonomous agents.",
 };
 
 function usd(n: number) {
@@ -286,7 +286,7 @@ export default async function LucaLedgerPage({
           </h1>
           <p style={{ fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.55, maxWidth: 520 }}>
             Every inference call Luca makes becomes a financial event. Surplus powers the intelligence.
-            x402Books records the economics. Luca explains what they mean.
+            Zetta records the economics. Luca explains what they mean.
           </p>
         </div>
 

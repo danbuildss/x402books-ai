@@ -206,7 +206,7 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
         <Link href="/registry" className="lp-btn-ghost">View Registry</Link>
       </div>
       <p className="val-actions-note">
-        Submitting adds this manifest to the x402Books registry queue. Luca will verify and generate a financial profile.
+        Submitting adds this manifest to the Zetta registry queue. Luca will verify and generate a financial profile.
       </p>
     </div>
   );
@@ -329,7 +329,7 @@ export default function ValidatePage() {
         <p className="val-hero-sub">
           Paste your <code className="val-code">.x402books/wallets.json</code> below.
           Valid manifests are automatically indexed in the{" "}
-          <Link href="/registry" className="val-link">x402Books registry</Link> and
+          <Link href="/registry" className="val-link">Zetta registry</Link> and
           generate a Luca financial profile.
         </p>
       </section>
@@ -404,7 +404,7 @@ export default function ValidatePage() {
           {[
             { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .x402books/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
             { icon: "verified", step: "2", title: "Validate here", body: "Paste and validate against the open schema. Zero errors means it's registry-ready." },
-            { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to x402Books. Luca indexes your wallets and builds a financial profile." },
+            { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to Zetta. Luca indexes your wallets and builds a financial profile." },
             { icon: "workspace_premium", step: "4", title: "Get verified", body: "Earn the Verified badge. Paste it in your README as proof of financial identity." },
           ].map((s) => (
             <div key={s.step} className="val-step">
@@ -460,11 +460,11 @@ export default function ValidatePage() {
           </div>
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Community</p>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
+            <a href="https://x.com/Zetta" target="_blank" rel="noreferrer">X / Twitter</a>
             <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
           </div>
         </div>
-        <p className="lp-footer-copy">&copy; 2026 x402Books AI. Not financial advice.</p>
+        <p className="lp-footer-copy">&copy; 2026 Zetta AI. Not financial advice.</p>
       </footer>
     </div>
   );

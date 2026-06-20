@@ -238,7 +238,7 @@ export default async function LeaderboardPage() {
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: 28, fontSize: "0.78rem", color: "var(--muted)" }}>
-          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>x402Books</Link>
+          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Zetta</Link>
           <span style={{ margin: "0 8px" }}>›</span>
           <span>Economic Leaderboard</span>
         </nav>

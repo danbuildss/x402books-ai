@@ -145,14 +145,14 @@ function LucaTokenSection() {
       <div className="luca-section-head">
         <p className="luca-label">Ecosystem Token</p>
         <h2 className="luca-h2">$LUCA</h2>
-        <p className="luca-section-sub">The ecosystem asset powering x402Books and Luca.</p>
+        <p className="luca-section-sub">The ecosystem asset powering Zetta and Luca.</p>
       </div>
       <div className="lp-token-card luca-lp-token-card">
         <div className="lp-token-left">
           <p className="lp-token-eyebrow">Ecosystem Token · Base</p>
           <h2 className="lp-token-name">$LUCA</h2>
           <p className="lp-token-desc">
-            $LUCA is the ecosystem asset for x402Books. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
+            $LUCA is the ecosystem asset for Zetta. Hold $LUCA to unlock higher API limits, premium reports, and agent intelligence credits.
           </p>
           <div className="lp-token-ca">
             <span className="lp-token-ca-label">CA</span>
@@ -217,13 +217,13 @@ export default function LucaPage() {
       {/* ── Hero ── */}
       <section className="lp-hero" style={{ minHeight: "auto", paddingBottom: "3rem" }}>
         <div className="lp-hero-copy" style={{ maxWidth: 660 }}>
-          <p className="lp-eyebrow">Financial Analyst · x402Books</p>
+          <p className="lp-eyebrow">Financial Analyst · Zetta</p>
           <h1 className="lp-h1">
             Luca reads<br />
             <em>the books.</em>
           </h1>
           <p className="lp-hero-sub">
-            Luca is x402Books&rsquo; financial analyst. Revenue, expenses, treasury activity, attribution gaps —
+            Luca is Zetta&rsquo; financial analyst. Revenue, expenses, treasury activity, attribution gaps —
             interpreted from on-chain data, written in plain language. Bloomberg Intelligence for the agent economy.
           </p>
           <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap", marginTop: "1.5rem" }}>

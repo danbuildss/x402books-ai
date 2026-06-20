@@ -211,13 +211,13 @@ export default async function HomePage() {
       <section className="lp-hero">
         <div className="lp-hero-copy">
           <FadeContent>
-            <p className="lp-eyebrow">x402Books · Financial Identity for Autonomous Agents</p>
+            <p className="lp-eyebrow">Zetta · Financial Identity for Autonomous Agents</p>
             <h1 className="lp-h1">
               Financial Identity<br />
               <em>for Autonomous Agents.</em>
             </h1>
             <p className="lp-hero-sub">
-              Autonomous agents are software that earns, spends, and manages capital on-chain — independently. x402Books is the attribution layer that turns their wallet activity into auditable books: revenue, expenses, treasury, and net income per agent.
+              Autonomous agents are software that earns, spends, and manages capital on-chain — independently. Zetta is the attribution layer that turns their wallet activity into auditable books: revenue, expenses, treasury, and net income per agent.
             </p>
             {gdp && (
               <p style={{ margin: "0 0 20px", fontSize: "0.75rem", color: "var(--muted)", fontFamily: "monospace" }}>
@@ -284,11 +284,11 @@ export default async function HomePage() {
         </FadeContent>
       </section>
 
-      {/* ── How x402Books Works ── */}
+      {/* ── How Zetta Works ── */}
       <section className="lp-section lp-section-alt" id="how">
         <FadeContent delay={60}>
           <div className="lp-section-head">
-            <p className="lp-section-label">How x402Books Works</p>
+            <p className="lp-section-label">How Zetta Works</p>
             <h2 className="lp-h2">From wallet declaration<br />to financial intelligence.</h2>
           </div>
         </FadeContent>
@@ -318,7 +318,7 @@ export default async function HomePage() {
               <p className="lp-section-label">Registry</p>
               <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>The attribution layer.</h2>
               <p className="lp-registry-sub">
-                x402Books identifies which wallets belong to which agents, and what role each wallet plays. Attribution is the foundation. Without it, there are no books.
+                Zetta identifies which wallets belong to which agents, and what role each wallet plays. Attribution is the foundation. Without it, there are no books.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "20px 0" }}>
                 {[
@@ -404,7 +404,7 @@ export default async function HomePage() {
           </div>
           <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
             <Link href="/research" className="lp-btn-primary">Read Reports →</Link>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="lp-btn-ghost">Follow @x402Books</a>
+            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="lp-btn-ghost">Follow on X</a>
           </div>
         </FadeContent>
       </section>

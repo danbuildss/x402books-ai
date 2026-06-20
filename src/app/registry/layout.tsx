@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Agent Financial Registry | x402Books AI",
+  title: "Agent Financial Registry | Zetta",
   description:
-    "Track the wallets behind AI agents. x402Books AI indexes agent wallets across BANKR and Virtuals, scoring treasury health and flagging anomalies.",
+    "Track the wallets behind AI agents. Zetta indexes agent wallets across BANKR and Virtuals, scoring treasury health and flagging anomalies.",
   openGraph: {
-    title: "Agent Financial Registry — x402Books AI",
+    title: "Agent Financial Registry — Zetta",
     description:
       "10+ agent wallets tracked. Wallet roles, confidence labels, treasury health scores, and Luca-powered audit examples.",
     url: "https://x402books.xyz/registry",
-    siteName: "x402Books AI",
+    siteName: "Zetta",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Agent Financial Registry — x402Books AI",
+    title: "Agent Financial Registry — Zetta",
     description:
       "Track the wallets behind AI agents. Wallet roles, confidence labels, treasury health scores.",
-    creator: "@x402Books",
+    creator: "@ZettaFinance",
   },
 };
 

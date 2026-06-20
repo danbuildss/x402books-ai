@@ -35,9 +35,9 @@ export function LogoMark() {
 
 export function Logo() {
   return (
-    <span className="brand" aria-label="x402Books AI">
+    <span className="brand" aria-label="Zetta">
       <LogoMark />
-      <span>x402Books AI</span>
+      <span>Zetta</span>
     </span>
   );
 }

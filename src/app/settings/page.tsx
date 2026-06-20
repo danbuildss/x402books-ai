@@ -104,7 +104,7 @@ export default function SettingsPage() {
           <div className="stitch-setting-row">
             <div>
               <strong>Theme</strong>
-              <p>Choose how x402Books AI appears. Changes apply immediately.</p>
+              <p>Choose how Zetta appears. Changes apply immediately.</p>
             </div>
             <div className="stitch-segmented" style={{ gridTemplateColumns: "1fr 1fr" }}>
               {(["dark", "light"] as const).map((t) => (

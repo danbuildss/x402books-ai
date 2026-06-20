@@ -4,7 +4,7 @@
 //   and the broader ecosystem. Gives Luca live context beyond on-chain data.
 //
 // Phase 2 — Claude: writes the State of the Agent Economy report using
-//   both the x402Books financial data and the Grok research findings.
+//   both the Zetta financial data and the Grok research findings.
 //
 // If GROK_API_KEY is missing, Phase 1 is skipped.
 // If ANTHROPIC_API_KEY is missing, falls back to a rules-based report.
@@ -149,8 +149,8 @@ export async function generateEconomyReport(
     return { slug, title, subtitle, type, summary, body, agent_gdp_usd: gdp.total_revenue_usd, attributed_agents: gdp.attributed_agents, period_label: label };
   }
 
-  const prompt = `You are Luca, the financial analyst for x402Books. You have two sources of intelligence:
-1. On-chain financial data from x402Books (authoritative, confirmed)
+  const prompt = `You are Luca, Zetta's financial analyst. You have two sources of intelligence:
+1. On-chain financial data from Zetta (authoritative, confirmed)
 2. Real-time research from Grok (contextual, use to add color where relevant)
 
 You are writing the ${type} "State of the Agent Economy" report for ${label}.
@@ -165,7 +165,7 @@ ALL revenue figures below are operating revenue only. They have already been fil
 
 NEVER present gross inflow as revenue. NEVER describe quarantined amounts as revenue. The numbers below are conservative by design — they represent confirmed operating activity only. If revenue appears low, this may reflect attribution coverage (only ${gdp.attributed_agents} of ${gdp.total_agents} indexed agents have declared wallet manifests), not actual economic inactivity. State this explicitly when relevant.
 
-── ON-CHAIN FINANCIAL DATA (x402Books, last 30 days — operating revenue only) ──
+── ON-CHAIN FINANCIAL DATA (Zetta, last 30 days — operating revenue only) ──
 Total Operating Revenue: ${fmtUSD(gdp.total_revenue_usd)}
 Total Expenses: ${fmtUSD(gdp.total_expenses_usd)}
 Net Income: ${fmtUSD(gdp.total_net_income_usd)}

@@ -228,7 +228,7 @@ export default function DeveloperPage() {
     <StitchShell>
       <StitchHeader
         title="Developer API"
-        description="Manage API keys · Build on x402Books · Powered by x402Books AI"
+        description="Manage API keys · Build on Zetta · Powered by Zetta"
       />
 
       {/* Tier overview */}

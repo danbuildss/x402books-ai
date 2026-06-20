@@ -226,7 +226,7 @@ const NONCE_TTL_MS = 10 * 60 * 1000;
 
 export function buildLinkMessage(keyId: string, walletAddress: string, nonce: string): string {
   return [
-    "x402Books wallet verification",
+    "Zetta wallet verification",
     "",
     `Key: ${keyId}`,
     `Wallet: ${walletAddress.toLowerCase()}`,

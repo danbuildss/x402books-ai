@@ -4,7 +4,7 @@ import { AGENTS } from "@/app/registry/data";
 import { toSlug } from "./slug";
 import type { Agent } from "@/app/registry/types";
 
-export const alt = "Agent profile — x402Books Registry";
+export const alt = "Agent profile — Zetta Registry";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -80,7 +80,7 @@ export default async function OgImage({
         }}
       >
         <span style={{ color: "#555", fontSize: 18, letterSpacing: "0.05em" }}>
-          x402Books Registry
+          Zetta Registry
         </span>
         <span
           style={{

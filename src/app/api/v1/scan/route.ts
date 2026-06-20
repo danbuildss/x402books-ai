@@ -37,7 +37,7 @@ const paywallHandler = withX402(
     return {
       price: hasLuca ? "$0.007" : "$0.01",
       network: "base" as const,
-      config: { description: "x402Books wallet scan — Luca financial intelligence on Base" },
+      config: { description: "Zetta wallet scan — Luca financial intelligence on Base" },
     };
   }
 );

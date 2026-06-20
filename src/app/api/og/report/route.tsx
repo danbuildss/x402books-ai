@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
                 letterSpacing: "0.04em",
               }}
             >
-              x402Books
+              Zetta
             </span>
             <span style={{ color: "#2a3a2a", fontSize: 18 }}>|</span>
             <span style={{ color: "#4a5a4a", fontSize: 16, letterSpacing: "0.05em" }}>

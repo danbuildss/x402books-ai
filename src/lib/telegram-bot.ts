@@ -129,7 +129,7 @@ async function cmdStart(chatId: number) {
   await send(
     chatId,
     [
-      `👋 Welcome to <b>x402Books AI</b>`,
+      `👋 Welcome to <b>Zetta</b>`,
       ``,
       `The financial intelligence layer for Base wallets and AI agents.`,
       ``,
@@ -144,7 +144,7 @@ async function cmdStart(chatId: number) {
       `<b>Range options:</b> 7d · 14d · 30d · 90d (default: 30d)`,
       `<b>Example:</b> <code>/scan vitalik.eth 7d</code>`,
       ``,
-      `Powered by <a href="${APP_URL}">x402Books AI</a>`,
+      `Powered by <a href="${APP_URL}">Zetta</a>`,
     ].join("\n"),
   );
 }
@@ -153,7 +153,7 @@ async function cmdHelp(chatId: number) {
   await send(
     chatId,
     [
-      `<b>x402Books AI — Commands</b>`,
+      `<b>Zetta — Commands</b>`,
       ``,
       `/scan <code>&lt;wallet&gt; [range]</code>`,
       `Full wallet scan — AI-categorized spend, income, net flow, x402 count, top categories, and report link.`,
@@ -353,7 +353,7 @@ async function handleInlineQuery(inlineQuery: InlineQuery) {
           reply_markup: {
             inline_keyboard: [[
               { text: "📄 Full Report", url: `${APP_URL}/dashboard` },
-              { text: "🌐 x402Books AI", url: APP_URL },
+              { text: "🌐 Zetta", url: APP_URL },
             ]],
           },
         },

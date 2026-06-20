@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Validate Agent Wallet Manifest | x402Books",
+  title: "Validate Agent Wallet Manifest | Zetta",
   description:
-    "Paste your .x402books/wallets.json and validate it against the Agent Wallet Manifest schema. Every valid manifest becomes an agent profile on x402Books.",
+    "Paste your .x402books/wallets.json and validate it against the Agent Wallet Manifest schema. Every valid manifest becomes an agent profile on Zetta.",
   openGraph: {
-    title: "Validate Agent Wallet Manifest — x402Books",
+    title: "Validate Agent Wallet Manifest — Zetta",
     description:
-      "Validate your wallets.json in seconds. Valid manifests are automatically indexed in the x402Books registry.",
+      "Validate your wallets.json in seconds. Valid manifests are automatically indexed in the Zetta registry.",
     url: "https://www.x402books.xyz/validate",
-    siteName: "x402Books",
+    siteName: "Zetta",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Validate Agent Wallet Manifest — x402Books",
+    title: "Validate Agent Wallet Manifest — Zetta",
     description:
       "Paste your .x402books/wallets.json and get instant schema validation.",
-    creator: "@x402Books",
+    creator: "@ZettaFinance",
   },
 };
 

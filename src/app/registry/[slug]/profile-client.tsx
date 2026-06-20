@@ -53,7 +53,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
         </div>
         <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
-          No books yet. This agent needs declared wallets before x402Books can generate revenue, expense, and profitability data.
+          No books yet. This agent needs declared wallets before Zetta can generate revenue, expense, and profitability data.
         </p>
         <a
           href="/developer#manifest"
@@ -570,7 +570,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   }, [slug]);
 
   const shareToX = useCallback(() => {
-    const text = `${agent.name} · Status: ${vstatus} — tracked by x402Books AI`;
+    const text = `${agent.name} · Status: ${vstatus} — tracked by Zetta`;
     const url  = `https://www.x402books.xyz/registry/${slug}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
@@ -624,12 +624,12 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
             <div style={{ width: 18, height: 18, borderRadius: 4, background: "#3b7a45", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ width: 7, height: 7, borderRadius: 2, background: "#f0ece0" }} />
             </div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>x402Books AI</span>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>Zetta</span>
           </div>
 
           {/* Headline */}
           <p style={{ fontSize: "1.35rem", fontWeight: 300, color: "#7a7364", marginBottom: 8, lineHeight: 1.2 }}>
-            <strong style={{ fontWeight: 600, color: "#3c3830" }}>{agent.name}</strong> is tracked by x402Books
+            <strong style={{ fontWeight: 600, color: "#3c3830" }}>{agent.name}</strong> is tracked by Zetta
           </p>
 
           {/* Hero stat */}

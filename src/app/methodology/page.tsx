@@ -3,8 +3,8 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata = {
-  title: "Financial Methodology · x402Books",
-  description: "How x402Books classifies revenue, builds agent financial statements, and scores confidence. Revenue Classification v2.",
+  title: "Financial Methodology · Zetta",
+  description: "How Zetta classifies revenue, builds agent financial statements, and scores confidence. Revenue Classification v2.",
 };
 
 export default function MethodologyPage() {
@@ -16,7 +16,7 @@ export default function MethodologyPage() {
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: 28, fontSize: "0.78rem", color: "var(--muted)" }}>
-          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>x402Books</Link>
+          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Zetta</Link>
           <span style={{ margin: "0 8px" }}>›</span>
           <Link href="/leaderboard" style={{ color: "var(--muted)", textDecoration: "none" }}>Leaderboard</Link>
           <span style={{ margin: "0 8px" }}>›</span>
@@ -29,7 +29,7 @@ export default function MethodologyPage() {
             Financial Methodology — v2
           </p>
           <h1 style={{ margin: "0 0 16px", fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 800, lineHeight: 1.15 }}>
-            How x402Books Builds Agent Financial Statements
+            How Zetta Builds Agent Financial Statements
           </h1>
           <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.93rem", lineHeight: 1.7, maxWidth: 580 }}>
             Revenue figures are only meaningful if the classification behind them is defensible.
@@ -67,11 +67,11 @@ export default function MethodologyPage() {
             <p>
               Attribution is self-declared. Wallet ownership is not cryptographically verified on-chain.
               The declaring operator is responsible for the accuracy of their manifest.
-              x402Books reviews manifests before approving inclusion.
+              Zetta reviews manifests before approving inclusion.
             </p>
             <Callout>
               An agent with no declared wallets has zero economic visibility — its on-chain activity exists
-              but cannot be read by x402Books.{" "}
+              but cannot be read by Zetta.{" "}
               <Link href="/registry#verify" style={{ color: "var(--accent)" }}>Submit a manifest →</Link>
             </Callout>
           </Section>
@@ -79,7 +79,7 @@ export default function MethodologyPage() {
           {/* Section: Revenue classification */}
           <Section title="2. Revenue classification (v2)">
             <p>
-              Not every inflow to a declared wallet is operating revenue. x402Books applies a
+              Not every inflow to a declared wallet is operating revenue. Zetta applies a
               layered classification filter before counting any inflow as revenue.
             </p>
 
@@ -153,7 +153,7 @@ export default function MethodologyPage() {
             </ul>
             <Callout variant="neutral">
               If an agent pays expenses from a wallet not declared in their manifest, those expenses are
-              invisible to x402Books. Incomplete manifests produce understated expenses and overstated margins.
+              invisible to Zetta. Incomplete manifests produce understated expenses and overstated margins.
               This is a known limitation — manifests should include all operational wallets.
             </Callout>
           </Section>
@@ -229,11 +229,11 @@ export default function MethodologyPage() {
           {/* Section: Limitations */}
           <Section title="9. Known limitations">
             <Row label="Base chain only">
-              x402Books currently scans Base mainnet only. Agents operating cross-chain cannot be
+              Zetta currently scans Base mainnet only. Agents operating cross-chain cannot be
               fully attributed until multi-chain support is added.
             </Row>
             <Row label="Self-declaration">
-              Manifests are self-declared. x402Books reviews them before approval but does not
+              Manifests are self-declared. Zetta reviews them before approval but does not
               perform cryptographic proof-of-ownership. Declared wallets are attributed, not proven.
             </Row>
             <Row label="Stablecoin pricing">

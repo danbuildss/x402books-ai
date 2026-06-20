@@ -34,22 +34,22 @@ async function getAgent(slug: string): Promise<Agent | null> {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const agent = await getAgent(slug);
-  if (!agent) return { title: "Agent not found — x402Books Registry" };
+  if (!agent) return { title: "Agent not found — Zetta Registry" };
 
-  const desc = `${agent.name} — financial intelligence from x402Books. Revenue, expenses, and profitability tracked on Base.`;
+  const desc = `${agent.name} — financial intelligence from Zetta. Revenue, expenses, and profitability tracked on Base.`;
 
   return {
-    title: `${agent.name} (${agent.symbol}) — Agent Books · x402Books`,
+    title: `${agent.name} (${agent.symbol}) — Agent Books · Zetta`,
     description: desc,
     openGraph: {
-      title: `${agent.name} — Agent Books · x402Books`,
+      title: `${agent.name} — Agent Books · Zetta`,
       description: desc,
       url: `https://www.x402books.xyz/registry/${slug}`,
-      siteName: "x402Books AI",
+      siteName: "Zetta",
     },
     twitter: {
       card: "summary",
-      title: `${agent.name} (${agent.symbol}) — x402Books`,
+      title: `${agent.name} (${agent.symbol}) — Zetta`,
       description: desc,
     },
   };

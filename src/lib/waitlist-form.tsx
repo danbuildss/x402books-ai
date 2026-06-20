@@ -77,7 +77,7 @@ export function WaitlistForm() {
   }
 
   const shareText = encodeURIComponent(
-    "I joined the x402Books AI waitlist. Readable books for the x402 economy.",
+    "I joined the Zetta waitlist. Readable books for the x402 economy.",
   );
   const shareUrl = result?.referralUrl
     ? `https://x.com/intent/tweet?text=${shareText}&url=${encodeURIComponent(result.referralUrl)}`

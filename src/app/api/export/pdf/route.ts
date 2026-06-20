@@ -50,7 +50,7 @@ export async function POST(request: Request) {
 
     // Header bar
     doc.rect(0, 0, doc.page.width, 72).fill(DARK);
-    doc.fillColor("#FFFFFF").font("Helvetica-Bold").fontSize(16).text("x402Books AI", 48, 22);
+    doc.fillColor("#FFFFFF").font("Helvetica-Bold").fontSize(16).text("Zetta", 48, 22);
     doc.fillColor(GREEN).font("Helvetica").fontSize(10).text("Onchain Ledger Report", 48, 42);
     doc.fillColor("#9CA6A0").fontSize(9).text(`Generated ${generatedDate}`, doc.page.width - 200, 32, { width: 152, align: "right" });
 
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     const footerY = doc.page.height - 36;
     doc.rect(0, footerY, doc.page.width, 36).fillColor(DARK).fill();
     doc.fillColor("#9CA6A0").font("Helvetica").fontSize(8)
-      .text("x402Books AI · Onchain financial intelligence for Base USDC · x402books.ai", 48, footerY + 14, { width: W, align: "center" });
+      .text("Zetta AI · Onchain financial intelligence for Base USDC · x402books.ai", 48, footerY + 14, { width: W, align: "center" });
 
     doc.end();
   });
