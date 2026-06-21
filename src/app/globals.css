@@ -11000,13 +11000,15 @@ html, body {
   height: auto;
   display: block;
 }
-.zg-grid {
-  animation: zg-spin 32s linear infinite;
-  transform-origin: 200px 200px;
+
+/* Chip slide-in animations */
+@keyframes zg-chip-in-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
-@keyframes zg-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+@keyframes zg-chip-in-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 /* Floating agent chips */
@@ -11024,11 +11026,36 @@ html, body {
   font-size: 0.68rem;
   white-space: nowrap;
   color: var(--ink);
-  animation: zg-float 4s ease-in-out infinite;
+  opacity: 0;
+  animation:
+    zg-float 4s ease-in-out infinite;
 }
-.zg-chip-1 { top: 5%;  right: 0%; animation-delay: 0s;   }
-.zg-chip-2 { top: 40%; left: -4%; animation-delay: 1.4s; }
-.zg-chip-3 { bottom: 8%; right: 2%; animation-delay: 2.7s; }
+
+/* chip-1: AEON — top right, slides in from right */
+.zg-chip-1 {
+  top: 8%;
+  right: -2%;
+  animation:
+    zg-chip-in-right 0.5s ease forwards 0.6s,
+    zg-float 4s ease-in-out infinite 1.2s;
+}
+/* chip-2: BANKR — middle left, slides in from left */
+.zg-chip-2 {
+  top: 44%;
+  left: -6%;
+  animation:
+    zg-chip-in-left 0.5s ease forwards 1.0s,
+    zg-float 4s ease-in-out infinite 1.6s;
+}
+/* chip-3: VIRTUALS — right side mid, slides in from right */
+.zg-chip-3 {
+  top: 36%;
+  right: -4%;
+  animation:
+    zg-chip-in-right 0.5s ease forwards 1.4s,
+    zg-float 4s ease-in-out infinite 2.0s;
+}
+
 .zg-chip-dot {
   width: 7px; height: 7px;
   border-radius: 50%;
@@ -11060,6 +11087,44 @@ html, body {
 @keyframes zg-float {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-5px); }
+}
+
+/* ── Page entrance animations ───────────────────────────────────────────────── */
+
+@keyframes zetta-fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Stats bar stagger */
+.zetta-stats-bar-item {
+  animation: zetta-fade-up 0.5s ease both;
+}
+.zetta-stats-bar-item:nth-child(1) { animation-delay: 0.1s; }
+.zetta-stats-bar-item:nth-child(2) { animation-delay: 0.2s; }
+.zetta-stats-bar-item:nth-child(3) { animation-delay: 0.3s; }
+.zetta-stats-bar-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Data panels stagger */
+.zetta-data-panel {
+  animation: zetta-fade-up 0.55s ease both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.zetta-data-panel:nth-child(1) { animation-delay: 0.15s; }
+.zetta-data-panel:nth-child(2) { animation-delay: 0.28s; }
+.zetta-data-panel:nth-child(3) { animation-delay: 0.41s; }
+.zetta-data-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(26, 28, 26, 0.10);
+}
+
+/* Bottom panels hover lift */
+.zetta-bottom-panel {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.zetta-bottom-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(26, 28, 26, 0.10);
 }
 
 /* ── CardNav Mobile Menu ────────────────────────────────────────────────────── */

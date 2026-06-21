@@ -86,13 +86,13 @@ export default async function HomePage() {
       <HomeHeader />
 
       {/* ── HERO ── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 40px 0" }}>
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 40px 0" }}>
         <div className="zetta-hero-grid">
           {/* Left: Copy */}
           <div>
             <FadeContent>
               <p className="lp-eyebrow">Zetta · Financial Intelligence Platform</p>
-              <h1 className="lp-h1" style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", maxWidth: 540 }}>
+              <h1 className="lp-h1" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.4rem)", maxWidth: 480 }}>
                 Financial Intelligence<br />
                 for the{" "}
                 <em style={{ fontStyle: "italic", color: "#6DB874" }}>Agent Economy.</em>

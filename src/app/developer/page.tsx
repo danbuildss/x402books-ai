@@ -1,46 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { StitchHeader, StitchShell, StitchEmpty } from "@/components/stitch-app";
-import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type LucaTier } from "@/lib/luca-token";
-
-type ApiKeyRecord = {
-  id: string;
-  key_prefix: string;
-  name: string;
-  is_active: boolean;
-  tier: LucaTier;
-  rate_limit_per_day: number;
-  requests_today: number;
-  requests_total: number;
-  wallet_address: string | null;
-  created_at: string;
-  last_used_at: string | null;
-};
+import Link from "next/link";
+import { HomeHeader } from "@/app/home-header";
+import { SiteFooter } from "@/components/site-footer";
+import { TIER_LABELS, TIER_LIMITS, type LucaTier } from "@/lib/luca-token";
 
 const TIER_COLORS: Record<LucaTier, string> = {
-  free:   "var(--st-muted)",
-  holder: "var(--st-blue)",
-  whale:  "var(--st-green)",
+  free:   "var(--muted)",
+  holder: "var(--blue)",
+  whale:  "var(--accent)",
   luca:   "#8B5CF6",
 };
 
-function relDate(iso: string | null) {
-  if (!iso) return "Never";
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
+const TIER_DESCS: Record<LucaTier, string> = {
+  free:   "Get started with the API. No token required.",
+  holder: "For $LUCA holders — developer-level throughput.",
+  whale:  "High-volume access for serious integrations.",
+  luca:   "Full infrastructure access. Ecosystem partners.",
+};
 
 function TierBadge({ tier }: { tier: LucaTier }) {
   return (
     <span style={{
-      fontSize: 11, padding: "2px 8px", borderRadius: 99, fontWeight: 600,
-      background: `color-mix(in srgb, ${TIER_COLORS[tier]} 15%, transparent)`,
+      fontSize: 11, padding: "2px 8px", borderRadius: 99, fontWeight: 700,
+      letterSpacing: "0.04em",
+      background: `color-mix(in srgb, ${TIER_COLORS[tier]} 14%, transparent)`,
       color: TIER_COLORS[tier],
     }}>
       {TIER_LABELS[tier]}
@@ -48,398 +32,238 @@ function TierBadge({ tier }: { tier: LucaTier }) {
   );
 }
 
-type EthereumProvider = {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-};
-
-function WalletLinker({ keyId, currentTier, onLinked }: {
-  keyId: string;
-  currentWallet: string | null;
-  currentTier: LucaTier;
-  onLinked: (wallet: string, tier: LucaTier, balance: number) => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState<"idle" | "connecting" | "signing" | "verifying">("idle");
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<{ tier: LucaTier; balance: number } | null>(null);
-
-  async function handleLink() {
-    const ethereum = (window as unknown as { ethereum?: EthereumProvider }).ethereum;
-    if (!ethereum) {
-      setError("No wallet detected. Install MetaMask or another browser wallet.");
-      return;
-    }
-    setLoading(true); setError("");
-    try {
-      // 1. Connect
-      setStep("connecting");
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" }) as string[];
-      const address = accounts?.[0];
-      if (!address) { setError("No account connected."); return; }
-
-      // 2. Request challenge
-      const chRes = await fetch("/api/developer/verify-wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId, walletAddress: address }),
-      });
-      const chData = await chRes.json() as { message?: string; error?: string };
-      if (!chRes.ok || !chData.message) { setError(chData.error ?? "Could not get challenge."); return; }
-
-      // 3. Sign the challenge
-      setStep("signing");
-      const signature = await ethereum.request({
-        method: "personal_sign",
-        params: [chData.message, address],
-      }) as string;
-
-      // 4. Verify + link
-      setStep("verifying");
-      const res = await fetch("/api/developer/verify-wallet", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyId, walletAddress: address, signature }),
-      });
-      const data = await res.json() as { tier: LucaTier; luca_balance: number; error?: string };
-      if (!res.ok) { setError(data.error ?? "Failed to link wallet."); return; }
-      setResult({ tier: data.tier, balance: data.luca_balance });
-      onLinked(address, data.tier, data.luca_balance);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "";
-      setError(msg.includes("rejected") || msg.includes("denied")
-        ? "Signature request rejected."
-        : "Could not complete wallet verification.");
-    } finally {
-      setLoading(false);
-      setStep("idle");
-    }
-  }
-
-  const stepLabel =
-    step === "connecting" ? "Connecting…"
-    : step === "signing" ? "Sign in your wallet…"
-    : step === "verifying" ? "Verifying…"
-    : "Connect & Sign";
-
-  return (
-    <div style={{ marginTop: 10, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)" }}>
-      <div style={{ fontSize: 12, color: "var(--st-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>toll</span>
-        Verify wallet ownership with a signature to unlock your access tier
-      </div>
-      <button type="button" className="stitch-btn" onClick={handleLink} disabled={loading}>
-        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>account_balance_wallet</span>
-        {loading ? stepLabel : "Connect & Sign"}
-      </button>
-      {error && <p style={{ color: "var(--st-red)", fontSize: 12, marginTop: 6 }}>{error}</p>}
-      {result && (
-        <div style={{ marginTop: 8, fontSize: 12, display: "flex", alignItems: "center", gap: 8 }}>
-          <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--st-green)" }}>check_circle</span>
-          <span style={{ color: "var(--st-muted)" }}>
-            Wallet verified →
-          </span>
-          <TierBadge tier={result.tier} />
-          <span style={{ color: "var(--st-muted)" }}>{TIER_LIMITS[result.tier].toLocaleString()} req/day</span>
-        </div>
-      )}
-      {!result && currentTier === "free" && (
-        <div style={{ marginTop: 8, fontSize: 11, color: "var(--st-muted)" }}>
-          Developer: 500 req/day &nbsp;·&nbsp; Enterprise: 2,000 req/day &nbsp;·&nbsp; The signature is free and authorizes no transaction.
-        </div>
-      )}
-    </div>
-  );
-}
+const ENDPOINTS = [
+  { method: "GET",  path: "/ledger-summary",       desc: "Income, spend, net flow, budget status",               params: "wallet, range" },
+  { method: "GET",  path: "/transactions",          desc: "Paginated transactions with USD values + categories",  params: "wallet, range, page, limit" },
+  { method: "GET",  path: "/full-report",           desc: "Complete scan: portfolio, daily flows, categories",    params: "wallet, range" },
+  { method: "POST", path: "/categorize",            desc: "AI-powered transaction categorization",                params: "{ wallet, range }" },
+  { method: "GET",  path: "/agent-financial-state", desc: "Agent snapshot: ecosystem, portfolio, x402 activity", params: "wallet, range" },
+];
 
 export default function DeveloperPage() {
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [signedOut, setSignedOut] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [newKey, setNewKey] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [showForm, setShowForm] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => { fetchKeys(); }, []);
-
-  async function fetchKeys() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/developer/keys");
-      if (res.status === 401) {
-        setSignedOut(true);
-        setKeys([]);
-        return;
-      }
-      const data = await res.json() as { keys: ApiKeyRecord[] };
-      setSignedOut(false);
-      setKeys(data.keys ?? []);
-    } finally { setLoading(false); }
-  }
-
-  async function handleCreate() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    try {
-      const res = await fetch("/api/developer/keys", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
-      });
-      const data = await res.json() as { key?: string; record?: ApiKeyRecord; error?: string };
-      if (!res.ok || !data.key || !data.record) {
-        alert(data.error ?? "Could not create API key.");
-        if (res.status === 401) setSignedOut(true);
-        return;
-      }
-      setNewKey(data.key);
-      setKeys((prev) => [data.record!, ...prev]);
-      setShowForm(false);
-      setNewName("");
-    } finally { setCreating(false); }
-  }
-
-  async function handleRevoke(id: string) {
-    if (!confirm("Revoke this API key? This cannot be undone.")) return;
-    await fetch(`/api/developer/keys/${id}`, { method: "DELETE" });
-    setKeys((prev) => prev.filter((k) => k.id !== id));
-  }
-
-  function copyKey(key: string) {
-    navigator.clipboard.writeText(key).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
-  function handleWalletLinked(keyId: string, wallet: string, tier: LucaTier) {
-    setKeys((prev) => prev.map((k) =>
-      k.id === keyId
-        ? { ...k, wallet_address: wallet.toLowerCase(), tier, rate_limit_per_day: TIER_LIMITS[tier] }
-        : k,
-    ));
-    setExpandedWallet(null);
-  }
-
   return (
-    <StitchShell>
-      <StitchHeader
-        title="Developer API"
-        description="Manage API keys · Build on Zetta · Powered by Zetta"
-      />
+    <div className="lp-root">
+      <HomeHeader />
 
-      {/* Tier overview */}
-      <div className="stitch-stats-grid stitch-tier-grid">
-        {(["free", "holder", "whale"] as LucaTier[]).map((tier) => (
-          <div key={tier} className="stitch-card" style={{ padding: "14px 16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <TierBadge tier={tier} />
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: TIER_COLORS[tier] }}>
-              {TIER_LIMITS[tier].toLocaleString()}
-              <span style={{ fontSize: 12, fontWeight: 400, color: "var(--st-muted)", marginLeft: 4 }}>req/day</span>
-            </div>
-            <div style={{ fontSize: 11, color: "var(--st-muted)", marginTop: 4 }}>
-              {tier === "free" && "Free tier"}
-              {tier === "holder" && "Developer access"}
-              {tier === "whale" && "High-volume access"}
-            </div>
-          </div>
-        ))}
+      {/* Hero */}
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "72px 40px 48px" }}>
+        <p style={{
+          fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em",
+          textTransform: "uppercase", color: "var(--accent)", marginBottom: 12,
+        }}>
+          API Reference
+        </p>
+        <h1 style={{
+          fontFamily: "var(--font-serif)",
+          fontSize: "clamp(1.6rem, 3vw, 2.5rem)",
+          fontWeight: 700,
+          lineHeight: 1.2,
+          color: "var(--ink)",
+          marginBottom: 16,
+        }}>
+          Build on Zetta.
+        </h1>
+        <p style={{
+          fontSize: "1rem",
+          color: "var(--muted)",
+          maxWidth: 560,
+          lineHeight: 1.65,
+          marginBottom: 32,
+        }}>
+          Query agent financial data, retrieve attributed books, and integrate
+          financial intelligence into your applications. RESTful API with
+          tier-based rate limits linked to your $LUCA balance.
+        </p>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link
+            href="/access"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "10px 20px", borderRadius: 8,
+              background: "var(--accent)", color: "#fff",
+              fontWeight: 700, fontSize: "0.85rem",
+              textDecoration: "none",
+            }}
+          >
+            Get API Key →
+          </Link>
+          <Link
+            href="/operators"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: 6,
+              padding: "10px 20px", borderRadius: 8,
+              background: "transparent",
+              border: "1px solid var(--line)",
+              color: "var(--ink)",
+              fontWeight: 600, fontSize: "0.85rem",
+              textDecoration: "none",
+            }}
+          >
+            Manage Keys →
+          </Link>
+        </div>
+      </section>
+
+      {/* Divider */}
+      <div style={{ maxWidth: 900, margin: "0 auto", padding: "0 40px" }}>
+        <hr style={{ border: "none", borderTop: "1px solid var(--line)" }} />
       </div>
 
-      {/* New key banner */}
-      {newKey && (
-        <div className="stitch-card" style={{ borderColor: "var(--st-green)", background: "color-mix(in srgb, var(--st-green) 8%, var(--st-surface))" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <span className="material-symbols-outlined" style={{ color: "var(--st-green)", fontSize: 18 }}>check_circle</span>
-            <strong style={{ color: "var(--st-green)" }}>API key created — copy it now</strong>
-          </div>
-          <p style={{ color: "var(--st-muted)", fontSize: 12, marginBottom: 10 }}>
-            This key will not be shown again. Store it in a safe place.
-          </p>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <code style={{ flex: 1, background: "var(--st-bg)", padding: "8px 12px", borderRadius: 6, fontFamily: "var(--st-mono)", fontSize: 13, border: "1px solid var(--st-border)", wordBreak: "break-all" }}>
-              {newKey}
-            </code>
-            <button type="button" className="stitch-btn" onClick={() => copyKey(newKey)} style={{ whiteSpace: "nowrap" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 15 }}>{copied ? "check" : "content_copy"}</span>
-              {copied ? "Copied!" : "Copy"}
-            </button>
-            <button type="button" className="stitch-btn" onClick={() => setNewKey(null)} style={{ color: "var(--st-muted)" }}>Dismiss</button>
-          </div>
-        </div>
-      )}
-
-      {/* Keys list */}
-      <div className="stitch-card">
-        <div className="stitch-card-head">
-          <h3>API Keys</h3>
-          <button type="button" className="stitch-btn" onClick={() => { setShowForm(true); setTimeout(() => inputRef.current?.focus(), 50); }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>add</span>
-            New Key
-          </button>
-        </div>
-
-        {showForm && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 16, padding: "12px 0", borderBottom: "1px solid var(--st-border)" }}>
-            <input
-              ref={inputRef}
-              style={{ flex: 1, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--st-border)", background: "var(--st-bg)", color: "var(--st-text)", fontSize: 13 }}
-              placeholder="Key name (e.g. My Agent)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") setShowForm(false); }}
-              maxLength={64}
-            />
-            <button type="button" className="stitch-btn" onClick={handleCreate} disabled={creating || !newName.trim()}>
-              {creating ? "Creating…" : "Create"}
-            </button>
-            <button type="button" className="stitch-btn" onClick={() => setShowForm(false)} style={{ color: "var(--st-muted)" }}>Cancel</button>
-          </div>
-        )}
-
-        {loading ? (
-          <div style={{ color: "var(--st-muted)", fontSize: 13, padding: "12px 0" }}>Loading keys…</div>
-        ) : signedOut ? (
-          <div style={{ padding: "16px 0", display: "flex", alignItems: "center", gap: 10 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--st-muted)" }}>lock</span>
-            <div>
-              <div style={{ fontSize: 13, marginBottom: 2 }}>Sign in to manage your API keys.</div>
-              <a href="/access" style={{ fontSize: 12, color: "var(--st-blue)" }}>Go to sign in →</a>
-            </div>
-          </div>
-        ) : keys.length === 0 ? (
-          <StitchEmpty compact>No API keys yet. Create one to get started.</StitchEmpty>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {keys.map((key) => (
-              <div key={key.id} style={{ padding: "14px 0", borderBottom: "1px solid var(--st-border)" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto auto", gap: 12, alignItems: "center" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
-                      <strong style={{ fontSize: 14 }}>{key.name}</strong>
-                      <code style={{ fontSize: 11, color: "var(--st-muted)", fontFamily: "var(--st-mono)" }}>{key.key_prefix}…</code>
-                      <TierBadge tier={key.tier ?? "free"} />
-                    </div>
-                    <div style={{ display: "flex", gap: 16, fontSize: 12, color: "var(--st-muted)" }}>
-                      <span>Created {relDate(key.created_at)}</span>
-                      <span>Last used: {relDate(key.last_used_at)}</span>
-                      <span>{key.requests_total.toLocaleString()} total</span>
-                      {key.wallet_address && (
-                        <span style={{ fontFamily: "var(--st-mono)", fontSize: 11 }}>
-                          {key.wallet_address.slice(0, 6)}…{key.wallet_address.slice(-4)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Daily usage bar */}
-                  <div style={{ width: 110, textAlign: "right" }}>
-                    <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 3 }}>
-                      {key.requests_today} / {key.rate_limit_per_day} today
-                    </div>
-                    <div style={{ height: 4, background: "var(--st-border)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{
-                        height: "100%", borderRadius: 2,
-                        width: `${Math.min(100, (key.requests_today / key.rate_limit_per_day) * 100)}%`,
-                        background: key.requests_today >= key.rate_limit_per_day ? "var(--st-red)" : TIER_COLORS[key.tier ?? "free"],
-                        transition: "width 0.3s",
-                      }} />
-                    </div>
-                  </div>
-
-                  {/* Upgrade / wallet button */}
-                  <button
-                    type="button"
-                    className="stitch-btn"
-                    style={{ fontSize: 11, whiteSpace: "nowrap" }}
-                    onClick={() => setExpandedWallet(expandedWallet === key.id ? null : key.id)}
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 13 }}>toll</span>
-                    {key.wallet_address ? "Re-verify" : "Link Wallet"}
-                  </button>
-
-                  <span style={{
-                    fontSize: 11, padding: "2px 8px", borderRadius: 99,
-                    background: "color-mix(in srgb, var(--st-green) 15%, transparent)",
-                    color: "var(--st-green)",
-                  }}>Active</span>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRevoke(key.id)}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--st-red)", padding: 4 }}
-                    title="Revoke key"
-                  >
-                    <span className="material-symbols-outlined" style={{ fontSize: 17 }}>delete</span>
-                  </button>
-                </div>
-
-                {expandedWallet === key.id && (
-                  <WalletLinker
-                    keyId={key.id}
-                    currentWallet={key.wallet_address}
-                    currentTier={key.tier ?? "free"}
-                    onLinked={(wallet, tier) => handleWalletLinked(key.id, wallet, tier)}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Endpoint reference */}
-      <div className="stitch-card">
-        <div className="stitch-card-head">
-          <h3>Endpoints</h3>
-          <span style={{ fontSize: 12, color: "var(--st-muted)" }}>
-            Base URL: <code style={{ fontFamily: "var(--st-mono)" }}>https://x402books.ai/api/v1</code>
-          </span>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {[
-            { method: "GET",  path: "/ledger-summary",       desc: "Income, spend, net flow, budget status",                params: "wallet, range" },
-            { method: "GET",  path: "/transactions",          desc: "Paginated transactions with USD values + categories",   params: "wallet, range, page, limit" },
-            { method: "GET",  path: "/full-report",           desc: "Complete scan: portfolio, daily flows, categories",     params: "wallet, range" },
-            { method: "POST", path: "/categorize",            desc: "AI-powered transaction categorization (Claude)",        params: "{ wallet, range }" },
-            { method: "GET",  path: "/agent-financial-state", desc: "Agent snapshot: ecosystem, portfolio, x402 activity",  params: "wallet, range" },
-          ].map((ep) => (
-            <div key={ep.path} style={{
-              display: "grid", gridTemplateColumns: "60px 220px 1fr auto",
-              gap: 12, alignItems: "baseline", padding: "10px 0",
-              borderBottom: "1px solid var(--st-border)", fontSize: 13,
+      {/* Tiers */}
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "48px 40px" }}>
+        <h2 style={{
+          fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+          color: "var(--ink)", marginBottom: 24,
+        }}>
+          Access Tiers
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+          {(["free", "holder", "whale"] as LucaTier[]).map((tier) => (
+            <div key={tier} style={{
+              padding: "20px",
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
+              borderRadius: 10,
             }}>
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: "2px 6px", borderRadius: 4, textAlign: "center",
-                background: ep.method === "GET" ? "color-mix(in srgb, var(--st-blue) 15%, transparent)" : "color-mix(in srgb, var(--st-green) 15%, transparent)",
-                color: ep.method === "GET" ? "var(--st-blue)" : "var(--st-green)",
+              <div style={{ marginBottom: 10 }}>
+                <TierBadge tier={tier} />
+              </div>
+              <div style={{
+                fontSize: "1.5rem", fontWeight: 700,
+                fontFamily: "var(--font-mono)",
+                color: TIER_COLORS[tier],
+                marginBottom: 4,
               }}>
-                {ep.method}
-              </span>
-              <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>{ep.path}</code>
-              <span style={{ color: "var(--st-muted)", fontSize: 12 }}>{ep.desc}</span>
-              <code style={{ fontFamily: "var(--st-mono)", fontSize: 11, color: "var(--st-muted)", whiteSpace: "nowrap" }}>{ep.params}</code>
+                {TIER_LIMITS[tier].toLocaleString()}
+                <span style={{ fontSize: "0.75rem", fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>
+                  req/day
+                </span>
+              </div>
+              <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5, margin: 0 }}>
+                {TIER_DESCS[tier]}
+              </p>
             </div>
           ))}
         </div>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: 16 }}>
+          Tier is determined by $LUCA balance verified via wallet signature. Link your wallet in the{" "}
+          <Link href="/operators" style={{ color: "var(--accent)" }}>Operators Dashboard</Link>.
+        </p>
+      </section>
 
-        <div style={{ marginTop: 16, padding: 12, background: "var(--st-bg)", borderRadius: 8, border: "1px solid var(--st-border)", display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 4 }}>Authentication</div>
-            <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>Authorization: Bearer xb_live_…</code>
+      {/* Auth */}
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 40px 48px" }}>
+        <h2 style={{
+          fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+          color: "var(--ink)", marginBottom: 16,
+        }}>
+          Authentication
+        </h2>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          overflow: "hidden",
+        }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)" }}>
+            Include your API key in every request using either header:
           </div>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--st-muted)", marginBottom: 4 }}>Or</div>
-            <code style={{ fontFamily: "var(--st-mono)", fontSize: 12 }}>X-API-Key: xb_live_…</code>
+          <div style={{ padding: "16px 20px", display: "flex", gap: 40, flexWrap: "wrap" }}>
+            <div>
+              <p style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Bearer token
+              </p>
+              <code style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.8rem",
+                color: "var(--ink)",
+                background: "var(--surface-soft)",
+                padding: "6px 10px", borderRadius: 6,
+                display: "block",
+              }}>
+                Authorization: Bearer xb_live_…
+              </code>
+            </div>
+            <div>
+              <p style={{ fontSize: "0.7rem", color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                API key header
+              </p>
+              <code style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.8rem",
+                color: "var(--ink)",
+                background: "var(--surface-soft)",
+                padding: "6px 10px", borderRadius: 6,
+                display: "block",
+              }}>
+                X-API-Key: xb_live_…
+              </code>
+            </div>
+          </div>
+          <div style={{
+            padding: "12px 20px",
+            borderTop: "1px solid var(--line)",
+            fontSize: "0.72rem",
+            color: "var(--muted)",
+            background: "var(--surface-soft)",
+          }}>
+            Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://x402books.xyz/api/v1</code>
           </div>
         </div>
-      </div>
-    </StitchShell>
+      </section>
+
+      {/* Endpoints */}
+      <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 40px 80px" }}>
+        <h2 style={{
+          fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+          color: "var(--ink)", marginBottom: 16,
+        }}>
+          Endpoints
+        </h2>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          overflow: "hidden",
+        }}>
+          {ENDPOINTS.map((ep, i) => (
+            <div
+              key={ep.path}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "56px 1fr 1fr",
+                gap: "12px 20px",
+                alignItems: "start",
+                padding: "14px 20px",
+                borderBottom: i < ENDPOINTS.length - 1 ? "1px solid var(--line)" : "none",
+              }}
+            >
+              <span style={{
+                fontSize: "0.65rem", fontWeight: 700, padding: "3px 6px", borderRadius: 4,
+                textAlign: "center", lineHeight: 1.4,
+                background: ep.method === "GET"
+                  ? "color-mix(in srgb, var(--blue) 14%, transparent)"
+                  : "color-mix(in srgb, var(--accent) 14%, transparent)",
+                color: ep.method === "GET" ? "var(--blue)" : "var(--accent)",
+              }}>
+                {ep.method}
+              </span>
+              <div>
+                <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--ink)", display: "block", marginBottom: 3 }}>
+                  {ep.path}
+                </code>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{ep.desc}</span>
+              </div>
+              <code style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.72rem",
+                color: "var(--muted)", wordBreak: "break-word",
+              }}>
+                {ep.params}
+              </code>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <SiteFooter />
+    </div>
   );
 }
