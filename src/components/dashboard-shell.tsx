@@ -19,8 +19,6 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const GROWTH_RATES = ["+32.5%", "+18.1%", "+15.7%", "+14.3%", "+11.2%", "+8.9%"];
-
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#6DB874",
   Virtuals: "#5B8FA8",
@@ -43,12 +41,9 @@ function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
 function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
   if (snapshots.length < 2) {
     return (
-      <svg viewBox="0 0 300 80" style={{ width: "100%", height: 80, display: "block" }}>
-        <polyline
-          points="0,60 30,45 60,50 90,35 120,40 150,25 180,30 210,20 240,25 270,15 300,18"
-          fill="none" stroke="#6DB874" strokeWidth="2" opacity="0.8"
-        />
-      </svg>
+      <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed var(--line)", borderRadius: 6 }}>
+        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Not enough history yet</p>
+      </div>
     );
   }
   const ordered = [...snapshots].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime());
@@ -265,21 +260,19 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
 
             {/* Right: Economy Overview */}
             <div className="zetta-economy-card">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <div style={{ marginBottom: 12 }}>
                 <span style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Agent Economy Overview</span>
-                <span style={{ fontSize: "0.65rem", color: "#6DB874", fontFamily: "var(--font-mono)" }}>&#9679; Live</span>
               </div>
               <div className="zetta-economy-grid">
                 {[
-                  { label: "Agent GDP", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+18.2%" },
-                  { label: "Operating Revenue", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+21.6%" },
-                  { label: "Attributed Agents", value: "1,278", delta: "+12.4%" },
-                  { label: "Treasury Value", value: gdp ? fmtUSD(gdp.total_revenue_usd * 2.5) : "$—", delta: "+8.9%" },
+                  { label: "Agent GDP", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },
+                  { label: "Net Income", value: gdp ? fmtUSD(gdp.total_net_income_usd) : "$—" },
+                  { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
+                  { label: "Total Expenses", value: gdp ? fmtUSD(gdp.total_expenses_usd) : "$—" },
                 ].map((s) => (
                   <div key={s.label} className="zetta-economy-stat">
                     <p className="zetta-stat-label">{s.label}</p>
                     <p className="zetta-stat-value" style={{ fontSize: "1rem" }}>{s.value}</p>
-                    <span className="zetta-stat-delta">{s.delta}</span>
                   </div>
                 ))}
               </div>
@@ -302,7 +295,6 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                   <th>#</th>
                   <th>Agent</th>
                   <th>Revenue</th>
-                  <th>Growth</th>
                   <th></th>
                 </tr>
               </thead>
@@ -319,33 +311,15 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                         </div>
                       </td>
                       <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
-                      <td style={{ color: "#6DB874", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{GROWTH_RATES[i] ?? "+—%"}</td>
                       <td><MiniSparkline color={ecoColor} /></td>
                     </tr>
                   );
                 }) : (
-                  [
-                    { name: "AEON Protocol", slug: "aeon", eco: "AEON", rev: "$18.2K" },
-                    { name: "BANKR Agent", slug: "bankr", eco: "BANKR", rev: "$12.4K" },
-                    { name: "Virtuals Bot", slug: "virtuals", eco: "Virtuals", rev: "$9.1K" },
-                    { name: "EigenBot", slug: "eigenbot", eco: "EigenCloud", rev: "$6.7K" },
-                  ].map((a, i) => {
-                    const ecoColor = ECO_COLORS[a.eco] ?? "#6DB874";
-                    return (
-                      <tr key={a.slug}>
-                        <td style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{i + 1}</td>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: ecoColor, flexShrink: 0, display: "inline-block" }} />
-                            <span style={{ fontWeight: 600, color: "var(--ink)", fontSize: "0.78rem" }}>{a.name}</span>
-                          </div>
-                        </td>
-                        <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{a.rev}</td>
-                        <td style={{ color: "#6DB874", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{GROWTH_RATES[i]}</td>
-                        <td><MiniSparkline color={ecoColor} /></td>
-                      </tr>
-                    );
-                  })
+                  <tr>
+                    <td colSpan={4} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
+                      Financial data loads as agents submit wallet manifests.
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -358,10 +332,9 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
               <Link href="/research" className="zetta-panel-link">Reports →</Link>
             </div>
             <div style={{ marginBottom: 16 }}>
-              <p style={{ margin: "0 0 2px", fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
+              <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
                 {gdp ? fmtUSD(gdp.total_revenue_usd) : "$—"}
               </p>
-              <span className="zetta-stat-delta">+18.2% vs last period</span>
             </div>
             <GDPChart snapshots={history} />
             <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -398,17 +371,9 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                 <span style={{ fontSize: "0.65rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{fmtDate(r.published_at)}</span>
               </div>
             )) : (
-              [
-                { type: "monthly" as const, title: "State of Agent Finance — May 2026", desc: "Agent GDP, top revenue generators, and treasury trends across the ecosystem." },
-                { type: "weekly" as const, title: "Revenue Signals — Week 24", desc: "AEON leads with $18.2K in attributed revenue. BANKR treasury inflows up." },
-                { type: "quarterly" as const, title: "Ecosystem Breakdown Q1 2026", desc: "Cross-ecosystem analysis: BANKR, Virtuals, AEON, and EigenCloud compared." },
-              ].map((r, i) => (
-                <div key={i} className="zetta-report-item">
-                  <span className="zetta-type-badge">{r.type}</span>
-                  <p style={{ margin: "4px 0 4px", fontSize: "0.82rem", fontWeight: 600, color: "var(--ink)", lineHeight: 1.35 }}>{r.title}</p>
-                  <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{r.desc}</p>
-                </div>
-              ))
+              <p style={{ margin: "12px 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                Research publishes weekly. No reports yet.
+              </p>
             )}
           </div>
         </div>
@@ -459,43 +424,19 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
           </div>
         </div>
 
-        {/* ── Right sidebar cards (below bottom grid, two-col) ── */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, padding: "0 40px 40px" }}>
-
-          {/* Luca's Take */}
+        {/* ── From the Research ── */}
+        <div style={{ padding: "0 40px 40px" }}>
           <div className="zetta-data-panel">
             <div className="zetta-panel-header">
-              <span className="zetta-panel-title">Luca&apos;s Take</span>
+              <span className="zetta-panel-title">From the Research</span>
               <Link href="/luca" className="zetta-panel-link">Go to Luca →</Link>
             </div>
             <p style={{ margin: "0 0 12px", fontSize: "0.85rem", fontStyle: "italic", color: "var(--ink)", lineHeight: 1.65 }}>
               &ldquo;{lucaTake}&rdquo;
             </p>
             <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-              Luca &middot; {lucaDate}
+              Research &middot; {lucaDate}
             </span>
-          </div>
-
-          {/* Ecosystem Health */}
-          <div className="zetta-data-panel">
-            <div className="zetta-panel-header">
-              <span className="zetta-panel-title">Ecosystem Health</span>
-            </div>
-            {[
-              { name: "AEON", label: "Strong", pct: 90, color: "#8B5CF6" },
-              { name: "BANKR", label: "Stable", pct: 70, color: "#6DB874" },
-              { name: "VIRTUALS", label: "Growing", pct: 55, color: "#5B8FA8" },
-              { name: "EigenCloud", label: "Emerging", pct: 35, color: "#F97316" },
-              { name: "Base", label: "Growing", pct: 60, color: "#4F46E5" },
-            ].map((eco) => (
-              <div key={eco.name} className="zetta-health-row">
-                <span style={{ minWidth: 80, fontSize: "0.78rem", fontWeight: 600, color: "var(--ink)" }}>{eco.name}</span>
-                <div className="zetta-health-bar-bg">
-                  <div className="zetta-health-bar-fill" style={{ width: `${eco.pct}%`, background: eco.color }} />
-                </div>
-                <span style={{ minWidth: 60, fontSize: "0.7rem", color: "var(--muted)", textAlign: "right" }}>{eco.label} {eco.pct}%</span>
-              </div>
-            ))}
           </div>
         </div>
 

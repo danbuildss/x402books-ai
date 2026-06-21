@@ -15,28 +15,28 @@ type TabKey = typeof TABS[number]["key"];
 
 const STATIC: Record<TabKey, Signal[]> = {
   growing: [
-    { eco: "AEON", color: "#8B5CF6", text: "Operating revenue increased 32.5% in the last 30 days.", ago: "12m ago" },
-    { eco: "BANKR", color: "#6DB874", text: "Treasury inflows up 18.1% with multi-sig activity detected.", ago: "34m ago" },
-    { eco: "VIRTUALS", color: "#5B8FA8", text: "New attribution confirmed: 3 wallets indexed.", ago: "1h ago" },
-    { eco: "GAME", color: "#F97316", text: "Revenue grew 15.7% — inference spend up proportionally.", ago: "2h ago" },
+    { eco: "AEON", color: "#8B5CF6", text: "Operating revenue trending up — attribution coverage complete across declared wallets.", ago: "—" },
+    { eco: "BANKR", color: "#6DB874", text: "Treasury inflows detected. Multi-sig wallet activity indexed.", ago: "—" },
+    { eco: "VIRTUALS", color: "#5B8FA8", text: "New attribution confirmed: wallets indexed and classified.", ago: "—" },
+    { eco: "GAME", color: "#F97316", text: "Revenue activity classified — inference spend rising proportionally.", ago: "—" },
   ],
   revenue: [
-    { eco: "AEON", color: "#8B5CF6", text: "$18.2K attributed operating revenue — highest in 30d window.", ago: "live" },
-    { eco: "BANKR", color: "#6DB874", text: "$12.4K revenue tracked across 4 wallets.", ago: "6m ago" },
-    { eco: "VIRTUALS", color: "#5B8FA8", text: "$9.1K — new high since attribution expanded.", ago: "18m ago" },
-    { eco: "SYNTH", color: "#EF4444", text: "$2.8K — small base but accelerating.", ago: "44m ago" },
+    { eco: "AEON", color: "#8B5CF6", text: "Attributed operating revenue available. Submit wallet manifest to view.", ago: "—" },
+    { eco: "BANKR", color: "#6DB874", text: "Revenue tracked across declared wallets. Attribution coverage active.", ago: "—" },
+    { eco: "VIRTUALS", color: "#5B8FA8", text: "Revenue indexed since attribution expanded to additional wallets.", ago: "—" },
+    { eco: "SYNTH", color: "#EF4444", text: "Small attribution base. Revenue classification in progress.", ago: "—" },
   ],
   treasury: [
-    { eco: "BANKR", color: "#6DB874", text: "Multi-sig treasury inflow detected: $6.2K.", ago: "22m ago" },
-    { eco: "AEON", color: "#8B5CF6", text: "Treasury holds $8.7M — unchanged vs 7d prior.", ago: "1h ago" },
-    { eco: "VIRTUALS", color: "#5B8FA8", text: "Treasury rebalance: $4.1K moved to operational wallet.", ago: "2h ago" },
-    { eco: "EIGENCLOUD", color: "#F97316", text: "Capital injection flagged — quarantined from revenue.", ago: "3h ago" },
+    { eco: "BANKR", color: "#6DB874", text: "Multi-sig treasury inflow detected and classified. Quarantined from revenue.", ago: "—" },
+    { eco: "AEON", color: "#8B5CF6", text: "Treasury wallet declared. Holdings tracked via attribution layer.", ago: "—" },
+    { eco: "VIRTUALS", color: "#5B8FA8", text: "Treasury rebalance activity detected. Classified as internal transfer.", ago: "—" },
+    { eco: "EIGENCLOUD", color: "#F97316", text: "Capital injection flagged — quarantined from revenue classification.", ago: "—" },
   ],
   new: [
-    { eco: "SYNTH", color: "#EF4444", text: "New wallet manifest submitted — attribution pending review.", ago: "4m ago" },
-    { eco: "GAME", color: "#F97316", text: "2 new wallets attributed to GAME ecosystem.", ago: "1h ago" },
-    { eco: "BANKR", color: "#6DB874", text: "Secondary fee wallet confirmed and indexed.", ago: "3h ago" },
-    { eco: "BASE", color: "#4F46E5", text: "New agent submitted via registry — awaiting verification.", ago: "5h ago" },
+    { eco: "SYNTH", color: "#EF4444", text: "New wallet manifest submitted — attribution pending review.", ago: "—" },
+    { eco: "GAME", color: "#F97316", text: "New wallets attributed to GAME ecosystem.", ago: "—" },
+    { eco: "BANKR", color: "#6DB874", text: "Secondary fee wallet confirmed and indexed.", ago: "—" },
+    { eco: "BASE", color: "#4F46E5", text: "New agent submitted via registry — awaiting verification.", ago: "—" },
   ],
 };
 

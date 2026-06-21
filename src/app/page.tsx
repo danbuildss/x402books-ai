@@ -25,8 +25,6 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-const GROWTH_RATES = ["+32.5%", "+18.1%", "+15.7%", "+14.3%", "+11.2%", "+8.9%"];
-
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#6DB874",
   Virtuals: "#5B8FA8",
@@ -49,12 +47,9 @@ function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
 function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
   if (snapshots.length < 2) {
     return (
-      <svg viewBox="0 0 300 80" style={{ width: "100%", height: 80, display: "block" }}>
-        <polyline
-          points="0,60 30,45 60,50 90,35 120,40 150,25 180,30 210,20 240,25 270,15 300,18"
-          fill="none" stroke="#6DB874" strokeWidth="2" opacity="0.8"
-        />
-      </svg>
+      <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed var(--line)", borderRadius: 6 }}>
+        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Not enough history yet</p>
+      </div>
     );
   }
   const ordered = [...snapshots].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime());
@@ -145,21 +140,19 @@ export default async function HomePage() {
 
             {/* Economy Overview card */}
             <div className="zetta-economy-card" style={{ marginTop: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <div style={{ marginBottom: 4 }}>
                 <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Economy Overview</span>
-                <span style={{ fontSize: "0.65rem", color: "#6DB874", fontFamily: "var(--font-mono)" }}>&#9679; Live</span>
               </div>
               <div className="zetta-economy-grid">
                 {[
-                  { label: "Agent GDP", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+18.2%" },
-                  { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—", delta: "+12.4%" },
-                  { label: "Operating Revenue", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+21.6%" },
-                  { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "—", delta: "+14.3%" },
+                  { label: "Agent GDP", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },
+                  { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
+                  { label: "Net Income", value: gdp ? fmtUSD(gdp.total_net_income_usd) : "$—" },
+                  { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "—" },
                 ].map((s) => (
                   <div key={s.label} className="zetta-economy-stat">
                     <p className="zetta-stat-label">{s.label}</p>
                     <p className="zetta-stat-value" style={{ fontSize: "1.1rem" }}>{s.value}</p>
-                    <span className="zetta-stat-delta">{s.delta}</span>
                   </div>
                 ))}
               </div>
@@ -171,15 +164,14 @@ export default async function HomePage() {
       {/* ── STATS BAR ── */}
       <div className="zetta-stats-bar" style={{ marginTop: 48 }}>
         {[
-          { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—", delta: "+12.4%" },
-          { label: "Agent GDP (30d)", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+18.2%" },
-          { label: "Operating Revenue", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—", delta: "+21.6%" },
-          { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "0", delta: "+14.3%" },
+          { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
+          { label: "Agent GDP (30d)", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },
+          { label: "Net Income", value: gdp ? fmtUSD(gdp.total_net_income_usd) : "$—" },
+          { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "—" },
         ].map((s) => (
           <div key={s.label} className="zetta-stats-bar-item">
             <p className="zetta-stat-label">{s.label}</p>
             <p className="zetta-stat-value">{s.value}</p>
-            <span className="zetta-stat-delta">{s.delta}</span>
           </div>
         ))}
       </div>
@@ -224,7 +216,6 @@ export default async function HomePage() {
                 <th>#</th>
                 <th>Agent</th>
                 <th>Revenue</th>
-                <th>Growth</th>
                 <th></th>
               </tr>
             </thead>
@@ -241,13 +232,12 @@ export default async function HomePage() {
                       </div>
                     </td>
                     <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
-                    <td style={{ color: "#6DB874", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{GROWTH_RATES[i] ?? "+—%"}</td>
                     <td><MiniSparkline color={ecoColor} /></td>
                   </tr>
                 );
               }) : (
                 <tr>
-                  <td colSpan={5} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
+                  <td colSpan={4} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
                     Financial data loads as agents submit wallet manifests.
                   </td>
                 </tr>
@@ -263,10 +253,9 @@ export default async function HomePage() {
             <Link href="/research" className="zetta-panel-link">Reports →</Link>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <p style={{ margin: "0 0 2px", fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
+            <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
               {gdp ? fmtUSD(gdp.total_revenue_usd) : "$—"}
             </p>
-            <span className="zetta-stat-delta">+18.2% vs last period</span>
           </div>
           <GDPChart snapshots={history} />
           <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -303,19 +292,9 @@ export default async function HomePage() {
               <span style={{ fontSize: "0.65rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{fmtDate(r.published_at)}</span>
             </div>
           )) : (
-            <div style={{ padding: "4px 0" }}>
-              {[
-                { type: "monthly", title: "State of Agent Finance — May 2026", desc: "Agent GDP, top revenue generators, and treasury trends across the ecosystem." },
-                { type: "weekly", title: "Revenue Signals — Week 24", desc: "AEON leads with $18.2K in attributed revenue. BANKR treasury inflows up." },
-                { type: "quarterly", title: "Ecosystem Breakdown Q1 2026", desc: "Cross-ecosystem analysis: BANKR, Virtuals, AEON, and EigenCloud compared." },
-              ].map((r, i) => (
-                <div key={i} className="zetta-report-item">
-                  <span className="zetta-type-badge">{r.type}</span>
-                  <p style={{ margin: "4px 0 4px", fontSize: "0.82rem", fontWeight: 600, color: "var(--ink)", lineHeight: 1.35 }}>{r.title}</p>
-                  <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{r.desc}</p>
-                </div>
-              ))}
-            </div>
+            <p style={{ margin: "12px 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
+              Research publishes weekly. No reports yet.
+            </p>
           )}
         </div>
       </div>
