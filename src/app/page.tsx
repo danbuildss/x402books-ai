@@ -86,7 +86,7 @@ export default async function HomePage() {
       <HomeHeader />
 
       {/* ── HERO ── */}
-      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "40px 40px 0" }}>
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 40px 0" }}>
         <div className="zetta-hero-grid">
           {/* Left: Copy */}
           <div>
@@ -100,7 +100,7 @@ export default async function HomePage() {
               <p className="lp-hero-sub">
                 Autonomous agents earn, spend, and manage capital on-chain. Zetta is the attribution layer that turns wallet activity into auditable books: revenue, expenses, treasury, and net income — per agent.
               </p>
-              <div className="lp-hero-actions" style={{ marginBottom: 28 }}>
+              <div className="lp-hero-actions" style={{ marginBottom: 16 }}>
                 <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Registry →</Link>
                 <Link href="/research" className="lp-btn-ghost lp-btn-lg">View Research</Link>
               </div>
@@ -124,36 +124,15 @@ export default async function HomePage() {
             </FadeContent>
           </div>
 
-          {/* Right: Globe + card */}
-          <div style={{ position: "relative" }}>
-            {/* Animated Globe */}
+          {/* Right: Globe only */}
+          <div>
             <AnimatedGlobe />
-
-            {/* Economy Overview card */}
-            <div className="zetta-economy-card" style={{ marginTop: 16 }}>
-              <div style={{ marginBottom: 4 }}>
-                <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Economy Overview</span>
-              </div>
-              <div className="zetta-economy-grid">
-                {[
-                  { label: "Agent GDP", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },
-                  { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
-                  { label: "Net Income", value: gdp ? fmtUSD(gdp.total_net_income_usd) : "$—" },
-                  { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "—" },
-                ].map((s) => (
-                  <div key={s.label} className="zetta-economy-stat">
-                    <p className="zetta-stat-label">{s.label}</p>
-                    <p className="zetta-stat-value" style={{ fontSize: "1.1rem" }}>{s.value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
       {/* ── STATS BAR ── */}
-      <div className="zetta-stats-bar" style={{ marginTop: 48 }}>
+      <div className="zetta-stats-bar" style={{ marginTop: 32 }}>
         {[
           { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
           { label: "Agent GDP (30d)", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },

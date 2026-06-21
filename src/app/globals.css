@@ -718,7 +718,7 @@ iframe[src*="privy"] { display: none !important; }
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .lp-h1 {
@@ -728,7 +728,7 @@ iframe[src*="privy"] { display: none !important; }
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: #F4F2ED;
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   max-width: 560px;
 }
 
@@ -746,11 +746,11 @@ iframe[src*="privy"] { display: none !important; }
 }
 
 .lp-hero-sub {
-  font-size: 16px;
-  line-height: 1.65;
+  font-size: 15px;
+  line-height: 1.6;
   color: rgba(232, 230, 225, 0.65);
   max-width: 480px;
-  margin: 0 0 32px;
+  margin: 0 0 20px;
 }
 
 .lp-hero-actions {
@@ -10962,7 +10962,7 @@ html, body {
 }
 
 /* Trusted by row */
-.zetta-trusted-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+.zetta-trusted-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 16px; }
 .zetta-trusted-label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
 .zetta-trusted-item { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; color: var(--muted); }
 .zetta-trusted-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
