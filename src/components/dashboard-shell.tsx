@@ -29,14 +29,6 @@ const ECO_COLORS: Record<string, string> = {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
-  const pts = "2,14 8,10 14,12 20,7 26,9 32,4 38,6";
-  return (
-    <svg width="40" height="20" viewBox="0 0 40 20" style={{ display: "block" }}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
   if (snapshots.length < 2) {
@@ -223,7 +215,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
 
         {/* ── Hero two-col ── */}
         <div style={{ padding: "48px 40px 0", borderBottom: "1px solid var(--line)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 40, maxWidth: 1100, alignItems: "start" }}>
+          <div className="zetta-dash-hero-grid">
 
             {/* Left: Headline */}
             <div>
@@ -295,7 +287,6 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                   <th>#</th>
                   <th>Agent</th>
                   <th>Revenue</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -311,12 +302,11 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                         </div>
                       </td>
                       <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
-                      <td><MiniSparkline color={ecoColor} /></td>
                     </tr>
                   );
                 }) : (
                   <tr>
-                    <td colSpan={4} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
+                    <td colSpan={3} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
                       Financial data loads as agents submit wallet manifests.
                     </td>
                   </tr>

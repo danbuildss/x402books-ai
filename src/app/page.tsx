@@ -34,15 +34,6 @@ const ECO_COLORS: Record<string, string> = {
 };
 
 
-function MiniSparkline({ color = "#6DB874" }: { color?: string }) {
-  const pts = "2,14 8,10 14,12 20,7 26,9 32,4 38,6";
-  return (
-    <svg width="40" height="20" viewBox="0 0 40 20" style={{ display: "block" }}>
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 
 function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
   if (snapshots.length < 2) {
@@ -96,7 +87,7 @@ export default async function HomePage() {
 
       {/* ── HERO ── */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "64px 40px 0" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 420px", alignItems: "start", gap: 48 }}>
+        <div className="zetta-hero-grid">
           {/* Left: Copy */}
           <div>
             <FadeContent>
@@ -216,7 +207,6 @@ export default async function HomePage() {
                 <th>#</th>
                 <th>Agent</th>
                 <th>Revenue</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -232,12 +222,11 @@ export default async function HomePage() {
                       </div>
                     </td>
                     <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
-                    <td><MiniSparkline color={ecoColor} /></td>
                   </tr>
                 );
               }) : (
                 <tr>
-                  <td colSpan={4} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
+                  <td colSpan={3} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
                     Financial data loads as agents submit wallet manifests.
                   </td>
                 </tr>

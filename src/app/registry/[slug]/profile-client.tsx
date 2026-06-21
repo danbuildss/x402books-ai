@@ -1542,7 +1542,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 <div className="prof-verdict">
                   <div className="prof-verdict-label">
                     <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
-                    Luca&apos;s Read
+                    From the Research
                   </div>
                   <p className="prof-verdict-text">{agent.adminNotes}</p>
                   {agent.lastChecked && <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>}
