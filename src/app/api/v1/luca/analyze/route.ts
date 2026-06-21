@@ -16,17 +16,18 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-// ── Attribution confidence score (replaces financial_activity_score) ─────────
+// ── Attribution confidence score ──────────────────────────────────────────────
+// Measures wallet declaration + verification quality only.
+// Zero wallets = zero score — no partial credit for metadata alone.
 
 function transparencyScoreForAgent(agent: Agent): number {
-  let s = 0;
   const wallets = agent.wallets ?? [];
-  if (wallets.length > 0) s += 30;
+  if (wallets.length === 0) return 0;
+  let s = 30;
   if (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed") s += 40;
   else if (agent.verificationStatus === "Claimed")          s += 30;
   else if (agent.verificationStatus === "Wallets Declared") s += 20;
   if (agent.evidenceSources.length > 0) s += 20;
-  if (agent.adminNotes) s += 10;
   return Math.min(100, s);
 }
 
@@ -54,15 +55,6 @@ async function findAgentByWallet(wallet: string): Promise<Agent | null> {
   }
 }
 
-// ── Health ratio (from profile page pattern) ──────────────────────────────────
-
-const HEALTH_RATIO: Record<string, number> = {
-  "Active":     0.72,
-  "Stable":     0.95,
-  "Unverified": 1.35,
-  "Inactive":   1.90,
-};
-
 // ── Agent-ID path (fast: registry + DB only, no wallet scan) ─────────────────
 
 async function analyzeByAgentId(agentId: string) {
@@ -87,25 +79,27 @@ async function analyzeByAgentId(agentId: string) {
     ? summarizeEvents(agentId, economicEvents, 30)
     : null;
 
-  // Derive classification from registry health signal
-  const isActive   = (agent.wallets ?? []).length > 0;
-  const ratio      = HEALTH_RATIO[agent.treasuryHealth ?? ""] ?? 1.0;
-  const totalInflow  = isActive ? 100 : 0;
-  const totalOutflow = totalInflow * ratio;
+  // Classify only from real economic event data — never from synthetic inputs
+  let activityPattern: string | null = null;
+  let activitySignals: string[] = [];
+  if (economicSummary) {
+    const classification = classifySettlementPattern({
+      totalInflow:         economicSummary.walletInflows,
+      totalOutflow:        economicSummary.walletOutflows,
+      txCount:             economicEvents.length,
+      categories:          [],
+      walletRolesDeclared: agent.wallets.length > 0,
+    });
+    activityPattern = classification.patterns[0] ?? null;
+    activitySignals = classification.signals;
+  } else if ((agent.wallets ?? []).length === 0) {
+    activityPattern = "unattributed";
+  }
 
-  const classification = classifySettlementPattern({
-    totalInflow,
-    totalOutflow,
-    txCount:             isActive ? 10 : 0,
-    categories:          [],
-    walletRolesDeclared: agent.wallets.length > 0,
-  });
-
-  // Verdict: prefer economic summary verdict, fall back to settlement verdict, fall back to admin notes
+  // Verdict: prefer real economic data — never fall back to internal adminNotes
   const verdict =
     economicSummary?.lucaVerdict ??
-    (classification.signals.length > 0 ? classification.signals.join(" ") : null) ??
-    agent.adminNotes ??
+    (activitySignals.length > 0 ? activitySignals.join(" ") : null) ??
     `${agent.name} is indexed in the registry. No active economic data available.`;
 
   const walletsVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
@@ -134,8 +128,8 @@ async function analyzeByAgentId(agentId: string) {
       net:     economicSummary?.netAgentPosition ?? null,
     },
     activity: {
-      pattern: classification.patterns[0] ?? "dormant",
-      signals: classification.signals,
+      pattern: activityPattern,
+      signals: activitySignals,
     },
     inference: inferenceSummary ? {
       spend_30d:    inferenceSummary.totalCostUsd,
@@ -268,7 +262,15 @@ export async function POST(req: NextRequest) {
   if (typeof body.agent_id === "string" && body.agent_id.trim()) {
     result = await analyzeByAgentId(body.agent_id.trim().toLowerCase());
   } else if (typeof body.wallet === "string" && body.wallet.trim()) {
-    result = await analyzeByWallet(body.wallet.trim());
+    try {
+      result = await analyzeByWallet(body.wallet.trim());
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      result = NextResponse.json(
+        { error: "Could not complete wallet analysis right now.", detail: msg },
+        { status: 502 },
+      );
+    }
   } else {
     return NextResponse.json(
       { error: "Provide either agent_id (registry slug) or wallet (0x address)." },
