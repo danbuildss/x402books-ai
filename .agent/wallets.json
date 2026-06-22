@@ -5,6 +5,7 @@
   "ecosystem": "Base",
   "website": "https://www.x402books.xyz",
   "x": "@x402Books",
+  "did": "did:pkh:eip155:8453:0x0000000000000000000000000000000000000001",
   "wallets": [
     {
       "address": "0x0000000000000000000000000000000000000001",
@@ -13,6 +14,16 @@
       "verification_method": "repo_manifest",
       "label": "x402Books registry treasury",
       "notes": "Placeholder — update with real treasury address before attribution.",
+      "active": false,
+      "last_updated": "2026-06-22"
+    },
+    {
+      "address": "0x0000000000000000000000000000000000000002",
+      "chain": "base",
+      "role": "fee",
+      "verification_method": "repo_manifest",
+      "label": "Fee recipient (legacy role alias test)",
+      "notes": "Uses legacy 'fee' role — should normalize to fee_recipient.",
       "active": false,
       "last_updated": "2026-06-22"
     }
