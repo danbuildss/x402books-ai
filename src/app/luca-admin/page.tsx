@@ -2240,6 +2240,7 @@ export default function LucaAdminPage() {
 
           <div className={styles.navDivider} />
           <Link href="/luca-admin/registry-updates" className={styles.navItem}>Pending Updates</Link>
+          <Link href="/luca-admin/revenue-accuracy-report" className={styles.navItem}>Accuracy Report</Link>
           <Link href="/luca-admin/revenue-audit" className={styles.navItem}>Revenue Audit</Link>
           <Link href="/registry" className={styles.navItem} target="_blank" rel="noreferrer">Public Registry ↗</Link>
 

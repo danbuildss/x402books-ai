@@ -522,6 +522,7 @@ export type AuditTx = {
 export type AgentRevenueAudit = {
   agent: { slug: string; name: string };
   period: TimeRange;
+  wallets: { declared: number; analyzed: number; roles: string[] };
   summary: {
     gross_inflow_usd: number;
     operating_revenue_usd: number;
@@ -732,6 +733,11 @@ export async function buildAgentBooksAudit(
       dex_excluded:       dexAudit,
       bridge_excluded:    bridgeAudit,
       internal_transfers: internalAudit,
+    },
+    wallets: {
+      declared:  declared.length,
+      analyzed:  scannable.length,
+      roles:     [...new Set(scannable.map((w) => w.role ?? "unknown"))],
     },
     aeon_diff_notes: aeonDiffNotes,
     generated_at: new Date().toISOString(),
