@@ -32,24 +32,24 @@ const EXAMPLE_ANALYSES = [
   {
     query: "How is AEON's revenue trending compared to last month?",
     rows: [
-      { field: "ATTRIBUTION", value: "4 wallets declared · verified · Base · last updated 2h ago", positive: false },
-      { field: "BOOKS",       value: "$18.2K revenue · $4.1K expenses · $14.1K net income · 47 txs", positive: false },
-      { field: "HISTORY",     value: "+24.6% vs prior 30d · expense ratio stable at 22.5% · net margin expanding", positive: true },
-      { field: "SIGNAL",      value: "Inference spend rising proportionally · treasury at $8.7M unchanged · no capital injections", positive: false },
+      { field: "ATTRIBUTION", value: "Manifest-declared wallets · operator role · Base · 30d window", positive: false },
+      { field: "BOOKS",       value: "Operating revenue · expenses · net income · transaction count", positive: false },
+      { field: "HISTORY",     value: "Period-over-period trend · expense ratio · net margin direction", positive: true },
+      { field: "SIGNAL",      value: "Inference spend pattern · treasury movement · capital injection flags", positive: false },
     ],
-    verdict: "Strong operational performance. Revenue acceleration driven by ecosystem adoption. Expense efficiency maintained. No risk signals.",
-    confidence: "HIGH",
+    verdict: "Luca reads attributed on-chain activity and produces a financial verdict. No estimates. No synthetic data. Only what the manifest wallets show.",
+    confidence: "LIVE",
   },
   {
     query: "What is BANKR's treasury position and runway?",
     rows: [
-      { field: "ATTRIBUTION", value: "2 wallets declared · verified · Base · fee wallet + treasury wallet", positive: false },
-      { field: "BOOKS",       value: "$12.4K revenue · $3.1K expenses · $9.3K net income · 31 txs", positive: false },
-      { field: "HISTORY",     value: "Treasury grew 18.1% over 30d · multi-sig inflow confirmed · 3 consecutive profitable periods", positive: true },
-      { field: "SIGNAL",      value: "Fee wallet receiving consistent settlement · stablecoin reserves diversified · no unusual outflows", positive: false },
+      { field: "ATTRIBUTION", value: "Manifest-declared wallets · role coverage · evidence source", positive: false },
+      { field: "BOOKS",       value: "Revenue · expenses · net income · over the selected period", positive: false },
+      { field: "HISTORY",     value: "Treasury trend · multi-sig inflow · consecutive profitable periods", positive: true },
+      { field: "SIGNAL",      value: "Settlement pattern · stablecoin reserves · outflow classification", positive: false },
     ],
-    verdict: "Treasury is healthy. Operating surplus maintained across three consecutive periods. Attribution coverage complete across declared wallets.",
-    confidence: "HIGH",
+    verdict: "Treasury analysis is only available for agents with manifest-declared wallets. Submit a wallet manifest to unlock books.",
+    confidence: "LIVE",
   },
 ];
 
@@ -339,7 +339,7 @@ export default function LucaPage() {
           </div>
 
           <div className="lt-terminal-footer">
-            <span>Analysis based on attributed wallets · on-chain events · 30d window · no synthetic data</span>
+            <span>Illustrative format · live analysis requires manifest-declared wallets · no synthetic data in production</span>
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <button
                 type="button"
