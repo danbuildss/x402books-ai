@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "agent": "x402Books",
+  "project": "x402Books",
+  "ecosystem": "Base",
+  "website": "https://www.x402books.xyz",
+  "x": "@x402Books",
+  "wallets": [
+    {
+      "address": "0x0000000000000000000000000000000000000001",
+      "chain": "base",
+      "role": "treasury",
+      "verification_method": "repo_manifest",
+      "label": "x402Books registry treasury",
+      "notes": "Placeholder — update with real treasury address before attribution.",
+      "active": false,
+      "last_updated": "2026-06-22"
+    }
+  ]
+}
