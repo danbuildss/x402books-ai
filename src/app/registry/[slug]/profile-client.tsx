@@ -1624,34 +1624,116 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             <div className="prof-grid">
               <section className="prof-section">
                 <p className="prof-section-title">Wallets</p>
-                {(agent.wallets ?? []).length > 0 && (
-                  <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>
-                    Self-declared by operator via signed manifest.{" "}
-                    <a href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Ownership not cryptographically verified →</a>
-                  </p>
-                )}
-                {agent.tokenAddress && (
-                  <div className="reg-card-wallet-row">
-                    <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
-                    <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                      {truncate(agent.tokenAddress)}
-                    </a>
-                  </div>
-                )}
-                {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
-                  <div key={w.address} className="reg-card-wallet-row">
-                    <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
-                    {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
-                    {w.confidence && w.confidence !== "declared" && <span className="reg-wallet-confidence">{w.confidence}</span>}
-                    <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                      {truncate(w.address)}
-                    </a>
-                    {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
-                  </div>
-                ))}
-                {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
-                  <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
-                )}
+                {(() => {
+                  const CONTRACT_TYPES = new Set(["token_contract", "smart_contract", "proxy_contract", "vault"]);
+                  const allWallets = Array.from(
+                    new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values(),
+                  );
+
+                  const manifestWallets = allWallets.filter((w) => {
+                    const src = (w.evidenceSource ?? "").toLowerCase();
+                    const atype = (w.address_type ?? "").toLowerCase();
+                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
+                    return src === "manifest" && !isTokenAddr && !CONTRACT_TYPES.has(atype);
+                  });
+                  const contractWallets = allWallets.filter((w) => {
+                    const atype = (w.address_type ?? "").toLowerCase();
+                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
+                    return CONTRACT_TYPES.has(atype) || isTokenAddr || (w.role ?? "").toLowerCase() === "token_contract";
+                  });
+                  const discoveredWallets = allWallets.filter((w) => {
+                    const src = (w.evidenceSource ?? "").toLowerCase();
+                    const atype = (w.address_type ?? "").toLowerCase();
+                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
+                    return src !== "manifest" && !CONTRACT_TYPES.has(atype) && !isTokenAddr && (w.role ?? "").toLowerCase() !== "token_contract";
+                  });
+
+                  const hasManifest = manifestWallets.length > 0;
+                  const hasDiscovered = discoveredWallets.length > 0 || contractWallets.length > 0;
+
+                  return (
+                    <>
+                      {/* No books warning */}
+                      {!hasManifest && hasDiscovered && (
+                        <div style={{ marginBottom: 10, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b30", borderRadius: 6 }}>
+                          <p style={{ margin: 0, fontSize: "0.72rem", color: "#f59e0b", lineHeight: 1.5 }}>
+                            Wallet manifest required. Contract addresses and discovered addresses are not used for books.{" "}
+                            <a href="/developer#manifest" style={{ color: "#f59e0b", textDecoration: "underline" }}>Add .agent/wallets.json →</a>
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Manifest wallets */}
+                      {manifestWallets.length > 0 && (
+                        <>
+                          <p style={{ margin: "0 0 6px", fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#22c55e", fontWeight: 700 }}>
+                            Manifest wallets — books eligible
+                          </p>
+                          {manifestWallets.map((w) => (
+                            <div key={w.address} className="reg-card-wallet-row">
+                              <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
+                              {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
+                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                                {truncate(w.address)}
+                              </a>
+                              {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Contract addresses */}
+                      {(contractWallets.length > 0 || agent.tokenAddress) && (
+                        <>
+                          <p style={{ margin: `${manifestWallets.length > 0 ? "12px" : "0"} 0 6px`, fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 700 }}>
+                            Contract addresses — not used for books
+                          </p>
+                          {agent.tokenAddress && !contractWallets.some((w) => w.address.toLowerCase() === agent.tokenAddress!.toLowerCase()) && (
+                            <div className="reg-card-wallet-row">
+                              <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
+                              <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                                {truncate(agent.tokenAddress)}
+                              </a>
+                            </div>
+                          )}
+                          {contractWallets.map((w) => (
+                            <div key={w.address} className="reg-card-wallet-row" style={{ opacity: 0.65 }}>
+                              <span className="reg-wallet-label-pill reg-wallet-candidate">
+                                {w.address_type ?? "contract"}
+                              </span>
+                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                                {truncate(w.address)}
+                              </a>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Discovered wallets */}
+                      {discoveredWallets.length > 0 && (
+                        <>
+                          <p style={{ margin: `${manifestWallets.length > 0 || contractWallets.length > 0 ? "12px" : "0"} 0 6px`, fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 700 }}>
+                            Discovered addresses — not used for books
+                          </p>
+                          {discoveredWallets.map((w) => (
+                            <div key={w.address} className="reg-card-wallet-row" style={{ opacity: 0.65 }}>
+                              <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
+                              {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
+                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                                {truncate(w.address)}
+                              </a>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* No wallets at all */}
+                      {!hasManifest && !hasDiscovered && !agent.tokenAddress && (
+                        <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
+                      )}
+                    </>
+                  );
+                })()}
               </section>
               {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
               <p className="prof-footer-note" style={{ gridColumn: "1 / -1" }}>

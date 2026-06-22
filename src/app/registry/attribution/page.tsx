@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAttributionMetrics } from "@/lib/attribution-health";
-import type { ManifestStatus, AttributionConfidence, AgentAttributionHealth } from "@/lib/attribution-health";
+import type { ManifestStatus, AttributionConfidence, AgentAttributionHealth, AttributionTier } from "@/lib/attribution-health";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
@@ -72,17 +72,17 @@ export default async function AttributionHealthPage() {
         {/* Platform KPIs */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12, marginBottom: 32 }}>
           {[
-            { label: "Indexed Agents",       value: String(metrics.total_agents),              note: "total in registry" },
-            { label: "Attributed Agents",    value: String(metrics.attributed_agents),          note: "any wallets" },
-            { label: "Attribution Coverage", value: `${metrics.attribution_coverage_pct}%`,     note: "attributed / total" },
-            { label: "Manifest Agents",      value: String(metrics.manifest_agents),            note: "self-declared" },
-            { label: "Manifest Coverage",    value: `${metrics.manifest_coverage_pct}%`,        note: "highest trust" },
-            { label: "Wallets Declared",     value: String(metrics.total_wallets),              note: "across all agents" },
-            { label: "Roles Assigned",       value: `${metrics.role_coverage_pct}%`,            note: "of wallets" },
+            { label: "Indexed Agents",          value: String(metrics.total_agents),                   note: "total in registry",              color: "var(--ink)" },
+            { label: "Attributed Agents",        value: String(metrics.manifest_attributed_agents),     note: "manifest-declared wallets",      color: "#22c55e" },
+            { label: "Discovered Agents",        value: String(metrics.discovered_agents),              note: "admin/inferred — no books",      color: "#f59e0b" },
+            { label: "Unattributed",             value: String(metrics.unattributed_agents),            note: "no wallets yet",                 color: "#6b7280" },
+            { label: "Attribution Coverage",     value: `${metrics.attribution_coverage_pct}%`,         note: "manifest-attributed / total",    color: "#6DB874" },
+            { label: "Books-eligible Wallets",   value: String(metrics.books_eligible_wallets),         note: "manifest + non-contract",        color: "#22c55e" },
+            { label: "Contract Addresses",       value: String(metrics.contract_wallets),               note: "never used for books",           color: "#ef4444" },
           ].map((kpi) => (
             <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>
               <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)", marginBottom: 2 }}>{kpi.value}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: kpi.color, fontFamily: "var(--font-mono)", marginBottom: 2 }}>{kpi.value}</div>
               <div style={{ fontSize: 11, color: "var(--muted)" }}>{kpi.note}</div>
             </div>
           ))}
@@ -222,8 +222,9 @@ export default async function AttributionHealthPage() {
         {/* Footer note */}
         <div style={{ borderTop: "1px solid var(--line)", paddingTop: 20, fontSize: 12, color: "var(--muted)", lineHeight: 1.7 }}>
           <p style={{ margin: 0 }}>
-            Attribution metrics update every 15 minutes. Confidence scores are based on evidence source, wallet role coverage, and on-chain verification.
-            {" · "}{metrics.attributed_agents}/{metrics.total_agents} agents attributed.
+            Attribution metrics update every 15 minutes. <strong>Attributed</strong> = manifest-declared, books-eligible wallets only.
+            Discovered agents (admin/inferred wallets) are indexed but do not produce books, revenue, or GDP.
+            {" · "}{metrics.manifest_attributed_agents} attributed · {metrics.discovered_agents} discovered · {metrics.unattributed_agents} unattributed · {metrics.total_agents} total.
           </p>
         </div>
       </main>
