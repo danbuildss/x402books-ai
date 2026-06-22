@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Validate Agent Wallet Manifest | Zetta",
   description:
-    "Paste your .x402books/wallets.json and validate it against the Agent Wallet Manifest schema. Every valid manifest becomes an agent profile on Zetta.",
+    "Paste your .agent/wallets.json and validate it against the Agent Wallet Manifest schema. Every valid manifest becomes an agent profile on Zetta.",
   openGraph: {
     title: "Validate Agent Wallet Manifest — Zetta",
     description:
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Validate Agent Wallet Manifest — Zetta",
     description:
-      "Paste your .x402books/wallets.json and get instant schema validation.",
+      "Paste your .agent/wallets.json and get instant schema validation.",
     creator: "@ZettaFinance",
   },
 };

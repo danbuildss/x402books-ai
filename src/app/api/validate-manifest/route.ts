@@ -64,7 +64,7 @@ function validateManifest(raw: unknown): ValidationError[] {
     }
   }
   if ("did" in obj && obj.did !== undefined) {
-    if (typeof obj.did !== "string" || !/^did:[a-z]+:.+$/.test(obj.did as string)) {
+    if (typeof obj.did !== "string" || !/^did:[a-z][a-z0-9]*:.+$/.test(obj.did as string)) {
       errors.push({ path: "did", message: '"did" must follow the pattern did:<method>:<id>' });
     }
   }
