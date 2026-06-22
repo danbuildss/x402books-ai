@@ -4,11 +4,16 @@ import { normalizeWalletRole } from "@/lib/luca-classify";
 import type { WalletLabel } from "@/app/registry/types";
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
-  treasury:  "likely treasury",
-  fee:       "likely fee recipient",
-  deployer:  "candidate wallet",
-  operator:  "likely expense wallet",
-  unknown:   "unknown role",
+  treasury:            "likely treasury",
+  revenue:             "likely revenue wallet",
+  expense:             "likely expense wallet",
+  fee_recipient:       "likely fee recipient",
+  payment_receiver:    "likely revenue wallet",
+  operator:            "likely expense wallet",
+  deployer:            "candidate wallet",
+  token_contract:      "candidate wallet",
+  token_bound_account: "candidate wallet",
+  unknown:             "unknown role",
 };
 
 export async function POST(req: NextRequest) {
@@ -59,7 +64,7 @@ export async function POST(req: NextRequest) {
       ecosystem:  ecosystem ?? null,
     },
     diff_summary: `Wallet manifest: ${wallets.length} wallet(s) — ${normalized.map((w) => w.role).join(", ")}`,
-    luca_notes:   "Submitted via .x402books/wallets.json manifest",
+    luca_notes:   "Submitted via .agent/wallets.json manifest",
     status:       "pending",
   });
 

@@ -100,6 +100,6 @@ export async function POST(req: NextRequest) {
     matched: walletMatched,
     message: walletMatched
       ? "Wallet matched — claim submitted for admin review. You'll be notified when approved."
-      : "Claim submitted. Wallet not found in current manifest — add it to your .x402books/wallets.json to strengthen your claim.",
+      : "Claim submitted. Wallet not found in current manifest — add it to your .agent/wallets.json to strengthen your claim.",
   });
 }

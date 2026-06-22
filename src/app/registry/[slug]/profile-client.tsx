@@ -1179,7 +1179,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       {tab === "manifest" && (
         <>
           <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
-            Add a <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 4px", borderRadius: 3 }}>.x402books/wallets.json</code> file
+            Add a <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 4px", borderRadius: 3 }}>.agent/wallets.json</code> file
             to your agent&apos;s GitHub or Gitlawb repo, then paste the repo URL below.
             This is the fastest path to <strong style={{ color: "var(--ink)" }}>Wallets Declared</strong> status.
           </p>
