@@ -106,13 +106,13 @@ export default function AttributionHealthAdminPage() {
             {/* KPI cards */}
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
               {[
-                { label: "Indexed",           value: metrics.total_agents,               color: "var(--ink)" },
-                { label: "Attributed",         value: metrics.attributed_agents,          color: "var(--ink)" },
-                { label: "Coverage",           value: `${metrics.attribution_coverage_pct}%`, color: "#6DB874" },
-                { label: "Manifest",           value: metrics.manifest_agents,            color: "#22c55e" },
-                { label: "Manifest %",         value: `${metrics.manifest_coverage_pct}%`,    color: "#22c55e" },
-                { label: "Wallets",            value: metrics.total_wallets,              color: "var(--ink)" },
-                { label: "Role coverage",      value: `${metrics.role_coverage_pct}%`,       color: "#f59e0b" },
+                { label: "Indexed",            value: metrics.total_agents,                        color: "var(--ink)" },
+                { label: "Attributed",          value: metrics.manifest_attributed_agents,          color: "#22c55e" },
+                { label: "Discovered",          value: metrics.discovered_agents,                   color: "#f59e0b" },
+                { label: "Unattributed",        value: metrics.unattributed_agents,                 color: "#6b7280" },
+                { label: "Coverage",            value: `${metrics.attribution_coverage_pct}%`,      color: "#6DB874" },
+                { label: "Books-eligible",      value: metrics.books_eligible_wallets,              color: "#22c55e" },
+                { label: "Contract wallets",    value: metrics.contract_wallets,                    color: "#ef4444" },
               ].map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px", minWidth: 100 }}>
                   <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
@@ -206,7 +206,21 @@ export default function AttributionHealthAdminPage() {
                           </span>
                         </td>
                         <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.wallet_count > 0 ? "var(--ink)" : "var(--muted)" }}>
-                          {agent.wallet_count > 0 ? agent.wallet_count : "—"}
+                          {agent.wallet_count > 0 ? (
+                            <>
+                              {agent.wallet_count}
+                              {agent.books_eligible_wallet_count > 0 && (
+                                <span style={{ fontSize: 10, color: "#22c55e", marginLeft: 4 }}>
+                                  ({agent.books_eligible_wallet_count} eligible)
+                                </span>
+                              )}
+                              {agent.books_eligible_wallet_count === 0 && agent.wallet_count > 0 && (
+                                <span style={{ fontSize: 10, color: "#ef4444", marginLeft: 4 }}>
+                                  (0 eligible)
+                                </span>
+                              )}
+                            </>
+                          ) : "—"}
                         </td>
                         <td style={{ padding: "10px 12px", fontSize: 13, color: agent.role_coverage_pct > 0 ? "var(--ink)" : "var(--muted)" }}>
                           {agent.wallet_count > 0 ? `${agent.role_coverage_pct}%` : "—"}
