@@ -42,6 +42,15 @@ export type WalletLabel =
   | "unknown role";
 export type OutreachStatus = "Not started" | "In progress" | "Connected";
 
+export type AddressType =
+  | "eoa"               // externally owned account — valid operator wallet
+  | "token_contract"    // ERC-20/ERC-721 — NEVER an operator wallet
+  | "proxy_contract"    // upgradeable proxy — inspect manually
+  | "treasury_contract" // Gnosis Safe or similar multi-sig
+  | "vault"             // yield vault / liquidity position
+  | "smart_contract"    // generic contract — not a valid operator wallet
+  | "unknown";          // not yet classified
+
 export type AgentWallet = {
   address: string;
   label: WalletLabel;
@@ -50,6 +59,7 @@ export type AgentWallet = {
   confidence?: string;    // declared | inferred | confirmed
   evidenceSource?: string; // manifest | luca | admin
   notes?: string;
+  address_type?: AddressType; // set after classification audit
 };
 
 export type Agent = {

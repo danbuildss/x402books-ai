@@ -39,6 +39,7 @@ interface RegistryAgentWalletRow {
   role: string | null;
   confidence: string | null;
   evidence_source: string | null;
+  address_type: string | null; // populated after classification audit
 }
 
 interface CommIdentityRow {
@@ -189,6 +190,7 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
         confidence: w.confidence ?? undefined,
         evidenceSource: w.evidence_source ?? undefined,
         notes: w.notes ?? undefined,
+        address_type: (w.address_type ?? undefined) as import("@/app/registry/types").AddressType | undefined,
       });
     }
 

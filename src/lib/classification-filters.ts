@@ -114,6 +114,9 @@ export function getQuarantineReason(
 ): QuarantineReason | null {
   if (isKnownGrantAddress(address)) return "grant_program";
   if (isBridgeContract(address)) return "bridge_receipt";
+  // $0-value non-stablecoins are always token distributions — junk tokens
+  // sent by airdrop bots regardless of how many prior interactions exist.
+  if (!isStablecoin && usdValue === 0) return "token_distribution";
   if (!isStablecoin && priorInteractions < KNOWN_COUNTERPARTY_MIN_INTERACTIONS) {
     return "token_distribution";
   }

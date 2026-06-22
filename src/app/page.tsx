@@ -7,9 +7,11 @@ import { HomeSignals } from "@/components/home-signals";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { listReports } from "@/lib/research-db";
 import { getGDPHistory } from "@/lib/gdp-history";
+import { getAttributionMetrics } from "@/lib/attribution-health";
 import type { AgentGDP } from "@/lib/agent-gdp";
 import type { ResearchReport } from "@/lib/research-db";
 import type { GDPSnapshot } from "@/lib/gdp-history";
+import type { AttributionMetrics } from "@/lib/attribution-health";
 
 export const revalidate = 3600;
 
@@ -74,10 +76,12 @@ export default async function HomePage() {
   let gdp: AgentGDP | null = null;
   let reports: ResearchReport[] = [];
   let history: GDPSnapshot[] = [];
+  let attr: AttributionMetrics | null = null;
 
   try { gdp = await getAgentGDP(); } catch { /* unavailable */ }
   try { reports = await listReports(3); } catch { /* unavailable */ }
   try { history = await getGDPHistory(30); } catch { /* unavailable */ }
+  try { attr = await getAttributionMetrics(); } catch { /* unavailable */ }
 
   const topAgents = gdp?.top_agents ?? [];
 
@@ -134,10 +138,10 @@ export default async function HomePage() {
       {/* ── STATS BAR ── */}
       <div className="zetta-stats-bar" style={{ marginTop: 32 }}>
         {[
-          { label: "Attributed Agents", value: gdp ? String(gdp.attributed_agents) : "—" },
-          { label: "Agent GDP (30d)", value: gdp ? fmtUSD(gdp.total_revenue_usd) : "$—" },
-          { label: "Net Income", value: gdp ? fmtUSD(gdp.total_net_income_usd) : "$—" },
-          { label: "Research Reports", value: reports.length > 0 ? String(reports.length) : "—" },
+          { label: "Indexed Agents",       value: attr ? String(attr.total_agents) : "—" },
+          { label: "Attributed Agents",    value: attr ? String(attr.attributed_agents) : "—" },
+          { label: "Attribution Coverage", value: attr ? `${attr.attribution_coverage_pct}%` : "—%" },
+          { label: "Agent GDP (30d)",      value: gdp  ? fmtUSD(gdp.total_revenue_usd) : "$—" },
         ].map((s) => (
           <div key={s.label} className="zetta-stats-bar-item">
             <p className="zetta-stat-label">{s.label}</p>
@@ -272,23 +276,48 @@ export default async function HomePage() {
         {/* Attribution Coverage */}
         <div className="zetta-bottom-panel">
           <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Attribution Coverage</p>
-          <h3 style={{ margin: "0 0 16px", fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, color: "var(--ink)" }}>
-            {gdp && gdp.total_agents > 0
-              ? `${Math.round((gdp.attributed_agents / gdp.total_agents) * 100)}%`
-              : "—%"
-            } attributed
-          </h3>
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: "0.65rem", color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Total Indexed</p>
-              <p style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>{gdp ? `${gdp.total_agents}+` : "—"}</p>
-            </div>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: "0.65rem", color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>Wallets Attributed</p>
-              <p style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>{gdp ? String(gdp.attributed_wallets) : "—"}</p>
-            </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <h3 style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: "2rem", fontWeight: 700, color: "var(--ink)" }}>
+              {attr ? `${attr.attribution_coverage_pct}%` : "—%"}
+            </h3>
+            <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>of agents attributed</span>
           </div>
-          <Link href="/registry#verify" className="lp-btn-primary" style={{ fontSize: "0.8rem", height: 34 }}>Submit Your Agent →</Link>
+
+          {/* Stacked progress bar */}
+          {attr && attr.total_agents > 0 && (() => {
+            const total = attr.total_agents;
+            const mPct  = (attr.status_breakdown.manifest       / total) * 100;
+            const aPct  = (attr.status_breakdown.admin_attributed / total) * 100;
+            const iPct  = (attr.status_breakdown.inferred        / total) * 100;
+            return (
+              <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", marginBottom: 14, display: "flex" }}>
+                <div style={{ width: `${mPct}%`, background: "#22c55e", transition: "width 0.4s" }} />
+                <div style={{ width: `${aPct}%`, background: "#6DB874", opacity: 0.7, transition: "width 0.4s" }} />
+                <div style={{ width: `${iPct}%`, background: "#f59e0b", opacity: 0.5, transition: "width 0.4s" }} />
+              </div>
+            );
+          })()}
+
+          {/* Breakdown */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", marginBottom: 16 }}>
+            {[
+              { label: "Manifest",    value: attr?.status_breakdown.manifest ?? 0,        color: "#22c55e" },
+              { label: "Admin",       value: attr?.status_breakdown.admin_attributed ?? 0, color: "#6DB874" },
+              { label: "Inferred",    value: attr?.status_breakdown.inferred ?? 0,         color: "#f59e0b" },
+              { label: "Unattributed",value: attr?.status_breakdown.none ?? 0,             color: "var(--muted)" },
+            ].map((row) => (
+              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.color, flexShrink: 0 }} />
+                <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{row.label}</span>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)", marginLeft: "auto" }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/registry/attribution" className="lp-btn-ghost" style={{ fontSize: "0.78rem", height: 32 }}>Full Report →</Link>
+            <Link href="/registry#verify" className="lp-btn-primary" style={{ fontSize: "0.78rem", height: 32 }}>Submit Manifest →</Link>
+          </div>
         </div>
 
         {/* What is Zetta */}

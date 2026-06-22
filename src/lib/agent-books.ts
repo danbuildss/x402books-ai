@@ -194,12 +194,19 @@ async function computeAgentBooks(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    // Token contract addresses must never be scanned as operational wallets.
+    // Rule: only manifest-declared wallets produce attributed books.
+    // Admin, luca, or inferred addresses are "discovered" — not attributed.
+    const src = (w.evidenceSource ?? "").toLowerCase();
+    if (src !== "" && src !== "manifest") return false;
+    // Rule: token contract addresses must never be scanned as operational wallets.
     if (
       agent.tokenAddress &&
       w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
     ) return false;
-    // Explicitly-labelled token contract roles are also excluded.
+    // Rule: exclude wallets classified as contracts (token, smart, proxy).
+    const atype = (w.address_type ?? "").toLowerCase();
+    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
+    // Legacy: exclude by role label
     const role = (w.role ?? "").toLowerCase();
     if (role === "token_contract" || role === "token") return false;
     return true;
@@ -208,7 +215,7 @@ async function computeAgentBooks(
     return {
       agent: agentMeta,
       attributed: false,
-      reason: "No declared wallets found. Add .agent/wallets.json to generate books.",
+      reason: "No manifest-declared wallets found. Only wallets declared via .agent/wallets.json produce attributed books.",
     };
   }
 
@@ -261,8 +268,10 @@ async function computeAgentBooks(
     (isInternal ? internal : external).push(tx);
   }
 
-  // ── Swap detection (v2) ───────────────────────────────────────────────────
-  // P0 fix: txHash dual-direction check + DEX router address check.
+  // ── Swap detection ────────────────────────────────────────────────────────
+  // Three signals: dual-direction txHash, known DEX router, and addresses
+  // seen as counterparties in confirmed swaps this window — catches standalone
+  // DEX settlement inflows that have no paired expense leg in the same txHash.
   const directionsByHash = new Map<string, Set<string>>();
   for (const tx of external) {
     const set = directionsByHash.get(tx.txHash) ?? new Set<string>();
@@ -273,7 +282,23 @@ async function computeAgentBooks(
     (directionsByHash.get(tx.txHash)?.size ?? 0) > 1;
   const isSwapByRouter = (tx: LedgerTransaction) =>
     isDexRouter(tx.from) || isDexRouter(tx.to) || isDexRouter(tx.counterparty ?? "");
-  const isSwap = (tx: LedgerTransaction) => isSwapByHash(tx) || isSwapByRouter(tx);
+
+  const dexDetectedAddresses = new Set<string>();
+  for (const tx of external) {
+    if (isSwapByHash(tx) || isSwapByRouter(tx)) {
+      if (tx.from) dexDetectedAddresses.add(tx.from.toLowerCase());
+      if (tx.to) dexDetectedAddresses.add(tx.to.toLowerCase());
+      if (tx.counterparty) dexDetectedAddresses.add(tx.counterparty.toLowerCase());
+    }
+  }
+  for (const addr of ownAddresses) dexDetectedAddresses.delete(addr);
+
+  const isSwapByDetectedAddress = (tx: LedgerTransaction) =>
+    dexDetectedAddresses.has((tx.from ?? "").toLowerCase()) ||
+    dexDetectedAddresses.has((tx.to ?? "").toLowerCase()) ||
+    dexDetectedAddresses.has((tx.counterparty ?? "").toLowerCase());
+  const isSwap = (tx: LedgerTransaction) =>
+    isSwapByHash(tx) || isSwapByRouter(tx) || isSwapByDetectedAddress(tx);
 
   // ── Bridge detection ──────────────────────────────────────────────────────
   // P0 fix: bridge transfers excluded from both revenue and expenses.
@@ -576,13 +601,24 @@ export async function buildAgentBooksAudit(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    if (agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase()) return false;
+    // Rule: only manifest-declared wallets produce attributed books.
+    const src = (w.evidenceSource ?? "").toLowerCase();
+    if (src !== "" && src !== "manifest") return false;
+    // Rule: token contract addresses must never be scanned as operational wallets.
+    if (
+      agent.tokenAddress &&
+      w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
+    ) return false;
+    // Rule: exclude wallets classified as contracts (token, smart, proxy).
+    const atype = (w.address_type ?? "").toLowerCase();
+    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
+    // Legacy: exclude by role label
     const role = (w.role ?? "").toLowerCase();
     if (role === "token_contract" || role === "token") return false;
     return true;
   });
 
-  if (declared.length === 0) return { error: "No declared wallets found." };
+  if (declared.length === 0) return { error: "No manifest-declared wallets found. Only wallets declared via .agent/wallets.json produce attributed books." };
 
   const scannable = declared
     .filter((w) => !w.chain || w.chain.toLowerCase() === "base")
@@ -623,7 +659,23 @@ export async function buildAgentBooksAudit(
   const isSwapByHash   = (tx: LedgerTransaction) => (directionsByHash.get(tx.txHash)?.size ?? 0) > 1;
   const isSwapByRouter = (tx: LedgerTransaction) =>
     isDexRouter(tx.from) || isDexRouter(tx.to) || isDexRouter(tx.counterparty ?? "");
-  const isSwap   = (tx: LedgerTransaction) => isSwapByHash(tx) || isSwapByRouter(tx);
+
+  const dexDetectedAddresses = new Set<string>();
+  for (const tx of external) {
+    if (isSwapByHash(tx) || isSwapByRouter(tx)) {
+      if (tx.from) dexDetectedAddresses.add(tx.from.toLowerCase());
+      if (tx.to) dexDetectedAddresses.add(tx.to.toLowerCase());
+      if (tx.counterparty) dexDetectedAddresses.add(tx.counterparty.toLowerCase());
+    }
+  }
+  for (const addr of ownAddresses) dexDetectedAddresses.delete(addr);
+
+  const isSwapByDetectedAddress = (tx: LedgerTransaction) =>
+    dexDetectedAddresses.has((tx.from ?? "").toLowerCase()) ||
+    dexDetectedAddresses.has((tx.to ?? "").toLowerCase()) ||
+    dexDetectedAddresses.has((tx.counterparty ?? "").toLowerCase());
+  const isSwap   = (tx: LedgerTransaction) =>
+    isSwapByHash(tx) || isSwapByRouter(tx) || isSwapByDetectedAddress(tx);
   const isBridge = (tx: LedgerTransaction) =>
     isBridgeContract(tx.from) || isBridgeContract(tx.to) || isBridgeContract(tx.counterparty ?? "");
 
@@ -659,11 +711,14 @@ export async function buildAgentBooksAudit(
 
     const qReason = getQuarantineReason(counterparty, usd, priorInt, isStablecoin);
     if (qReason) {
+      const tokenDistMsg = usd === 0
+        ? `$0-value non-stablecoin (${tx.tokenSymbol}) — junk token airdrop, not operating revenue regardless of counterparty history.`
+        : `Non-stablecoin (${tx.tokenSymbol}) from counterparty with only ${priorInt} prior interaction(s). Classified as token distribution, not operating revenue.`;
       const EXPLANATIONS: Record<QuarantineReason, string> = {
         capital_injection:   `Single inflow of $${usd.toFixed(2)} from counterparty with only ${priorInt} prior interaction(s) — exceeds $${CAPITAL_INJECTION_THRESHOLD_USD.toLocaleString()} capital injection threshold.`,
         grant_program:       `Inflow from known grant/ecosystem program address. Classified as grant, not operating revenue.`,
         bridge_receipt:      `Inbound bridge transfer. Bridge receipts transfer token ownership but do not represent earned revenue.`,
-        token_distribution:  `Non-stablecoin (${tx.tokenSymbol}) from counterparty with only ${priorInt} prior interaction(s). Classified as token distribution, not operating revenue.`,
+        token_distribution:  tokenDistMsg,
         unknown_large_inflow:`Large inflow ($${usd.toFixed(2)}) from counterparty with ${priorInt} prior interaction(s). Cannot classify as operating revenue.`,
       };
       quarantinedAudit.push(txToAudit(tx, "quarantined", EXPLANATIONS[qReason], qReason));
@@ -679,13 +734,18 @@ export async function buildAgentBooksAudit(
   }
 
   const dexAudit = dexExcludedTxs.map((tx) => {
-    const byHash   = isSwapByHash(tx);
-    const byRouter = isSwapByRouter(tx);
+    const byHash     = isSwapByHash(tx);
+    const byRouter   = isSwapByRouter(tx);
+    const byDetected = isSwapByDetectedAddress(tx);
     const why = byHash && byRouter
       ? "Both dual-direction txHash and DEX router address detected."
       : byHash
         ? "Transaction hash contains both income and expense legs — detected as token swap."
-        : "From/to/counterparty address is a known DEX router or aggregator.";
+        : byRouter
+          ? "From/to/counterparty address is a known DEX router or aggregator."
+          : byDetected
+            ? "Counterparty address participated in confirmed DEX swaps this audit window — standalone inflow treated as DEX activity."
+            : "From/to/counterparty address is a known DEX router or aggregator.";
     return txToAudit(tx, "dex_excluded", why);
   });
 
