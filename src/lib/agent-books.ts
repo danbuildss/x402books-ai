@@ -194,12 +194,19 @@ async function computeAgentBooks(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    // Token contract addresses must never be scanned as operational wallets.
+    // Rule: only manifest-declared wallets produce attributed books.
+    // Admin, luca, or inferred addresses are "discovered" — not attributed.
+    const src = (w.evidenceSource ?? "").toLowerCase();
+    if (src !== "" && src !== "manifest") return false;
+    // Rule: token contract addresses must never be scanned as operational wallets.
     if (
       agent.tokenAddress &&
       w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
     ) return false;
-    // Explicitly-labelled token contract roles are also excluded.
+    // Rule: exclude wallets classified as contracts (token, smart, proxy).
+    const atype = (w.address_type ?? "").toLowerCase();
+    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
+    // Legacy: exclude by role label
     const role = (w.role ?? "").toLowerCase();
     if (role === "token_contract" || role === "token") return false;
     return true;
@@ -208,7 +215,7 @@ async function computeAgentBooks(
     return {
       agent: agentMeta,
       attributed: false,
-      reason: "No declared wallets found. Add .agent/wallets.json to generate books.",
+      reason: "No manifest-declared wallets found. Only wallets declared via .agent/wallets.json produce attributed books.",
     };
   }
 
@@ -594,13 +601,24 @@ export async function buildAgentBooksAudit(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    if (agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase()) return false;
+    // Rule: only manifest-declared wallets produce attributed books.
+    const src = (w.evidenceSource ?? "").toLowerCase();
+    if (src !== "" && src !== "manifest") return false;
+    // Rule: token contract addresses must never be scanned as operational wallets.
+    if (
+      agent.tokenAddress &&
+      w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
+    ) return false;
+    // Rule: exclude wallets classified as contracts (token, smart, proxy).
+    const atype = (w.address_type ?? "").toLowerCase();
+    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
+    // Legacy: exclude by role label
     const role = (w.role ?? "").toLowerCase();
     if (role === "token_contract" || role === "token") return false;
     return true;
   });
 
-  if (declared.length === 0) return { error: "No declared wallets found." };
+  if (declared.length === 0) return { error: "No manifest-declared wallets found. Only wallets declared via .agent/wallets.json produce attributed books." };
 
   const scannable = declared
     .filter((w) => !w.chain || w.chain.toLowerCase() === "base")
