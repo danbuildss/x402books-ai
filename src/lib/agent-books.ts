@@ -502,6 +502,248 @@ async function computeAgentBooks(
   };
 }
 
+// ── Revenue Audit Types ───────────────────────────────────────────────────────
+
+export type AuditTx = {
+  txHash: string;
+  timestamp: string;
+  amount_usd: number;
+  token_symbol: string;
+  token_address: string;
+  from: string;
+  to: string;
+  counterparty: string;
+  direction: "income" | "expense" | "internal";
+  audit_category: "operating_revenue" | "quarantined" | "dex_excluded" | "bridge_excluded" | "internal_transfer";
+  audit_reason: string;
+  quarantine_reason?: QuarantineReason;
+};
+
+export type AgentRevenueAudit = {
+  agent: { slug: string; name: string };
+  period: TimeRange;
+  wallets: { declared: number; analyzed: number; roles: string[] };
+  summary: {
+    gross_inflow_usd: number;
+    operating_revenue_usd: number;
+    quarantined_usd: number;
+    dex_excluded_usd: number;
+    bridge_excluded_inflow_usd: number;
+    internal_transfer_usd: number;
+    total_txs_scanned: number;
+  };
+  transactions: {
+    operating_revenue: AuditTx[];
+    quarantined: AuditTx[];
+    dex_excluded: AuditTx[];
+    bridge_excluded: AuditTx[];
+    internal_transfers: AuditTx[];
+  };
+  aeon_diff_notes: string[];
+  generated_at: string;
+};
+
+function txToAudit(
+  tx: LedgerTransaction,
+  category: AuditTx["audit_category"],
+  reason: string,
+  qReason?: QuarantineReason,
+): AuditTx {
+  return {
+    txHash: tx.txHash,
+    timestamp: tx.timestamp,
+    amount_usd: Math.round((tx.usdValue ?? tx.amountUsdc) * 100) / 100,
+    token_symbol: tx.tokenSymbol,
+    token_address: tx.tokenAddress,
+    from: tx.from,
+    to: tx.to,
+    counterparty: tx.counterparty ?? "",
+    direction: tx.direction,
+    audit_category: category,
+    audit_reason: reason,
+    quarantine_reason: qReason,
+  };
+}
+
+// buildAgentBooksAudit returns the full transaction-level breakdown used by
+// Revenue Audit Mode. It always bypasses cache and returns every transaction
+// with its classification reason. Never modifies any classification logic.
+export async function buildAgentBooksAudit(
+  agent: Agent,
+  period: TimeRange,
+): Promise<AgentRevenueAudit | { error: string }> {
+  const slug = toSlug(agent.name);
+
+  const declared = (agent.wallets ?? []).filter((w) => {
+    if (!isValidWalletAddress(w.address)) return false;
+    if (agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase()) return false;
+    const role = (w.role ?? "").toLowerCase();
+    if (role === "token_contract" || role === "token") return false;
+    return true;
+  });
+
+  if (declared.length === 0) return { error: "No declared wallets found." };
+
+  const scannable = declared
+    .filter((w) => !w.chain || w.chain.toLowerCase() === "base")
+    .slice(0, MAX_WALLETS);
+
+  if (scannable.length === 0) return { error: "No scannable wallets (Base chain only)." };
+
+  const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
+
+  const scans = await Promise.all(
+    scannable.map((w) => buildLedgerScan({ wallet: w.address, range: period, persist: false })),
+  );
+
+  const seen = new Set<string>();
+  const merged: LedgerTransaction[] = [];
+  for (const scan of scans) {
+    for (const tx of scan.transactions) {
+      const key = `${tx.txHash}:${tx.tokenAddress}:${tx.from.toLowerCase()}:${tx.to.toLowerCase()}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(tx);
+    }
+  }
+
+  const internalTxs: LedgerTransaction[] = [];
+  const external: LedgerTransaction[] = [];
+  for (const tx of merged) {
+    const isIntl = ownAddresses.has(tx.from.toLowerCase()) && ownAddresses.has(tx.to.toLowerCase());
+    (isIntl ? internalTxs : external).push(tx);
+  }
+
+  const directionsByHash = new Map<string, Set<string>>();
+  for (const tx of external) {
+    const s = directionsByHash.get(tx.txHash) ?? new Set<string>();
+    s.add(tx.direction);
+    directionsByHash.set(tx.txHash, s);
+  }
+  const isSwapByHash   = (tx: LedgerTransaction) => (directionsByHash.get(tx.txHash)?.size ?? 0) > 1;
+  const isSwapByRouter = (tx: LedgerTransaction) =>
+    isDexRouter(tx.from) || isDexRouter(tx.to) || isDexRouter(tx.counterparty ?? "");
+  const isSwap   = (tx: LedgerTransaction) => isSwapByHash(tx) || isSwapByRouter(tx);
+  const isBridge = (tx: LedgerTransaction) =>
+    isBridgeContract(tx.from) || isBridgeContract(tx.to) || isBridgeContract(tx.counterparty ?? "");
+
+  const usdOf = (tx: LedgerTransaction) => tx.usdValue ?? tx.amountUsdc;
+  const round = (n: number) => Math.round(n * 100) / 100;
+
+  const operational      = external.filter((tx) => !isSwap(tx) && !isBridge(tx));
+  const dexExcludedTxs   = external.filter((tx) => isSwap(tx));
+  const bridgeExcludedTxs = external.filter((tx) => !isSwap(tx) && isBridge(tx));
+
+  const counterpartyInteractions = new Map<string, number>();
+  for (const tx of operational) {
+    const addr = (tx.counterparty || tx.from).toLowerCase();
+    counterpartyInteractions.set(addr, (counterpartyInteractions.get(addr) ?? 0) + 1);
+  }
+
+  const STABLECOINS = new Set([
+    "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
+    "0x50c5725949a6f0c72e6c4a641f24049a917db0cb",
+    "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+  ]);
+
+  const allIncomeTxs = operational.filter((tx) => tx.direction === "income");
+  const operatingRevenueAudit: AuditTx[] = [];
+  const quarantinedAudit: AuditTx[] = [];
+
+  for (const tx of allIncomeTxs) {
+    const counterparty   = (tx.counterparty || tx.from).toLowerCase();
+    const priorInt       = counterpartyInteractions.get(counterparty) ?? 0;
+    const isStablecoin   = STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase());
+    const usd            = usdOf(tx);
+
+    const qReason = getQuarantineReason(counterparty, usd, priorInt, isStablecoin);
+    if (qReason) {
+      const EXPLANATIONS: Record<QuarantineReason, string> = {
+        capital_injection:   `Single inflow of $${usd.toFixed(2)} from counterparty with only ${priorInt} prior interaction(s) — exceeds $${CAPITAL_INJECTION_THRESHOLD_USD.toLocaleString()} capital injection threshold.`,
+        grant_program:       `Inflow from known grant/ecosystem program address. Classified as grant, not operating revenue.`,
+        bridge_receipt:      `Inbound bridge transfer. Bridge receipts transfer token ownership but do not represent earned revenue.`,
+        token_distribution:  `Non-stablecoin (${tx.tokenSymbol}) from counterparty with only ${priorInt} prior interaction(s). Classified as token distribution, not operating revenue.`,
+        unknown_large_inflow:`Large inflow ($${usd.toFixed(2)}) from counterparty with ${priorInt} prior interaction(s). Cannot classify as operating revenue.`,
+      };
+      quarantinedAudit.push(txToAudit(tx, "quarantined", EXPLANATIONS[qReason], qReason));
+    } else {
+      const reasons: string[] = [];
+      if (isStablecoin) reasons.push(`stablecoin (${tx.tokenSymbol})`);
+      if (priorInt >= KNOWN_COUNTERPARTY_MIN_INTERACTIONS) reasons.push(`known counterparty (${priorInt} prior txs)`);
+      if (usd < CAPITAL_INJECTION_THRESHOLD_USD) reasons.push(`below $${CAPITAL_INJECTION_THRESHOLD_USD.toLocaleString()} threshold`);
+      operatingRevenueAudit.push(
+        txToAudit(tx, "operating_revenue", `Counted as operating revenue: ${reasons.join(", ")}.`),
+      );
+    }
+  }
+
+  const dexAudit = dexExcludedTxs.map((tx) => {
+    const byHash   = isSwapByHash(tx);
+    const byRouter = isSwapByRouter(tx);
+    const why = byHash && byRouter
+      ? "Both dual-direction txHash and DEX router address detected."
+      : byHash
+        ? "Transaction hash contains both income and expense legs — detected as token swap."
+        : "From/to/counterparty address is a known DEX router or aggregator.";
+    return txToAudit(tx, "dex_excluded", why);
+  });
+
+  const bridgeAudit = bridgeExcludedTxs.map((tx) =>
+    txToAudit(tx, "bridge_excluded", "From/to/counterparty address is a known bridge contract."),
+  );
+
+  const internalAudit = internalTxs.map((tx) =>
+    txToAudit(tx, "internal_transfer", `Both from (${tx.from.slice(0, 10)}…) and to (${tx.to.slice(0, 10)}…) are declared wallets of ${agent.name}. Treasury movement, not revenue.`),
+  );
+
+  const grossInflowUsd       = allIncomeTxs.reduce((s, tx) => s + usdOf(tx), 0);
+  const operatingRevenueUsd  = operatingRevenueAudit.reduce((s, tx) => s + tx.amount_usd, 0);
+  const quarantinedUsd       = quarantinedAudit.reduce((s, tx) => s + tx.amount_usd, 0);
+  const dexUsd               = dexAudit.reduce((s, tx) => s + tx.amount_usd, 0);
+  const bridgeInflowUsd      = bridgeAudit.filter((t) => t.direction === "income").reduce((s, tx) => s + tx.amount_usd, 0);
+  const internalUsd          = internalAudit.reduce((s, tx) => s + tx.amount_usd, 0);
+
+  const aeonDiffNotes = [
+    `x402Books operating revenue ($${round(operatingRevenueUsd).toLocaleString()}) = gross inflows ($${round(grossInflowUsd).toLocaleString()}) minus quarantined ($${round(quarantinedUsd).toLocaleString()}).`,
+    `DEX swaps ($${round(dexUsd).toLocaleString()} across ${dexAudit.length} tx(s)) are excluded from all revenue and expense calculations.`,
+    `Bridge transfers excluded; $${round(bridgeInflowUsd).toLocaleString()} in inbound bridge receipts were not counted as revenue.`,
+    `${internalTxs.length} internal transfer(s) between this agent's declared wallets removed (treasury movement).`,
+    `Capital injection rule: inflows ≥ $${CAPITAL_INJECTION_THRESHOLD_USD.toLocaleString()} from counterparties with < ${KNOWN_COUNTERPARTY_MIN_INTERACTIONS} prior interactions are quarantined.`,
+    `If AEON's figure is higher: it may include bridge receipts, DEX inflows, or capital injections, or aggregate across chains beyond Base.`,
+    `If AEON's figure is lower: it may use a shorter time window, different wallet set, or a stricter stablecoin-only filter.`,
+    `Only Base chain ERC-20 transfers are scanned. Native ETH inflows and multi-chain activity are not captured.`,
+  ];
+
+  return {
+    agent: { slug, name: agent.name },
+    period,
+    summary: {
+      gross_inflow_usd:           round(grossInflowUsd),
+      operating_revenue_usd:      round(operatingRevenueUsd),
+      quarantined_usd:            round(quarantinedUsd),
+      dex_excluded_usd:           round(dexUsd),
+      bridge_excluded_inflow_usd: round(bridgeInflowUsd),
+      internal_transfer_usd:      round(internalUsd),
+      total_txs_scanned:          merged.length,
+    },
+    transactions: {
+      operating_revenue:  operatingRevenueAudit,
+      quarantined:        quarantinedAudit,
+      dex_excluded:       dexAudit,
+      bridge_excluded:    bridgeAudit,
+      internal_transfers: internalAudit,
+    },
+    wallets: {
+      declared:  declared.length,
+      analyzed:  scannable.length,
+      roles:     [...new Set(scannable.map((w) => w.role ?? "unknown"))],
+    },
+    aeon_diff_notes: aeonDiffNotes,
+    generated_at: new Date().toISOString(),
+  };
+}
+
 function buildSummary(
   name: string,
   period: TimeRange,
