@@ -112,7 +112,7 @@ const LAYERS = [
     purpose: "Accounting + controls",
     color: "var(--accent)",
     agents: [
-      { name: "Wallet Audit Agent", role: "Runs x402Books wallet audits", cadence: "On demand", status: "active" },
+      { name: "Wallet Audit Agent", role: "Runs Zetta wallet audits", cadence: "On demand", status: "active" },
       { name: "Scoring Agent",      role: "Grades activity, treasury health, and risk", cadence: "Per report", status: "active" },
       { name: "Anomaly Agent",      role: "Flags unusual flows and missing context", cadence: "Per audit", status: "active" },
     ],
@@ -140,30 +140,30 @@ const COMMAND_QUEUE = [
 const POLICIES = [
   "Only Dan can publish to X or approve Bankr write actions.",
   "Public users can ask questions, request reports, and audit their own wallets.",
-  "$LUCA is the unified ecosystem token powering Luca and x402Books AI.",
+  "$LUCA is the unified ecosystem token powering Luca and Zetta.",
   "Wallets are never called official unless verified by evidence.",
 ];
 
 const ROADMAP = [
   {
     tag: "CLI",
-    title: "x402Books CLI",
+    title: "Zetta CLI",
     color: "var(--blue)",
     description: "Command-line interface for wallet scanning, reporting, and registry lookups.",
-    items: ["x402books scan <wallet>", "x402books report <wallet>", "x402books score <wallet>", "x402books registry lookup <query>"],
+    items: ["zetta scan <wallet>", "zetta report <wallet>", "zetta score <wallet>", "zetta registry lookup <query>"],
   },
   {
     tag: "SDK",
     title: "TypeScript SDK",
     color: "#a78bfa",
-    description: "Typed client for building apps on top of x402Books AI APIs.",
+    description: "Typed client for building apps on top of Zetta APIs.",
     items: ["ledgerSummary(wallet)", "transactions(wallet)", "fullReport(wallet)", "agentFinancialState(wallet)"],
   },
   {
     tag: "MCP",
     title: "MCP Server",
     color: "#f59e0b",
-    description: "Model Context Protocol tools so other agents can call x402Books directly.",
+    description: "Model Context Protocol tools so other agents can call Zetta directly.",
     items: ["scan_wallet", "generate_report", "lookup_agent", "analyze_portfolio", "check_agent_score"],
   },
 ];
@@ -1663,7 +1663,7 @@ function RoadmapSection() {
       <div className={styles.sectionHead}>
         <p className={styles.kicker}>Agent Tooling</p>
         <h1>Roadmap</h1>
-        <p>Planned packages that make x402Books callable by other agents and developers.</p>
+        <p>Planned packages that make Zetta callable by other agents and developers.</p>
       </div>
       <div className={styles.roadmapGrid}>
         {ROADMAP.map((item) => (
@@ -2163,7 +2163,7 @@ export default function LucaAdminPage() {
         <div className={styles.authCard}>
           <div className={styles.authLogo}>L</div>
           <p className={styles.authTitle}>Luca Admin</p>
-          <p className={styles.authSub}>x402Books Command Center — admin access only.</p>
+          <p className={styles.authSub}>Zetta Command Center — admin access only.</p>
           <form onSubmit={handleLogin}>
             <input
               type="password"
@@ -2213,7 +2213,7 @@ export default function LucaAdminPage() {
         <aside className={styles.sidebar}>
           <div className={styles.sidebarBrand}>
             <p className={styles.sidebarBrandName}>Luca Admin</p>
-            <p className={styles.sidebarBrandSub}>x402Books</p>
+            <p className={styles.sidebarBrandSub}>Zetta</p>
           </div>
 
           {Object.entries(groups).map(([group, items]) => (

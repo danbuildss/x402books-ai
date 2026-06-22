@@ -147,10 +147,29 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
 }
 
 function RankMedal({ rank }: { rank: number }) {
-  if (rank === 1) return <span style={{ fontSize: "1rem" }}>🥇</span>;
-  if (rank === 2) return <span style={{ fontSize: "1rem" }}>🥈</span>;
-  if (rank === 3) return <span style={{ fontSize: "1rem" }}>🥉</span>;
-  return <span style={{ fontSize: "0.78rem", color: "var(--muted)", fontFamily: "monospace", minWidth: 24, display: "inline-block", textAlign: "center" }}>{rank}</span>;
+  const top3: Record<number, { bg: string; color: string }> = {
+    1: { bg: "rgba(109,184,116,0.15)", color: "#6DB874" },
+    2: { bg: "rgba(255,255,255,0.08)", color: "var(--ink)" },
+    3: { bg: "rgba(249,115,22,0.12)", color: "#F97316" },
+  };
+  if (top3[rank]) {
+    return (
+      <span style={{
+        display: "inline-flex", alignItems: "center", justifyContent: "center",
+        width: 26, height: 26, borderRadius: 6,
+        background: top3[rank].bg, color: top3[rank].color,
+        fontWeight: 700, fontSize: "0.8rem", fontFamily: "var(--font-mono)",
+        border: `1px solid color-mix(in srgb, ${top3[rank].color} 30%, transparent)`,
+      }}>
+        {rank}
+      </span>
+    );
+  }
+  return (
+    <span style={{ fontSize: "0.78rem", color: "var(--muted)", fontFamily: "var(--font-mono)", minWidth: 24, display: "inline-block", textAlign: "center" }}>
+      {rank}
+    </span>
+  );
 }
 
 function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number }) {
@@ -238,7 +257,7 @@ export default async function LeaderboardPage() {
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: 28, fontSize: "0.78rem", color: "var(--muted)" }}>
-          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>x402Books</Link>
+          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Zetta</Link>
           <span style={{ margin: "0 8px" }}>›</span>
           <span>Economic Leaderboard</span>
         </nav>

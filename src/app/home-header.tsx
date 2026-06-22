@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
+import { CardNav } from "@/components/card-nav";
 
 const SOCIAL = [
   {
@@ -60,7 +61,7 @@ export function HomeHeader() {
           </div>
           <ThemeToggle />
           <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/registry" className="lp-btn-primary">Explore Books</Link>
+          <Link href="/registry" className="lp-btn-primary">Explore Registry</Link>
           <button type="button" className="lp-hamburger" aria-label="Open menu" onClick={() => setOpen(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
@@ -69,34 +70,7 @@ export function HomeHeader() {
         </div>
       </header>
 
-      {open && (
-        <div className="lp-mobile-menu" role="dialog" aria-modal="true">
-          <div className="lp-mobile-menu-head">
-            <a href="/" className="lp-brand" onClick={() => setOpen(false)}><Logo /></a>
-            <button type="button" className="lp-mobile-close" onClick={() => setOpen(false)} aria-label="Close menu">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-              </svg>
-            </button>
-          </div>
-          <nav className="lp-mobile-nav">
-            {NAV_LINKS.map((l) => (
-              <Link key={l.label} href={l.href} onClick={() => setOpen(false)}>{l.label}</Link>
-            ))}
-          </nav>
-          <div className="lp-mobile-menu-footer">
-            <div className="lp-social-icons">
-              {SOCIAL.map((s) => (
-                <a key={s.href} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} className="lp-social-icon">{s.icon}</a>
-              ))}
-            </div>
-            <div className="lp-mobile-ctas">
-              <Link href="/access" className="lp-btn-ghost" onClick={() => setOpen(false)}>Sign In</Link>
-              <Link href="/registry" className="lp-btn-primary" onClick={() => setOpen(false)}>Explore Books</Link>
-            </div>
-          </div>
-        </div>
-      )}
+      <CardNav open={open} onClose={() => setOpen(false)} />
     </>
   );
 }

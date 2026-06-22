@@ -50,9 +50,18 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Candidate not found" }, { status: 404 });
     }
 
+    // Validate candidate data before inserting
+    const agentName = (candidate.name ?? candidate.ticker ?? candidate.ca ?? "").trim();
+    if (!agentName) {
+      return NextResponse.json({ error: "Candidate has no usable name, ticker, or address." }, { status: 400 });
+    }
+    if (candidate.ca && !/^0x[0-9a-fA-F]{40}$/.test(candidate.ca)) {
+      return NextResponse.json({ error: "Candidate has invalid contract address format." }, { status: 400 });
+    }
+
     // Insert into registry as a Candidate entry
     const { error: insertErr } = await sb.from("registry_agents").insert({
-      name: candidate.name ?? candidate.ticker ?? candidate.ca,
+      name: agentName,
       symbol: candidate.ticker ? `$${candidate.ticker.toUpperCase()}` : null,
       ecosystem: "BANKR",
       x_handle: "",

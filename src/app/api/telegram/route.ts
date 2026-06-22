@@ -11,6 +11,16 @@ const BOT_COMMANDS = [
 
 // Webhook receiver — Telegram POSTs every update here
 export async function POST(request: Request) {
+  // Verify Telegram webhook secret token (set TELEGRAM_WEBHOOK_SECRET + pass it
+  // as secret_token when calling setWebhook via GET /api/telegram?setup=1)
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+  if (secret) {
+    const incoming = request.headers.get("x-telegram-bot-api-secret-token") ?? "";
+    if (incoming !== secret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
+
   const update = await request.json().catch(() => null);
   if (update) {
     // Fire-and-forget: respond 200 immediately so Telegram doesn't retry,
@@ -45,12 +55,17 @@ export async function GET(request: Request) {
   // Use the canonical domain (no www — matches what Vercel serves)
   const webhookUrl = "https://x402books.xyz/api/telegram";
 
+  const webhookBody: Record<string, unknown> = {
+    url: webhookUrl,
+    allowed_updates: ["message", "inline_query"],
+    drop_pending_updates: true,
+  };
+  if (process.env.TELEGRAM_WEBHOOK_SECRET) {
+    webhookBody.secret_token = process.env.TELEGRAM_WEBHOOK_SECRET;
+  }
+
   const [webhookResult, commandsResult] = await Promise.all([
-    tgSetup("setWebhook", {
-      url: webhookUrl,
-      allowed_updates: ["message", "inline_query"],
-      drop_pending_updates: true,
-    }),
+    tgSetup("setWebhook", webhookBody),
     tgSetup("setMyCommands", { commands: BOT_COMMANDS }),
   ]);
 

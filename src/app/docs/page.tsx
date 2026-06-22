@@ -58,7 +58,7 @@ const FEATURES = [
 const CORE_PAGES = [
   { path: "/registry",       name: "Agent Registry",  desc: "125+ autonomous agents indexed. Sort by verification tier, activity score, treasury health, or name. Filter by ecosystem and status.", actions: "Browse agents, filter by status, sort by score" },
   { path: "/registry/[slug]", name: "Agent Profile",  desc: "Public financial identity profile for every agent. Shows declared wallets, transparency score, settlement patterns, Luca verdict, and tool decisions.", actions: "View wallets, read Luca verdict, claim profile, embed badge" },
-  { path: "/luca",           name: "Luca",            desc: "Luca's public interface — financial intelligence agent built on x402Books. Access Luca's analysis, ask questions about agent finances.", actions: "Ask Luca, view agent economics, read analysis" },
+  { path: "/luca",           name: "Luca",            desc: "Luca's public interface — financial intelligence agent built on Zetta. Access Luca's analysis, ask questions about agent finances.", actions: "Ask Luca, view agent economics, read analysis" },
   { path: "/developer",      name: "Developer Portal", desc: "API key management with $LUCA tier system. Free: 100 req/day. Holder: 500/day. Whale: 2,000/day.", actions: "Generate API key, verify wallet for tier, view usage" },
   { path: "/docs",           name: "Documentation",   desc: "Product docs, API reference, manifest standard specification, and integration guides.", actions: "Read API docs, copy endpoints, learn manifest format" },
 ];
@@ -122,7 +122,7 @@ const ROADMAP = [
       "Ecosystem discovery feed — ranked by trust signals",
       "Embeddable profile cards for partner sites",
       "API partnerships with agent frameworks",
-      "x402Books as the default financial identity layer for new agents",
+      "Zetta as the default financial identity layer for new agents",
     ],
   },
   {
@@ -141,12 +141,12 @@ const ROADMAP = [
 
 const FAQ_ITEMS = [
   {
-    q: "What is x402Books?",
-    a: "x402Books is Financial Identity Infrastructure for Autonomous Agents. We index agents, verify wallet ownership via a manifest standard, classify financial activity, and generate transparency scores — giving every autonomous agent a verifiable, public financial identity.",
+    q: "What is Zetta?",
+    a: "Zetta is Financial Identity Infrastructure for Autonomous Agents. We index agents, verify wallet ownership via a manifest standard, classify financial activity, and generate transparency scores — giving every autonomous agent a verifiable, public financial identity.",
   },
   {
     q: "What is the Agent Wallet Manifest?",
-    a: "An open standard for declaring financial identity. Agents add a .x402books/wallets.json file to their GitHub or Gitlawb repo declaring wallet addresses and roles (treasury, fee recipient, deployer, operator). x402Books validates it, upgrades the registry profile to Wallets Declared, and issues a live SVG verification badge.",
+    a: "An open standard for declaring financial identity. Agents add a .x402books/wallets.json file to their GitHub or Gitlawb repo declaring wallet addresses and roles (treasury, fee recipient, deployer, operator). Zetta validates it, upgrades the registry profile to Wallets Declared, and issues a live SVG verification badge.",
   },
   {
     q: "How does verification work?",
@@ -154,7 +154,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is Luca?",
-    a: "Luca is the AI financial intelligence agent built on top of x402Books. He writes financial summaries for every agent profile, analyzes settlement patterns and attribution quality, approves manifest submissions and wallet claims, and runs integrity passes to maintain registry quality.",
+    a: "Luca is the AI financial intelligence agent built on top of Zetta. He writes financial summaries for every agent profile, analyzes settlement patterns and attribution quality, approves manifest submissions and wallet claims, and runs integrity passes to maintain registry quality.",
   },
   {
     q: "How do I get my agent listed?",
@@ -165,8 +165,8 @@ const FAQ_ITEMS = [
     a: "$LUCA is Luca's intelligence token. Holding $LUCA increases your API rate limit — Holder (≥1,000 $LUCA): 500 req/day, Whale (≥10,000 $LUCA): 2,000 req/day. It also unlocks priority verification and premium Luca intelligence reports.",
   },
   {
-    q: "Does x402Books control agent funds?",
-    a: "No. x402Books is read-only infrastructure. It never requests private keys, cannot execute transactions, and holds no custody over any assets. All data comes from public blockchain records and agent-declared manifests.",
+    q: "Does Zetta control agent funds?",
+    a: "No. Zetta is read-only infrastructure. It never requests private keys, cannot execute transactions, and holds no custody over any assets. All data comes from public blockchain records and agent-declared manifests.",
   },
   {
     q: "Is the API free?",
@@ -262,7 +262,7 @@ export default function DocsPage() {
             ))}
             <div className="docs-sidebar-cta-wrap">
               <Link href="/dashboard" className="docs-sidebar-cta">Open App →</Link>
-              <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="docs-sidebar-link-ext">@x402Books on X</a>
+              <a href="https://x.com/Zetta" target="_blank" rel="noreferrer" className="docs-sidebar-link-ext">Follow on X</a>
             </div>
           </div>
         </aside>
@@ -273,23 +273,23 @@ export default function DocsPage() {
           {/* ── Overview ── */}
           <section id="overview" className="docs-section">
             <span className="docs-tag">Introduction</span>
-            <h1 className="docs-h1">x402Books</h1>
+            <h1 className="docs-h1">Zetta</h1>
             <p className="docs-lead">Financial Identity Infrastructure for Autonomous Agents.</p>
             <p className="docs-p">
               AI agents are becoming economic actors. They operate wallets, settle payments, and generate revenue — all onchain. But raw wallet data tells you nothing about who the agent is, whether it can be trusted, or what it&apos;s actually doing.
             </p>
             <p className="docs-p">
-              x402Books solves this. We give every autonomous agent a verifiable financial identity — indexed in a public registry, scored for transparency, verified through a manifest standard, and interpreted by Luca.
+              Zetta solves this. We give every autonomous agent a verifiable financial identity — indexed in a public registry, scored for transparency, verified through a manifest standard, and interpreted by Luca.
             </p>
 
             <div className="docs-callout">
-              <strong>In one line:</strong> x402Books is the open standard for agent financial identity.
+              <strong>In one line:</strong> Zetta is the open standard for agent financial identity.
             </div>
 
-            <h2 className="docs-h2">What x402Books does</h2>
+            <h2 className="docs-h2">What Zetta does</h2>
             <ul className="docs-list">
               <li><strong>Indexes</strong> — 125+ autonomous agents across 5 ecosystems in a public registry</li>
-              <li><strong>Verifies</strong> — agents declare wallets via manifest, x402Books validates ownership</li>
+              <li><strong>Verifies</strong> — agents declare wallets via manifest, Zetta validates ownership</li>
               <li><strong>Scores</strong> — Transparency Score (0–100) based on wallets, status, activity, evidence</li>
               <li><strong>Classifies</strong> — settlement patterns: treasury, revenue, operational spend, inference</li>
               <li><strong>Interprets</strong> — Luca writes financial verdicts and monitors agent finances</li>
@@ -317,7 +317,7 @@ export default function DocsPage() {
             </p>
             <div className="docs-code-block">
               <div className="docs-code-head"><span>Stack</span></div>
-              <pre>{`x402Books  =  infrastructure  (index, verify, classify, display)
+              <pre>{`Zetta  =  infrastructure  (index, verify, classify, display)
 Luca       =  intelligence    (interpret, score, verdict, monitor)
 $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
             </div>
@@ -356,7 +356,7 @@ $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
             <div className="docs-steps">
               {[
                 { n: "01", title: "Declare", body: "Add .x402books/wallets.json to your agent's GitHub or Gitlawb repo. Declare wallet addresses with roles: treasury, fee recipient, deployer, or operator. The GitHub Action validates the format on every push." },
-                { n: "02", title: "Submit", body: "Paste your repo URL into the Claim Banner on your agent's profile page. x402Books fetches the manifest, validates the wallets, and queues the update for Luca review." },
+                { n: "02", title: "Submit", body: "Paste your repo URL into the Claim Banner on your agent's profile page. Zetta fetches the manifest, validates the wallets, and queues the update for Luca review." },
                 { n: "03", title: "Verify", body: "Luca reviews the submission. Verified manifests upgrade the agent's status to Wallets Declared. Matching a wallet address via the claim form upgrades to Claimed. Full Verified status follows Luca review." },
                 { n: "04", title: "Distribute", body: "A live SVG badge appears at /api/badge/[your-slug]. Embed it in your README. Your Transparency Score updates. Your profile shows declared wallets, settlement patterns, and Luca's financial verdict." },
               ].map((s) => (
@@ -481,7 +481,7 @@ Luca Managed       →  Luca actively monitors finances`}</pre>
 Cache-Control: public, max-age=60, stale-while-revalidate=300
 
 # In a README:
-![x402Books](https://www.x402books.xyz/api/badge/aeon)`}</pre>
+![Zetta](https://www.x402books.xyz/api/badge/aeon)`}</pre>
               </div>
               <p className="docs-p" style={{ marginTop: 8 }}>Badge colors: Verified / Luca Managed → green · Claimed → purple · Wallets Declared → blue · Candidate → gray</p>
             </div>
@@ -620,9 +620,9 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="xbooks" className="docs-section">
             <span className="docs-tag">Token</span>
             <h1 className="docs-h1">$LUCA</h1>
-            <p className="docs-lead">The token for Luca — not for x402Books API access.</p>
+            <p className="docs-lead">The token for Luca — not for Zetta API access.</p>
             <p className="docs-p">
-              $LUCA is Luca&apos;s intelligence token. It unlocks the full power of Luca as a financial intelligence agent — deeper analysis, premium reports, and priority verification. It is not required to use x402Books or the registry API.
+              $LUCA is Luca&apos;s intelligence token. It unlocks the full power of Luca as a financial intelligence agent — deeper analysis, premium reports, and priority verification. It is not required to use Zetta or the registry API.
             </p>
 
             <div className="docs-utility-grid">
@@ -642,7 +642,7 @@ Authorization: Bearer xb_live_...`}</pre>
             </div>
 
             <div className="docs-callout">
-              <strong>x402Books API is separate.</strong> Accessing the registry, wallet data, and financial intelligence endpoints does not require $LUCA. API access is tiered by usage volume — free, developer, and enterprise.
+              <strong>Zetta API is separate.</strong> Accessing the registry, wallet data, and financial intelligence endpoints does not require $LUCA. API access is tiered by usage volume — free, developer, and enterprise.
             </div>
 
             <h2 className="docs-h2">Access tiers</h2>
@@ -740,13 +740,13 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="security" className="docs-section">
             <span className="docs-tag">Trust</span>
             <h1 className="docs-h1">Security</h1>
-            <p className="docs-lead">x402Books AI is read-only. It never touches your funds.</p>
+            <p className="docs-lead">Zetta AI is read-only. It never touches your funds.</p>
 
             <div className="docs-callout docs-callout-green">
-              <strong>Read-only by design.</strong> x402Books AI analyzes public onchain data. It does not require private keys, cannot execute transactions, and holds no custody over any assets.
+              <strong>Read-only by design.</strong> Zetta AI analyzes public onchain data. It does not require private keys, cannot execute transactions, and holds no custody over any assets.
             </div>
 
-            <h2 className="docs-h2">What x402Books AI does not do</h2>
+            <h2 className="docs-h2">What Zetta AI does not do</h2>
             <ul className="docs-list docs-list-check">
               <li>Request or store private keys</li>
               <li>Execute transactions from any wallet</li>
@@ -755,7 +755,7 @@ Authorization: Bearer xb_live_...`}</pre>
               <li>Store raw wallet secrets</li>
             </ul>
 
-            <h2 className="docs-h2">What x402Books AI does</h2>
+            <h2 className="docs-h2">What Zetta AI does</h2>
             <ul className="docs-list">
               <li>Reads public onchain USDC transfer data via Base RPC</li>
               <li>Stores Privy user IDs, email addresses, and X handles in Supabase</li>
@@ -765,12 +765,12 @@ Authorization: Bearer xb_live_...`}</pre>
 
             <h2 className="docs-h2">Authentication</h2>
             <p className="docs-p">
-              User authentication is handled entirely by Privy. x402Books AI does not implement its own credential store. Sessions are issued as HMAC-signed cookies with no sensitive data embedded.
+              User authentication is handled entirely by Privy. Zetta AI does not implement its own credential store. Sessions are issued as HMAC-signed cookies with no sensitive data embedded.
             </p>
 
             <h2 className="docs-h2">Data handling</h2>
             <p className="docs-p">
-              All wallet activity analyzed by x402Books AI is sourced from public Base chain data. No private transaction data, off-chain balances, or non-public information is accessed at any point.
+              All wallet activity analyzed by Zetta AI is sourced from public Base chain data. No private transaction data, off-chain balances, or non-public information is accessed at any point.
             </p>
           </section>
 
@@ -778,7 +778,7 @@ Authorization: Bearer xb_live_...`}</pre>
           <section id="faq" className="docs-section">
             <span className="docs-tag">Trust</span>
             <h1 className="docs-h1">FAQ</h1>
-            <p className="docs-lead">Common questions about x402Books AI.</p>
+            <p className="docs-lead">Common questions about Zetta AI.</p>
             <div className="docs-faq-list">
               {FAQ_ITEMS.map((item) => (
                 <FaqItem key={item.q} q={item.q} a={item.a} />
@@ -798,19 +798,19 @@ Authorization: Bearer xb_live_...`}</pre>
 
             <h2 className="docs-h2">What we are</h2>
             <p className="docs-p docs-p-large">
-              x402Books is the financial identity layer for the autonomous agent economy — not a wallet scanner, not a dashboard, not a token project.
+              Zetta is the financial identity layer for the autonomous agent economy — not a wallet scanner, not a dashboard, not a token project.
             </p>
             <p className="docs-p">
               AI agents are becoming economic actors. They operate wallets, settle payments, generate revenue, and pay for inference — all onchain. But raw blockchain data tells you nothing about who the agent is, whether it can be trusted, or whether its finances are healthy.
             </p>
             <p className="docs-p">
-              x402Books solves the identity problem: every agent gets a verifiable financial identity, publicly readable, verified through an open manifest standard, and interpreted by Luca.
+              Zetta solves the identity problem: every agent gets a verifiable financial identity, publicly readable, verified through an open manifest standard, and interpreted by Luca.
             </p>
 
             <h2 className="docs-h2">The architecture</h2>
             <div className="docs-code-block">
               <div className="docs-code-head"><span>Three layers</span></div>
-              <pre>{`x402Books  =  infrastructure  (index, verify, classify, display)
+              <pre>{`Zetta  =  infrastructure  (index, verify, classify, display)
 Luca       =  intelligence    (interpret, verdict, score, monitor)
 $LUCA      =  ecosystem asset (API tier, priority verification)
 
@@ -819,7 +819,7 @@ These are three distinct things. Never blur them.`}</pre>
 
             <h2 className="docs-h2">The moat</h2>
             <p className="docs-p">
-              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.x402books/wallets.json</code> to their repo plugs into x402Books' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
+              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.x402books/wallets.json</code> to their repo plugs into Zetta' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
             </p>
             <p className="docs-p">
               Infrastructure compounds slowly. Trust compounds slowly. Once infra wins — it is extremely difficult to replace.
@@ -857,11 +857,11 @@ These are three distinct things. Never blur them.`}</pre>
           </div>
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Community</p>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X / Twitter</a>
+            <a href="https://x.com/Zetta" target="_blank" rel="noreferrer">X / Twitter</a>
             <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
           </div>
         </div>
-        <p className="lp-footer-copy">© 2026 x402Books AI. Not financial advice.</p>
+        <p className="lp-footer-copy">© 2026 Zetta. Not financial advice.</p>
       </footer>
     </div>
   );

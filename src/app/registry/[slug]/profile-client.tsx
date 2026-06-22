@@ -53,7 +53,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
         </div>
         <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
-          No books yet. This agent needs declared wallets before x402Books can generate revenue, expense, and profitability data.
+          No books yet. This agent needs declared wallets before Zetta can generate revenue, expense, and profitability data.
         </p>
         <a
           href="/developer#manifest"
@@ -570,7 +570,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   }, [slug]);
 
   const shareToX = useCallback(() => {
-    const text = `${agent.name} · Status: ${vstatus} — tracked by x402Books AI`;
+    const text = `${agent.name} · Status: ${vstatus} — tracked by Zetta`;
     const url  = `https://www.x402books.xyz/registry/${slug}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
@@ -624,12 +624,12 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
             <div style={{ width: 18, height: 18, borderRadius: 4, background: "#3b7a45", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <div style={{ width: 7, height: 7, borderRadius: 2, background: "#f0ece0" }} />
             </div>
-            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>x402Books AI</span>
+            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>Zetta</span>
           </div>
 
           {/* Headline */}
           <p style={{ fontSize: "1.35rem", fontWeight: 300, color: "#7a7364", marginBottom: 8, lineHeight: 1.2 }}>
-            <strong style={{ fontWeight: 600, color: "#3c3830" }}>{agent.name}</strong> is tracked by x402Books
+            <strong style={{ fontWeight: 600, color: "#3c3830" }}>{agent.name}</strong> is tracked by Zetta
           </p>
 
           {/* Hero stat */}
@@ -1402,8 +1402,51 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
+type ProfileTab = "overview" | "books" | "history" | "attribution" | "research";
+
+const PROF_TABS: { key: ProfileTab; label: string }[] = [
+  { key: "overview",     label: "Overview"     },
+  { key: "books",        label: "Books"        },
+  { key: "history",      label: "History"      },
+  { key: "attribution",  label: "Attribution"  },
+  { key: "research",     label: "Research"     },
+];
+
+function OverviewFinancials({ books }: { books: AgentBooks }) {
+  const f = books.financials;
+  const usd = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const netPos = f.net_income_usd >= 0;
+  return (
+    <section className="prof-section">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+        <p className="prof-section-title" style={{ margin: 0 }}>Financial Summary</p>
+        <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{books.period}</span>
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 10 }}>
+        {([
+          { label: "Revenue",    value: usd(f.revenue_usd),    color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" },
+          { label: "Expenses",   value: usd(f.expenses_usd),   color: f.expenses_usd > 0 ? "#f87171"      : "var(--muted)" },
+          { label: "Net Income", value: (netPos ? "+" : "−") + usd(f.net_income_usd), color: netPos ? "var(--accent)" : "#f87171" },
+        ] as const).map(({ label, value, color }) => (
+          <div key={label} style={{ padding: "12px 14px", borderRadius: 8, background: "var(--surface-soft)", border: "1px solid var(--line)" }}>
+            <p style={{ margin: "0 0 5px", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)", fontWeight: 600 }}>{label}</p>
+            <p style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, fontFamily: "var(--font-mono)", color }}>{value}</p>
+          </div>
+        ))}
+      </div>
+      {f.tx_count > 0 && (
+        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)" }}>
+          {f.tx_count} txs · {books.wallets.analyzed} wallets
+          {f.margin_pct !== null && <> · <strong style={{ color: "var(--ink)" }}>{f.margin_pct.toFixed(1)}%</strong> margin</>}
+        </p>
+      )}
+    </section>
+  );
+}
+
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
   const [showShare, setShowShare] = useState(false);
+  const [tab, setTab] = useState<ProfileTab>("overview");
 
   return (
     <div className="prof-page">
@@ -1474,112 +1517,124 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </div>
         </div>
 
+        {/* Tab navigation */}
+        <div className="prof-tabs">
+          {PROF_TABS.map((t) => (
+            <button
+              key={t.key}
+              type="button"
+              className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
+              onClick={() => setTab(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         <div className="prof-body">
-          {/* Claim banner — top of body, unclaimed agents only */}
+          {/* Claim banner — always shown */}
           <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
 
-          {/* Agent Books — the headline financial statement */}
-          {books && <AgentBooksBlock books={books} />}
-
-          {/* Treasury Signals — interpretation of the books */}
-          {books?.attributed && <TreasurySignals books={books} />}
-
-          {/* Agent Books Historical Trend — only shown when 2+ snapshots exist */}
-          {books?.attributed && booksHistory && booksHistory.length >= 2 && (
-            <AgentBooksTrendSection snapshots={booksHistory} />
-          )}
-
-          {/* 30-Day Momentum — derived from snapshot history, never synthetic */}
-          {books?.attributed && booksHistory && booksHistory.length >= 2 && (
-            <MomentumSection history={booksHistory} />
-          )}
-
-          {/* Luca's Notes — research and analysis by Luca */}
-          {agent.adminNotes && (
-            <div className="prof-verdict">
-              <div className="prof-verdict-label">
-                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
-                Luca&apos;s Notes
-              </div>
-              <p className="prof-verdict-text">{agent.adminNotes}</p>
-              {agent.lastChecked && (
-                <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>
+          {/* ── OVERVIEW ── insight first, data second */}
+          {tab === "overview" && (
+            <>
+              {agent.adminNotes && (
+                <div className="prof-verdict">
+                  <div className="prof-verdict-label">
+                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
+                    From the Research
+                  </div>
+                  <p className="prof-verdict-text">{agent.adminNotes}</p>
+                  {agent.lastChecked && <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>}
+                </div>
               )}
+              {books?.attributed && <OverviewFinancials books={books} />}
+              {classification && <SettlementSection classification={classification} />}
+              {books?.attributed && booksHistory && booksHistory.length >= 2 && (
+                <MomentumSection history={booksHistory} />
+              )}
+              {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
+              {economics && <AgentEconomicsBlock economics={economics} />}
+            </>
+          )}
+
+          {/* ── BOOKS — full P&L + treasury */}
+          {tab === "books" && (
+            <>
+              {books && <AgentBooksBlock books={books} />}
+              {books?.attributed && <TreasurySignals books={books} />}
+            </>
+          )}
+
+          {/* ── HISTORY — snapshots + momentum */}
+          {tab === "history" && (
+            books?.attributed && booksHistory && booksHistory.length >= 2 ? (
+              <>
+                <AgentBooksTrendSection snapshots={booksHistory} />
+                <MomentumSection history={booksHistory} />
+              </>
+            ) : (
+              <section className="prof-section prof-empty-state">
+                <p style={{ margin: "0 0 6px", fontWeight: 700 }}>No history yet.</p>
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)" }}>
+                  Historical snapshots build over multiple reporting periods once wallets are attributed.
+                </p>
+              </section>
+            )
+          )}
+
+          {/* ── ATTRIBUTION — wallets + tool decisions */}
+          {tab === "attribution" && (
+            <div className="prof-grid">
+              <section className="prof-section">
+                <p className="prof-section-title">Wallets</p>
+                {(agent.wallets ?? []).length > 0 && (
+                  <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>
+                    Self-declared by operator via signed manifest.{" "}
+                    <a href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Ownership not cryptographically verified →</a>
+                  </p>
+                )}
+                {agent.tokenAddress && (
+                  <div className="reg-card-wallet-row">
+                    <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
+                    <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                      {truncate(agent.tokenAddress)}
+                    </a>
+                  </div>
+                )}
+                {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
+                  <div key={w.address} className="reg-card-wallet-row">
+                    <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
+                    {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
+                    {w.confidence && w.confidence !== "declared" && <span className="reg-wallet-confidence">{w.confidence}</span>}
+                    <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                      {truncate(w.address)}
+                    </a>
+                    {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
+                  </div>
+                ))}
+                {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
+                  <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
+                )}
+              </section>
+              {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
+              <p className="prof-footer-note" style={{ gridColumn: "1 / -1" }}>
+                Luca analyzed public data associated with {agent.name}. Wallets are candidate unless marked Verified.{" "}
+                <Link href="/registry#verify">Verify your agent →</Link>
+              </p>
             </div>
           )}
 
-          <div className="prof-grid">
-            {/* Wallets — attribution first */}
-            <section className="prof-section">
-              <p className="prof-section-title">Wallets</p>
-              {(agent.wallets ?? []).length > 0 && (
-                <p style={{ margin: "0 0 10px", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>
-                  Self-declared by operator via signed manifest.{" "}
-                  <a href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Ownership not cryptographically verified →</a>
-                </p>
-              )}
-              {agent.tokenAddress && (
-                <div className="reg-card-wallet-row">
-                  <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
-                  <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                    {truncate(agent.tokenAddress)}
-                  </a>
-                </div>
-              )}
-              {Array.from(new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values()).map((w) => (
-                <div key={w.address} className="reg-card-wallet-row">
-                  <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>
-                    {w.label}
-                  </span>
-                  {w.chain && (
-                    <span className="reg-wallet-chain">{w.chain}</span>
-                  )}
-                  {w.confidence && w.confidence !== "declared" && (
-                    <span className="reg-wallet-confidence">{w.confidence}</span>
-                  )}
-                  <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                    {truncate(w.address)}
-                  </a>
-                  {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
-                </div>
-              ))}
-              {!agent.tokenAddress && (agent.wallets ?? []).length === 0 && (
-                <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
-              )}
+          {/* ── RESEARCH — published Luca reports for this agent */}
+          {tab === "research" && (
+            <section className="prof-section prof-empty-state">
+              <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Research for {agent.name}</p>
+              <p style={{ margin: "0 0 20px", fontSize: "0.82rem", color: "var(--muted)" }}>
+                Luca publishes analysis when sufficient attributed data exists. Check the research hub for published reports.
+              </p>
+              <Link href="/research" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>Browse All Research →</Link>
             </section>
-
-            {/* Settlement profile */}
-            {classification && <SettlementSection classification={classification} />}
-
-            {/* Inference Activity (any agent with data) */}
-            {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
-
-            {/* Agent Economics (Luca self-profile only) */}
-            {economics && <AgentEconomicsBlock economics={economics} />}
-
-            {/* Tool Decisions (Nipmod integration) */}
-            {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
-
-            {/* Report CTA */}
-            {(agent.tokenAddress || (agent.wallets ?? []).length > 0) && (
-              <section className="prof-section">
-                <p className="prof-section-title">Agent Books</p>
-                <a
-                  href="#agent-books"
-                  className="prof-report-btn"
-                >
-                  <span className="material-symbols-outlined" style={{ fontSize: 15 }}>account_balance</span>
-                  View Agent Books →
-                </a>
-              </section>
-            )}
-          </div>
-
-          {/* Footer note */}
-          <p className="prof-footer-note">
-            Luca analyzed public data associated with {agent.name}. These are candidate wallets — not verified unless marked Verified.{" "}
-            <Link href="/registry#verify">Verify your agent →</Link>
-          </p>
+          )}
         </div>
       </main>
 

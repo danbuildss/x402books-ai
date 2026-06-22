@@ -1,43 +1,42 @@
-export function LogoMark() {
+import Link from "next/link";
+
+// matrix(0.985,-0.174,-0.423,0.906,e,f):
+//   x-axis (width dir) → (0.985, -0.174): 10° upward lean going right
+//   y-axis (height dir) → (-0.423, 0.906): 25° leftward lean going down
+// This reproduces the 3D-stack Z shape from the Zetta brand mark.
+// Layer rects at y=0,37,74,111 produce 9px screen-space gaps between layers.
+// ViewBox 0 0 120 126 tightly bounds all 4 layers.
+
+export function LogoMark({ size = 32 }: { size?: number }) {
+  const w = Math.round(size * 120 / 126);
   return (
     <svg
+      viewBox="0 0 120 126"
+      width={w}
+      height={size}
       aria-hidden="true"
       className="logo-mark"
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      style={{ display: "block", flexShrink: 0 }}
     >
-      <rect width="48" height="48" rx="15" fill="#0B8F74" />
-      <path
-        d="M14 15.5C14 13.57 15.57 12 17.5 12H34V33.5C34 34.88 32.88 36 31.5 36H17.5C15.57 36 14 34.43 14 32.5V15.5Z"
-        fill="#F7FAF8"
-      />
-      <path
-        d="M19 18.5H29.5M19 23.5H27M19 28.5H30"
-        stroke="#0E1A17"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M34 12H18C15.79 12 14 13.79 14 16V16.5C14 18.43 15.57 20 17.5 20H34V12Z"
-        fill="#DFF7EF"
-      />
-      <path
-        d="M25.75 36V30.5C25.75 29.4 26.65 28.5 27.75 28.5H34"
-        stroke="#0B8F74"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-      />
-      <circle cx="35.5" cy="28.5" r="3.5" fill="#101918" />
+      <g transform="matrix(0.985,-0.174,-0.423,0.906,53,12)">
+        <rect x="0" y="0"   width="68" height="14" rx="6" fill="currentColor" />
+        <rect x="0" y="37"  width="68" height="14" rx="6" fill="#6DB874" />
+        <rect x="0" y="74"  width="68" height="14" rx="6" fill="currentColor" />
+        <rect x="0" y="111" width="68" height="14" rx="6" fill="currentColor" />
+      </g>
     </svg>
   );
 }
 
-export function Logo() {
-  return (
-    <span className="brand" aria-label="x402Books AI">
+export function Logo({ href }: { href?: string }) {
+  const inner = (
+    <span className="brand" aria-label="Zetta">
       <LogoMark />
-      <span>x402Books AI</span>
+      <span>zetta</span>
     </span>
   );
+  if (href) {
+    return <Link href={href} style={{ textDecoration: "none", color: "inherit" }}>{inner}</Link>;
+  }
+  return inner;
 }

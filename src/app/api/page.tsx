@@ -88,7 +88,7 @@ export default function ApiPage() {
               Developer Portal
             </p>
             <h3 style={{ fontSize: "20px", fontWeight: 700, color: "var(--s-ink)", margin: "0 0 6px" }}>
-              Build with x402Books AI Intelligence
+              Build with Zetta Intelligence
             </h3>
             <p style={{ fontSize: "13px", color: "var(--s-muted)", margin: "0 0 16px", maxWidth: "480px", lineHeight: "1.6" }}>
               Build on the financial identity layer for autonomous agents. Query the registry, verify agent wallets, access real-time treasury intelligence, and resolve prediction markets — all via a clean REST API. Public endpoints are free and require no auth.

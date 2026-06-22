@@ -73,7 +73,7 @@ function AccessForm() {
         {!showSpinner && !authenticated && (
           <>
             <div className="access-copy">
-              <h1>Sign in to x402Books</h1>
+              <h1>Sign in to Zetta</h1>
               <p>Track your Base USDC activity, categorize transactions, and generate financial reports.</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

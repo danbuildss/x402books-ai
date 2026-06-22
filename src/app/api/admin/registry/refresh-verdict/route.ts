@@ -14,12 +14,6 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const HEALTH_RATIO: Record<string, number> = {
-  Active:     0.72,
-  Stable:     0.95,
-  Unverified: 1.35,
-  Inactive:   1.90,
-};
 
 function buildVerdict(
   agent: Agent,
@@ -131,15 +125,11 @@ export async function POST(req: NextRequest) {
   const economics = economicEvents.length > 0 ? summarizeEvents(slug, economicEvents, 30) : null;
   const inference = inferenceEvents.length > 0 ? summarizeInferenceEvents(slug, inferenceEvents, 30) : null;
 
-  // Derive classification
-  const isActive    = (agent.wallets ?? []).length > 0;
-  const ratio       = HEALTH_RATIO[agent.treasuryHealth ?? ""] ?? 1.0;
-  const totalInflow = isActive ? 100 : 0;
-
+  // Classify from real economic event data; fall back to honest dormant when none available
   const classification = classifySettlementPattern({
-    totalInflow,
-    totalOutflow:        totalInflow * ratio,
-    txCount:             isActive ? 10 : 0,
+    totalInflow:         economics ? economics.walletInflows  : 0,
+    totalOutflow:        economics ? economics.walletOutflows : 0,
+    txCount:             economics ? economicEvents.length    : 0,
     categories:          [],
     walletRolesDeclared: (agent.wallets ?? []).length > 0,
   });

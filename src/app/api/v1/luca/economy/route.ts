@@ -26,10 +26,24 @@ export async function GET(req: NextRequest) {
   const endpoint = "/api/v1/luca/economy";
 
   try {
-    const [gdp, latestReport] = await Promise.all([
-      getAgentGDP(),
-      getLatestReport().catch(() => null),
-    ]);
+    let gdp: Awaited<ReturnType<typeof getAgentGDP>>;
+    let isLive = true;
+    let dataWarning: string | undefined;
+
+    try {
+      gdp = await getAgentGDP();
+      // If registry has agents but none are attributed, DB is likely unreachable
+      if (gdp.total_agents > 0 && gdp.attributed_agents === 0) {
+        isLive = false;
+        dataWarning = "No attributed agents found. Financial data may be unavailable — check Supabase connectivity.";
+      }
+    } catch {
+      isLive = false;
+      dataWarning = "Economy data unavailable right now.";
+      gdp = { total_revenue_usd: 0, total_expenses_usd: 0, total_net_income_usd: 0, attributed_agents: 0, attributed_wallets: 0, total_agents: 0, all_attributed: [], top_agents: [], generated_at: new Date().toISOString() };
+    }
+
+    const latestReport = await getLatestReport().catch(() => null);
 
     const payload = {
       generated_at: new Date().toISOString(),
@@ -43,6 +57,8 @@ export async function GET(req: NextRequest) {
         total_agents:         gdp.total_agents,
         attribution_gap:      gdp.total_agents - gdp.attributed_agents,
         period: "30d",
+        is_live: isLive,
+        ...(dataWarning ? { warning: dataWarning } : {}),
       },
 
       // All attributed agents ranked by revenue

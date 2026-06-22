@@ -1,5 +1,5 @@
 // $LUCA token balance checker and tier calculator.
-// $LUCA is Luca's intelligence token — it unlocks Luca features, not x402Books API access.
+// $LUCA is Luca's intelligence token — it unlocks Luca features, not Zetta API access.
 // Contract on Base: 0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
 
 export type LucaTier = "free" | "holder" | "whale" | "luca";

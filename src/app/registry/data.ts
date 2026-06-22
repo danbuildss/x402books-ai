@@ -18,12 +18,12 @@ export const AGENTS: Agent[] = [
       },
     ],
     verificationStatus: "Luca Managed",
-    evidenceSources: ["x402Books internal"],
+    evidenceSources: ["Zetta internal"],
     treasuryHealth: "Pending",
     outreachStatus: null,
     lastChecked: null,
     priority: 100,
-    adminNotes: "x402Books AI — agent financial registry operator. Tracks agent wallets, treasury health, and financial activity across the Base/BANKR/Virtuals ecosystem.",
+    adminNotes: "Zetta — agent financial registry operator. Tracks agent wallets, treasury health, and financial activity across the Base/BANKR/Virtuals ecosystem.",
     communicationIdentities: [
       {
         platform: "wiretap",
@@ -570,7 +570,7 @@ export const AGENTS: Agent[] = [
     outreachStatus: "In progress",
     lastChecked: "2026-05",
     priority: 97,
-    adminNotes: "Execution and settlement layer — configure once, no approval loops. Weekly revenue confirmed at 17.16 WETH on Base. Token contract verified via official Bankr profile. Settlement role: AEON handles autonomous payment execution; x402Books provides financial readability. Wallet manifest verification pending — treasury, fee, deployer, and operator roles expected. High counterparty surface across agent ecosystem. Classify on wallet declaration.",
+    adminNotes: "Execution and settlement layer — configure once, no approval loops. Weekly revenue confirmed at 17.16 WETH on Base. Token contract verified via official Bankr profile. Settlement role: AEON handles autonomous payment execution; Zetta provides financial readability. Wallet manifest verification pending — treasury, fee, deployer, and operator roles expected. High counterparty surface across agent ecosystem. Classify on wallet declaration.",
   },
   {
     name: "Manfred Macx",
@@ -1500,7 +1500,7 @@ export const AGENTS: Agent[] = [
     tokenAddress: "0xa7f63eb41779925803a3eec30890742571e63ba3",
     wallets: [],
     verificationStatus: "Candidate",
-    evidenceSources: ["x402Books agent candidate list"],
+    evidenceSources: ["Zetta agent candidate list"],
     treasuryHealth: "Pending",
     outreachStatus: null,
     lastChecked: null,

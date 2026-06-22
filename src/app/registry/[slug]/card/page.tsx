@@ -58,8 +58,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const agent = await getAgent(slug);
   if (!agent) return { title: "Agent not found" };
   return {
-    title: `${agent.name} — x402Books Registry Card`,
-    description: `${agent.name} · ${statusLabel(agent)} · Tracked by x402Books AI.`,
+    title: `${agent.name} — Zetta Registry Card`,
+    description: `${agent.name} · ${statusLabel(agent)} · Tracked by Zetta.`,
   };
 }
 
@@ -257,12 +257,12 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
           {/* Brand */}
           <div className="card-brand">
             <div className="brand-dot"><div className="brand-dot-inner" /></div>
-            <span className="brand-name">x402Books AI</span>
+            <span className="brand-name">Zetta AI</span>
           </div>
 
           {/* Hero */}
           <p className="card-headline">
-            <strong>{agent.name}</strong> is tracked by x402Books
+            <strong>{agent.name}</strong> is tracked by Zetta
           </p>
           <p className="card-hero">
             {vstatus}

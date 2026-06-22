@@ -30,6 +30,9 @@ export async function POST(request: Request) {
   const body = await request.json();
   const wallet = String(body.wallet || "").trim();
   if (!wallet) return NextResponse.json({ error: "wallet required" }, { status: 400 });
+  if (!/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+    return NextResponse.json({ error: "Invalid wallet address format." }, { status: 400 });
+  }
 
   const supabase = getSupabaseAdminClient();
   await supabase

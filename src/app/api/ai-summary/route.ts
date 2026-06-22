@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     .map((c) => `${c.label} ($${c.totalUsdc.toFixed(2)} USDC, ${c.count} tx)`)
     .join(", ");
 
-  const prompt = `You are x402Books AI, a financial analyst for onchain Base USDC activity.
+  const prompt = `You are Luca, Zetta's financial analyst for on-chain Base USDC activity.
 
 Wallet: ${wallet}
 Period: Last ${rangeLabel}
