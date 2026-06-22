@@ -149,10 +149,10 @@ export default function ApiPage() {
           {/* ---- Stats bar ---- */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "8px", marginTop: "16px", paddingTop: "14px", borderTop: "1px solid var(--s-border)" }}>
             {[
-              { label: "Requests (24h)", value: "1.2M", sub: "+15%" },
-              { label: "Avg Latency",    value: "42ms" },
-              { label: "Success Rate",   value: "99.98%" },
-              { label: "Rate Limit",     value: "1,000/s" },
+              { label: "Free tier",      value: "50/day" },
+              { label: "Luca tier",      value: "500/day" },
+              { label: "API tier",       value: "2,000/day" },
+              { label: "Auth",           value: "Bearer" },
             ].map((stat) => (
               <div key={stat.label}>
                 <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--s-muted)", margin: "0 0 2px" }}>
