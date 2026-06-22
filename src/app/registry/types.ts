@@ -92,6 +92,8 @@ export type Agent = {
   erc8004AgentId?: string;
   erc8004MetadataUri?: string;
   erc8004RegistrationTx?: string;
+  erc8004Did?: string;
+  erc8004Description?: string;
 };
 
 // PublicAgent — fields safe to pass to client JS bundle.

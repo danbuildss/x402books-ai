@@ -11,6 +11,7 @@ type AgentResult = {
   wallet_address: string | null;
   wallet_type: string | null;
   manifest_uri: string | null;
+  has_did: boolean;
   books_eligible: boolean;
   warnings: string[];
   error?: string;
@@ -18,11 +19,19 @@ type AgentResult = {
 
 type IngestionSummary = {
   total_discovered: number;
+  // 7 coverage KPIs
+  metadata_coverage_pct: number;
+  did_coverage_pct: number;
+  reputation_coverage_pct: number;
+  validation_coverage_pct: number;
+  manifest_coverage_pct: number;
+  books_coverage_pct: number;
+  // Raw counts
   metadata_fetched: number;
+  agents_with_did: number;
   manifest_uris_found: number;
   wallets_found: number;
   books_eligible_wallets: number;
-  erc8004_wallets: number;
   token_contracts_found: number;
   agents_upserted: number;
   agents_skipped: number;
@@ -196,21 +205,48 @@ export default function Erc8004IngestionPage() {
               Generated {new Date(report.generated_at).toLocaleString()}
             </div>
 
-            {/* KPI grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 24 }}>
-              {[
-                { label: "Total Discovered",   value: report.summary.total_discovered,      color: "var(--ink)" },
-                { label: "Metadata Fetched",   value: report.summary.metadata_fetched,      color: "#22c55e" },
-                { label: "Wallets Found",      value: report.summary.wallets_found,         color: "var(--ink)" },
-                { label: "Books-Eligible",     value: report.summary.books_eligible_wallets, color: "#6b7280" },
-                { label: "ERC-8004 Wallets",   value: report.summary.erc8004_wallets,       color: "#a855f7" },
-                { label: "Token Contracts",    value: report.summary.token_contracts_found,  color: "#ef4444" },
-                { label: "Upserted",           value: report.summary.agents_upserted,        color: "#22c55e" },
-                { label: "Skipped",            value: report.summary.agents_skipped,         color: "#f59e0b" },
-              ].map((kpi) => (
+            {/* Primary KPI: total indexed */}
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 20px", marginBottom: 12, display: "flex", alignItems: "center", gap: 24 }}>
+              <div>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>ERC-8004 Agents Indexed</div>
+                <div style={{ fontSize: 28, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{report.summary.total_discovered}</div>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--muted)", maxWidth: 400, lineHeight: 1.6 }}>
+                ERC-8004 → Discovery → Identity → Reputation → Validation → Attribution → Financial Intelligence
+              </div>
+            </div>
+
+            {/* 7 Coverage KPIs */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 24 }}>
+              {([
+                { label: "Metadata",    pct: report.summary.metadata_coverage_pct,    count: report.summary.metadata_fetched,     color: "#22c55e",  note: "metadata fetched" },
+                { label: "DID",         pct: report.summary.did_coverage_pct,         count: report.summary.agents_with_did,      color: "#a855f7",  note: "with DID" },
+                { label: "Reputation",  pct: report.summary.reputation_coverage_pct,  count: null,                                color: "#5B8FA8",  note: "Phase 2" },
+                { label: "Validation",  pct: report.summary.validation_coverage_pct,  count: null,                                color: "#f59e0b",  note: "Phase 2" },
+                { label: "Manifest",    pct: report.summary.manifest_coverage_pct,    count: report.summary.manifest_uris_found,  color: "#6DB874",  note: "manifest URIs" },
+                { label: "Books",       pct: report.summary.books_coverage_pct,       count: report.summary.books_eligible_wallets, color: "#6b7280", note: "books-eligible" },
+              ] as const).map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
-                  <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+                  <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label} Coverage</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, fontFamily: "var(--font-mono)" }}>{kpi.pct}%</div>
+                  <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 2 }}>
+                    {kpi.count !== null ? `${kpi.count} ${kpi.note}` : kpi.note}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Op stats */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+              {[
+                { label: "Upserted",        value: report.summary.agents_upserted,    color: "#22c55e" },
+                { label: "Skipped",         value: report.summary.agents_skipped,     color: "#f59e0b" },
+                { label: "Errors",          value: report.summary.errors,             color: "#ef4444" },
+                { label: "Token contracts", value: report.summary.token_contracts_found, color: "#ef4444" },
+              ].map((s) => (
+                <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: s.color, fontFamily: "var(--font-mono)" }}>{s.value}</span>
                 </div>
               ))}
             </div>
@@ -225,7 +261,7 @@ export default function Erc8004IngestionPage() {
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                     <thead>
                       <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                        {["Agent ID", "Name", "Status", "Wallet", "Type", "Manifest URI", "Books Eligible", "Warnings"].map((h) => (
+                        {["Agent ID", "Name", "Status", "DID", "Wallet", "Type", "Manifest URI", "Books Eligible", "Warnings"].map((h) => (
                           <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
@@ -244,6 +280,9 @@ export default function Erc8004IngestionPage() {
                               {agent.error && (
                                 <div style={{ fontSize: 10, color: "#ef4444", marginTop: 2 }}>{agent.error}</div>
                               )}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontSize: 11, color: agent.has_did ? "#a855f7" : "var(--muted)" }}>
+                              {agent.has_did ? "✓" : "—"}
                             </td>
                             <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
                               {agent.wallet_address ? (

@@ -20,6 +20,9 @@ export type Erc8004TransformResult = {
     notes: string;
   }>;
   manifestUri: string | null;
+  // Identity layer — separate from financial layer
+  did: string | null;
+  description: string | null;
   warnings: string[];
 };
 
@@ -68,6 +71,13 @@ export function transformErc8004Agent(raw: Erc8004RawAgent): Erc8004TransformRes
     }
   }
 
+  // DID — from explicit field or did: service type
+  const did: string | null =
+    (typeof metadata?.did === "string" && metadata.did) ? metadata.did :
+    (services.find((s) => s.type === "did")?.url ?? null);
+
+  const description: string | null = metadata?.description?.trim() ?? null;
+
   const wallets: Erc8004TransformResult["wallets"] = [];
   if (agentWallet) {
     wallets.push({
@@ -84,6 +94,21 @@ export function transformErc8004Agent(raw: Erc8004RawAgent): Erc8004TransformRes
     warnings.push("No agentWallet set on contract");
   }
 
+  // paymentAddress from metadata — stored as candidate, NEVER books-eligible
+  const paymentAddress = typeof metadata?.paymentAddress === "string" ? metadata.paymentAddress.trim() : null;
+  if (paymentAddress && paymentAddress !== agentWallet) {
+    wallets.push({
+      address: paymentAddress,
+      label: "candidate wallet",
+      role: "payment",
+      chain: "base",
+      confidence: "declared",
+      evidenceSource: "erc8004",
+      address_type: "unknown",
+      notes: "paymentAddress from ERC-8004 metadata — potential operational wallet, not books-eligible until manifest declared",
+    });
+  }
+
   return {
     agent: {
       name,
@@ -97,6 +122,8 @@ export function transformErc8004Agent(raw: Erc8004RawAgent): Erc8004TransformRes
     },
     wallets,
     manifestUri,
+    did,
+    description,
     warnings,
   };
 }

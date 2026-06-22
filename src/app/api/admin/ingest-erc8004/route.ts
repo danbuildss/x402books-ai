@@ -24,6 +24,7 @@ type AgentIngestionResult = {
   wallet_address: string | null;
   wallet_type: string | null;
   manifest_uri: string | null;
+  has_did: boolean;
   books_eligible: boolean;
   warnings: string[];
   error?: string;
@@ -115,7 +116,7 @@ export async function POST(req: NextRequest) {
   let errors = 0;
 
   for (const { raw, result } of transformed) {
-    const { agent, wallets, manifestUri, warnings } = result;
+    const { agent, wallets, manifestUri, did, description, warnings } = result;
     const walletAddr = wallets[0]?.address ?? null;
     const walletType = walletAddr ? (classificationMap.get(walletAddr.toLowerCase()) ?? "unknown") : null;
 
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
       wallet_address: walletAddr,
       wallet_type: walletType,
       manifest_uri: manifestUri,
+      has_did: did !== null,
       books_eligible: booksEligible,
       warnings,
     };
@@ -172,6 +174,8 @@ export async function POST(req: NextRequest) {
             erc8004_agent_id: raw.agentId,
             erc8004_metadata_uri: raw.metadataUri ?? null,
             erc8004_registration_tx: raw.registrationTx ?? null,
+            erc8004_did: did ?? null,
+            erc8004_description: description ?? null,
           },
           { onConflict: "name" },
         );
@@ -214,22 +218,35 @@ export async function POST(req: NextRequest) {
     agentResults.push(agentResult);
   }
 
-  const metadataFetched = transformed.filter(({ raw }) => raw.metadata !== null).length;
+  const total = rawAgents.length;
+  const metadataFetched  = transformed.filter(({ raw }) => raw.metadata !== null).length;
   const manifestUrisFound = transformed.filter(({ result }) => result.manifestUri !== null).length;
-  const walletsFound = transformed.reduce((n, { result }) => n + result.wallets.length, 0);
-  const erc8004Wallets = walletsFound;
+  const agentsWithDid    = transformed.filter(({ result }) => result.did !== null).length;
+  const walletsFound     = transformed.reduce((n, { result }) => n + result.wallets.length, 0);
   const tokenContractsFound = [...classificationMap.values()].filter((t) => t === "token_contract").length;
+
+  function pct(n: number) {
+    return total > 0 ? Math.round((n / total) * 100) : 0;
+  }
 
   return NextResponse.json({
     ok: true,
     dry_run: dryRun,
     summary: {
-      total_discovered: rawAgents.length,
+      total_discovered: total,
+      // Coverage KPIs — identity/trust layer, not financial
+      metadata_coverage_pct:   pct(metadataFetched),
+      did_coverage_pct:        pct(agentsWithDid),
+      reputation_coverage_pct: 0, // Phase 2 — Reputation Registry queries
+      validation_coverage_pct: 0, // Phase 2 — Validation Registry queries
+      manifest_coverage_pct:   pct(manifestUrisFound),
+      books_coverage_pct:      0, // 0 until manifest submitted and wallets declared
+      // Raw counts
       metadata_fetched: metadataFetched,
+      agents_with_did: agentsWithDid,
       manifest_uris_found: manifestUrisFound,
       wallets_found: walletsFound,
       books_eligible_wallets: 0,
-      erc8004_wallets: erc8004Wallets,
       token_contracts_found: tokenContractsFound,
       agents_upserted: agentsUpserted,
       agents_skipped: agentsSkipped,

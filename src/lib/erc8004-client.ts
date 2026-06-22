@@ -1,4 +1,5 @@
 const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
+export const REPUTATION_REGISTRY  = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63";
 const BASE_RPC = "https://base-mainnet.g.alchemy.com/v2";
 const TRANSFER_TOPIC0 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 const ZERO_ADDRESS_TOPIC = "0x0000000000000000000000000000000000000000000000000000000000000000";
@@ -24,6 +25,17 @@ export type Erc8004Metadata = {
   name?: string;
   description?: string;
   image?: string;
+  // Identity
+  did?: string;                // did:erc8004:... or did:pkh:...
+  operator?: string;           // operator identifier or address
+  // Capabilities & endpoints
+  capabilities?: string[];
+  endpoints?: Array<{ type: string; url: string; [k: string]: unknown }>;
+  // Financial — paymentAddress is a candidate only, NEVER auto books-eligible
+  paymentAddress?: string;
+  // Social handles
+  socials?: Array<{ platform: string; handle: string; url?: string }>;
+  // Standard ERC-8004
   services?: Array<{ type: string; url: string; [k: string]: unknown }>;
   active?: boolean;
   registrations?: Array<{ agentId: string; agentRegistry: string }>;
