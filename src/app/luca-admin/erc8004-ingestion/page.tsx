@@ -1,0 +1,299 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+
+type AgentResult = {
+  agent_id: string;
+  name: string;
+  status: "upserted" | "skipped" | "error";
+  metadata_ok: boolean;
+  wallet_address: string | null;
+  wallet_type: string | null;
+  manifest_uri: string | null;
+  books_eligible: boolean;
+  warnings: string[];
+  error?: string;
+};
+
+type IngestionSummary = {
+  total_discovered: number;
+  metadata_fetched: number;
+  manifest_uris_found: number;
+  wallets_found: number;
+  books_eligible_wallets: number;
+  erc8004_wallets: number;
+  token_contracts_found: number;
+  agents_upserted: number;
+  agents_skipped: number;
+  errors: number;
+};
+
+type IngestionReport = {
+  ok: boolean;
+  dry_run: boolean;
+  summary: IngestionSummary;
+  agents: AgentResult[];
+  generated_at: string;
+  error?: string;
+};
+
+const STATUS_META: Record<AgentResult["status"], { label: string; color: string }> = {
+  upserted: { label: "Upserted", color: "#22c55e" },
+  skipped:  { label: "Skipped",  color: "#f59e0b" },
+  error:    { label: "Error",    color: "#ef4444" },
+};
+
+function shortAddr(addr: string) {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+export default function Erc8004IngestionPage() {
+  const [mode, setMode]         = useState<"contract" | "batch">("contract");
+  const [fromBlock, setFromBlock] = useState("0x0");
+  const [agentIdsText, setAgentIdsText] = useState("");
+  const [dryRun, setDryRun]     = useState(true);
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
+  const [report, setReport]     = useState<IngestionReport | null>(null);
+
+  async function runIngestion() {
+    setLoading(true);
+    setError("");
+    setReport(null);
+
+    const body: Record<string, unknown> = { mode, dryRun };
+    if (mode === "contract") {
+      body.fromBlock = fromBlock || "0x0";
+    } else {
+      body.agentIds = agentIdsText
+        .split(/[\n,\s]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+
+    try {
+      const res = await fetch("/api/admin/ingest-erc8004", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json() as IngestionReport;
+      if (!json.ok) { setError(json.error ?? "Ingestion failed"); return; }
+      setReport(json);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Network error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
+      <div style={{ borderBottom: "1px solid var(--line)", padding: "14px 24px", display: "flex", alignItems: "center", gap: 16 }}>
+        <Link href="/luca-admin" style={{ color: "var(--muted)", textDecoration: "none", fontSize: 13 }}>
+          {"← Admin"}
+        </Link>
+        <span style={{ color: "var(--line)" }}>|</span>
+        <span style={{ fontWeight: 700, fontSize: 15 }}>ERC-8004 Ingestion</span>
+      </div>
+
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
+
+        {/* Config panel */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>Ingestion Config</div>
+
+          {/* Mode selector */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Mode</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {(["contract", "batch"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  style={{
+                    padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)",
+                    background: mode === m ? "#6DB874" : "var(--bg)",
+                    color: mode === m ? "#fff" : "var(--ink)",
+                    fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  }}
+                >
+                  {m === "contract" ? "All Agents (contract scan)" : "Batch (specific IDs)"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {mode === "contract" && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>From Block (hex)</div>
+              <input
+                value={fromBlock}
+                onChange={(e) => setFromBlock(e.target.value)}
+                placeholder="0x0"
+                style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 200, fontFamily: "var(--font-mono)" }}
+              />
+            </div>
+          )}
+
+          {mode === "batch" && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Agent IDs (one per line or comma-separated)</div>
+              <textarea
+                value={agentIdsText}
+                onChange={(e) => setAgentIdsText(e.target.value)}
+                placeholder={"1\n2\n3"}
+                rows={4}
+                style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: "100%", fontFamily: "var(--font-mono)", resize: "vertical" }}
+              />
+            </div>
+          )}
+
+          {/* Dry run toggle */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+            <button
+              onClick={() => setDryRun((v) => !v)}
+              style={{
+                width: 36, height: 20, borderRadius: 10,
+                background: dryRun ? "#6DB874" : "var(--line)",
+                border: "none", cursor: "pointer", position: "relative", transition: "background 0.15s",
+              }}
+            >
+              <span style={{
+                position: "absolute", top: 3, left: dryRun ? 18 : 3,
+                width: 14, height: 14, borderRadius: "50%", background: "#fff",
+                transition: "left 0.15s",
+              }} />
+            </button>
+            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Dry Run</span>
+            <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "Report only — no DB writes" : "Will write to DB"}</span>
+          </div>
+
+          <button
+            onClick={runIngestion}
+            disabled={loading}
+            style={{
+              padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff",
+              border: "none", cursor: loading ? "not-allowed" : "pointer",
+              fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1,
+            }}
+          >
+            {loading ? "Running…" : "Run Ingestion"}
+          </button>
+        </div>
+
+        {error && (
+          <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+            {error}
+          </div>
+        )}
+
+        {report && (
+          <>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
+              {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
+              Generated {new Date(report.generated_at).toLocaleString()}
+            </div>
+
+            {/* KPI grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 24 }}>
+              {[
+                { label: "Total Discovered",   value: report.summary.total_discovered,      color: "var(--ink)" },
+                { label: "Metadata Fetched",   value: report.summary.metadata_fetched,      color: "#22c55e" },
+                { label: "Wallets Found",      value: report.summary.wallets_found,         color: "var(--ink)" },
+                { label: "Books-Eligible",     value: report.summary.books_eligible_wallets, color: "#6b7280" },
+                { label: "ERC-8004 Wallets",   value: report.summary.erc8004_wallets,       color: "#a855f7" },
+                { label: "Token Contracts",    value: report.summary.token_contracts_found,  color: "#ef4444" },
+                { label: "Upserted",           value: report.summary.agents_upserted,        color: "#22c55e" },
+                { label: "Skipped",            value: report.summary.agents_skipped,         color: "#f59e0b" },
+              ].map((kpi) => (
+                <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Per-agent table */}
+            {report.agents.length > 0 && (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+                <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600 }}>
+                  Agent Results ({report.agents.length})
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                        {["Agent ID", "Name", "Status", "Wallet", "Type", "Manifest URI", "Books Eligible", "Warnings"].map((h) => (
+                          <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.agents.map((agent, i) => {
+                        const sMeta = STATUS_META[agent.status];
+                        return (
+                          <tr key={agent.agent_id} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
+                            <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>{agent.agent_id}</td>
+                            <td style={{ padding: "8px 10px", fontWeight: 600 }}>{agent.name}</td>
+                            <td style={{ padding: "8px 10px" }}>
+                              <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: `${sMeta.color}18`, color: sMeta.color }}>
+                                {sMeta.label}
+                              </span>
+                              {agent.error && (
+                                <div style={{ fontSize: 10, color: "#ef4444", marginTop: 2 }}>{agent.error}</div>
+                              )}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                              {agent.wallet_address ? (
+                                <a
+                                  href={`https://basescan.org/address/${agent.wallet_address}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: "var(--accent)", textDecoration: "none" }}
+                                >
+                                  {shortAddr(agent.wallet_address)}
+                                </a>
+                              ) : <span style={{ color: "var(--muted)" }}>—</span>}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontSize: 11, color: "var(--muted)" }}>
+                              {agent.wallet_type ?? "—"}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontSize: 11, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {agent.manifest_uri ? (
+                                <a
+                                  href={agent.manifest_uri}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{ color: "var(--accent)", textDecoration: "none" }}
+                                  title={agent.manifest_uri}
+                                >
+                                  {agent.manifest_uri.replace(/^https?:\/\//, "").slice(0, 30)}…
+                                </a>
+                              ) : <span style={{ color: "var(--muted)" }}>—</span>}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontSize: 12, color: agent.books_eligible ? "#22c55e" : "var(--muted)" }}>
+                              {agent.books_eligible ? "Yes" : "No"}
+                            </td>
+                            <td style={{ padding: "8px 10px", fontSize: 11, color: "var(--muted)", maxWidth: 200 }}>
+                              {agent.warnings.length > 0 ? (
+                                <ul style={{ margin: 0, padding: "0 0 0 14px", listStyle: "disc" }}>
+                                  {agent.warnings.map((w, wi) => <li key={wi}>{w}</li>)}
+                                </ul>
+                              ) : <span style={{ color: "#22c55e" }}>—</span>}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -14,6 +14,8 @@ const STATUS_COLOR: Record<VerificationStatus, string> = {
   "Wallets Declared":   "#3b82f6",
   "Needs Verification": "#f59e0b",
   "Candidate":          "#6b7280",
+  "ERC-8004 Indexed":   "#6b7280",
+  "Awaiting Manifest":  "#f59e0b",
 };
 
 const STATUS_LABEL: Record<VerificationStatus, string> = {
@@ -23,6 +25,8 @@ const STATUS_LABEL: Record<VerificationStatus, string> = {
   "Wallets Declared":   "Wallets Declared",
   "Needs Verification": "Needs Verification",
   "Candidate":          "Candidate",
+  "ERC-8004 Indexed":   "ERC-8004 Indexed",
+  "Awaiting Manifest":  "Awaiting Manifest",
 };
 
 function buildSvg(agentName: string, status: VerificationStatus): string {

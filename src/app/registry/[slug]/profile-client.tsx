@@ -486,6 +486,8 @@ const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon
   "Claimed":            { cls: "claimed",          label: "Claimed by Team", icon: "handshake" },
   "Verified":           { cls: "verified",         label: "Verified", icon: "verified" },
   "Luca Managed":       { cls: "luca-managed",     label: "Luca Managed"       },
+  "ERC-8004 Indexed":   { cls: "candidate",        label: "ERC-8004 Indexed"   },
+  "Awaiting Manifest":  { cls: "needs-verify",     label: "Awaiting Manifest"  },
 };
 
 function StatusBadge({ status }: { status: VerificationStatus }) {

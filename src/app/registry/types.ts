@@ -31,7 +31,15 @@ export type CommunicationIdentity = {
 // Health values are purely descriptive — based on on-chain activity patterns only.
 // No judgment or rating implied.
 export type Health = "Active" | "Inactive" | "Unverified" | "Pending" | "Stable";
-export type VerificationStatus = "Candidate" | "Needs Verification" | "Wallets Declared" | "Claimed" | "Verified" | "Luca Managed";
+export type VerificationStatus =
+  | "Candidate"
+  | "Needs Verification"
+  | "Wallets Declared"
+  | "Claimed"
+  | "Verified"
+  | "Luca Managed"
+  | "ERC-8004 Indexed"
+  | "Awaiting Manifest";
 export type WalletLabel =
   | "candidate wallet"
   | "verified wallet"
@@ -81,6 +89,9 @@ export type Agent = {
   pfp?: string;
   gitlawbRepo?: string;
   communicationIdentities?: CommunicationIdentity[]; // internal CRM, not exposed publicly
+  erc8004AgentId?: string;
+  erc8004MetadataUri?: string;
+  erc8004RegistrationTx?: string;
 };
 
 // PublicAgent — fields safe to pass to client JS bundle.

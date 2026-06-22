@@ -2242,6 +2242,7 @@ export default function LucaAdminPage() {
           <Link href="/luca-admin/registry-updates" className={styles.navItem}>Pending Updates</Link>
           <Link href="/luca-admin/attribution-health" className={styles.navItem}>Attribution Health</Link>
           <Link href="/luca-admin/address-classification" className={styles.navItem}>Address Classification</Link>
+          <Link href="/luca-admin/erc8004-ingestion" className={styles.navItem}>ERC-8004 Ingestion</Link>
           <Link href="/luca-admin/revenue-accuracy-report" className={styles.navItem}>Accuracy Report</Link>
           <Link href="/luca-admin/revenue-audit" className={styles.navItem}>Revenue Audit</Link>
           <Link href="/luca-admin/revenue-confidence" className={styles.navItem}>Confidence Labels</Link>
