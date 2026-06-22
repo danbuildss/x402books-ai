@@ -113,7 +113,7 @@ export default function AttributionPage() {
           <div className="op-card">
             <h2 className="op-card-title" style={{ marginBottom: 4 }}>Fetch Wallet Manifest</h2>
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.55 }}>
-              Point to a GitHub or GitLab repo containing a <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.x402books/wallets.json</code> manifest. Zetta will parse the wallet declarations and attribute on-chain activity to your agent.
+              Point to a GitHub or GitLab repo containing a <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> manifest. Zetta will parse the wallet declarations and attribute on-chain activity to your agent.
             </p>
             <div style={{ display: "flex", gap: 8 }}>
               <input
@@ -180,7 +180,7 @@ export default function AttributionPage() {
   ]
 }`}</pre>
             <p style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: 10 }}>
-              Place this file at <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.x402books/wallets.json</code> in your repo root.
+              Place this file at <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> in your repo root.
               Valid roles: {ROLES.join(", ")}.
             </p>
           </div>

@@ -162,20 +162,49 @@ function buildSettlementVerdict(patterns: SettlementPattern[], signals: string[]
 }
 
 // ── Wallet role normalization ──────────────────────────────────────────────────
-// Normalizes wallet role strings from .x402books/wallets.json manifests
+// Normalizes wallet role strings from .agent/wallets.json manifests
 
-export type WalletRole = "treasury" | "fee" | "deployer" | "operator" | "unknown";
+export type WalletRole =
+  | "treasury"
+  | "revenue"
+  | "expense"
+  | "fee_recipient"
+  | "payment_receiver"
+  | "operator"
+  | "deployer"
+  | "token_contract"
+  | "token_bound_account"
+  | "unknown";
 
 const ROLE_ALIASES: Record<string, WalletRole> = {
-  treasury:       "treasury",
-  fee:            "fee",
-  fee_recipient:  "fee",
-  fees:           "fee",
-  deployer:       "deployer",
-  deploy:         "deployer",
-  operator:       "operator",
-  ops:            "operator",
-  hot_wallet:     "operator",
+  // treasury
+  treasury:            "treasury",
+  // revenue / inflow
+  revenue:             "revenue",
+  income:              "revenue",
+  // expense / outflow
+  expense:             "expense",
+  expenses:            "expense",
+  spend:               "expense",
+  // fee recipient
+  fee:                 "fee_recipient",
+  fee_recipient:       "fee_recipient",
+  fees:                "fee_recipient",
+  // payment receiver
+  payment_receiver:    "payment_receiver",
+  payment:             "payment_receiver",
+  // operator
+  operator:            "operator",
+  ops:                 "operator",
+  hot_wallet:          "operator",
+  // deployer
+  deployer:            "deployer",
+  deploy:              "deployer",
+  // token types
+  token_contract:      "token_contract",
+  token:               "token_contract",
+  token_bound_account: "token_bound_account",
+  tba:                 "token_bound_account",
 };
 
 export function normalizeWalletRole(raw: string): WalletRole {
@@ -183,9 +212,14 @@ export function normalizeWalletRole(raw: string): WalletRole {
 }
 
 export const WALLET_ROLE_LABELS: Record<WalletRole, string> = {
-  treasury: "treasury",
-  fee:      "fee wallet",
-  deployer: "deployer",
-  operator: "operator",
-  unknown:  "unknown role",
+  treasury:            "treasury",
+  revenue:             "revenue wallet",
+  expense:             "expense wallet",
+  fee_recipient:       "fee recipient",
+  payment_receiver:    "payment receiver",
+  operator:            "operator",
+  deployer:            "deployer",
+  token_contract:      "token contract",
+  token_bound_account: "token-bound account",
+  unknown:             "unknown role",
 };

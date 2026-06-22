@@ -327,7 +327,7 @@ export default function ValidatePage() {
         <p className="reg-label">Agent Wallet Manifest</p>
         <h1 className="val-h1">Validate your manifest.</h1>
         <p className="val-hero-sub">
-          Paste your <code className="val-code">.x402books/wallets.json</code> below.
+          Paste your <code className="val-code">.agent/wallets.json</code> below.
           Valid manifests are automatically indexed in the{" "}
           <Link href="/registry" className="val-link">Zetta registry</Link> and
           generate a Luca financial profile.
@@ -337,7 +337,7 @@ export default function ValidatePage() {
       <section className="val-main">
         <div className="val-editor-wrap">
           <div className="val-editor-header">
-            <span className="val-filename">.x402books/wallets.json</span>
+            <span className="val-filename">.agent/wallets.json</span>
             <button
               type="button"
               className="val-clear-btn"
@@ -402,7 +402,7 @@ export default function ValidatePage() {
         <h2 className="val-h2">From manifest to registry profile.</h2>
         <div className="val-steps">
           {[
-            { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .x402books/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
+            { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .agent/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
             { icon: "verified", step: "2", title: "Validate here", body: "Paste and validate against the open schema. Zero errors means it's registry-ready." },
             { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to Zetta. Luca indexes your wallets and builds a financial profile." },
             { icon: "workspace_premium", step: "4", title: "Get verified", body: "Earn the Verified badge. Paste it in your README as proof of financial identity." },

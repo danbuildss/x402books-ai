@@ -46,7 +46,7 @@ const ALL_IDS = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
 
 const FEATURES = [
   { icon: "dataset",            label: "Agent Registry",          items: ["125+ autonomous agents indexed", "5 ecosystems: AEON, BANKR, Virtuals, Base, EigenCloud", "Sort by score, status, health, activity"] },
-  { icon: "folder_open",        label: "Wallet Manifest Standard", items: [".x402books/wallets.json open format", "GitHub + Gitlawb repo support", "GitHub Action for automated validation"] },
+  { icon: "folder_open",        label: "Wallet Manifest Standard", items: [".agent/wallets.json open format", "GitHub + Gitlawb repo support", "GitHub Action for automated validation"] },
   { icon: "verified_user",      label: "Verification System",      items: ["Six-tier pipeline: Candidate → Luca Managed", "Manifest submission fast-tracks to Wallets Declared", "Wallet claim + signed proof paths"] },
   { icon: "analytics",          label: "Transparency Scores",      items: ["0–100 composite score per agent", "Factors: wallets, status, activity, evidence, verdict", "Live on every public profile"] },
   { icon: "psychology",         label: "Luca Intelligence",        items: ["AI writes financial summaries for every agent", "Analyzes settlement patterns and attribution", "Runs integrity passes + approves claims"] },
@@ -70,7 +70,7 @@ const ROADMAP = [
     status: "live",
     items: [
       "125+ autonomous agents indexed across 5 ecosystems",
-      "Agent Wallet Manifest standard (.x402books/wallets.json)",
+      "Agent Wallet Manifest standard (.agent/wallets.json)",
       "Six-tier verification pipeline: Candidate → Luca Managed",
       "Transparency scores + Luca verdicts on every profile",
       "SVG verification badges + /api/stats prediction oracle",
@@ -146,7 +146,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is the Agent Wallet Manifest?",
-    a: "An open standard for declaring financial identity. Agents add a .x402books/wallets.json file to their GitHub or Gitlawb repo declaring wallet addresses and roles (treasury, fee recipient, deployer, operator). Zetta validates it, upgrades the registry profile to Wallets Declared, and issues a live SVG verification badge.",
+    a: "An open standard for declaring financial identity. Agents add a .agent/wallets.json file to their GitHub or Gitlawb repo declaring wallet addresses and roles (treasury, fee recipient, deployer, operator). Zetta validates it, upgrades the registry profile to Wallets Declared, and issues a live SVG verification badge.",
   },
   {
     q: "How does verification work?",
@@ -158,7 +158,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How do I get my agent listed?",
-    a: "Add a .x402books/wallets.json manifest to your agent's GitHub repo and submit your repo URL via the Claim Banner on your profile page. If your agent isn't indexed yet, contact the team to add it. Once indexed, manifest submission is fully self-serve.",
+    a: "Add a .agent/wallets.json manifest to your agent's GitHub repo and submit your repo URL via the Claim Banner on your profile page. If your agent isn't indexed yet, contact the team to add it. Once indexed, manifest submission is fully self-serve.",
   },
   {
     q: "What is $LUCA?",
@@ -355,7 +355,7 @@ $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
 
             <div className="docs-steps">
               {[
-                { n: "01", title: "Declare", body: "Add .x402books/wallets.json to your agent's GitHub or Gitlawb repo. Declare wallet addresses with roles: treasury, fee recipient, deployer, or operator. The GitHub Action validates the format on every push." },
+                { n: "01", title: "Declare", body: "Add .agent/wallets.json to your agent's GitHub or Gitlawb repo. Declare wallet addresses with roles: treasury, fee recipient, deployer, or operator. The GitHub Action validates the format on every push." },
                 { n: "02", title: "Submit", body: "Paste your repo URL into the Claim Banner on your agent's profile page. Zetta fetches the manifest, validates the wallets, and queues the update for Luca review." },
                 { n: "03", title: "Verify", body: "Luca reviews the submission. Verified manifests upgrade the agent's status to Wallets Declared. Matching a wallet address via the claim form upgrades to Claimed. Full Verified status follows Luca review." },
                 { n: "04", title: "Distribute", body: "A live SVG badge appears at /api/badge/[your-slug]. Embed it in your README. Your Transparency Score updates. Your profile shows declared wallets, settlement patterns, and Luca's financial verdict." },
@@ -371,9 +371,9 @@ $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
             </div>
 
             <h2 className="docs-h2">Wallet manifest format</h2>
-            <p className="docs-p">Add this file to your repo at <code>.x402books/wallets.json</code>:</p>
+            <p className="docs-p">Add this file to your repo at <code>.agent/wallets.json</code>:</p>
             <div className="docs-code-block">
-              <div className="docs-code-head"><span>.x402books/wallets.json</span></div>
+              <div className="docs-code-head"><span>.agent/wallets.json</span></div>
               <pre>{`{
   "agent": "MyAgent",
   "ecosystem": "AEON",
@@ -519,7 +519,7 @@ Cache-Control: public, max-age=60, stale-while-revalidate=300
                 <span className="docs-method post">POST</span>
                 <code>/api/registry/fetch-manifest</code>
               </div>
-              <p className="docs-p">Fetch and validate a <code>.x402books/wallets.json</code> manifest from a GitHub or Gitlawb repo. Queues wallet declarations for Luca verification.</p>
+              <p className="docs-p">Fetch and validate a <code>.agent/wallets.json</code> manifest from a GitHub or Gitlawb repo. Queues wallet declarations for Luca verification.</p>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
                 <pre>{`POST /api/registry/fetch-manifest
@@ -819,7 +819,7 @@ These are three distinct things. Never blur them.`}</pre>
 
             <h2 className="docs-h2">The moat</h2>
             <p className="docs-p">
-              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.x402books/wallets.json</code> to their repo plugs into Zetta' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
+              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.agent/wallets.json</code> to their repo plugs into Zetta' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
             </p>
             <p className="docs-p">
               Infrastructure compounds slowly. Trust compounds slowly. Once infra wins — it is extremely difficult to replace.

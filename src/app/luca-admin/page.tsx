@@ -389,7 +389,7 @@ function ManifestSubmissions({ secret }: { secret: string }) {
         )}
       </div>
       <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12 }}>
-        Repo-submitted wallet manifests via <code>.x402books/wallets.json</code>. Review and approve to upgrade agent profile.
+        Repo-submitted wallet manifests via <code>.agent/wallets.json</code>. Review and approve to upgrade agent profile.
       </p>
 
       {loading && <div style={{ color: "var(--muted)", fontSize: "0.83rem" }}>Loading…</div>}

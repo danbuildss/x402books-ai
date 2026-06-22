@@ -4,11 +4,16 @@ import { normalizeWalletRole } from "@/lib/luca-classify";
 import type { WalletLabel } from "@/app/registry/types";
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
-  treasury: "likely treasury",
-  fee:      "likely fee recipient",
-  deployer: "candidate wallet",
-  operator: "likely expense wallet",
-  unknown:  "unknown role",
+  treasury:            "likely treasury",
+  revenue:             "likely revenue wallet",
+  expense:             "likely expense wallet",
+  fee_recipient:       "likely fee recipient",
+  payment_receiver:    "likely revenue wallet",
+  operator:            "likely expense wallet",
+  deployer:            "candidate wallet",
+  token_contract:      "candidate wallet",
+  token_bound_account: "candidate wallet",
+  unknown:             "unknown role",
 };
 
 function repoToRawUrls(repoUrl: string): string[] {
@@ -122,10 +127,24 @@ export async function POST(req: NextRequest) {
   }
 
   const manifest = found.data as {
-    agent?: string;
-    xHandle?: string;
+    version?:  string;
+    agent?:    string;
+    project?:  string;
     ecosystem?: string;
-    wallets?: Array<{ address?: string; role?: string; chain?: string; notes?: string }>;
+    website?:  string;
+    x?:        string;
+    xHandle?:  string;   // legacy alias
+    did?:      string;
+    wallets?:  Array<{
+      address?:             string;
+      role?:                string;
+      chain?:               string;
+      verification_method?: string;
+      label?:               string;
+      notes?:               string;
+      active?:              boolean;
+      last_updated?:        string;
+    }>;
   };
 
   if (!manifest.agent || typeof manifest.agent !== "string") {
@@ -138,11 +157,13 @@ export async function POST(req: NextRequest) {
   const normalized = manifest.wallets.map((w) => {
     const role = normalizeWalletRole(w.role ?? "unknown");
     return {
-      address: w.address ?? "",
+      address:             w.address ?? "",
       role,
-      label:   ROLE_TO_LABEL[role] ?? "unknown role",
-      chain:   w.chain ?? "base",
-      notes:   w.notes ?? null,
+      label:               ROLE_TO_LABEL[role] ?? "unknown role",
+      chain:               w.chain ?? "base",
+      verification_method: w.verification_method ?? "repo_manifest",
+      notes:               w.notes ?? null,
+      active:              w.active !== false,
     };
   });
 
@@ -169,12 +190,24 @@ export async function POST(req: NextRequest) {
     agent_name:    manifest.agent.trim(),
     update_type:   "wallet_update",
     proposed_data: {
-      wallets:   normalized.map((w) => ({ address: w.address, label: w.label, role: w.role, chain: w.chain, notes: w.notes })),
-      xHandle:   manifest.xHandle ?? null,
-      ecosystem: manifest.ecosystem ?? null,
-      source_repo: repo_url.trim(),
+      wallets:      normalized.map((w) => ({
+        address:             w.address,
+        label:               w.label,
+        role:                w.role,
+        chain:               w.chain,
+        verification_method: w.verification_method,
+        notes:               w.notes,
+        active:              w.active,
+      })),
+      project:      manifest.project ?? null,
+      xHandle:      manifest.xHandle ?? manifest.x ?? null,
+      ecosystem:    manifest.ecosystem ?? null,
+      website:      manifest.website ?? null,
+      did:          manifest.did ?? null,
+      version:      manifest.version ?? null,
+      source_repo:  repo_url.trim(),
     },
-    diff_summary:  `Repo manifest: ${normalized.length} wallet(s) — ${normalized.map((w) => w.role).join(", ")}`,
+    diff_summary:  `Repo manifest v${manifest.version ?? "0"}: ${normalized.length} wallet(s) — ${normalized.map((w) => w.role).join(", ")}`,
     luca_notes:    `Auto-fetched from ${found.url}`,
     status:        "pending",
   }).select("id").single();
@@ -187,7 +220,9 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok:      true,
+    version: manifest.version ?? null,
     agent:   manifest.agent,
+    project: manifest.project ?? null,
     wallets: normalized,
     ref_id,
     message: `Manifest submitted. ${normalized.length} wallet(s) queued for Luca verification.`,

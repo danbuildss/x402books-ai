@@ -13,7 +13,7 @@ const STATIC_ENDPOINTS = [
   { method: "GET",  path: "/api/stats",                          note: "Live adoption metrics + market resolution" },
   { method: "GET",  path: "/api/badge/[slug]",                   note: "SVG verification badge (embed in README)" },
   { method: "GET",  path: "/api/registry/agents",                note: "All indexed agents with verification status" },
-  { method: "POST", path: "/api/registry/fetch-manifest",        note: "Submit .x402books/wallets.json from repo" },
+  { method: "POST", path: "/api/registry/fetch-manifest",        note: "Submit .agent/wallets.json from repo" },
   { method: "POST", path: "/api/registry/claim",                 note: "Claim agent profile with wallet address" },
   { method: "GET",  path: "/api/v1/agent-financial-state",       note: "Treasury health for any wallet (API key)" },
   { method: "GET",  path: "/api/v1/agent-report",                note: "Financial intelligence report (API key)" },
