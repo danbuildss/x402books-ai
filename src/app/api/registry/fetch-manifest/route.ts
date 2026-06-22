@@ -177,8 +177,12 @@ export async function POST(req: NextRequest) {
 
   if (!hasSupabaseAdminEnv()) {
     return NextResponse.json({
-      ok: true,
-      agent: manifest.agent,
+      ok:      true,
+      version: manifest.version ?? null,
+      agent:   manifest.agent,
+      project: manifest.project ?? null,
+      ecosystem: manifest.ecosystem ?? null,
+      did:     manifest.did ?? null,
       wallets: normalized,
       message: "Manifest read successfully (registry unavailable — contact team to finalize).",
     });
