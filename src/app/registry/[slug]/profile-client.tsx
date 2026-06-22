@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
@@ -16,6 +16,39 @@ import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { computeMomentum } from "@/lib/agent-momentum";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
+import { CONFIDENCE_META } from "@/lib/revenue-confidence";
+
+// ── Confidence badge (fetched client-side from confidence label API) ──────────
+
+function ConfidenceLabelBadge({ slug }: { slug: string }) {
+  const [label, setLabel] = useState<AgentConfidenceLabel | null>(null);
+  useEffect(() => {
+    fetch(`/api/v1/agent/${encodeURIComponent(slug)}/confidence`)
+      .then((r) => r.json())
+      .then((d: { label?: AgentConfidenceLabel | null }) => { if (d.label) setLabel(d.label); })
+      .catch(() => {});
+  }, [slug]);
+
+  if (!label) return null;
+  const meta = CONFIDENCE_META[label.confidence_level];
+  return (
+    <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, border: `1px solid ${meta.color}44`, background: `${meta.color}0d` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: label.public_note ? 6 : 0 }}>
+        <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
+        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: meta.color }}>{meta.label}</span>
+        {label.reviewed_at && (
+          <span style={{ fontSize: "0.65rem", color: "var(--muted)", marginLeft: "auto" }}>
+            Verified {new Date(label.reviewed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </span>
+        )}
+      </div>
+      {label.public_note && (
+        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.55 }}>{label.public_note}</p>
+      )}
+    </div>
+  );
+}
 
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
@@ -89,6 +122,9 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           {books.period}
         </span>
       </div>
+
+      {/* Human-verified confidence label (from admin review) */}
+      <ConfidenceLabelBadge slug={books.agent.slug} />
 
       {/* No activity notice */}
       {f.tx_count === 0 && f.revenue_usd === 0 && f.expenses_usd === 0 && (
