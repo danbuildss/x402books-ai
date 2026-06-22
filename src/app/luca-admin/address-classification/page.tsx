@@ -99,7 +99,12 @@ function shortAddr(addr: string) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AddressClassificationPage() {
-  const [secret, setSecret]   = useState("");
+  const [secret, setSecret]   = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [report, setReport] = useState<ClassificationReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");

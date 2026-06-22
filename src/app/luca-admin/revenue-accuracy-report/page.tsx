@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { AgentRevenueAudit } from "@/lib/agent-books";
 import type { AuditFlag } from "@/app/api/admin/revenue-audit/route";
@@ -272,7 +272,12 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function RevenueAccuracyReportPage() {
-  const [secret,  setSecret]  = useState("");
+  const [secret,  setSecret]  = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [period,  setPeriod]  = useState<"7d" | "14d" | "30d" | "90d">("30d");
   const [mode,    setMode]    = useState<"named" | "all">("all");
   const [loading, setLoading] = useState(false);

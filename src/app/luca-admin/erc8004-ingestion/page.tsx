@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type AgentResult = {
@@ -58,7 +58,12 @@ function shortAddr(addr: string) {
 }
 
 export default function Erc8004IngestionPage() {
-  const [secret, setSecret]     = useState("");
+  const [secret, setSecret]     = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [mode, setMode]         = useState<"contract" | "batch">("contract");
   const [fromBlock, setFromBlock] = useState("0x0");
   const [agentIdsText, setAgentIdsText] = useState("");
