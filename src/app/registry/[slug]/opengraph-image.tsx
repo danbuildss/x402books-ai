@@ -167,7 +167,7 @@ export default async function OgImage({
             {agent.verificationStatus}
           </span>
         </div>
-        <span style={{ color: "#333", fontSize: 17 }}>x402books.xyz</span>
+        <span style={{ color: "#333", fontSize: 17 }}>zettaai.co</span>
       </div>
     </div>,
     { ...size },

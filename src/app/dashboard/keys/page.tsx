@@ -311,7 +311,7 @@ export default function ApiKeysPage() {
           </div>
         </div>
         <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10 }}>
-          Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://x402books.xyz/api/v1</code> &nbsp;·&nbsp;
+          Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://www.zettaai.co/api/v1</code> &nbsp;·&nbsp;
           <a href="/developer" style={{ color: "var(--accent)" }}>Full API docs →</a>
         </p>
       </div>

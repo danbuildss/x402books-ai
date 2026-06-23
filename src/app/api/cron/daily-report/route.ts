@@ -6,7 +6,7 @@ import {
   getRecentRegistryEvents,
 } from "@/lib/growth-db";
 
-const APP_URL = "https://x402books.xyz";
+const APP_URL = "https://www.zettaai.co";
 
 function n(v: number | null | undefined) {
   return v == null ? "0" : v.toLocaleString();

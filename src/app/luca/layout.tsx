@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Luca — AI Accountant for the Agent Economy",
     description:
       "Send Luca a wallet address. He audits it, categorizes transactions, scores financial health, and returns a clean report — instantly.",
-    url: "https://x402books.xyz/luca",
+    url: "https://www.zettaai.co/luca",
     siteName: "Zetta",
     images: [
       {

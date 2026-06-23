@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Validate Agent Wallet Manifest — Zetta",
     description:
       "Validate your wallets.json in seconds. Valid manifests are automatically indexed in the Zetta registry.",
-    url: "https://www.x402books.xyz/validate",
+    url: "https://www.zettaai.co/validate",
     siteName: "Zetta",
     type: "website",
   },

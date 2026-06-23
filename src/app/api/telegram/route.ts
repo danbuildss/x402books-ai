@@ -53,7 +53,7 @@ export async function GET(request: Request) {
   }
 
   // Use the canonical domain (no www — matches what Vercel serves)
-  const webhookUrl = "https://x402books.xyz/api/telegram";
+  const webhookUrl = "https://www.zettaai.co/api/telegram";
 
   const webhookBody: Record<string, unknown> = {
     url: webhookUrl,

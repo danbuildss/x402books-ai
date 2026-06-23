@@ -300,7 +300,7 @@ export default async function AgentCardPage({ params }: { params: Promise<{ slug
                 <span key={p} className="pattern-pill">{PATTERN_LABEL[p] ?? p}</span>
               ))}
             </div>
-            <span className="footer-url">x402books.xyz/registry/{slug}</span>
+            <span className="footer-url">zettaai.co/registry/{slug}</span>
           </div>
         </div>
       </body>

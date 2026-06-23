@@ -1,7 +1,7 @@
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress, type TimeRange } from "@/lib/ledger";
 
-const APP_URL = "https://x402books.xyz";
+const APP_URL = "https://www.zettaai.co";
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
 
 // ── Telegram API helpers ──────────────────────────────────────────────────────
@@ -277,7 +277,7 @@ async function cmdReport(chatId: number, walletArg: string) {
 }
 
 // ── Inline mode ───────────────────────────────────────────────────────────────
-// Users type @x402BooksBot 0x... in any chat to get a shareable result card
+// Users type @asklucaai 0x... in any chat to get a shareable result card
 
 type InlineQuery = {
   id: string;
@@ -383,7 +383,7 @@ type TelegramUpdate = {
 };
 
 export async function handleUpdate(update: TelegramUpdate) {
-  // Handle inline queries (@x402BooksBot in any chat)
+  // Handle inline queries (@asklucaai in any chat)
   if (update.inline_query) {
     return handleInlineQuery(update.inline_query);
   }
@@ -395,7 +395,7 @@ export async function handleUpdate(update: TelegramUpdate) {
   const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
   const text = msg.text.trim();
 
-  // Strip bot username suffix from commands (e.g. /scan@x402BooksBot → /scan)
+  // Strip bot username suffix from commands (e.g. /scan@asklucaai → /scan)
   const [rawCmd, ...args] = text.split(/\s+/);
   const cmdPart = rawCmd.split("@");
   const cmd = cmdPart[0].toLowerCase();

@@ -208,7 +208,7 @@ export async function GET(req: NextRequest) {
     lines.push(`• Errors: <b>${errors.length}</b>`);
     for (const e of errors.slice(0, 3)) lines.push(`  └ ${e}`);
   }
-  if (hasNew) lines.push(`\n<a href="https://x402books.xyz/luca-admin">Review drafts in Luca Admin →</a>`);
+  if (hasNew) lines.push(`\n<a href="https://www.zettaai.co/luca-admin">Review drafts in Luca Admin →</a>`);
 
   await notifyTelegram(lines.join("\n"));
 

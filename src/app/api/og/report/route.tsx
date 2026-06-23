@@ -158,7 +158,7 @@ export async function GET(req: NextRequest) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
             <span style={{ fontSize: 16, fontWeight: 700, color: "#6DB874" }}>By Luca</span>
-            <span style={{ fontSize: 14, color: "#3a4a3a" }}>x402books.xyz/research</span>
+            <span style={{ fontSize: 14, color: "#3a4a3a" }}>zettaai.co/research</span>
           </div>
         </div>
       </div>

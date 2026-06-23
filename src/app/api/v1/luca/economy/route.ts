@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
         net_income_usd:  a.net_income_usd,
         tx_count:        a.tx_count,
         profitable:      a.net_income_usd > 0,
-        profile_url:     `https://www.x402books.xyz/registry/${a.slug}`,
+        profile_url:     `https://www.zettaai.co/registry/${a.slug}`,
       })),
 
       // Top 3 for quick reference
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
             title:        latestReport.title,
             type:         latestReport.type,
             published_at: latestReport.published_at,
-            url:          `https://www.x402books.xyz/research/${latestReport.slug}`,
+            url:          `https://www.zettaai.co/research/${latestReport.slug}`,
           }
         : null,
 
@@ -93,8 +93,8 @@ export async function GET(req: NextRequest) {
         generate_report:  "POST /api/admin/research/generate  (use X402BOOKS_INTERNAL_SECRET)",
         agent_books:      "GET /api/v1/agent-books/[slug]?range=30d",
         this_endpoint:    "GET /api/v1/luca/economy",
-        leaderboard_url:  "https://www.x402books.xyz/leaderboard",
-        research_url:     "https://www.x402books.xyz/research",
+        leaderboard_url:  "https://www.zettaai.co/leaderboard",
+        research_url:     "https://www.zettaai.co/research",
       },
     };
 
