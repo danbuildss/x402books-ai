@@ -161,11 +161,20 @@ export async function buildAgentBooks(
   const cached = BOOKS_CACHE.get(cacheKey);
   if (cached && cached.expires > Date.now()) return cached.data;
 
-  // Check persistent DB cache before running a live Alchemy scan
+  // Check persistent DB cache before running a live Alchemy scan.
+  // Validate before serving: if the cached result claims attributed: true but
+  // the agent no longer has manifest-declared wallets, the cache is stale and
+  // must be bypassed so the strict filter runs immediately.
+  const hasManifestWallets = (agent.wallets ?? []).some(
+    (w) => (w.evidenceSource ?? "").toLowerCase() === "manifest",
+  );
   const dbCached = await getDbCachedBooks(slug, period);
   if (dbCached) {
-    BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data: dbCached });
-    return dbCached;
+    const cacheStale = dbCached.attributed && !hasManifestWallets;
+    if (!cacheStale) {
+      BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data: dbCached });
+      return dbCached;
+    }
   }
 
   const data = await computeAgentBooks(agent, period, slug);
@@ -196,9 +205,10 @@ async function computeAgentBooks(
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
     // Rule: only manifest-declared wallets produce attributed books.
-    // Admin, luca, or inferred addresses are "discovered" — not attributed.
+    // Wallets with no evidenceSource (legacy, admin, inferred, erc8004) are excluded.
+    // Only explicitly evidenceSource: "manifest" wallets scan and produce books.
     const src = (w.evidenceSource ?? "").toLowerCase();
-    if (src !== "" && src !== "manifest") return false;
+    if (src !== "manifest") return false;
     // Rule: token contract addresses must never be scanned as operational wallets.
     if (
       agent.tokenAddress &&
