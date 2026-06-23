@@ -109,13 +109,12 @@ export async function upsertB20ActivityBatch(
     block_timestamp: e.timestamp,
   }));
 
-  const { error, count } = await sb
+  const { error } = await sb
     .from("b20_activity")
-    .upsert(rows, { onConflict: "tx_hash,log_index", ignoreDuplicates: true })
-    .select("id", { count: "exact" });
+    .upsert(rows, { onConflict: "tx_hash,log_index", ignoreDuplicates: true });
 
   if (error) return { ok: false, inserted: 0, error: error.message };
-  return { ok: true, inserted: count ?? 0 };
+  return { ok: true, inserted: rows.length };
 }
 
 export async function getB20Tokens(): Promise<B20TokenRow[]> {
@@ -195,7 +194,7 @@ export function buildActivitySummaryFromDb(
   const burns = events.filter((e) => e.eventType === "burn");
 
   function sumRaw(items: B20ActivityEvent[]): string {
-    let total = 0n;
+    let total = BigInt(0);
     for (const e of items) {
       try { total += BigInt(e.amountRaw || "0"); } catch { /* skip */ }
     }

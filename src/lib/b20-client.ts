@@ -259,7 +259,7 @@ export async function fetchB20Activity(
   const burns = allRecent.filter((t) => t.to?.toLowerCase() === ZERO_ADDRESS);
 
   function sumRaw(items: AlchemyTransferItem[]): string {
-    let total = 0n;
+    let total = BigInt(0);
     for (const t of items) {
       const raw = t.rawContract?.value ?? "0x0";
       try { total += BigInt(raw === "0x" ? "0x0" : raw); } catch { /* skip */ }

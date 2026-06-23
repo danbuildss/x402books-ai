@@ -12,10 +12,10 @@ function formatRaw(raw: string, decimals = 18): string {
   if (!raw || raw === "0") return "0";
   try {
     const n = BigInt(raw);
-    const divisor = 10n ** BigInt(decimals);
+    const divisor = BigInt(10) ** BigInt(decimals);
     const whole = n / divisor;
     const frac = n % divisor;
-    if (frac === 0n) return whole.toLocaleString();
+    if (frac === BigInt(0)) return whole.toLocaleString();
     const fracStr = frac.toString().padStart(decimals, "0").slice(0, 4).replace(/0+$/, "");
     return `${whole.toLocaleString()}.${fracStr}`;
   } catch {
