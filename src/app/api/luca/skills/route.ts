@@ -68,6 +68,18 @@ const SKILLS = [
       period: { type: "string", required: false, default: "30d", enum: ["7d", "14d", "30d", "90d"] },
     },
   },
+  {
+    id: "b20-token-analysis",
+    name: "B20 Token Analysis",
+    description: "Analyse a B20 token on Base: identity, issuer wallet, linked agent, manifest status, mint/burn activity, and financial readiness. Enforces strict data integrity — token transfers are not revenue, token contracts are not operator wallets.",
+    endpoint: "/api/luca/skills/b20-token-analysis",
+    method: "POST",
+    input: {
+      address: { type: "string", required: true, description: "Token contract address (0x...)" },
+      agent_slug: { type: "string", required: false, description: "Optional agent slug to correlate" },
+      period: { type: "string", required: false, default: "30d", description: "Activity period (informational)" },
+    },
+  },
 ];
 
 export async function GET() {
