@@ -99,6 +99,12 @@ function shortAddr(addr: string) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AddressClassificationPage() {
+  const [secret, setSecret]   = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [report, setReport] = useState<ClassificationReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -111,7 +117,9 @@ export default function AddressClassificationPage() {
     setLoading(true);
     setError("");
     setReport(null);
-    fetch("/api/admin/address-classification")
+    fetch("/api/admin/address-classification", {
+      headers: { "x-internal-secret": secret },
+    })
       .then((r) => r.json())
       .then((json: ClassificationReport) => {
         if (!json.ok) { setError(json.error ?? "Classification failed"); return; }
@@ -141,21 +149,30 @@ export default function AddressClassificationPage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
 
         {/* Run audit */}
-        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ flex: 1 }}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
             <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Classification Audit</div>
             <div style={{ fontSize: 12, color: "var(--muted)" }}>
               Classifies every wallet address via Alchemy RPC — EOA, Token Contract, Proxy, Treasury (Safe), Vault, Smart Contract.
               Takes ~30–90s depending on registry size.
             </div>
           </div>
-          <button
-            onClick={runAudit}
-            disabled={loading}
-            style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: loading ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1 }}
-          >
-            {loading ? "Classifying…" : "Run Audit"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <input
+              type="password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              placeholder="X402BOOKS_INTERNAL_SECRET"
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 260 }}
+            />
+            <button
+              onClick={runAudit}
+              disabled={loading}
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: loading ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1 }}
+            >
+              {loading ? "Classifying…" : "Run Audit"}
+            </button>
+          </div>
         </div>
 
         {error && (

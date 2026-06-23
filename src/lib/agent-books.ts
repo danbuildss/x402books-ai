@@ -33,6 +33,7 @@ import type { Agent } from "@/app/registry/types";
 import { computeMomentum } from "./agent-momentum";
 import type { AgentBooksSnapshot } from "./agent-books-history";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { isBooksTrackedToken } from "@/lib/tokens";
 
 const MAX_WALLETS = 20;
 
@@ -258,11 +259,18 @@ async function computeAgentBooks(
     }
   }
 
+  // Token whitelist: only ETH (native), WETH, USDC, USDT, and the agent's own
+  // project token count toward books/GDP. All other ERC-20s are excluded to
+  // prevent inflation from memecoin and LP token flows.
+  const tokenFiltered = merged.filter((tx) =>
+    isBooksTrackedToken(tx.tokenAddress, agent.tokenAddress),
+  );
+
   // Internal transfers: both legs belong to this agent's declared wallets —
   // treasury movement, never revenue or expenses.
   const internal: LedgerTransaction[] = [];
   const external: LedgerTransaction[] = [];
-  for (const tx of merged) {
+  for (const tx of tokenFiltered) {
     const isInternal =
       ownAddresses.has(tx.from.toLowerCase()) && ownAddresses.has(tx.to.toLowerCase());
     (isInternal ? internal : external).push(tx);

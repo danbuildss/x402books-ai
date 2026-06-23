@@ -167,7 +167,12 @@ function AgentLabelCard({ row, secret, onSaved }: { row: AgentRow; secret: strin
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function RevenueConfidencePage() {
-  const [secret,  setSecret]  = useState("");
+  const [secret,  setSecret]  = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [rows,    setRows]    = useState<AgentRow[]>(PRIORITY_AGENTS.map((a) => ({ ...a, label: null })));
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");

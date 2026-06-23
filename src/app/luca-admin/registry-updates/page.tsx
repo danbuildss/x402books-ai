@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import type { PendingUpdate } from "@/lib/registry-db";
 
@@ -238,7 +238,12 @@ function UpdateCard({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function RegistryUpdatesPage() {
-  const [secret, setSecret] = useState("");
+  const [secret, setSecret] = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [authed, setAuthed] = useState(false);
   const [authError, setAuthError] = useState("");
   const [updates, setUpdates] = useState<PendingUpdate[]>([]);

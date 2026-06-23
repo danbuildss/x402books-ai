@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 type AgentResult = {
@@ -58,6 +58,12 @@ function shortAddr(addr: string) {
 }
 
 export default function Erc8004IngestionPage() {
+  const [secret, setSecret]     = useState(() =>
+    typeof window !== "undefined" ? sessionStorage.getItem("luca_admin_secret") ?? "" : ""
+  );
+  useEffect(() => {
+    if (secret) sessionStorage.setItem("luca_admin_secret", secret);
+  }, [secret]);
   const [mode, setMode]         = useState<"contract" | "batch">("contract");
   const [fromBlock, setFromBlock] = useState("0x0");
   const [agentIdsText, setAgentIdsText] = useState("");
@@ -84,7 +90,7 @@ export default function Erc8004IngestionPage() {
     try {
       const res = await fetch("/api/admin/ingest-erc8004", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-internal-secret": secret },
         body: JSON.stringify(body),
       });
       const json = await res.json() as IngestionReport;
@@ -112,6 +118,18 @@ export default function Erc8004IngestionPage() {
         {/* Config panel */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>Ingestion Config</div>
+
+          {/* Auth */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Internal Secret</div>
+            <input
+              type="password"
+              value={secret}
+              onChange={(e) => setSecret(e.target.value)}
+              placeholder="X402BOOKS_INTERNAL_SECRET"
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 260 }}
+            />
+          </div>
 
           {/* Mode selector */}
           <div style={{ marginBottom: 14 }}>
