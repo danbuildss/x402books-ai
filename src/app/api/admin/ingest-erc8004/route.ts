@@ -61,6 +61,13 @@ export async function POST(req: NextRequest) {
   let rawAgents;
   if (mode === "contract") {
     rawAgents = await fetchAllErc8004Agents(apiKey, fromBlock, toBlock);
+    if (rawAgents.length === 0) {
+      return NextResponse.json({
+        ok: false,
+        error: "Contract scan returned 0 agents. The block range may be too old or too large. Try specifying a fromBlock closer to the contract deployment, or use mode: 'batch' with known agentIds.",
+        debug: { fromBlock: fromBlock ?? "0xE4E1C0", toBlock: toBlock ?? "latest" },
+      }, { status: 422 });
+    }
   } else {
     const settled = await Promise.allSettled(
       (agentIds ?? []).map((id) => fetchErc8004AgentById(id, apiKey)),
