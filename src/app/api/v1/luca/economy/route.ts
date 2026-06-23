@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     } catch {
       isLive = false;
       dataWarning = "Economy data unavailable right now.";
-      gdp = { total_revenue_usd: 0, total_expenses_usd: 0, total_net_income_usd: 0, attributed_agents: 0, attributed_wallets: 0, total_agents: 0, all_attributed: [], top_agents: [], generated_at: new Date().toISOString() };
+      gdp = { total_revenue_usd: 0, total_expenses_usd: 0, total_net_income_usd: 0, attributed_agents: 0, attributed_wallets: 0, total_agents: 0, erc8004_agents: 0, awaiting_manifest: [], all_attributed: [], top_agents: [], generated_at: new Date().toISOString() };
     }
 
     const latestReport = await getLatestReport().catch(() => null);

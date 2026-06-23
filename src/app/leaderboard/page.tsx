@@ -3,7 +3,7 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
-import type { AgentGDPEntry } from "@/lib/agent-gdp";
+import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
 
 export const revalidate = 3600;
@@ -248,6 +248,7 @@ export default async function LeaderboardPage() {
 
   const agents = gdp?.all_attributed ?? [];
   const hasData = agents.length > 0;
+  const awaitingManifest = gdp?.awaiting_manifest ?? [];
 
   return (
     <div className="lp-root">
@@ -293,6 +294,7 @@ export default async function LeaderboardPage() {
               { label: "Total Expenses",      value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
               { label: "Net Income",          value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#6DB874" : "#ef4444" },
               { label: "Attributed Agents",  value: String(gdp.attributed_agents), color: "var(--fg)" },
+              { label: "ERC-8004 Indexed",   value: String(gdp.erc8004_agents),    color: "#8B5CF6"   },
               { label: "Total Indexed",       value: `${gdp.total_agents}`, color: "var(--muted)" },
             ].map((s) => (
               <div key={s.label}>
@@ -334,8 +336,8 @@ export default async function LeaderboardPage() {
             lineHeight: 1.6,
           }}>
             <strong style={{ color: "var(--fg)" }}>Attribution gap: </strong>
-            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents have not declared wallet manifests and are excluded from this leaderboard.
-            Their on-chain activity is real but unreadable without attribution.{" "}
+            {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents — including {gdp.erc8004_agents} indexed via ERC-8004 — have not yet declared a wallet manifest and are excluded from financial rankings.
+            Their on-chain identity is real and verified. Their finances become readable once they declare wallets.{" "}
             <Link href="/methodology" style={{ color: "var(--accent)" }}>Why attribution is required →</Link>
             {"  "}
             <Link href="/registry#verify" style={{ color: "var(--accent)" }}>Submit a manifest →</Link>
@@ -398,6 +400,69 @@ export default async function LeaderboardPage() {
           </div>
         )}
 
+
+        {/* Indexed agents awaiting manifest declaration */}
+        {awaitingManifest.length > 0 && (
+          <div style={{ marginTop: 40 }}>
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: "0 0 4px", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+                Indexed — Awaiting Manifest Declaration
+              </p>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                These agents are indexed in the registry
+                {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via the ERC-8004 on-chain identity standard</>}.
+                Financial data becomes available once they declare a wallet manifest.
+              </p>
+            </div>
+            <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 100px 160px 80px",
+                gap: 12,
+                padding: "9px 16px",
+                background: "var(--surface-soft)",
+                borderBottom: "1px solid var(--line)",
+              }}>
+                {["Agent", "Ecosystem", "Status", ""].map((h, i) => (
+                  <div key={i} style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)" }}>
+                    {h}
+                  </div>
+                ))}
+              </div>
+              {awaitingManifest.map((a: AwaitingManifestEntry) => (
+                <div key={a.slug} style={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 100px 160px 80px",
+                  gap: 12,
+                  padding: "11px 16px",
+                  borderBottom: "1px solid var(--line)",
+                  alignItems: "center",
+                  fontSize: "0.83rem",
+                }}>
+                  <div style={{ fontWeight: 600, color: "var(--fg)" }}>
+                    {a.isErc8004 && (
+                      <span style={{
+                        display: "inline-block", marginRight: 7,
+                        fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                        background: "color-mix(in srgb, #8B5CF6 12%, transparent)",
+                        border: "1px solid color-mix(in srgb, #8B5CF6 30%, transparent)",
+                        color: "#8B5CF6", verticalAlign: "middle",
+                      }}>ERC-8004</span>
+                    )}
+                    <Link href={`/registry/${a.slug}`} style={{ color: "var(--fg)", textDecoration: "none" }}>
+                      {a.name}
+                    </Link>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.ecosystem}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</div>
+                  <div style={{ textAlign: "right" }}>
+                    <Link href="/manifest/spec" style={{ fontSize: "0.72rem", color: "var(--accent)" }}>Declare →</Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* GDP failure note */}
         {gdpFailed && (
