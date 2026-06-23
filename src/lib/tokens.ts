@@ -5,7 +5,7 @@ export const STABLECOIN_ADDRESSES = new Set([
   "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC on Base
 ]);
 
-// Tokens tracked in x402Books financial calculations.
+// Tokens tracked in Zetta financial calculations.
 // Only ETH (native), WETH, USDC, USDT, and the agent's own project token count.
 // All other ERC-20s (memecoins, LP tokens, misc) are excluded to prevent GDP inflation.
 export const WETH_BASE = "0x4200000000000000000000000000000000000006";
