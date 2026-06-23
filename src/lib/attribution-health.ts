@@ -106,7 +106,7 @@ function isBooksEligible(w: AgentWallet, agentTokenAddress: string | null): {
   const atype = (w.address_type ?? "").toLowerCase();
   const role = (w.role ?? "").toLowerCase();
 
-  if (src !== "" && src !== "manifest") {
+  if (src !== "manifest") {
     return { eligible: false, reason: `evidenceSource=${src || "empty"} — only manifest wallets produce books` };
   }
   if (agentTokenAddress && w.address.toLowerCase() === agentTokenAddress.toLowerCase()) {
