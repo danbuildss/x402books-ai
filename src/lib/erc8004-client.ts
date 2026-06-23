@@ -152,12 +152,27 @@ async function fetchAgentDetails(
 
 const MAX_BLOCK_RANGE = 50_000;
 
-async function getLogsWithPagination(
+export type LogsDiagnostic = {
+  registry_address: string;
+  topic_0: string;
+  topic_1_filter: string;
+  agent_id_from_topic_index: number;
+  from_block_input: string;
+  from_block_num: number;
+  latest_block: number;
+  chunks_planned: number;
+  chunks_scanned: number;
+  total_logs_found: number;
+  first_nonempty_chunk: { from: string; to: string; count: number } | null;
+  first_log_sample: { topics: string[]; transactionHash: string } | null;
+  rpc_errors: Array<{ chunk: string; error: string }>;
+};
+
+async function getLogsWithDiagnostics(
   apiKey: string,
   fromBlock: string,
   toBlock: string,
-): Promise<Array<{ topics: string[]; transactionHash: string }>> {
-  // Resolve "latest" to a real block number
+): Promise<{ logs: Array<{ topics: string[]; transactionHash: string }>; diagnostic: LogsDiagnostic }> {
   let toNum: number;
   if (toBlock === "latest") {
     const blockNum = await rpc(apiKey, "eth_blockNumber", []);
@@ -167,9 +182,28 @@ async function getLogsWithPagination(
   }
   const fromNum = parseInt(fromBlock, 16);
 
+  const chunksPlanned = Math.ceil((toNum - fromNum + 1) / MAX_BLOCK_RANGE);
+  const diagnostic: LogsDiagnostic = {
+    registry_address: IDENTITY_REGISTRY,
+    topic_0: TRANSFER_TOPIC0,
+    topic_1_filter: ZERO_ADDRESS_TOPIC,
+    agent_id_from_topic_index: 2,
+    from_block_input: fromBlock,
+    from_block_num: fromNum,
+    latest_block: toNum,
+    chunks_planned: chunksPlanned,
+    chunks_scanned: 0,
+    total_logs_found: 0,
+    first_nonempty_chunk: null,
+    first_log_sample: null,
+    rpc_errors: [],
+  };
+
   const allLogs: Array<{ topics: string[]; transactionHash: string }> = [];
+
   for (let start = fromNum; start <= toNum; start += MAX_BLOCK_RANGE) {
     const end = Math.min(start + MAX_BLOCK_RANGE - 1, toNum);
+    const chunkLabel = `0x${start.toString(16)}–0x${end.toString(16)}`;
     try {
       const result = await rpc(apiKey, "eth_getLogs", [{
         address: IDENTITY_REGISTRY,
@@ -178,22 +212,36 @@ async function getLogsWithPagination(
         toBlock:   "0x" + end.toString(16),
       }]);
       const chunk = result as typeof allLogs;
-      allLogs.push(...chunk);
-    } catch {
-      // skip failed chunk, continue
+      diagnostic.chunks_scanned++;
+      if (chunk.length > 0) {
+        diagnostic.total_logs_found += chunk.length;
+        if (!diagnostic.first_nonempty_chunk) {
+          diagnostic.first_nonempty_chunk = { from: "0x" + start.toString(16), to: "0x" + end.toString(16), count: chunk.length };
+          diagnostic.first_log_sample = chunk[0];
+        }
+        allLogs.push(...chunk);
+      }
+    } catch (e) {
+      diagnostic.rpc_errors.push({ chunk: chunkLabel, error: e instanceof Error ? e.message : String(e) });
     }
   }
-  return allLogs;
+
+  return { logs: allLogs, diagnostic };
 }
+
+export type FetchErc8004Result = {
+  agents: Erc8004RawAgent[];
+  diagnostic: LogsDiagnostic;
+};
 
 export async function fetchAllErc8004Agents(
   apiKey: string,
   fromBlock: string = "0xE4E1C0",
   toBlock: string = "latest",
-): Promise<Erc8004RawAgent[]> {
-  const logs = await getLogsWithPagination(apiKey, fromBlock, toBlock);
+): Promise<FetchErc8004Result> {
+  const { logs, diagnostic } = await getLogsWithDiagnostics(apiKey, fromBlock, toBlock);
 
-  // Deduplicate by agentId — last log wins (highest block = most recent mint event)
+  // Deduplicate by agentId
   const seen = new Map<string, string>();
   for (const log of logs) {
     if (!log.topics[2]) continue;
@@ -218,7 +266,7 @@ export async function fetchAllErc8004Agents(
     }
   }
 
-  return results;
+  return { agents: results, diagnostic };
 }
 
 export async function fetchErc8004AgentsByIds(

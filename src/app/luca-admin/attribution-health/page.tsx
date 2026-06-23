@@ -22,6 +22,19 @@ const CONF_META: Record<AttributionConfidence, { label: string; color: string }>
 
 type SortKey = "name" | "status" | "wallets" | "roles" | "confidence";
 
+function getAttributionBadge(agent: AgentAttributionHealth) {
+  if (agent.attribution_tier === "manifest_attributed") {
+    return { label: "Books Eligible", color: "#22c55e" };
+  }
+  if (agent.manifest_status === "manifest") {
+    return { label: "Manifest Invalid", color: "#ef4444" };
+  }
+  if (agent.attribution_tier === "discovered") {
+    return { label: "Discovered", color: "#f59e0b" };
+  }
+  return { label: "Unattributed", color: "#6b7280" };
+}
+
 function sortAgents(agents: AgentAttributionHealth[], key: SortKey, dir: 1 | -1) {
   const STATUS_RANK: Record<ManifestStatus, number> = { manifest: 0, admin: 1, inferred: 2, none: 3 };
   const CONF_RANK: Record<AttributionConfidence, number> = { high: 0, medium: 1, low: 2, unattributed: 3 };
@@ -121,37 +134,29 @@ export default function AttributionHealthAdminPage() {
               ))}
             </div>
 
-            {/* Progress bar */}
+            {/* Attribution breakdown */}
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", display: "flex", marginBottom: 12 }}>
-                {([
-                  { status: "manifest" as ManifestStatus, count: metrics.status_breakdown.manifest, opacity: 1 },
-                  { status: "admin"    as ManifestStatus, count: metrics.status_breakdown.admin_attributed, opacity: 0.7 },
-                  { status: "inferred" as ManifestStatus, count: metrics.status_breakdown.inferred, opacity: 0.5 },
-                ] as const).map(({ status, count, opacity }) => (
-                  <div
-                    key={status}
-                    style={{ width: `${(count / metrics.total_agents) * 100}%`, background: STATUS_META[status].color, opacity }}
-                  />
-                ))}
+                <div style={{ width: `${(metrics.tier_breakdown.manifest_attributed / metrics.total_agents) * 100}%`, background: "#22c55e" }} />
+                <div style={{ width: `${(metrics.tier_breakdown.discovered / metrics.total_agents) * 100}%`, background: "#f59e0b" }} />
+                <div style={{ width: `${(metrics.tier_breakdown.unattributed / metrics.total_agents) * 100}%`, background: "#6b7280" }} />
               </div>
-              <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                {(["manifest", "admin_attributed", "inferred", "none"] as const).map((k) => {
-                  const statusKey = k === "admin_attributed" ? "admin" : k === "none" ? "none" : k;
-                  const count = metrics.status_breakdown[k];
-                  const meta  = STATUS_META[statusKey as ManifestStatus];
-                  return (
-                    <button
-                      key={k}
-                      onClick={() => setFilter(filter === statusKey ? "all" : statusKey as ManifestStatus)}
-                      style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, opacity: filter !== "all" && filter !== statusKey ? 0.5 : 1 }}
-                    >
-                      <span style={{ width: 8, height: 8, borderRadius: "50%", background: meta.color }} />
-                      <span style={{ fontSize: 12, color: "var(--muted)" }}>{meta.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{count}</span>
-                    </button>
-                  );
-                })}
+              <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+                {([
+                  { label: "Books-eligible agents", count: metrics.tier_breakdown.manifest_attributed, color: "#22c55e" },
+                  { label: "Discovered",            count: metrics.tier_breakdown.discovered,            color: "#f59e0b" },
+                  { label: "Unattributed",          count: metrics.tier_breakdown.unattributed,          color: "#6b7280" },
+                ] as const).map(({ label, count, color }) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />
+                    <span style={{ fontSize: 12, color: "var(--muted)" }}>{label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{count}</span>
+                  </div>
+                ))}
+                <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: "auto", borderLeft: "1px solid var(--line)", paddingLeft: 16 }}>
+                  Manifest-tagged agents: <strong>{metrics.manifest_agents}</strong>
+                  {" "}({metrics.manifest_agents - metrics.tier_breakdown.manifest_attributed} have manifest wallets but none are books-eligible)
+                </span>
               </div>
             </div>
 
@@ -187,7 +192,7 @@ export default function AttributionHealthAdminPage() {
                 </thead>
                 <tbody>
                   {visible.map((agent, i) => {
-                    const sMeta = STATUS_META[agent.manifest_status];
+                    const sMeta = getAttributionBadge(agent);
                     const cMeta = CONF_META[agent.confidence];
                     return (
                       <tr
