@@ -250,7 +250,7 @@ function buildFallbackBody(
   }
 
   paragraphs.push(
-    `${unattributed} of ${gdp.total_agents} indexed agents remain unattributed — no declared wallet manifest on file. These agents are excluded from all financial figures. Agent GDP expands as attribution coverage improves. Operators can submit a wallet manifest at x402books.xyz/registry to be included in future reports.`,
+    `${unattributed} of ${gdp.total_agents} indexed agents remain unattributed — no declared wallet manifest on file. These agents are excluded from all financial figures. Agent GDP expands as attribution coverage improves. Operators can submit a wallet manifest at zettaai.co/registry to be included in future reports.`,
   );
 
   return paragraphs.join("\n\n");

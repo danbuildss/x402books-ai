@@ -25,14 +25,14 @@ type CodeTab = (typeof CODE_TABS)[number];
 
 const CODE_SAMPLES: Record<CodeTab, string> = {
   "Node.js": `// Fetch live registry stats (no auth)
-const res = await fetch('https://www.x402books.xyz/api/stats');
+const res = await fetch('https://www.zettaai.co/api/stats');
 const stats = await res.json();
 console.log(stats.agents_indexed);      // 125
 console.log(stats.wallets_declared_or_above); // 15
 
 // Fetch treasury health (API key)
 const state = await fetch(
-  'https://www.x402books.xyz/api/v1/agent-financial-state?wallet=0x...&range=30d',
+  'https://www.zettaai.co/api/v1/agent-financial-state?wallet=0x...&range=30d',
   { headers: { 'Authorization': 'Bearer xb_live_...' } }
 );
 const data = await state.json();
@@ -40,13 +40,13 @@ console.log(data.financial_health.budget_status);`,
   Python: `import requests
 
 # Fetch live registry stats (no auth)
-stats = requests.get('https://www.x402books.xyz/api/stats').json()
+stats = requests.get('https://www.zettaai.co/api/stats').json()
 print(stats['agents_indexed'])          # 125
 print(stats['wallets_declared_or_above']) # 15
 
 # Fetch treasury health (API key)
 state = requests.get(
-    'https://www.x402books.xyz/api/v1/agent-financial-state',
+    'https://www.zettaai.co/api/v1/agent-financial-state',
     params={'wallet': '0x...', 'range': '30d'},
     headers={'Authorization': 'Bearer xb_live_...'}
 ).json()

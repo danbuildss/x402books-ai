@@ -205,7 +205,7 @@ export default function DeveloperPage() {
             color: "var(--muted)",
             background: "var(--surface-soft)",
           }}>
-            Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://x402books.xyz/api/v1</code>
+            Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://www.zettaai.co/api/v1</code>
           </div>
         </div>
       </section>

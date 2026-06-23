@@ -20,7 +20,7 @@ export async function generateMetadata({
   const report = await getReportBySlug(slug);
   if (!report) return { title: "Report not found — Zetta" };
 
-  const ogUrl = new URL("https://www.x402books.xyz/api/og/report");
+  const ogUrl = new URL("https://www.zettaai.co/api/og/report");
   ogUrl.searchParams.set("title", report.title);
   if (report.summary) ogUrl.searchParams.set("summary", report.summary.slice(0, 200));
   if (report.agent_gdp_usd != null) ogUrl.searchParams.set("gdp", String(report.agent_gdp_usd));
@@ -35,7 +35,7 @@ export async function generateMetadata({
     openGraph: {
       title: report.title,
       description: desc,
-      url: `https://www.x402books.xyz/research/${slug}`,
+      url: `https://www.zettaai.co/research/${slug}`,
       siteName: "Zetta",
       images: [{ url: ogUrl.toString(), width: 1200, height: 630 }],
     },

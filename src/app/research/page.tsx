@@ -83,8 +83,8 @@ export default async function ResearchPage() {
                 Luca is analyzing Agent GDP data. Follow @Zetta for the first State of the Agent Economy report.
               </p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <a href="https://x.com/x402Books" target="_blank" rel="noreferrer" className="lp-btn-primary">Follow on X →</a>
-                <a href="https://t.me/x402books" target="_blank" rel="noreferrer" className="lp-btn-ghost">Telegram</a>
+                <a href="https://x.com/zettaaidotco" target="_blank" rel="noreferrer" className="lp-btn-primary">Follow on X →</a>
+                <a href="https://t.me/asklucaai" target="_blank" rel="noreferrer" className="lp-btn-ghost">Telegram</a>
               </div>
             </div>
           )}

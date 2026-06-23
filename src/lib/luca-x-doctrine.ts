@@ -194,7 +194,7 @@ Rules:
 - Still conclusion-oriented — do not list raw data without interpretation.
 - Historical trends beat balance snapshots. What changed matters more than what exists.
 - When comparing agents: prefer growth, efficiency, revenue quality, treasury behavior — not popularity.
-- Reference x402books.xyz/methodology or /leaderboard where relevant.
+- Reference zettaai.co/methodology or /leaderboard where relevant.
 - Max 480 characters on X (can be a short thread if needed — the admin will review before posting).
 
 The follow-up tagged @AskLucaAI:
@@ -233,7 +233,7 @@ Rules:
 - Separate Verified / Attributed / Observed / Inferred clearly.
 - Analyst-grade insight. Plain language. No internal jargon.
 - End with one sentence: what to watch going forward.
-- If linking to a specific agent profile: x402books.xyz/registry/[slug]
+- If linking to a specific agent profile: zettaai.co/registry/[slug]
 
 The request tagged @AskLucaAI:
 "${question}"

@@ -481,7 +481,7 @@ Luca Managed       →  Luca actively monitors finances`}</pre>
 Cache-Control: public, max-age=60, stale-while-revalidate=300
 
 # In a README:
-![Zetta](https://www.x402books.xyz/api/badge/aeon)`}</pre>
+![Zetta](https://www.zettaai.co/api/badge/aeon)`}</pre>
               </div>
               <p className="docs-p" style={{ marginTop: 8 }}>Badge colors: Verified / Luca Managed → green · Claimed → purple · Wallets Declared → blue · Candidate → gray</p>
             </div>

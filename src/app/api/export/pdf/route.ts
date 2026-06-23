@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     const footerY = doc.page.height - 36;
     doc.rect(0, footerY, doc.page.width, 36).fillColor(DARK).fill();
     doc.fillColor("#9CA6A0").font("Helvetica").fontSize(8)
-      .text("Zetta AI · Onchain financial intelligence for Base USDC · x402books.ai", 48, footerY + 14, { width: W, align: "center" });
+      .text("Zetta AI · Onchain financial intelligence for Base USDC · zettaai.co", 48, footerY + 14, { width: W, align: "center" });
 
     doc.end();
   });

@@ -614,7 +614,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
     try {
       const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
       const link = document.createElement("a");
-      link.download = `${slug}-x402books.png`;
+      link.download = `${slug}-zettaai.png`;
       link.href = dataUrl;
       link.click();
     } finally {
@@ -624,7 +624,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
 
   const shareToX = useCallback(() => {
     const text = `${agent.name} · Status: ${vstatus} — tracked by Zetta`;
-    const url  = `https://www.x402books.xyz/registry/${slug}`;
+    const url  = `https://www.zettaai.co/registry/${slug}`;
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
       "_blank",
@@ -734,7 +734,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
               ))}
             </div>
             <span style={{ fontSize: "0.66rem", color: "#b0a990" }}>
-              x402books.xyz/registry/{slug}
+              zettaai.co/registry/{slug}
             </span>
           </div>
         </div>

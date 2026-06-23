@@ -7,7 +7,7 @@ export const AGENTS: Agent[] = [
     symbol: "$LUCA",
     ecosystem: "Base",
     xHandle: "@AskLucaAI",
-    website: "https://www.x402books.xyz",
+    website: "https://www.zettaai.co",
     bankrProfile: null,
     tokenAddress: "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3",
     wallets: [

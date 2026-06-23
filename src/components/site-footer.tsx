@@ -31,9 +31,9 @@ export function SiteFooter() {
           </div>
           <div>
             <h4>Company</h4>
-            <a href="https://x.com/x402Books" target="_blank" rel="noreferrer">X</a>
-            <a href="https://t.me/x402books" target="_blank" rel="noreferrer">Telegram</a>
-            <a href="mailto:contact@x402books.xyz">Contact</a>
+            <a href="https://x.com/zettaaidotco" target="_blank" rel="noreferrer">X</a>
+            <a href="https://t.me/asklucaai" target="_blank" rel="noreferrer">Telegram</a>
+            <a href="mailto:contact@zettaai.co">Contact</a>
           </div>
         </div>
       </div>

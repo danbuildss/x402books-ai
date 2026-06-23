@@ -28,9 +28,9 @@ const ITEMS: NavItem[] = [
   {
     label: "Company",
     links: [
-      { label: "X / Twitter", href: "https://x.com/x402Books" },
-      { label: "Telegram", href: "https://t.me/x402books" },
-      { label: "Contact", href: "mailto:contact@x402books.xyz" },
+      { label: "X / Twitter", href: "https://x.com/zettaaidotco" },
+      { label: "Telegram", href: "https://t.me/asklucaai" },
+      { label: "Contact", href: "mailto:contact@zettaai.co" },
     ],
   },
 ];

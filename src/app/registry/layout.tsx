@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Agent Financial Registry — Zetta",
     description:
       "10+ agent wallets tracked. Wallet roles, confidence labels, treasury health scores, and Luca-powered audit examples.",
-    url: "https://x402books.xyz/registry",
+    url: "https://www.zettaai.co/registry",
     siteName: "Zetta",
     type: "website",
   },

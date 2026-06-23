@@ -8,7 +8,7 @@ import { CardNav } from "@/components/card-nav";
 
 const SOCIAL = [
   {
-    href: "https://x.com/x402Books",
+    href: "https://x.com/zettaaidotco",
     label: "X (Twitter)",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -17,7 +17,7 @@ const SOCIAL = [
     ),
   },
   {
-    href: "https://t.me/x402books",
+    href: "https://t.me/asklucaai",
     label: "Telegram",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

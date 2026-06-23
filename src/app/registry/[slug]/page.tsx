@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: `${agent.name} — Agent Books · Zetta`,
       description: desc,
-      url: `https://www.x402books.xyz/registry/${slug}`,
+      url: `https://www.zettaai.co/registry/${slug}`,
       siteName: "Zetta",
     },
     twitter: {

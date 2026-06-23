@@ -26,7 +26,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.x402books.xyz"),
+  metadataBase: new URL("https://www.zettaai.co"),
   title: "Zetta",
   description:
     "Financial Intelligence for the Agent Economy. Understand how autonomous agents earn, spend, grow, and operate.",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Zetta",
     description: "Financial Intelligence for the Agent Economy.",
-    url: "https://www.x402books.xyz",
+    url: "https://www.zettaai.co",
     siteName: "Zetta",
     type: "website",
   },
