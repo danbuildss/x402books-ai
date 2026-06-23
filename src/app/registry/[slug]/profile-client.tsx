@@ -80,6 +80,21 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </section>
       );
     }
+    if (books.reason === "financials_under_review") {
+      return (
+        <section className="prof-section" style={{ borderLeft: "3px solid #6b7280", paddingLeft: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "#6b728018", border: "1px solid #6b728040", color: "#6b7280", letterSpacing: "0.02em" }}>
+              Under Review
+            </span>
+          </div>
+          <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 0 }}>
+            {(books as AgentBooksUnattributed).message ?? "Financial figures are being verified with the agent team. Updated numbers will be published once attribution and classification are confirmed."}
+          </p>
+        </section>
+      );
+    }
     return (
       <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>

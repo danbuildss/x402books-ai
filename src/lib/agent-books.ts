@@ -211,6 +211,18 @@ export async function invalidateBooksCache(slug: string, period = "30d"): Promis
   await sb.from("agent_books_cache").delete().eq("agent_slug", slug).eq("period", period);
 }
 
+// Invalidate ALL periods for a given agent — used after wallet eligibility changes
+// or when manually purging a stale/incorrect cache entry (e.g., post-PR fix).
+export async function invalidateAllBooksCache(slug: string): Promise<void> {
+  // Clear in-memory for all known periods
+  for (const period of ["7d", "14d", "30d", "90d"]) {
+    BOOKS_CACHE.delete(`${slug}:${period}`);
+  }
+  if (!hasSupabaseAdminEnv()) return;
+  const sb = getSupabaseAdminClient();
+  await sb.from("agent_books_cache").delete().eq("agent_slug", slug);
+}
+
 // ── Internal computation ──────────────────────────────────────────────────────
 
 async function computeAgentBooks(
