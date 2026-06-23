@@ -22,6 +22,7 @@ import {
   type TimeRange,
 } from "@/lib/ledger";
 import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
+import { getConfidenceLabel } from "@/lib/revenue-confidence";
 import {
   isBridgeContract,
   isDexRouter,
@@ -162,25 +163,41 @@ export async function buildAgentBooks(
   const cached = BOOKS_CACHE.get(cacheKey);
   if (cached && cached.expires > Date.now()) return cached.data;
 
-  // Check persistent DB cache before running a live Alchemy scan.
-  // Validate before serving: if the cached result claims attributed: true but
-  // the agent no longer has manifest-declared wallets, the cache is stale and
-  // must be bypassed so the strict filter runs immediately.
-  const hasManifestWallets = (agent.wallets ?? []).some(
-    (w) => (w.evidenceSource ?? "").toLowerCase() === "manifest",
-  );
+  // Check confidence label — if under_review, suppress all financials immediately.
+  // This ensures GDP, leaderboard, and API all see attributed:false.
+  const confidenceLabel = await getConfidenceLabel(slug);
+  if (confidenceLabel?.confidence_level === "under_review") {
+    const underReview: AgentBooksUnattributed = {
+      agent: { slug, name: agent.name, ecosystem: agent.ecosystem },
+      attributed: false,
+      reason: "financials_under_review",
+      message: confidenceLabel.public_note ?? "Financial figures are being verified. Updated numbers will be published once wallet attribution and transaction classification are confirmed.",
+    };
+    // Short TTL for under-review — re-check every 5 minutes so lifting the flag takes effect quickly.
+    BOOKS_CACHE.set(cacheKey, { expires: Date.now() + 5 * 60 * 1000, data: underReview });
+    return underReview;
+  }
+
+  // Validate DB cache before serving: stale if attributed wallets changed.
+  // Old check only caught "no manifest wallets". New check also catches wallet-count changes.
+  const currentEligibleCount = (agent.wallets ?? []).filter(
+    (w) => isBooksEligibleWallet(w, agent.tokenAddress).eligible,
+  ).length;
   const dbCached = await getDbCachedBooks(slug, period);
   if (dbCached) {
-    const cacheStale = dbCached.attributed && !hasManifestWallets;
+    const cachedAnalyzed = dbCached.attributed ? (dbCached as AgentBooks).wallets.analyzed : 0;
+    const cacheStale =
+      (dbCached.attributed && currentEligibleCount === 0) ||
+      (dbCached.attributed && cachedAnalyzed !== currentEligibleCount);
     if (!cacheStale) {
       BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data: dbCached });
       return dbCached;
     }
+    // Cache is stale — fall through to fresh computation
   }
 
   const data = await computeAgentBooks(agent, period, slug);
   BOOKS_CACHE.set(cacheKey, { expires: Date.now() + BOOKS_CACHE_TTL, data });
-  // Persist to DB cache (fire-and-forget)
   setDbCachedBooks(slug, period, data).catch(() => {});
   return data;
 }
