@@ -68,7 +68,10 @@ export async function POST(req: NextRequest) {
   const sessionValue = signSession(secret);
   const isProd = process.env.NODE_ENV === "production";
 
-  const response = NextResponse.json({ ok: true });
+  // Return the internal secret as the session token so sub-pages can use it
+  // directly as a Bearer token against internalAuth(). LUCA_ADMIN_PASSWORD and
+  // X402BOOKS_INTERNAL_SECRET may differ; returning the secret here bridges them.
+  const response = NextResponse.json({ ok: true, token: secret });
   response.cookies.set("x402-admin-session", sessionValue, {
     httpOnly: true,
     secure: isProd,
