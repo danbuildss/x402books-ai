@@ -95,7 +95,7 @@ export default function ApiPage() {
             </p>
             <div style={{ display: "flex", gap: "8px" }}>
               <a
-                href="https://github.com/danbuildss/x402books-ai"
+                href="https://github.com/danbuildss/zetta"
                 target="_blank"
                 rel="noreferrer"
                 className="stitch-primary"

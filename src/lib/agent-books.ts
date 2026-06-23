@@ -783,7 +783,7 @@ export async function buildAgentBooksAudit(
   const internalUsd          = internalAudit.reduce((s, tx) => s + tx.amount_usd, 0);
 
   const aeonDiffNotes = [
-    `x402Books operating revenue ($${round(operatingRevenueUsd).toLocaleString()}) = gross inflows ($${round(grossInflowUsd).toLocaleString()}) minus quarantined ($${round(quarantinedUsd).toLocaleString()}).`,
+    `Zetta operating revenue ($${round(operatingRevenueUsd).toLocaleString()}) = gross inflows ($${round(grossInflowUsd).toLocaleString()}) minus quarantined ($${round(quarantinedUsd).toLocaleString()}).`,
     `DEX swaps ($${round(dexUsd).toLocaleString()} across ${dexAudit.length} tx(s)) are excluded from all revenue and expense calculations.`,
     `Bridge transfers excluded; $${round(bridgeInflowUsd).toLocaleString()} in inbound bridge receipts were not counted as revenue.`,
     `${internalTxs.length} internal transfer(s) between this agent's declared wallets removed (treasury movement).`,
