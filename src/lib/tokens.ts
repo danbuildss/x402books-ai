@@ -5,6 +5,27 @@ export const STABLECOIN_ADDRESSES = new Set([
   "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42", // EURC on Base
 ]);
 
+// Tokens tracked in x402Books financial calculations.
+// Only ETH (native), WETH, USDC, USDT, and the agent's own project token count.
+// All other ERC-20s (memecoins, LP tokens, misc) are excluded to prevent GDP inflation.
+export const WETH_BASE = "0x4200000000000000000000000000000000000006";
+
+export const BOOKS_TRACKED_TOKENS = new Set([
+  WETH_BASE,
+  "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // USDC on Base
+  "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2", // USDT on Base
+]);
+
+// Returns true if a tokenAddress is tracked for books/GDP calculations.
+// Pass agentTokenAddress to also allow the agent's own project token.
+export function isBooksTrackedToken(tokenAddress: string | null | undefined, agentTokenAddress?: string | null): boolean {
+  if (!tokenAddress) return true; // null/undefined = native ETH transfer
+  const addr = tokenAddress.toLowerCase();
+  if (BOOKS_TRACKED_TOKENS.has(addr)) return true;
+  if (agentTokenAddress && addr === agentTokenAddress.toLowerCase()) return true;
+  return false;
+}
+
 export const LUCA_TOKEN_ADDRESS = "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3";
 
 // Fallback agent token symbols used before live registry loads
