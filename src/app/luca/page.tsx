@@ -462,6 +462,40 @@ export default function LucaPage() {
         </div>
       </section>
 
+      {/* ── Luca Skills ── */}
+      <section className="lp-section lp-section-alt" id="skills">
+        <div className="lp-section-head">
+          <p className="lp-section-label">API</p>
+          <h2 className="lp-h2">Luca Skills.</h2>
+          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
+            Seven callable financial intelligence endpoints. Plug Luca directly into your agent, dashboard, or workflow.
+            Each skill enforces strict data integrity — no synthetic numbers, no attribution without a manifest.
+          </p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 28 }}>
+          {[
+            { name: "Wallet Audit",         desc: "Classify any address and check books-eligibility" },
+            { name: "Agent Books",           desc: "Full P&L: revenue, expenses, net income, margin" },
+            { name: "Treasury Monitor",      desc: "Live stablecoin balances and health signal" },
+            { name: "Revenue Analysis",      desc: "Gross inflow vs operating revenue breakdown" },
+            { name: "Registry Check",        desc: "Look up any agent by slug, name, or address" },
+            { name: "Luca Report",           desc: "Full composite: identity + books + treasury + narrative" },
+            { name: "B20 Token Analysis",    desc: "Token identity, issuer, activity, financial readiness" },
+          ].map((skill) => (
+            <div key={skill.name} style={{
+              background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px",
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 5 }}>{skill.name}</div>
+              <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{skill.desc}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <Link href="/docs/luca-skills" className="lp-btn-primary">View Luca Skills API →</Link>
+          <Link href="/developer" className="lp-btn-ghost">Get API Key</Link>
+        </div>
+      </section>
+
       {/* ── $LUCA Token ── */}
       <LucaTokenSection />
 
