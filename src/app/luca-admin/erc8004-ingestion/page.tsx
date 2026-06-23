@@ -65,7 +65,7 @@ export default function Erc8004IngestionPage() {
     if (secret) sessionStorage.setItem("luca_admin_secret", secret);
   }, [secret]);
   const [mode, setMode]         = useState<"contract" | "batch">("contract");
-  const [fromBlock, setFromBlock] = useState("0x0");
+  const [fromBlock, setFromBlock] = useState("0xE4E1C0");
   const [agentIdsText, setAgentIdsText] = useState("");
   const [dryRun, setDryRun]     = useState(true);
   const [loading, setLoading]   = useState(false);
@@ -79,7 +79,7 @@ export default function Erc8004IngestionPage() {
 
     const body: Record<string, unknown> = { mode, dryRun };
     if (mode === "contract") {
-      body.fromBlock = fromBlock || "0x0";
+      body.fromBlock = fromBlock || "0xE4E1C0";
     } else {
       body.agentIds = agentIdsText
         .split(/[\n,\s]+/)
@@ -158,7 +158,7 @@ export default function Erc8004IngestionPage() {
               <input
                 value={fromBlock}
                 onChange={(e) => setFromBlock(e.target.value)}
-                placeholder="0x0"
+                placeholder="0xE4E1C0"
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 200, fontFamily: "var(--font-mono)" }}
               />
             </div>
@@ -233,6 +233,14 @@ export default function Erc8004IngestionPage() {
                 ERC-8004 → Discovery → Identity → Reputation → Validation → Attribution → Financial Intelligence
               </div>
             </div>
+
+            {report.summary.total_discovered === 0 && (
+              <div style={{ background: "#f59e0b18", border: "1px solid #f59e0b", borderRadius: 8, padding: "10px 14px", marginBottom: 16, color: "#f59e0b", fontSize: 13 }}>
+                <span style={{ fontWeight: 700 }}>&#9888; 0 agents discovered.</span>{" "}
+                The contract scan may have scanned a block range with no mints.
+                Try: (1) set fromBlock closer to deployment block ~15,000,000 (0xE4E1C0), or (2) use batch mode with known agent IDs.
+              </div>
+            )}
 
             {/* 7 Coverage KPIs */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 10, marginBottom: 24 }}>

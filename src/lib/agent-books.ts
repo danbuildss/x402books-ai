@@ -21,6 +21,7 @@ import {
   type LedgerTransaction,
   type TimeRange,
 } from "@/lib/ledger";
+import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
 import {
   isBridgeContract,
   isDexRouter,
@@ -204,23 +205,7 @@ async function computeAgentBooks(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    // Rule: only manifest-declared wallets produce attributed books.
-    // Wallets with no evidenceSource (legacy, admin, inferred, erc8004) are excluded.
-    // Only explicitly evidenceSource: "manifest" wallets scan and produce books.
-    const src = (w.evidenceSource ?? "").toLowerCase();
-    if (src !== "manifest") return false;
-    // Rule: token contract addresses must never be scanned as operational wallets.
-    if (
-      agent.tokenAddress &&
-      w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
-    ) return false;
-    // Rule: exclude wallets classified as contracts (token, smart, proxy).
-    const atype = (w.address_type ?? "").toLowerCase();
-    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
-    // Legacy: exclude by role label
-    const role = (w.role ?? "").toLowerCase();
-    if (role === "token_contract" || role === "token") return false;
-    return true;
+    return isBooksEligibleWallet(w, agent.tokenAddress).eligible;
   });
   if (declared.length === 0) {
     return {
@@ -619,21 +604,7 @@ export async function buildAgentBooksAudit(
 
   const declared = (agent.wallets ?? []).filter((w) => {
     if (!isValidWalletAddress(w.address)) return false;
-    // Rule: only manifest-declared wallets produce attributed books.
-    const src = (w.evidenceSource ?? "").toLowerCase();
-    if (src !== "manifest") return false;
-    // Rule: token contract addresses must never be scanned as operational wallets.
-    if (
-      agent.tokenAddress &&
-      w.address.toLowerCase() === agent.tokenAddress.toLowerCase()
-    ) return false;
-    // Rule: exclude wallets classified as contracts (token, smart, proxy).
-    const atype = (w.address_type ?? "").toLowerCase();
-    if (atype === "token_contract" || atype === "smart_contract" || atype === "proxy_contract") return false;
-    // Legacy: exclude by role label
-    const role = (w.role ?? "").toLowerCase();
-    if (role === "token_contract" || role === "token") return false;
-    return true;
+    return isBooksEligibleWallet(w, agent.tokenAddress).eligible;
   });
 
   if (declared.length === 0) return { error: "No manifest-declared wallets found. Only wallets declared via .agent/wallets.json produce attributed books." };

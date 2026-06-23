@@ -150,23 +150,48 @@ async function fetchAgentDetails(
   };
 }
 
+const MAX_BLOCK_RANGE = 50_000;
+
+async function getLogsWithPagination(
+  apiKey: string,
+  fromBlock: string,
+  toBlock: string,
+): Promise<Array<{ topics: string[]; transactionHash: string }>> {
+  // Resolve "latest" to a real block number
+  let toNum: number;
+  if (toBlock === "latest") {
+    const blockNum = await rpc(apiKey, "eth_blockNumber", []);
+    toNum = parseInt(blockNum as string, 16);
+  } else {
+    toNum = parseInt(toBlock, 16);
+  }
+  const fromNum = parseInt(fromBlock, 16);
+
+  const allLogs: Array<{ topics: string[]; transactionHash: string }> = [];
+  for (let start = fromNum; start <= toNum; start += MAX_BLOCK_RANGE) {
+    const end = Math.min(start + MAX_BLOCK_RANGE - 1, toNum);
+    try {
+      const result = await rpc(apiKey, "eth_getLogs", [{
+        address: IDENTITY_REGISTRY,
+        topics: [TRANSFER_TOPIC0, ZERO_ADDRESS_TOPIC],
+        fromBlock: "0x" + start.toString(16),
+        toBlock:   "0x" + end.toString(16),
+      }]);
+      const chunk = result as typeof allLogs;
+      allLogs.push(...chunk);
+    } catch {
+      // skip failed chunk, continue
+    }
+  }
+  return allLogs;
+}
+
 export async function fetchAllErc8004Agents(
   apiKey: string,
-  fromBlock: string = "0x0",
+  fromBlock: string = "0xE4E1C0",
   toBlock: string = "latest",
 ): Promise<Erc8004RawAgent[]> {
-  let logs: Array<{ topics: string[]; transactionHash: string }>;
-  try {
-    const result = await rpc(apiKey, "eth_getLogs", [{
-      address: IDENTITY_REGISTRY,
-      topics: [TRANSFER_TOPIC0, ZERO_ADDRESS_TOPIC],
-      fromBlock,
-      toBlock,
-    }]);
-    logs = result as typeof logs;
-  } catch {
-    return [];
-  }
+  const logs = await getLogsWithPagination(apiKey, fromBlock, toBlock);
 
   // Deduplicate by agentId — last log wins (highest block = most recent mint event)
   const seen = new Map<string, string>();
@@ -194,6 +219,18 @@ export async function fetchAllErc8004Agents(
   }
 
   return results;
+}
+
+export async function fetchErc8004AgentsByIds(
+  agentIds: string[],
+  apiKey: string,
+): Promise<Erc8004RawAgent[]> {
+  const settled = await Promise.allSettled(
+    agentIds.map((id) => fetchAgentDetails(BigInt(id), null, apiKey)),
+  );
+  return settled
+    .filter((s): s is PromiseFulfilledResult<Erc8004RawAgent> => s.status === "fulfilled")
+    .map((s) => s.value);
 }
 
 export async function fetchErc8004AgentById(

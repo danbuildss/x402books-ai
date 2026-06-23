@@ -14,7 +14,8 @@
 
 import { getRegistryAgents } from "@/lib/registry-db";
 import { toSlug } from "@/app/registry/[slug]/slug";
-import type { Agent, AgentWallet } from "@/app/registry/types";
+import type { Agent } from "@/app/registry/types";
+import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,35 +92,6 @@ export type AttributionMetrics = {
 
 const REVENUE_ROLES = new Set(["fee", "operator", "revenue", "payment_receiver"]);
 const TREASURY_ROLES = new Set(["treasury"]);
-const CONTRACT_TYPES = new Set([
-  "token_contract",
-  "smart_contract",
-  "proxy_contract",
-  "vault",
-]);
-
-function isBooksEligible(w: AgentWallet, agentTokenAddress: string | null): {
-  eligible: boolean;
-  reason: string | null;
-} {
-  const src = (w.evidenceSource ?? "").toLowerCase();
-  const atype = (w.address_type ?? "").toLowerCase();
-  const role = (w.role ?? "").toLowerCase();
-
-  if (src !== "manifest") {
-    return { eligible: false, reason: `evidenceSource=${src || "empty"} — only manifest wallets produce books` };
-  }
-  if (agentTokenAddress && w.address.toLowerCase() === agentTokenAddress.toLowerCase()) {
-    return { eligible: false, reason: "address matches agent token contract" };
-  }
-  if (CONTRACT_TYPES.has(atype)) {
-    return { eligible: false, reason: `address_type=${atype} — contracts are not operator wallets` };
-  }
-  if (role === "token_contract" || role === "token") {
-    return { eligible: false, reason: `role=${role} — not an operator wallet` };
-  }
-  return { eligible: true, reason: null };
-}
 
 function walletManifestStatus(agent: Agent): ManifestStatus {
   const wallets = agent.wallets ?? [];
@@ -150,7 +122,7 @@ function buildWalletDetail(agent: Agent): WalletAttributionRow[] {
       src === "admin" || src === "luca" || src === "inferred" ? "discovered" :
       "unknown";
 
-    const { eligible, reason } = isBooksEligible(w, agent.tokenAddress);
+    const { eligible, reason } = isBooksEligibleWallet(w, agent.tokenAddress);
 
     return {
       address: w.address,
@@ -235,9 +207,7 @@ export async function getAttributionMetrics(): Promise<AttributionMetrics> {
   const walletsWithRoles = agentHealths.reduce((s, h) => s + h.wallets_with_roles, 0);
 
   const allWalletDetails = agentHealths.flatMap((h) => h.wallet_detail);
-  const contractWallets = allWalletDetails.filter((w) =>
-    CONTRACT_TYPES.has((w.address_type ?? "").toLowerCase()),
-  ).length;
+  const contractWallets = allWalletDetails.filter((w) => !w.is_books_eligible).length;
   const discoveredWallets = allWalletDetails.filter((w) => w.attribution === "discovered").length;
 
   const data: AttributionMetrics = {

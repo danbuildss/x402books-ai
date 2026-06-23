@@ -1,6 +1,7 @@
 import { getRegistryAgents } from "@/lib/registry-db";
 import { buildAgentBooks } from "@/lib/agent-books";
 import { toSlug } from "@/app/registry/[slug]/slug";
+import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
 
 export type AgentGDPEntry = {
   name: string;
@@ -42,9 +43,9 @@ export async function getAgentGDP(): Promise<AgentGDP> {
 
   const { agents } = await getRegistryAgents();
 
-  // Only agents with at least one manifest-declared wallet get books computed.
+  // Only agents with at least one books-eligible wallet get books computed.
   const withManifestWallets = agents.filter((a) =>
-    (a.wallets ?? []).some((w) => (w.evidenceSource ?? "").toLowerCase() === "manifest"),
+    (a.wallets ?? []).some((w) => isBooksEligibleWallet(w, a.tokenAddress).eligible),
   );
 
   const booksResults = await Promise.allSettled(
