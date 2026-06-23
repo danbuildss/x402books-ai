@@ -349,13 +349,14 @@ export function linkTokenToAgent(
       };
     }
 
-    // 3. candidate: issuer wallet appears in any agent's wallet list (not manifest)
+    // 3. candidate: issuer wallet appears in any agent's wallet list (not manifest-declared)
+    // method stays "none" — no confirmed link method exists until .agent/wallets.json is submitted
     const byWallet = agents.find((a) =>
       (a.wallets ?? []).some((w) => w.address.toLowerCase() === issuerLower),
     );
     if (byWallet) {
       return {
-        method: "manifest",
+        method: "none",
         confidence: "candidate",
         agentName: byWallet.name,
         agentSlug: toSlug(byWallet.name),
