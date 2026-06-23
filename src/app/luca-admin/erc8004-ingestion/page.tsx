@@ -40,18 +40,11 @@ type IngestionSummary = {
 
 type LogsDiagnostic = {
   registry_address: string;
-  topic_0: string;
-  topic_1_filter: string;
-  agent_id_from_topic_index: number;
+  method: string;
   from_block_input: string;
-  from_block_num: number;
-  latest_block: number;
-  chunks_planned: number;
-  chunks_scanned: number;
-  total_logs_found: number;
-  first_nonempty_chunk: { from: string; to: string; count: number } | null;
-  first_log_sample: { topics: string[]; transactionHash: string } | null;
-  rpc_errors: Array<{ chunk: string; error: string }>;
+  total_transfers_found: number;
+  pages_fetched: number;
+  rpc_errors: Array<{ page: number; error: string }>;
 };
 
 type IngestionReport = {
@@ -248,16 +241,12 @@ export default function Erc8004IngestionPage() {
             <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Scan Diagnostic</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, marginBottom: 12 }}>
               {[
-                { label: "Registry address",       value: errorDiagnostic.registry_address },
-                { label: "From block (input)",      value: errorDiagnostic.from_block_input },
-                { label: "From block (dec)",        value: errorDiagnostic.from_block_num.toLocaleString() },
-                { label: "Latest block",            value: errorDiagnostic.latest_block.toLocaleString() },
-                { label: "Blocks to scan",          value: (errorDiagnostic.latest_block - errorDiagnostic.from_block_num).toLocaleString() },
-                { label: "Chunks planned",          value: errorDiagnostic.chunks_planned },
-                { label: "Chunks scanned",          value: errorDiagnostic.chunks_scanned },
-                { label: "Total logs found",        value: errorDiagnostic.total_logs_found },
-                { label: "RPC errors",              value: errorDiagnostic.rpc_errors.length },
-                { label: "agentId from topics[N]",  value: errorDiagnostic.agent_id_from_topic_index },
+                { label: "Registry address",    value: errorDiagnostic.registry_address },
+                { label: "Method",              value: errorDiagnostic.method },
+                { label: "From block (input)",  value: errorDiagnostic.from_block_input },
+                { label: "Transfers found",     value: errorDiagnostic.total_transfers_found },
+                { label: "Pages fetched",       value: errorDiagnostic.pages_fetched },
+                { label: "RPC errors",          value: errorDiagnostic.rpc_errors.length },
               ].map(({ label, value }) => (
                 <div key={label} style={{ background: "var(--bg)", borderRadius: 6, padding: "8px 10px" }}>
                   <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 2 }}>{label}</div>
@@ -265,27 +254,11 @@ export default function Erc8004IngestionPage() {
                 </div>
               ))}
             </div>
-            {errorDiagnostic.first_nonempty_chunk && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>First non-empty chunk:</div>
-                <pre style={{ fontSize: 11, background: "var(--bg)", padding: 8, borderRadius: 4, overflow: "auto" }}>
-                  {JSON.stringify(errorDiagnostic.first_nonempty_chunk, null, 2)}
-                </pre>
-              </div>
-            )}
-            {errorDiagnostic.first_log_sample && (
-              <div style={{ marginBottom: 8 }}>
-                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>First log sample (raw topics):</div>
-                <pre style={{ fontSize: 11, background: "var(--bg)", padding: 8, borderRadius: 4, overflow: "auto" }}>
-                  {JSON.stringify(errorDiagnostic.first_log_sample, null, 2)}
-                </pre>
-              </div>
-            )}
             {errorDiagnostic.rpc_errors.length > 0 && (
               <div>
                 <div style={{ fontSize: 11, color: "#ef4444", marginBottom: 4 }}>RPC errors:</div>
                 {errorDiagnostic.rpc_errors.map((e, i) => (
-                  <div key={i} style={{ fontSize: 11, color: "#ef4444" }}>• {e.chunk}: {e.error}</div>
+                  <div key={i} style={{ fontSize: 11, color: "#ef4444" }}>• Page {e.page}: {e.error}</div>
                 ))}
               </div>
             )}

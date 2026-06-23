@@ -1,8 +1,6 @@
 const IDENTITY_REGISTRY = "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432";
 export const REPUTATION_REGISTRY  = "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63";
 const BASE_RPC = "https://base-mainnet.g.alchemy.com/v2";
-const TRANSFER_TOPIC0 = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
-const ZERO_ADDRESS_TOPIC = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 const SEL = {
   tokenURI:       "0xc87b56dd",
@@ -150,83 +148,74 @@ async function fetchAgentDetails(
   };
 }
 
-const MAX_BLOCK_RANGE = 50_000;
-
 export type LogsDiagnostic = {
   registry_address: string;
-  topic_0: string;
-  topic_1_filter: string;
-  agent_id_from_topic_index: number;
+  method: string;
   from_block_input: string;
-  from_block_num: number;
-  latest_block: number;
-  chunks_planned: number;
-  chunks_scanned: number;
-  total_logs_found: number;
-  first_nonempty_chunk: { from: string; to: string; count: number } | null;
-  first_log_sample: { topics: string[]; transactionHash: string } | null;
-  rpc_errors: Array<{ chunk: string; error: string }>;
+  total_transfers_found: number;
+  pages_fetched: number;
+  rpc_errors: Array<{ page: number; error: string }>;
 };
 
-async function getLogsWithDiagnostics(
+type AlchemyTransfer = {
+  tokenId?: string | null;
+  hash?: string;
+};
+
+type AlchemyTransfersResult = {
+  transfers?: AlchemyTransfer[];
+  pageKey?: string;
+};
+
+async function fetchMintTransfers(
   apiKey: string,
   fromBlock: string,
-  toBlock: string,
-): Promise<{ logs: Array<{ topics: string[]; transactionHash: string }>; diagnostic: LogsDiagnostic }> {
-  let toNum: number;
-  if (toBlock === "latest") {
-    const blockNum = await rpc(apiKey, "eth_blockNumber", []);
-    toNum = parseInt(blockNum as string, 16);
-  } else {
-    toNum = parseInt(toBlock, 16);
-  }
-  const fromNum = parseInt(fromBlock, 16);
-
-  const chunksPlanned = Math.ceil((toNum - fromNum + 1) / MAX_BLOCK_RANGE);
+): Promise<{ transfers: Array<{ tokenId: string; txHash: string }>; diagnostic: LogsDiagnostic }> {
   const diagnostic: LogsDiagnostic = {
     registry_address: IDENTITY_REGISTRY,
-    topic_0: TRANSFER_TOPIC0,
-    topic_1_filter: ZERO_ADDRESS_TOPIC,
-    agent_id_from_topic_index: 2,
+    method: "alchemy_getAssetTransfers",
     from_block_input: fromBlock,
-    from_block_num: fromNum,
-    latest_block: toNum,
-    chunks_planned: chunksPlanned,
-    chunks_scanned: 0,
-    total_logs_found: 0,
-    first_nonempty_chunk: null,
-    first_log_sample: null,
+    total_transfers_found: 0,
+    pages_fetched: 0,
     rpc_errors: [],
   };
 
-  const allLogs: Array<{ topics: string[]; transactionHash: string }> = [];
+  const results: Array<{ tokenId: string; txHash: string }> = [];
+  let pageKey: string | undefined;
+  let pageNum = 0;
 
-  for (let start = fromNum; start <= toNum; start += MAX_BLOCK_RANGE) {
-    const end = Math.min(start + MAX_BLOCK_RANGE - 1, toNum);
-    const chunkLabel = `0x${start.toString(16)}–0x${end.toString(16)}`;
+  do {
+    pageNum++;
+    const params: Record<string, unknown> = {
+      fromBlock,
+      toBlock: "latest",
+      fromAddress: "0x0000000000000000000000000000000000000000",
+      contractAddresses: [IDENTITY_REGISTRY],
+      category: ["erc721"],
+      withMetadata: false,
+      excludeZeroValue: false,
+      maxCount: "0x3e8",
+    };
+    if (pageKey) params.pageKey = pageKey;
+
     try {
-      const result = await rpc(apiKey, "eth_getLogs", [{
-        address: IDENTITY_REGISTRY,
-        topics: [TRANSFER_TOPIC0, ZERO_ADDRESS_TOPIC],
-        fromBlock: "0x" + start.toString(16),
-        toBlock:   "0x" + end.toString(16),
-      }]);
-      const chunk = result as typeof allLogs;
-      diagnostic.chunks_scanned++;
-      if (chunk.length > 0) {
-        diagnostic.total_logs_found += chunk.length;
-        if (!diagnostic.first_nonempty_chunk) {
-          diagnostic.first_nonempty_chunk = { from: "0x" + start.toString(16), to: "0x" + end.toString(16), count: chunk.length };
-          diagnostic.first_log_sample = chunk[0];
+      const result = await rpc(apiKey, "alchemy_getAssetTransfers", [params]);
+      const data = result as AlchemyTransfersResult;
+      diagnostic.pages_fetched++;
+      for (const t of data.transfers ?? []) {
+        if (t.tokenId && t.hash) {
+          results.push({ tokenId: t.tokenId, txHash: t.hash });
         }
-        allLogs.push(...chunk);
       }
+      diagnostic.total_transfers_found = results.length;
+      pageKey = data.pageKey;
     } catch (e) {
-      diagnostic.rpc_errors.push({ chunk: chunkLabel, error: e instanceof Error ? e.message : String(e) });
+      diagnostic.rpc_errors.push({ page: pageNum, error: e instanceof Error ? e.message : String(e) });
+      break;
     }
-  }
+  } while (pageKey);
 
-  return { logs: allLogs, diagnostic };
+  return { transfers: results, diagnostic };
 }
 
 export type FetchErc8004Result = {
@@ -239,14 +228,17 @@ export async function fetchAllErc8004Agents(
   fromBlock: string = "0xE4E1C0",
   toBlock: string = "latest",
 ): Promise<FetchErc8004Result> {
-  const { logs, diagnostic } = await getLogsWithDiagnostics(apiKey, fromBlock, toBlock);
+  void toBlock; // alchemy_getAssetTransfers always scans to latest
+  const { transfers, diagnostic } = await fetchMintTransfers(apiKey, fromBlock);
 
-  // Deduplicate by agentId
+  // Deduplicate by tokenId (last mint wins — same semantics as before)
   const seen = new Map<string, string>();
-  for (const log of logs) {
-    if (!log.topics[2]) continue;
-    const agentId = BigInt("0x" + log.topics[2].slice(2)).toString();
-    seen.set(agentId, log.transactionHash);
+  for (const t of transfers) {
+    // tokenId may be hex ("0x1") or decimal string — normalise to decimal
+    const agentId = t.tokenId.startsWith("0x")
+      ? BigInt(t.tokenId).toString()
+      : t.tokenId;
+    seen.set(agentId, t.txHash);
   }
 
   const entries = [...seen.entries()];
