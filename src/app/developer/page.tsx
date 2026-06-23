@@ -180,7 +180,7 @@ export default function DeveloperPage() {
                 padding: "6px 10px", borderRadius: 6,
                 display: "block",
               }}>
-                Authorization: Bearer xb_live_…
+                Authorization: Bearer zt_live_…
               </code>
             </div>
             <div>
@@ -194,7 +194,7 @@ export default function DeveloperPage() {
                 padding: "6px 10px", borderRadius: 6,
                 display: "block",
               }}>
-                X-API-Key: xb_live_…
+                X-API-Key: zt_live_…
               </code>
             </div>
           </div>

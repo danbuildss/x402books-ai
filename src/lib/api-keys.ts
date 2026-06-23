@@ -5,7 +5,7 @@ import { verifyMessage } from "viem";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { type LucaTier, TIER_LIMITS, getWalletTier } from "@/lib/luca-token";
 
-const KEY_PREFIX = "xb_live_";
+const KEY_PREFIX = "zt_live_";
 
 function todayUtc(): string {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -51,9 +51,9 @@ export async function createApiKey(
 ): Promise<{ key: string; record: ApiKeyRecord } | null> {
   if (!hasSupabaseAdminEnv()) return null;
 
-  const raw = KEY_PREFIX + randomHex(20); // xb_live_ + 40 hex = 48 chars total
+  const raw = KEY_PREFIX + randomHex(20); // zt_live_ + 40 hex = 48 chars total
   const hash = await sha256hex(raw);
-  const prefix = raw.slice(0, 16); // "xb_live_XXXXXXXX"
+  const prefix = raw.slice(0, 16); // "zt_live_XXXXXXXX"
 
   const supabase = getSupabaseAdminClient();
   const { data, error } = await supabase

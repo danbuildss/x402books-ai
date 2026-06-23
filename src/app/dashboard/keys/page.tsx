@@ -300,13 +300,13 @@ export default function ApiKeysPage() {
           <div>
             <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>Bearer token</p>
             <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "6px 10px", borderRadius: 6, display: "block" }}>
-              Authorization: Bearer xb_live_…
+              Authorization: Bearer zt_live_…
             </code>
           </div>
           <div>
             <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>API key header</p>
             <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "6px 10px", borderRadius: 6, display: "block" }}>
-              X-API-Key: xb_live_…
+              X-API-Key: zt_live_…
             </code>
           </div>
         </div>

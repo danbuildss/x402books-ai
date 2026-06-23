@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     .eq("is_active", true);
 
   // Generate new key
-  const raw = "xb_live_" + randomHex(20);
+  const raw = "zt_live_" + randomHex(20);
   const hash = await sha256hex(raw);
   const prefix = raw.slice(0, 16);
 

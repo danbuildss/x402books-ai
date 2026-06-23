@@ -33,7 +33,7 @@ console.log(stats.wallets_declared_or_above); // 15
 // Fetch treasury health (API key)
 const state = await fetch(
   'https://www.zettaai.co/api/v1/agent-financial-state?wallet=0x...&range=30d',
-  { headers: { 'Authorization': 'Bearer xb_live_...' } }
+  { headers: { 'Authorization': 'Bearer zt_live_...' } }
 );
 const data = await state.json();
 console.log(data.financial_health.budget_status);`,
@@ -48,7 +48,7 @@ print(stats['wallets_declared_or_above']) # 15
 state = requests.get(
     'https://www.zettaai.co/api/v1/agent-financial-state',
     params={'wallet': '0x...', 'range': '30d'},
-    headers={'Authorization': 'Bearer xb_live_...'}
+    headers={'Authorization': 'Bearer zt_live_...'}
 ).json()
 print(state['financial_health']['budget_status'])`,
 };

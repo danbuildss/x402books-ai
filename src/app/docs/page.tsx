@@ -577,7 +577,7 @@ Content-Type: application/json
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
                 <pre>{`GET /api/v1/agent-financial-state?wallet=0x...&range=30d
-Authorization: Bearer xb_live_...`}</pre>
+Authorization: Bearer zt_live_...`}</pre>
               </div>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Response (excerpt)</span></div>
@@ -607,7 +607,7 @@ Authorization: Bearer xb_live_...`}</pre>
               <div className="docs-code-block">
                 <div className="docs-code-head"><span>Request</span></div>
                 <pre>{`GET /api/v1/agent-report?agentName=Aeon&days=7
-Authorization: Bearer xb_live_...`}</pre>
+Authorization: Bearer zt_live_...`}</pre>
               </div>
             </div>
 
