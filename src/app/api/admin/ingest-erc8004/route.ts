@@ -3,6 +3,7 @@ import { internalAuth } from "@/lib/internal-auth";
 import { hasSupabaseAdminEnv, getSupabaseAdminClient } from "@/lib/supabase-admin";
 import { classifyAddressBatch } from "@/lib/address-classifier";
 import { fetchAllErc8004Agents, fetchErc8004AgentById } from "@/lib/erc8004-client";
+import type { Erc8004RawAgent } from "@/lib/erc8004-client";
 import { transformErc8004Agent } from "@/lib/erc8004-transformer";
 
 export const dynamic = "force-dynamic";
@@ -58,14 +59,21 @@ export async function POST(req: NextRequest) {
   }
 
   // 1. Fetch raw agents
-  let rawAgents;
+  let rawAgents: Erc8004RawAgent[];
   if (mode === "contract") {
-    rawAgents = await fetchAllErc8004Agents(apiKey, fromBlock, toBlock);
+    const erc8004Result = await fetchAllErc8004Agents(apiKey, fromBlock, toBlock);
+    rawAgents = erc8004Result.agents;
     if (rawAgents.length === 0) {
       return NextResponse.json({
         ok: false,
-        error: "Contract scan returned 0 agents. The block range may be too old or too large. Try specifying a fromBlock closer to the contract deployment, or use mode: 'batch' with known agentIds.",
-        debug: { fromBlock: fromBlock ?? "0xE4E1C0", toBlock: toBlock ?? "latest" },
+        error: "Contract scan returned 0 agents. See diagnostic for details.",
+        diagnostic: erc8004Result.diagnostic,
+        suggestions: [
+          "Confirm IDENTITY_REGISTRY address is correct for Base mainnet",
+          "Try fromBlock closer to the ERC-8004 registry deployment block",
+          "Check if any RPC errors occurred during scanning",
+          "Use batch mode with known agentIds to test individual IDs",
+        ],
       }, { status: 422 });
     }
   } else {

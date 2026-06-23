@@ -38,6 +38,22 @@ type IngestionSummary = {
   errors: number;
 };
 
+type LogsDiagnostic = {
+  registry_address: string;
+  topic_0: string;
+  topic_1_filter: string;
+  agent_id_from_topic_index: number;
+  from_block_input: string;
+  from_block_num: number;
+  latest_block: number;
+  chunks_planned: number;
+  chunks_scanned: number;
+  total_logs_found: number;
+  first_nonempty_chunk: { from: string; to: string; count: number } | null;
+  first_log_sample: { topics: string[]; transactionHash: string } | null;
+  rpc_errors: Array<{ chunk: string; error: string }>;
+};
+
 type IngestionReport = {
   ok: boolean;
   dry_run: boolean;
@@ -45,6 +61,8 @@ type IngestionReport = {
   agents: AgentResult[];
   generated_at: string;
   error?: string;
+  diagnostic?: LogsDiagnostic;
+  suggestions?: string[];
 };
 
 const STATUS_META: Record<AgentResult["status"], { label: string; color: string }> = {
@@ -68,14 +86,18 @@ export default function Erc8004IngestionPage() {
   const [fromBlock, setFromBlock] = useState("0xE4E1C0");
   const [agentIdsText, setAgentIdsText] = useState("");
   const [dryRun, setDryRun]     = useState(true);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
-  const [report, setReport]     = useState<IngestionReport | null>(null);
+  const [loading, setLoading]       = useState(false);
+  const [error, setError]           = useState("");
+  const [report, setReport]         = useState<IngestionReport | null>(null);
+  const [errorDiagnostic, setErrorDiagnostic] = useState<LogsDiagnostic | null>(null);
+  const [errorSuggestions, setErrorSuggestions] = useState<string[]>([]);
 
   async function runIngestion() {
     setLoading(true);
     setError("");
     setReport(null);
+    setErrorDiagnostic(null);
+    setErrorSuggestions([]);
 
     const body: Record<string, unknown> = { mode, dryRun };
     if (mode === "contract") {
@@ -94,7 +116,12 @@ export default function Erc8004IngestionPage() {
         body: JSON.stringify(body),
       });
       const json = await res.json() as IngestionReport;
-      if (!json.ok) { setError(json.error ?? "Ingestion failed"); return; }
+      if (!json.ok) {
+        setError(json.error ?? "Ingestion failed");
+        if (json.diagnostic) setErrorDiagnostic(json.diagnostic);
+        if (json.suggestions) setErrorSuggestions(json.suggestions);
+        return;
+      }
       setReport(json);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");
@@ -213,6 +240,63 @@ export default function Erc8004IngestionPage() {
         {error && (
           <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
             {error}
+          </div>
+        )}
+
+        {errorDiagnostic && (
+          <div style={{ background: "var(--surface)", border: "1px solid #ef444440", borderRadius: 8, padding: "14px 18px", marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Scan Diagnostic</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 8, marginBottom: 12 }}>
+              {[
+                { label: "Registry address",       value: errorDiagnostic.registry_address },
+                { label: "From block (input)",      value: errorDiagnostic.from_block_input },
+                { label: "From block (dec)",        value: errorDiagnostic.from_block_num.toLocaleString() },
+                { label: "Latest block",            value: errorDiagnostic.latest_block.toLocaleString() },
+                { label: "Blocks to scan",          value: (errorDiagnostic.latest_block - errorDiagnostic.from_block_num).toLocaleString() },
+                { label: "Chunks planned",          value: errorDiagnostic.chunks_planned },
+                { label: "Chunks scanned",          value: errorDiagnostic.chunks_scanned },
+                { label: "Total logs found",        value: errorDiagnostic.total_logs_found },
+                { label: "RPC errors",              value: errorDiagnostic.rpc_errors.length },
+                { label: "agentId from topics[N]",  value: errorDiagnostic.agent_id_from_topic_index },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ background: "var(--bg)", borderRadius: 6, padding: "8px 10px" }}>
+                  <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 2 }}>{label}</div>
+                  <div style={{ fontSize: 12, fontFamily: "var(--font-mono)", color: "var(--ink)", wordBreak: "break-all" }}>{String(value)}</div>
+                </div>
+              ))}
+            </div>
+            {errorDiagnostic.first_nonempty_chunk && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>First non-empty chunk:</div>
+                <pre style={{ fontSize: 11, background: "var(--bg)", padding: 8, borderRadius: 4, overflow: "auto" }}>
+                  {JSON.stringify(errorDiagnostic.first_nonempty_chunk, null, 2)}
+                </pre>
+              </div>
+            )}
+            {errorDiagnostic.first_log_sample && (
+              <div style={{ marginBottom: 8 }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>First log sample (raw topics):</div>
+                <pre style={{ fontSize: 11, background: "var(--bg)", padding: 8, borderRadius: 4, overflow: "auto" }}>
+                  {JSON.stringify(errorDiagnostic.first_log_sample, null, 2)}
+                </pre>
+              </div>
+            )}
+            {errorDiagnostic.rpc_errors.length > 0 && (
+              <div>
+                <div style={{ fontSize: 11, color: "#ef4444", marginBottom: 4 }}>RPC errors:</div>
+                {errorDiagnostic.rpc_errors.map((e, i) => (
+                  <div key={i} style={{ fontSize: 11, color: "#ef4444" }}>• {e.chunk}: {e.error}</div>
+                ))}
+              </div>
+            )}
+            {errorSuggestions.length > 0 && (
+              <div style={{ marginTop: 10, borderTop: "1px solid var(--line)", paddingTop: 10 }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>Suggestions:</div>
+                {errorSuggestions.map((s, i) => (
+                  <div key={i} style={{ fontSize: 12, color: "var(--ink)", marginBottom: 2 }}>• {s}</div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

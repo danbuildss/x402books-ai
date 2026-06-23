@@ -127,7 +127,7 @@ export async function GET(req: NextRequest) {
       const isValidForBooks =
         attribution === "manifest" &&
         !isTokenAddress &&
-        !isContractType;
+        (addrType === "eoa" || addrType === "treasury_contract");
 
       return {
         address: w.address,
@@ -152,11 +152,10 @@ export async function GET(req: NextRequest) {
       w.address_type === "vault",
     ).length;
 
-    const hasManifest = manifestCount > 0;
-    const hasDiscovered = discoveredCount > 0;
+    const validForBooksCount = walletReports.filter((w) => w.is_valid_for_books).length;
     const attributionStatus: AgentReport["attribution_status"] =
-      hasManifest ? "attributed" :
-      hasDiscovered ? "discovered_only" :
+      validForBooksCount > 0 ? "attributed" :
+      wallets.length > 0 ? "discovered_only" :
       "unattributed";
 
     agentReports.push({
