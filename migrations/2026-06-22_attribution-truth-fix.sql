@@ -18,6 +18,15 @@ alter table registry_agent_wallets
   ))
   default 'unknown';
 
+-- Deduplicate registry_agent_wallets before adding the unique constraint.
+-- Keeps the row with the most complete data (longest notes, or latest ctid).
+-- Safe to re-run — does nothing if no duplicates exist.
+delete from registry_agent_wallets a
+using registry_agent_wallets b
+where a.ctid < b.ctid
+  and a.agent_name = b.agent_name
+  and a.address    = b.address;
+
 -- Add unique constraint so ON CONFLICT (agent_name, address) works.
 -- Wrapped in DO block so it's idempotent — safe to re-run.
 do $$ begin
