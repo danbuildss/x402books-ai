@@ -18,6 +18,15 @@ alter table registry_agent_wallets
   ))
   default 'unknown';
 
+-- Add unique constraint so ON CONFLICT (agent_name, address) works.
+-- Wrapped in DO block so it's idempotent — safe to re-run.
+do $$ begin
+  alter table registry_agent_wallets
+    add constraint uq_registry_agent_wallets_agent_address
+    unique (agent_name, address);
+exception when duplicate_object then null;
+end $$;
+
 -- ─── STEP 1: AEON ─────────────────────────────────────────────────────────────
 --
 -- Known manifest/operator wallets declared by AEON team:

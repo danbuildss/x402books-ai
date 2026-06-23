@@ -621,7 +621,7 @@ export async function buildAgentBooksAudit(
     if (!isValidWalletAddress(w.address)) return false;
     // Rule: only manifest-declared wallets produce attributed books.
     const src = (w.evidenceSource ?? "").toLowerCase();
-    if (src !== "" && src !== "manifest") return false;
+    if (src !== "manifest") return false;
     // Rule: token contract addresses must never be scanned as operational wallets.
     if (
       agent.tokenAddress &&
