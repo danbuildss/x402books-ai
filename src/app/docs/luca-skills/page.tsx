@@ -19,7 +19,7 @@ const SKILLS = [
       { field: "chain",   type: "string", required: false, desc: "Chain name. Default: base" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/wallet-audit \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"address": "0xf1e958db7d1e4c074377946018ad645db4fb158e"}'`,
     example_response: `{
@@ -42,7 +42,7 @@ const SKILLS = [
       { field: "period", type: "string", required: false, desc: "Time window. One of: 7d, 14d, 30d, 90d. Default: 30d" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon", "period": "30d"}'`,
     example_response: `{
@@ -71,7 +71,7 @@ const SKILLS = [
       { field: "address", type: "string", required: false, desc: "Single wallet address. Required if slug not provided." },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/treasury-monitor \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon"}'`,
     example_response: `{
@@ -100,7 +100,7 @@ const SKILLS = [
       { field: "period", type: "string", required: false, desc: "Time window. One of: 7d, 14d, 30d, 90d. Default: 30d" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/revenue-analysis \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon", "period": "30d"}'`,
     example_response: `{
@@ -128,7 +128,7 @@ const SKILLS = [
       { field: "query", type: "string", required: true, desc: "Agent slug, name fragment, or 0x wallet address" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/registry-check \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"query": "aeon"}'`,
     example_response: `{
@@ -164,7 +164,7 @@ const SKILLS = [
       { field: "period", type: "string", required: false, desc: "Time window. One of: 7d, 14d, 30d, 90d. Default: 30d" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/luca-report \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon", "period": "30d"}'`,
     example_response: `{
@@ -202,7 +202,7 @@ const SKILLS = [
       { field: "period",     type: "string", required: false, desc: "Activity period. Default: 30d" },
     ],
     example_request: `curl -X POST https://www.zettaai.co/api/luca/skills/b20-token-analysis \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"address": "0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3"}'`,
     example_response: `{
@@ -278,7 +278,7 @@ export default function LucaSkillsDocsPage() {
   const skill = SKILLS.find((s) => s.id === activeSkill) ?? SKILLS[0];
   const exampleWithKey = showBearer
     ? skill.example_request
-    : skill.example_request.replace('Authorization: Bearer xb_live_..."', 'X-API-Key: xb_live_..."');
+    : skill.example_request.replace('Authorization: Bearer zt_live_..."', 'X-API-Key: zt_live_..."');
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
@@ -302,7 +302,7 @@ export default function LucaSkillsDocsPage() {
             </div>
             <div style={{ padding: "6px 14px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, fontSize: 12 }}>
               <span style={{ color: "var(--muted)" }}>Auth: </span>
-              <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>Authorization: Bearer xb_live_...</code>
+              <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>Authorization: Bearer zt_live_...</code>
             </div>
             <Link href="/developer" style={{ padding: "6px 14px", background: "#6DB874", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               Get API Key →
@@ -451,13 +451,13 @@ export default function LucaSkillsDocsPage() {
             </p>
             <CodeBlock code={`# Option 1 — Bearer token (recommended)
 curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
-  -H "Authorization: Bearer xb_live_..." \\
+  -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon"}'
 
 # Option 2 — X-API-Key header
 curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
-  -H "X-API-Key: xb_live_..." \\
+  -H "X-API-Key: zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon"}'`} />
             <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>

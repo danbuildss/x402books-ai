@@ -110,7 +110,7 @@ Public REST API with key-based auth and $LUCA token-gated rate limits.
 
 **Base URL:** `https://www.zettaai.co/api/v1`
 
-**Auth:** `Authorization: Bearer xb_live_...` or `X-API-Key: xb_live_...`
+**Auth:** `Authorization: Bearer zt_live_...` or `X-API-Key: zt_live_...`
 
 | Tier | Requirement | Requests/day |
 |------|-------------|--------------|
