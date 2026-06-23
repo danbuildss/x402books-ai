@@ -38,6 +38,10 @@ export type AgentGDP = {
 const GDP_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 let _cache: { data: AgentGDP; expires: number } | null = null;
 
+export function invalidateGdpCache(): void {
+  _cache = null;
+}
+
 export async function getAgentGDP(): Promise<AgentGDP> {
   if (_cache && _cache.expires > Date.now()) return _cache.data;
 

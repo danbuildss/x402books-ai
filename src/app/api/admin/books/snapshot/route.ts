@@ -10,9 +10,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { internalAuth } from "@/lib/internal-auth";
 import { getRegistryAgents } from "@/lib/registry-db";
-import { buildAgentBooks } from "@/lib/agent-books";
+import { buildAgentBooks, invalidateAllBooksCache } from "@/lib/agent-books";
 import { saveAgentBooksSnapshot } from "@/lib/agent-books-history";
 import { toSlug } from "@/app/registry/[slug]/slug";
+import { invalidateGdpCache } from "@/lib/agent-gdp";
 
 export async function POST(req: NextRequest) {
   if (!internalAuth(req)) {
@@ -68,4 +69,22 @@ export async function POST(req: NextRequest) {
     skipped,
     errors,
   });
+}
+
+export async function DELETE(req: NextRequest) {
+  if (!internalAuth(req)) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const slug = searchParams.get("slug")?.trim();
+
+  if (!slug) {
+    return NextResponse.json({ ok: false, error: "slug query param required" }, { status: 400 });
+  }
+
+  await invalidateAllBooksCache(slug);
+  // Also reset GDP in-memory cache so the old figure doesn't linger there
+  invalidateGdpCache();
+  return NextResponse.json({ ok: true, slug, message: `Books cache purged for ${slug}. Next request will trigger fresh computation.` });
 }
