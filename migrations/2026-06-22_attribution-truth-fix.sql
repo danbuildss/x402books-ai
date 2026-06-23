@@ -28,12 +28,17 @@ where a.ctid < b.ctid
   and a.address    = b.address;
 
 -- Add unique constraint so ON CONFLICT (agent_name, address) works.
--- Wrapped in DO block so it's idempotent — safe to re-run.
-do $$ begin
-  alter table registry_agent_wallets
-    add constraint uq_registry_agent_wallets_agent_address
-    unique (agent_name, address);
-exception when duplicate_object then null;
+-- Checks pg_constraint directly — avoids exception-code mismatch (42P07 vs 42710).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'uq_registry_agent_wallets_agent_address'
+  ) then
+    alter table registry_agent_wallets
+      add constraint uq_registry_agent_wallets_agent_address
+      unique (agent_name, address);
+  end if;
 end $$;
 
 -- ─── STEP 1: AEON ─────────────────────────────────────────────────────────────
