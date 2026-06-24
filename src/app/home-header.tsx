@@ -30,8 +30,10 @@ const SOCIAL = [
 const NAV_LINKS = [
   { href: "/registry",        label: "Registry"      },
   { href: "/leaderboard",     label: "Leaderboard"   },
+  { href: "/b20",             label: "B20"           },
   { href: "/research",        label: "Research"      },
   { href: "/developer",       label: "API"           },
+  { href: "/docs",            label: "Docs"          },
   { href: "/luca",            label: "Luca"          },
   { href: "/registry#verify", label: "Submit Agent"  },
 ];

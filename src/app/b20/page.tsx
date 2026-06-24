@@ -1,6 +1,8 @@
 import { getB20Tokens, getB20Stats } from "@/lib/b20-db";
 import type { B20TokenRow } from "@/lib/b20-db";
 import Link from "next/link";
+import { HomeHeader } from "@/app/home-header";
+import { SiteFooter } from "@/components/site-footer";
 
 export const revalidate = 120;
 
@@ -32,9 +34,10 @@ export default async function B20Page() {
   const stats = statsResult.status === "fulfilled" ? statsResult.value : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
+    <div style={{ background: "var(--bg)", color: "var(--ink)" }}>
+      <HomeHeader />
 
-      {/* Header */}
+      {/* Page header */}
       <div style={{ borderBottom: "1px solid var(--line)", padding: "20px 24px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
@@ -191,6 +194,7 @@ export default async function B20Page() {
           Luca Skill.
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }
