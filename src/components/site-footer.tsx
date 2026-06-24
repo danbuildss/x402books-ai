@@ -20,12 +20,14 @@ export function SiteFooter() {
             <Link href="/registry">Registry</Link>
             <Link href="/leaderboard">Leaderboard</Link>
             <Link href="/b20">B20 Intelligence</Link>
+            <Link href="/adopt">Adopt</Link>
             <Link href="/research">Research</Link>
             <Link href="/developer">API</Link>
             <Link href="/luca">Luca</Link>
           </div>
           <div>
             <h4>Resources</h4>
+            <Link href="/how-it-works">How It Works</Link>
             <Link href="/methodology">Methodology</Link>
             <Link href="/registry#verify">Submit Agent</Link>
             <Link href="/manifest">Manifest Guide</Link>
