@@ -1,6 +1,8 @@
 import { getB20Token, getB20Activity, buildActivitySummaryFromDb } from "@/lib/b20-db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { HomeHeader } from "@/app/home-header";
+import { SiteFooter } from "@/components/site-footer";
 
 export const revalidate = 120;
 
@@ -42,14 +44,18 @@ export default async function B20TokenProfilePage(
 
   if (!token) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)", padding: 40 }}>
-        <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Token not indexed</div>
-          <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
-            {address} has not been indexed by Zetta yet.
+      <div style={{ background: "var(--bg)", color: "var(--ink)" }}>
+        <HomeHeader />
+        <div style={{ padding: 40 }}>
+          <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Token not indexed</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 20 }}>
+              {address} has not been indexed by Zetta yet.
+            </div>
+            <Link href="/b20" style={{ color: "var(--accent)", textDecoration: "none", fontSize: 13 }}>← Back to B20 Intelligence</Link>
           </div>
-          <Link href="/b20" style={{ color: "var(--accent)", textDecoration: "none", fontSize: 13 }}>← Back to B20 Intelligence</Link>
         </div>
+        <SiteFooter />
       </div>
     );
   }
@@ -68,7 +74,8 @@ export default async function B20TokenProfilePage(
     token.manifest_status === "candidate"  ? "Awaiting Manifest" : "No Manifest";
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
+    <div style={{ background: "var(--bg)", color: "var(--ink)" }}>
+      <HomeHeader />
 
       {/* Nav */}
       <div style={{ borderBottom: "1px solid var(--line)", padding: "14px 24px", display: "flex", alignItems: "center", gap: 12 }}>
@@ -215,6 +222,7 @@ export default async function B20TokenProfilePage(
           Last indexed: {new Date(token.last_indexed_at).toLocaleString()}
         </div>
       </div>
+      <SiteFooter />
     </div>
   );
 }

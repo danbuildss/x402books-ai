@@ -8,6 +8,7 @@ import { getAgentGDP } from "@/lib/agent-gdp";
 import { listReports } from "@/lib/research-db";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getAttributionMetrics } from "@/lib/attribution-health";
+import { getB20Stats } from "@/lib/b20-db";
 import type { AgentGDP } from "@/lib/agent-gdp";
 import type { ResearchReport } from "@/lib/research-db";
 import type { GDPSnapshot } from "@/lib/gdp-history";
@@ -77,11 +78,13 @@ export default async function HomePage() {
   let reports: ResearchReport[] = [];
   let history: GDPSnapshot[] = [];
   let attr: AttributionMetrics | null = null;
+  let b20Stats: Awaited<ReturnType<typeof getB20Stats>> | null = null;
 
   try { gdp = await getAgentGDP(); } catch { /* unavailable */ }
   try { reports = await listReports(3); } catch { /* unavailable */ }
   try { history = await getGDPHistory(30); } catch { /* unavailable */ }
   try { attr = await getAttributionMetrics(); } catch { /* unavailable */ }
+  try { b20Stats = await getB20Stats(); } catch { /* unavailable */ }
 
   const topAgents = gdp?.top_agents ?? [];
 
@@ -340,6 +343,45 @@ export default async function HomePage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── B20 TOKEN INTELLIGENCE ── */}
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderLeft: "3px solid #6DB874",
+          borderRadius: 10,
+          padding: "24px 28px",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6DB874" }}>Token Intelligence</p>
+              <h3 style={{ margin: "0 0 10px", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>B20 Intelligence</h3>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 400 }}>
+                Zetta indexes B20 tokens, links them to agents and issuers, and checks financial readiness.
+                Token transfers are not revenue — but issuer attribution matters for books.
+              </p>
+            </div>
+            {b20Stats && (
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+                {[
+                  { label: "Tokens Indexed",    value: b20Stats.total,            color: "var(--ink)" },
+                  { label: "Attributed",         value: b20Stats.attributed,       color: "#22c55e"    },
+                  { label: "Awaiting Manifest",  value: b20Stats.awaiting_manifest, color: "#f59e0b"   },
+                ].map((s) => (
+                  <div key={s.label} style={{ textAlign: "center", minWidth: 72 }}>
+                    <div style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Link href="/b20" className="lp-btn-ghost" style={{ fontSize: "0.78rem", height: 32, whiteSpace: "nowrap" }}>View B20 Intelligence →</Link>
+            </div>
           </div>
         </div>
       </div>
