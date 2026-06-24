@@ -78,6 +78,7 @@ export type Agent = {
   website: string | null;
   bankrProfile: string | null;
   tokenAddress: string | null;
+  isB20Token?: boolean;        // true = confirmed B20 token, eligible for B20 Intelligence indexing
   wallets: AgentWallet[];
   verificationStatus: VerificationStatus;
   evidenceSources: string[];
