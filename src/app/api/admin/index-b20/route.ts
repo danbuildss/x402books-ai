@@ -77,8 +77,9 @@ export async function POST(req: NextRequest) {
   if (mode === "single" || mode === "activity_only") {
     tokenAddresses = [address!.trim().toLowerCase()];
   } else {
-    // from_registry: collect all agent tokenAddress values
+    // from_registry: only index agents explicitly marked isB20Token: true
     tokenAddresses = agents
+      .filter((a) => a.isB20Token === true)
       .map((a) => a.tokenAddress)
       .filter((addr): addr is string => !!addr)
       .map((addr) => addr.toLowerCase());
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
   if (tokenAddresses.length === 0) {
     return NextResponse.json({
       ok: false,
-      error: "No token addresses found. Add tokenAddress to registry agents or use single mode.",
+      error: "No B20 token addresses found. Set isB20Token: true on registry agents or use single mode.",
     }, { status: 422 });
   }
 
