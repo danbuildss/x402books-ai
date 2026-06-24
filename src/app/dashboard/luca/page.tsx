@@ -126,6 +126,23 @@ function LucaChat() {
 
   return (
     <div className="op-chat-root">
+      {/* Coming soon banner */}
+      <div style={{
+        background: "var(--surface)", borderBottom: "1px solid var(--line)",
+        padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#f59e0b", background: "#f59e0b18", padding: "2px 7px", borderRadius: 4 }}>
+          Coming Soon
+        </span>
+        <span style={{ fontSize: 12, color: "var(--muted)" }}>
+          Luca chat is in development. Use{" "}
+          <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            @AskLucaBot on Telegram
+          </a>{" "}
+          for live analysis.
+        </span>
+      </div>
+
       {/* Top bar */}
       <div className="op-chat-topbar">
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -187,15 +204,13 @@ function LucaChat() {
       <div className="op-chat-input-row">
         <textarea
           className="op-chat-input"
-          placeholder="Ask Luca about your agent's finances…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          placeholder="Coming soon — use @AskLucaBot on Telegram for live analysis"
+          disabled
           rows={1}
-          style={{ minHeight: 40, maxHeight: 120, resize: "none", flex: 1, padding: "9px 12px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", font: "inherit", fontSize: "0.83rem", outline: "none" }}
-          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+          style={{ minHeight: 40, maxHeight: 120, resize: "none", flex: 1, padding: "9px 12px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--muted)", font: "inherit", fontSize: "0.83rem", outline: "none", cursor: "not-allowed" }}
         />
-        <button className="op-btn op-btn-primary" onClick={() => send()} disabled={sending || !input.trim()}>
-          {sending ? "…" : "Send"}
+        <button className="op-btn op-btn-primary" disabled style={{ opacity: 0.4, cursor: "not-allowed" }}>
+          Send
         </button>
       </div>
     </div>
