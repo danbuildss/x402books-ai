@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zettaai.co/schemas/books-eligibility.schema.json",
+  "title": "Books Eligibility Snapshot",
+  "type": "object",
+  "required": ["agent_slug", "eligible_wallets", "ineligible_wallets"],
+  "properties": {
+    "agent_slug": {
+      "type": "string"
+    },
+    "period_label": {
+      "type": "string"
+    },
+    "eligible_wallets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["address", "role", "chain", "reason"],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "ineligible_wallets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["address", "role", "chain", "reason"],
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

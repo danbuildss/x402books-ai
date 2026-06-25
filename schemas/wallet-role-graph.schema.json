@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zettaai.co/schemas/wallet-role-graph.schema.json",
+  "title": "Wallet Role Graph",
+  "type": "object",
+  "required": ["agent_slug", "wallets"],
+  "properties": {
+    "agent_slug": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wallets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["address", "chain", "role", "claim_status", "evidence_status", "books_eligible"],
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$"
+          },
+          "chain": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "claim_status": {
+            "type": "string",
+            "enum": ["discovered", "candidate", "declared", "verified"]
+          },
+          "evidence_status": {
+            "type": "string",
+            "enum": ["verified", "attributed", "observed", "inferred", "speculative"]
+          },
+          "books_eligible": {
+            "type": "boolean"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "source_type": {
+            "type": "string"
+          },
+          "source_ref": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}
