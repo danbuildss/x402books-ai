@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { normalizeWalletRole } from "@/lib/luca-classify";
+import { ingestManifestTruth } from "@/lib/truth-engine-db";
 import type { WalletLabel } from "@/app/registry/types";
 
 const ROLE_TO_LABEL: Record<string, WalletLabel> = {
@@ -221,6 +222,12 @@ export async function POST(req: NextRequest) {
   }
 
   const ref_id = data?.id ? (data.id as string).slice(0, 8).toUpperCase() : null;
+
+  // Best-effort truth engine ingestion — never blocks the response
+  ingestManifestTruth(manifest, {
+    repoUrl:     repo_url.trim(),
+    sourceUrl:   found.url,
+  }).catch(() => {});
 
   return NextResponse.json({
     ok:      true,
