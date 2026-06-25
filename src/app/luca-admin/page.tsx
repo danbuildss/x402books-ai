@@ -1876,10 +1876,10 @@ function TruthEngineSection({ secret }: { secret: string }) {
             {walletResult.fetch_error && (
               <p style={{ fontSize: "0.75rem", color: "#f59e0b", margin: "0 0 6px" }}>⚠ {walletResult.fetch_error}</p>
             )}
-            {Object.keys(walletResult.classified_counts).length > 0 && (
+            {Object.keys(walletResult.classified_counts ?? {}).length > 0 && (
               <ClassifiedCountBadges counts={walletResult.classified_counts} />
             )}
-            {walletResult.errors.length > 0 && (
+            {(walletResult.errors ?? []).length > 0 && (
               <p style={{ fontSize: "0.72rem", color: "#ef4444", marginTop: 6 }}>
                 {walletResult.errors.length} insert error(s): {walletResult.errors[0]}
               </p>
@@ -1942,7 +1942,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
               </p>
             )}
 
-            {allResult.per_wallet.length > 0 && (
+            {(allResult.per_wallet ?? []).length > 0 && (
               <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 380, overflowY: "auto" }}>
                 {allResult.per_wallet.map((w, i) => (
                   <div key={i} style={{ padding: "9px 12px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7 }}>
