@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies";
+type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies" | "truth-engine";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -173,6 +173,7 @@ const NAV: { section: Section; label: string; group: string }[] = [
   { section: "registry",     label: "Registry",     group: "ops" },
   { section: "attribution",  label: "Attribution",  group: "ops" },
   { section: "economics",    label: "Economics",    group: "ops" },
+  { section: "truth-engine", label: "Truth Engine", group: "ops" },
   { section: "growth",     label: "Growth OS",   group: "ops" },
   { section: "reports",    label: "Reports",     group: "ops" },
   { section: "comm",            label: "Comm Intel",      group: "intel" },
@@ -1657,6 +1658,333 @@ function ReportsSection({ secret }: { secret: string }) {
   );
 }
 
+// ── Truth Engine Section ──────────────────────────────────────────────────────
+
+const CHAINS = ["base", "ethereum", "arbitrum", "optimism", "polygon"] as const;
+
+type IndexWalletResult = {
+  ok:                boolean;
+  provider_used:     string;
+  txs_fetched:       number;
+  events_classified: number;
+  evidence_upgrade:  string | null;
+  fetch_error:       string | null;
+  errors:            string[];
+  classified_counts: Record<string, number>;
+  error?:            string;
+};
+
+type IndexAllResult = {
+  ok:              boolean;
+  wallets_found:   number;
+  wallets_indexed: number;
+  wallets_skipped: number;
+  truncated:       boolean;
+  truncated_at:    number | null;
+  totals: {
+    txs_fetched:       number;
+    events_classified: number;
+    evidence_upgrades: number;
+  };
+  per_wallet: {
+    agent_slug:        string;
+    address:           string;
+    chain:             string;
+    provider_used:     string;
+    txs_fetched:       number;
+    events_classified: number;
+    evidence_upgrade:  string | null;
+    classified_counts: Record<string, number>;
+    fetch_error:       string | null;
+    insert_errors:     number;
+    skipped:           boolean;
+    skip_reason?:      string;
+  }[];
+  error?: string;
+};
+
+const CLS_COLOR: Record<string, string> = {
+  settlement_revenue:  "var(--accent)",
+  fee_received:        "#6366f1",
+  inference_spend:     "var(--blue)",
+  treasury_movement:   "#f59e0b",
+  token_distribution:  "#a78bfa",
+  external_expense:    "var(--muted)",
+  unknown:             "var(--muted)",
+};
+
+function ClassifiedCountBadges({ counts }: { counts: Record<string, number> }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginTop: 6 }}>
+      {Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([cls, n]) => (
+        <span key={cls} style={{
+          padding: "2px 8px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700,
+          background: `color-mix(in srgb, ${CLS_COLOR[cls] ?? "var(--muted)"} 14%, transparent)`,
+          color: CLS_COLOR[cls] ?? "var(--muted)",
+          border: `1px solid color-mix(in srgb, ${CLS_COLOR[cls] ?? "var(--muted)"} 28%, transparent)`,
+        }}>
+          {cls} · {n}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function TruthEngineSection({ secret }: { secret: string }) {
+  const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  // ── Single wallet indexer ────────────────────────────────────────────────────
+  const [walletForm, setWalletForm] = useState({
+    agent_slug: "", address: "", chain: "base" as string, limit: "50",
+  });
+  const [walletResult, setWalletResult] = useState<IndexWalletResult | null>(null);
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletError, setWalletError] = useState("");
+
+  async function indexWallet(e: React.FormEvent) {
+    e.preventDefault();
+    setWalletLoading(true);
+    setWalletError("");
+    setWalletResult(null);
+    try {
+      const res = await fetch("/api/admin/truth-engine/index-wallet", {
+        method: "POST", headers,
+        body: JSON.stringify({
+          agent_slug: walletForm.agent_slug.trim().toLowerCase(),
+          address:    walletForm.address.trim().toLowerCase(),
+          chain:      walletForm.chain,
+          limit:      parseInt(walletForm.limit, 10) || 50,
+        }),
+      });
+      const d = await res.json() as IndexWalletResult;
+      setWalletResult(d);
+      if (!d.ok && d.error) setWalletError(d.error);
+    } catch {
+      setWalletError("Network error");
+    } finally {
+      setWalletLoading(false);
+    }
+  }
+
+  // ── Index all ────────────────────────────────────────────────────────────────
+  const [allForm, setAllForm]     = useState({ limit: "200", max_wallets: "50" });
+  const [allResult, setAllResult] = useState<IndexAllResult | null>(null);
+  const [allLoading, setAllLoading] = useState(false);
+  const [allError, setAllError]   = useState("");
+
+  async function indexAll(e: React.FormEvent) {
+    e.preventDefault();
+    setAllLoading(true);
+    setAllError("");
+    setAllResult(null);
+    try {
+      const res = await fetch("/api/admin/truth-engine/index-all", {
+        method: "POST", headers,
+        body: JSON.stringify({
+          limit:       parseInt(allForm.limit, 10) || 200,
+          max_wallets: parseInt(allForm.max_wallets, 10) || 50,
+        }),
+      });
+      const d = await res.json() as IndexAllResult;
+      setAllResult(d);
+      if (!d.ok && d.error) setAllError(d.error);
+    } catch {
+      setAllError("Network error");
+    } finally {
+      setAllLoading(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Observed Truth · Phase 2</p>
+        <h1>Truth Engine</h1>
+        <p>On-chain indexing and revenue classification. Conservative by design — unknown beats overclaim.</p>
+      </div>
+
+      {/* Evidence posture note */}
+      <div className={styles.registryBanner} style={{ marginBottom: 16 }}>
+        <div>
+          <strong>Classification posture</strong>
+          <p>
+            settlement_revenue only fires for inbound from a known registry wallet.
+            fee_received is stablecoin inflow — medium confidence, not confirmed revenue.
+            Evidence upgrades to verified only at ≥3 distinct fee senders or a registry settlement.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Single wallet ── */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <p className={styles.cardTitle}>Index Single Wallet</p>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12 }}>
+          Fetch and classify on-chain transactions for one wallet. Safe to re-run — idempotent.
+        </p>
+        <form onSubmit={indexWallet}>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Agent Slug *</label>
+              <input required value={walletForm.agent_slug}
+                onChange={(e) => setWalletForm((f) => ({ ...f, agent_slug: e.target.value }))}
+                placeholder="e.g. nipmod" className={styles.formInput} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Wallet Address *</label>
+              <input required value={walletForm.address}
+                onChange={(e) => setWalletForm((f) => ({ ...f, address: e.target.value }))}
+                placeholder="0x…" className={styles.formInput} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Chain *</label>
+              <select value={walletForm.chain}
+                onChange={(e) => setWalletForm((f) => ({ ...f, chain: e.target.value }))}
+                className={styles.formSelect}>
+                {CHAINS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Limit (txs)</label>
+              <input type="number" min={10} max={500} value={walletForm.limit}
+                onChange={(e) => setWalletForm((f) => ({ ...f, limit: e.target.value }))}
+                className={styles.formInput} />
+            </div>
+          </div>
+          <button type="submit" disabled={walletLoading}
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: walletLoading ? "not-allowed" : "pointer", opacity: walletLoading ? 0.6 : 1 }}>
+            {walletLoading ? "Indexing…" : "Index Wallet →"}
+          </button>
+        </form>
+
+        {walletError && <div className={styles.errorBox} style={{ marginTop: 10 }}>{walletError}</div>}
+
+        {walletResult && (
+          <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: walletResult.ok ? "var(--accent)" : "#ef4444" }}>
+                {walletResult.ok ? "✓ Indexed" : "✗ Error"}
+              </span>
+              <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+                {walletResult.txs_fetched} txs · {walletResult.events_classified} classified · provider: {walletResult.provider_used}
+              </span>
+              {walletResult.evidence_upgrade && (
+                <span style={{ padding: "2px 8px", borderRadius: 999, fontSize: "0.68rem", fontWeight: 700, background: "var(--accent-soft)", color: "var(--accent)" }}>
+                  evidence → {walletResult.evidence_upgrade}
+                </span>
+              )}
+            </div>
+            {walletResult.fetch_error && (
+              <p style={{ fontSize: "0.75rem", color: "#f59e0b", margin: "0 0 6px" }}>⚠ {walletResult.fetch_error}</p>
+            )}
+            {Object.keys(walletResult.classified_counts).length > 0 && (
+              <ClassifiedCountBadges counts={walletResult.classified_counts} />
+            )}
+            {walletResult.errors.length > 0 && (
+              <p style={{ fontSize: "0.72rem", color: "#ef4444", marginTop: 6 }}>
+                {walletResult.errors.length} insert error(s): {walletResult.errors[0]}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Index all ── */}
+      <div className={styles.card}>
+        <p className={styles.cardTitle}>Index All Eligible Wallets</p>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12 }}>
+          Runs the indexer across all books-eligible wallets in the registry. Processes sequentially.
+          Cap max_wallets to stay within Vercel function timeout.
+        </p>
+        <form onSubmit={indexAll}>
+          <div className={styles.formGrid}>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Tx limit per wallet</label>
+              <input type="number" min={10} max={500} value={allForm.limit}
+                onChange={(e) => setAllForm((f) => ({ ...f, limit: e.target.value }))}
+                className={styles.formInput} />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Max wallets (≤100)</label>
+              <input type="number" min={1} max={100} value={allForm.max_wallets}
+                onChange={(e) => setAllForm((f) => ({ ...f, max_wallets: e.target.value }))}
+                className={styles.formInput} />
+            </div>
+          </div>
+          <button type="submit" disabled={allLoading}
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: allLoading ? "not-allowed" : "pointer", opacity: allLoading ? 0.6 : 1 }}>
+            {allLoading ? "Running… (may take 30–60s)" : "Index All →"}
+          </button>
+        </form>
+
+        {allError && <div className={styles.errorBox} style={{ marginTop: 10 }}>{allError}</div>}
+
+        {allResult && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 12 }}>
+              {[
+                { label: "Wallets found",   value: allResult.wallets_found },
+                { label: "Indexed",         value: allResult.wallets_indexed },
+                { label: "Skipped",         value: allResult.wallets_skipped },
+                { label: "Total txs",       value: allResult.totals.txs_fetched },
+                { label: "Total events",    value: allResult.totals.events_classified },
+                { label: "Evidence upgs",   value: allResult.totals.evidence_upgrades },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <p style={{ margin: 0, fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 600 }}>{label}</p>
+                  <p style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700, fontFamily: "monospace", color: "var(--ink)" }}>{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {allResult.truncated && (
+              <p style={{ fontSize: "0.75rem", color: "#f59e0b", marginBottom: 8 }}>
+                ⚠ Truncated at {allResult.truncated_at} wallets. Run again with a higher max_wallets or different offset.
+              </p>
+            )}
+
+            {allResult.per_wallet.length > 0 && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5, maxHeight: 380, overflowY: "auto" }}>
+                {allResult.per_wallet.map((w, i) => (
+                  <div key={i} style={{ padding: "9px 12px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: w.skipped ? "#f59e0b" : "var(--ink)" }}>
+                        {w.agent_slug}
+                      </span>
+                      <code style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
+                        {w.address.slice(0, 10)}…{w.address.slice(-6)}
+                      </code>
+                      <span style={{ fontSize: "0.65rem", color: "var(--muted)" }}>{w.chain}</span>
+                      {!w.skipped && (
+                        <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>
+                          {w.txs_fetched} txs · {w.events_classified} events · {w.provider_used}
+                        </span>
+                      )}
+                      {w.evidence_upgrade && (
+                        <span style={{ padding: "1px 6px", borderRadius: 999, fontSize: "0.62rem", fontWeight: 700, background: "var(--accent-soft)", color: "var(--accent)" }}>
+                          → {w.evidence_upgrade}
+                        </span>
+                      )}
+                      {w.skipped && (
+                        <span style={{ fontSize: "0.68rem", color: "#f59e0b" }}>skipped: {w.skip_reason}</span>
+                      )}
+                      {w.fetch_error && !w.skipped && (
+                        <span style={{ fontSize: "0.65rem", color: "#f59e0b" }}>⚠ fallback used</span>
+                      )}
+                    </div>
+                    {!w.skipped && Object.keys(w.classified_counts).length > 0 && (
+                      <ClassifiedCountBadges counts={w.classified_counts} />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RoadmapSection() {
   return (
     <div>
@@ -2260,6 +2588,7 @@ export default function LucaAdminPage() {
           {section === "registry"    && <RegistrySection secret={secret} />}
           {section === "attribution" && <AttributionSection secret={secret} />}
           {section === "economics"   && <EconomicsSection />}
+          {section === "truth-engine" && <TruthEngineSection secret={secret} />}
           {section === "growth"    && <GrowthSection secret={secret} />}
           {section === "reports"   && <ReportsSection secret={secret} />}
           {section === "comm"      && <CommIntelSection secret={secret} />}
