@@ -1,4 +1,4 @@
-# x402Books + Luca — Ecosystem Integration Plan
+# Zetta + Luca — Ecosystem Integration Plan
 
 ## The Core Stack
 
@@ -6,7 +6,7 @@
 Nipmod          → package discovery + install intelligence
 EigenCloud      → verifiable execution
 x402            → autonomous payments
-x402Books       → financial intelligence
+Zetta       → financial intelligence
 Luca            → financial operator / accountant
 ```
 
@@ -14,7 +14,7 @@ Luca            → financial operator / accountant
 
 EigenCloud proves what code ran.
 x402 proves what payment happened.
-x402Books + Luca prove what the money means.
+Zetta + Luca prove what the money means.
 
 **Verifiable execution + verifiable payments + readable books.**
 
@@ -23,7 +23,7 @@ x402Books + Luca prove what the money means.
 ## EigenCloud Integration
 
 ### Positioning
-> EigenCloud proves what agents executed. x402Books + Luca explain the financial activity behind those agents.
+> EigenCloud proves what agents executed. Zetta + Luca explain the financial activity behind those agents.
 
 Make agent financial activity as verifiable as agent execution.
 
@@ -31,7 +31,7 @@ Make agent financial activity as verifiable as agent execution.
 
 1. **EigenCloud agent deploys** → gets app identity, TEE attestation, wallet, payment activity, execution history
 2. **Agent declares financial wallet** → `.x402books/wallets.json` manifest with EigenCloud deployment reference
-3. **x402Books indexes the agent** → registry profile with wallet roles, verification status, treasury health
+3. **Zetta indexes the agent** → registry profile with wallet roles, verification status, treasury health
 4. **Luca generates the report** → inflows, outflows, x402 payments, compute spend, treasury health, anomalies
 5. **Agent gets a Verifiable Treasury Report** → co-branded output, shareable
 
@@ -72,12 +72,12 @@ New report type with sections: Agent identity, Execution proof, Wallet roles, Tr
 1 manually researched EigenCloud agent → manifest → registry → Luca report → publish → DM EigenCloud.
 
 **Ship 5 — Outreach DM**
-> Hey EigenCloud team — EigenCloud proves what an agent ran. x402 proves what an agent paid. x402Books + Luca explain what the money means. We built a POC for "Verifiable Treasury Reports." Would love to explore this for EigenCloud-deployed agents.
+> Hey EigenCloud team — EigenCloud proves what an agent ran. x402 proves what an agent paid. Zetta + Luca explain what the money means. We built a POC for "Verifiable Treasury Reports." Would love to explore this for EigenCloud-deployed agents.
 
 ### Luca Rule
 ```
 EigenCloud proves execution.
-x402Books explains financial activity.
+Zetta explains financial activity.
 Do not confuse code attestation with financial health.
 An agent can have verified execution but weak treasury discipline.
 ```
@@ -141,10 +141,10 @@ Luca Verdict: Operationally active. Treasury discipline remains stable.
 agents → manifests → registry → Luca analysis → visibility → more agents
 
 **Loop 2 — Infrastructure Loop**
-Nipmod packages → more capable agents → more financial complexity → more need for Luca/x402Books
+Nipmod packages → more capable agents → more financial complexity → more need for Luca/Zetta
 
 **Loop 3 — Verifiability Loop**
-EigenCloud execution → x402 payments → x402Books intelligence → Luca reports → trusted autonomous systems
+EigenCloud execution → x402 payments → Zetta intelligence → Luca reports → trusted autonomous systems
 
 ---
 
@@ -152,7 +152,7 @@ EigenCloud execution → x402 payments → x402Books intelligence → Luca repor
 
 Don't announce "partnerships." Announce **composable infrastructure**.
 
-x402Books is becoming: **the financial coordination/intelligence layer for the agent economy.**
+Zetta is becoming: **the financial coordination/intelligence layer for the agent economy.**
 
 Every stack eventually touches money. Every autonomous system eventually needs treasury visibility. Every agent ecosystem eventually needs financial intelligence.
 

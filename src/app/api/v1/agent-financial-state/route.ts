@@ -14,8 +14,9 @@ import { getEcosystemRegistry, isInEcosystem } from "@/lib/ecosystem-tokens";
 
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
-const PAYMENT_ADDRESS = (process.env.X402BOOKS_PAYMENT_ADDRESS ?? ZERO_ADDRESS) as `0x${string}`;
-const PAYMENT_ENABLED = Boolean(process.env.X402BOOKS_PAYMENT_ADDRESS);
+// ZETTA_PAYMENT_ADDRESS preferred; X402BOOKS_PAYMENT_ADDRESS accepted during migration.
+const PAYMENT_ADDRESS = ((process.env.ZETTA_PAYMENT_ADDRESS || process.env.X402BOOKS_PAYMENT_ADDRESS) ?? ZERO_ADDRESS) as `0x${string}`;
+const PAYMENT_ENABLED = Boolean(process.env.ZETTA_PAYMENT_ADDRESS || process.env.X402BOOKS_PAYMENT_ADDRESS);
 
 async function treasuryHandler(request: NextRequest): Promise<NextResponse> {
 

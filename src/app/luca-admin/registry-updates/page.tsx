@@ -306,7 +306,7 @@ export default function RegistryUpdatesPage() {
           <form onSubmit={(e) => { e.preventDefault(); loadPendingUpdates(secret); }}>
             <input
               type="password"
-              placeholder="X402BOOKS_INTERNAL_SECRET"
+              placeholder="ZETTA_INTERNAL_SECRET"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
               autoFocus

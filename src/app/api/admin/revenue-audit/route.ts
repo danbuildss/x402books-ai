@@ -1,7 +1,7 @@
 // POST /api/admin/revenue-audit
 // Batch revenue audit for named agents or top-N by GDP.
 // Returns full AgentRevenueAudit per agent + automated analysis flags.
-// Protected by X402BOOKS_INTERNAL_SECRET — admin use only.
+// Protected by ZETTA_INTERNAL_SECRET — admin use only.
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAgentBySlug, buildAgentBooksAudit } from "@/lib/agent-books";

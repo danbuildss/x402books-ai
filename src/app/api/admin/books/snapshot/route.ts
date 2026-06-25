@@ -4,7 +4,7 @@
 //   - If slug is provided: snapshot just that agent.
 //   - If slug is omitted: snapshot all attributed agents.
 //
-// Auth: internalAuth (X402BOOKS_INTERNAL_SECRET)
+// Auth: internalAuth (ZETTA_INTERNAL_SECRET)
 // Runs sequentially to avoid rate-limiting downstream ledger calls.
 
 import { NextRequest, NextResponse } from "next/server";

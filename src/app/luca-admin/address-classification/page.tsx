@@ -162,7 +162,7 @@ export default function AddressClassificationPage() {
               type="password"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              placeholder="X402BOOKS_INTERNAL_SECRET"
+              placeholder="ZETTA_INTERNAL_SECRET"
               style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 260 }}
             />
             <button

@@ -5,7 +5,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { StitchHeader, StitchIcon, StitchShell, saveTheme } from "@/components/stitch-app";
 import { useLedgerState } from "@/lib/use-ledger-state";
 
-const THEME_KEY = "x402books_theme";
+const THEME_KEY = "zetta_theme";
 
 export default function SettingsPage() {
   const { user, logout: privyLogout } = usePrivy();
@@ -136,9 +136,10 @@ export default function SettingsPage() {
               className="stitch-button"
               style={{ fontSize: "12px", minHeight: "30px", whiteSpace: "nowrap" }}
               onClick={() => {
-                ["x402books_active_ledger", "x402books_recent_wallets", "x402books_notes"].forEach((k) =>
-                  localStorage.removeItem(k),
-                );
+                [
+                  "zetta_active_ledger", "zetta_recent_wallets", "zetta_notes",
+                  "x402books_active_ledger", "x402books_recent_wallets", "x402books_notes",
+                ].forEach((k) => localStorage.removeItem(k));
                 window.location.reload();
               }}
             >

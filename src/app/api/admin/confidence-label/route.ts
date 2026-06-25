@@ -1,6 +1,6 @@
 // POST /api/admin/confidence-label  — set human-verified confidence for an agent
 // GET  /api/admin/confidence-label  — list all labels (admin view)
-// Protected by X402BOOKS_INTERNAL_SECRET.
+// Protected by ZETTA_INTERNAL_SECRET.
 
 import { NextRequest, NextResponse } from "next/server";
 import { setConfidenceLabel, getAllConfidenceLabels, type ConfidenceLevel } from "@/lib/revenue-confidence";

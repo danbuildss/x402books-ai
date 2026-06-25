@@ -8,7 +8,7 @@
 //   - total_addresses, eoa_count, token_contract_count, smart_contract_count, etc.
 //   - per-agent breakdown with address_type for each wallet
 //
-// Protected by X402BOOKS_INTERNAL_SECRET.
+// Protected by ZETTA_INTERNAL_SECRET.
 // Uses Alchemy Base-mainnet RPC to classify each address.
 
 import { NextRequest, NextResponse } from "next/server";

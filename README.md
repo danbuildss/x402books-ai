@@ -184,7 +184,7 @@ ANTHROPIC_API_KEY=             # report writing (Claude)
 GROK_API_KEY=                  # optional — research phase (Grok); reports generate without it
 
 # Internal
-X402BOOKS_INTERNAL_SECRET=     # bearer token for /api/admin/* routes — fail-closed when unset
+ZETTA_INTERNAL_SECRET=     # bearer token for /api/admin/* routes — fail-closed when unset
 
 # $LUCA
 LUCA_TOKEN_ADDRESS=0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3
@@ -216,7 +216,7 @@ Run in order from the Supabase SQL editor. All files are idempotent (`IF NOT EXI
 
 ## Admin Endpoints
 
-All admin routes require `Authorization: Bearer <X402BOOKS_INTERNAL_SECRET>`.
+All admin routes require `Authorization: Bearer <ZETTA_INTERNAL_SECRET>`.
 
 ### Generate a research report
 
@@ -256,7 +256,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Security
 
-- `X402BOOKS_INTERNAL_SECRET` must be set in production — routes fail closed when missing
+- `ZETTA_INTERNAL_SECRET` must be set in production — routes fail closed when missing
 - API keys stored as SHA-256 hashes — raw keys are never persisted
 - Timing-safe comparisons on all token/secret checks
 - `SUPABASE_SERVICE_ROLE_KEY` is server-side only — never exposed to client

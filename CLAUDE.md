@@ -1,4 +1,4 @@
-# x402Books — Strategic North Star
+# Zetta — Strategic North Star
 
 ## What we are building
 
@@ -18,19 +18,19 @@ The wedge: **readable financial identity for autonomous systems.**
 ## The architecture
 
 ```
-x402Books  = infrastructure (index, classify, interpret, display)
-Luca       = intelligence interface on top of x402Books
-$LUCA      = ecosystem asset — NOT the product, NOT the narrative
+Zetta  = infrastructure (index, classify, interpret, display)
+Luca   = intelligence interface on top of Zetta
+$LUCA  = ecosystem asset — NOT the product, NOT the narrative
 ```
 
-- x402Books sees: wallet A sent USDC to wallet B
+- Zetta sees: wallet A sent USDC to wallet B
 - Luca interprets: "recurring settlement activity detected."
 
 That distinction matters. Never blur it.
 
 ---
 
-## What x402Books does
+## What Zetta does
 
 1. **Identity layer** — wallet manifest, roles (treasury / fee / deployer / operator), verification, ecosystem indexing
 2. **Registry layer** — agents, wallets, ecosystems, settlement history → public financial identity
@@ -42,9 +42,9 @@ That distinction matters. Never blur it.
 ## How AEON fits
 
 ```
-AEON        = execution + settlement layer
-x402Books   = financial visibility layer
-Luca        = operational intelligence layer
+AEON   = execution + settlement layer
+Zetta  = financial visibility layer
+Luca   = operational intelligence layer
 ```
 
 That triangle is correct. Protect it.
@@ -54,7 +54,7 @@ That triangle is correct. Protect it.
 ## How Surplus fits
 
 ```
-Luca → requests inference → Surplus routes provider → x402Books records event → Luca generates financial interpretation
+Luca → requests inference → Surplus routes provider → Zetta records event → Luca generates financial interpretation
 ```
 
 Financially self-aware agents. That's the loop.

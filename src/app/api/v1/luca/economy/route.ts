@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
 
       // Luca's action endpoints (so he has them in context)
       _meta: {
-        generate_report:  "POST /api/admin/research/generate  (use X402BOOKS_INTERNAL_SECRET)",
+        generate_report:  "POST /api/admin/research/generate  (use ZETTA_INTERNAL_SECRET)",
         agent_books:      "GET /api/v1/agent-books/[slug]?range=30d",
         this_endpoint:    "GET /api/v1/luca/economy",
         leaderboard_url:  "https://www.zettaai.co/leaderboard",

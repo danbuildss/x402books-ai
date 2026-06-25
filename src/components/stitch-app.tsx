@@ -60,7 +60,9 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 // ---- Theme helpers ----
 
-const THEME_KEY = "x402books_theme";
+const THEME_KEY = "zetta_theme";
+// Legacy keys accepted as fallback during migration (note: old code used both dash and underscore variants)
+const THEME_KEY_LEGACY = ["x402books_theme", "x402books-theme"];
 type Theme = "dark" | "light";
 
 function applyTheme(theme: Theme) {
@@ -69,7 +71,9 @@ function applyTheme(theme: Theme) {
 
 function readStoredTheme(): Theme {
   if (typeof window === "undefined") return "dark";
-  return (localStorage.getItem(THEME_KEY) as Theme) || "dark";
+  const v = localStorage.getItem(THEME_KEY)
+    ?? THEME_KEY_LEGACY.map((k) => localStorage.getItem(k)).find(Boolean);
+  return (v as Theme) || "dark";
 }
 
 export function saveTheme(theme: Theme) {

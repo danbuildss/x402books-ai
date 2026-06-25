@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-const ACCESS_COOKIE_NAME = "x402books_access";
+// New canonical name. Legacy kept for dual-read during migration.
+const ACCESS_COOKIE_NAME = "zetta_access";
+const ACCESS_COOKIE_NAME_LEGACY = "x402books_access";
 
 const protectedRoutes = [
   "/dashboard",
@@ -30,7 +32,10 @@ async function getSignature(payload: string, secret: string) {
 }
 
 async function hasValidAccessCookie(request: NextRequest) {
-  const token = request.cookies.get(ACCESS_COOKIE_NAME)?.value;
+  // Accept both new and legacy cookie names during migration
+  const token =
+    request.cookies.get(ACCESS_COOKIE_NAME)?.value ??
+    request.cookies.get(ACCESS_COOKIE_NAME_LEGACY)?.value;
   const secret = process.env.ACCESS_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
   if (!token || !secret) return false;
