@@ -1,8 +1,8 @@
-# x402Books AI + Luca — Full Vision, Overview & Billion-Dollar Plan
+# Zetta AI + Luca — Full Vision, Overview & Billion-Dollar Plan
 
 ## The Core Vision
 
-x402Books AI is becoming the financial intelligence layer for the autonomous agent economy.
+Zetta AI is becoming the financial intelligence layer for the autonomous agent economy.
 
 Luca is becoming the AI accountant and public financial analyst for that economy.
 
@@ -45,13 +45,13 @@ This becomes a massive problem as:
 - stablecoin payments grow
 - AI companies become autonomous
 
-That is the gap x402Books AI fills.
+That is the gap Zetta AI fills.
 
 ---
 
-## What x402Books AI Is
+## What Zetta AI Is
 
-x402Books AI is the financial intelligence platform for autonomous agents.
+Zetta AI is the financial intelligence platform for autonomous agents.
 
 It transforms:
 - wallet activity
@@ -86,7 +86,7 @@ Luca is:
 Luca lives publicly:
 - on Telegram
 - on X
-- inside x402Books
+- inside Zetta
 - eventually inside agent workflows and MCP systems
 
 Luca becomes: **the public financial analyst for the agent economy.**
@@ -106,7 +106,7 @@ Purpose:
 
 This is the open adoption wedge.
 
-### 2. x402Books AI
+### 2. Zetta AI
 Financial intelligence engine.
 
 Handles:
@@ -204,14 +204,14 @@ The token becomes: **the access and utility layer for agent financial intelligen
 ## The Main Strategic Shift
 
 Originally:
-- x402Books AI
+- Zetta AI
 - $XBOOKS token
 
 Now:
 - unified around Luca
 - $LUCA becomes ecosystem token
 - Luca becomes public face
-- x402Books becomes the infrastructure layer
+- Zetta becomes the infrastructure layer
 
 This is a smart shift because:
 - Luca is easier to understand
@@ -261,7 +261,7 @@ Meaning:
 - human founder sets direction
 - AI agents execute workflows
 - Luca tracks finances
-- x402Books measures activity
+- Zetta measures activity
 
 Dan becomes: **founder / governor / allocator**
 
@@ -274,7 +274,7 @@ Agents handle:
 - finance
 - product workflows
 
-This turns x402Books into: **the financial operating system for agent-run companies.**
+This turns Zetta into: **the financial operating system for agent-run companies.**
 
 ---
 
@@ -351,7 +351,7 @@ Then monetize:
 
 ## The Long-Term Platform Strategy
 
-x402Books should evolve into: **Financial Infrastructure Layer**
+Zetta should evolve into: **Financial Infrastructure Layer**
 
 **Developers use:**
 - APIs
@@ -401,7 +401,7 @@ Creates: distribution, backlinks, trust, branding
 
 ```
 Agent Wallet Manifest  →  wallet ownership
-x402Books AI           →  financial intelligence
+Zetta AI           →  financial intelligence
 Luca                   →  financial explanation + ops
 Registry               →  public proof + discovery
 $LUCA                  →  ecosystem utility + access
@@ -456,7 +456,7 @@ all eventually depend on:
 - financial reporting
 - agent scoring
 
-That is the category x402Books and Luca are trying to own.
+That is the category Zetta and Luca are trying to own.
 
 ---
 
@@ -493,7 +493,7 @@ That is the category x402Books and Luca are trying to own.
 
 ## Final Positioning
 
-**x402Books AI** is becoming: the financial intelligence platform for autonomous agents.
+**Zetta AI** is becoming: the financial intelligence platform for autonomous agents.
 
 **Luca** is becoming: the AI accountant and public financial analyst for the agent economy.
 

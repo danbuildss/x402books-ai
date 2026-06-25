@@ -1645,7 +1645,7 @@ function ReportsSection({ secret }: { secret: string }) {
         <div className={styles.card}>
           <p className={styles.cardTitle}>Required env vars</p>
           <div className={styles.envList}>
-            {["TELEGRAM_BOT_TOKEN", "LUCA_ADMIN_CHAT_ID", "X402BOOKS_INTERNAL_SECRET"].map((key) => (
+            {["TELEGRAM_BOT_TOKEN", "LUCA_ADMIN_CHAT_ID", "ZETTA_INTERNAL_SECRET"].map((key) => (
               <div key={key} className={styles.envRow}>
                 <code>{key}</code>
               </div>
@@ -1691,7 +1691,7 @@ function RoadmapSection() {
 
 function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health: HealthData | null }) {
   const envStatus = [
-    { key: "X402BOOKS_INTERNAL_SECRET", ok: true },
+    { key: "ZETTA_INTERNAL_SECRET", ok: true },
     { key: "SUPABASE_SERVICE_ROLE_KEY",  ok: health?.services.supabase ?? null },
     { key: "ALCHEMY_API_KEY",            ok: health?.services.alchemy  ?? null },
     { key: "OPENAI_API_KEY",             ok: health?.services.openai   ?? null },

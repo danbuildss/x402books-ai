@@ -1,6 +1,8 @@
 import { createHash, createHmac } from "crypto";
 
-export const ACCESS_COOKIE_NAME = "x402books_access";
+// New canonical cookie name. Legacy name accepted for backwards compatibility.
+export const ACCESS_COOKIE_NAME = "zetta_access";
+export const ACCESS_COOKIE_NAME_LEGACY = "x402books_access";
 export const ACCESS_COOKIE_MAX_AGE = 60 * 60 * 24 * 14;
 
 export function normalizeAccessCode(code: string) {
@@ -29,15 +31,19 @@ export function createAccessToken(codeId: string) {
 
 // Reads the session cookie from a request and returns the codeId
 // (access_codes.id) if the session is valid, null otherwise.
+// Accepts both zetta_access (new) and x402books_access (legacy) during migration.
 export function getSessionCodeId(req: Request): string | null {
   const cookieHeader = req.headers.get("cookie") ?? "";
-  const match = cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${ACCESS_COOKIE_NAME}=`));
-  if (!match) return null;
-  const token = decodeURIComponent(match.slice(ACCESS_COOKIE_NAME.length + 1));
-  return verifyAccessToken(token);
+  const cookies = cookieHeader.split(";").map((c) => c.trim());
+
+  for (const name of [ACCESS_COOKIE_NAME, ACCESS_COOKIE_NAME_LEGACY]) {
+    const match = cookies.find((c) => c.startsWith(`${name}=`));
+    if (!match) continue;
+    const token = decodeURIComponent(match.slice(name.length + 1));
+    const codeId = verifyAccessToken(token);
+    if (codeId) return codeId;
+  }
+  return null;
 }
 
 // Returns the codeId (access_codes.id) if the token is valid, null otherwise.

@@ -334,7 +334,7 @@ export default function RevenueAccuracyReportPage() {
               type="password"
               value={secret}
               onChange={(e) => setSecret(e.target.value)}
-              placeholder="X402BOOKS_INTERNAL_SECRET"
+              placeholder="ZETTA_INTERNAL_SECRET"
               style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 13, width: 220 }}
             />
           </div>
@@ -438,7 +438,7 @@ export default function RevenueAccuracyReportPage() {
               Shows every classification metric side-by-side and flags agents most likely to have incorrect revenue figures.
             </div>
             <div style={{ marginTop: 20, fontSize: 12, color: "var(--muted)", opacity: 0.7 }}>
-              Requires Alchemy API key and X402BOOKS_INTERNAL_SECRET configured in production.
+              Requires Alchemy API key and ZETTA_INTERNAL_SECRET configured in production.
             </div>
           </div>
         )}

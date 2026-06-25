@@ -8,7 +8,7 @@
 ## Ships This Week
 
 ### 1. Agent Wallet Manifest Launch (Main Infrastructure Ship)
-**Goal:** Position x402Books as foundational infrastructure for the agent economy.
+**Goal:** Position Zetta as foundational infrastructure for the agent economy.
 
 **Deliverables:**
 - GitHub repo live
@@ -122,7 +122,7 @@ Short, sharp analysis — not long-form. Example format:
 By end of week, people should clearly understand:
 
 ```
-x402Books  =  financial intelligence infrastructure
+Zetta  =  financial intelligence infrastructure
 Luca       =  the AI accountant / analyst
 Registry   =  public proof layer
 Manifest   =  wallet identity standard

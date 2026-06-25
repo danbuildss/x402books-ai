@@ -1,11 +1,11 @@
-# x402Books + Luca — Core Focus Document
+# Zetta + Luca — Core Focus Document
 
 ## The Real Business
 
 ```
 Agent
 → declares treasury
-→ x402Books indexes wallet
+→ Zetta indexes wallet
 → Luca generates profile
 → public credibility
 → more onboarding
@@ -15,7 +15,7 @@ That is the core loop. Everything else serves this.
 
 ---
 
-## What x402Books Actually Is
+## What Zetta Actually Is
 
 Not: accounting SaaS, dashboard tool, crypto analytics app.
 
@@ -43,7 +43,7 @@ Leverage comes from: public visibility, discoverability, financial identity, pro
 
 ## The Manifest Is the Moat
 
-If agents adopt `.x402books/wallets.json`, x402Books becomes the canonical financial identity layer for agents.
+If agents adopt `.x402books/wallets.json`, Zetta becomes the canonical financial identity layer for agents.
 
 That standard, once adopted, is very hard to displace.
 

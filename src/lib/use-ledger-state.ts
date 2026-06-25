@@ -32,14 +32,19 @@ async function resolveEns(name: string): Promise<string | null> {
   }
 }
 
-const storageKey = "x402books_active_ledger";
-const recentWalletsKey = "x402books_recent_wallets";
-const notesKey = "x402books_notes";
+// New canonical keys. Legacy keys read as fallback during migration.
+const storageKey = "zetta_active_ledger";
+const recentWalletsKey = "zetta_recent_wallets";
+const notesKey = "zetta_notes";
+const storageKeyLegacy = "x402books_active_ledger";
+const recentWalletsKeyLegacy = "x402books_recent_wallets";
+const notesKeyLegacy = "x402books_notes";
 
 function readNotes(): Record<string, string> {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(notesKey) || "{}");
+    const v = window.localStorage.getItem(notesKey) ?? window.localStorage.getItem(notesKeyLegacy);
+    return JSON.parse(v || "{}");
   } catch { return {}; }
 }
 
@@ -71,7 +76,7 @@ type RecentWallet = {
 function readStoredLedger() {
   if (typeof window === "undefined") return null;
   try {
-    const value = window.localStorage.getItem(storageKey);
+    const value = window.localStorage.getItem(storageKey) ?? window.localStorage.getItem(storageKeyLegacy);
     return value ? (JSON.parse(value) as StoredLedger) : null;
   } catch {
     return null;
@@ -85,7 +90,7 @@ function writeStoredLedger(value: StoredLedger) {
 function readRecentWallets() {
   if (typeof window === "undefined") return [] as RecentWallet[];
   try {
-    const value = window.localStorage.getItem(recentWalletsKey);
+    const value = window.localStorage.getItem(recentWalletsKey) ?? window.localStorage.getItem(recentWalletsKeyLegacy);
     return value ? (JSON.parse(value) as RecentWallet[]) : [];
   } catch {
     return [];

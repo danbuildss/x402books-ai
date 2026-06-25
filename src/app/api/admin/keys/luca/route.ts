@@ -1,7 +1,7 @@
 // POST /api/admin/keys/luca  — provision or rotate Luca's API key
 // GET  /api/admin/keys/luca  — show current Luca key metadata (not the raw key)
 //
-// Protected by X402BOOKS_INTERNAL_SECRET. Luca calls POST once on startup
+// Protected by ZETTA_INTERNAL_SECRET. Luca calls POST once on startup
 // if he doesn't have a key stored, or when rotating. The raw key is returned
 // only on creation — store it immediately.
 

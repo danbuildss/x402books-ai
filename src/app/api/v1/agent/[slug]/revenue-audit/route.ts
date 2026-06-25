@@ -1,6 +1,6 @@
 // GET /api/v1/agent/[slug]/revenue-audit?period=30d
 // Returns the full transaction-level revenue audit for a single agent.
-// Protected by X402BOOKS_INTERNAL_SECRET — admin/AEON use only.
+// Protected by ZETTA_INTERNAL_SECRET — admin/AEON use only.
 // Classification logic is read-only. No DB writes.
 
 import { NextRequest, NextResponse } from "next/server";

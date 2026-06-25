@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // POST /api/inference/log
 // Internal intake endpoint — called by Surplus (or any agent) to record inference economic events.
-// Requires Authorization: Bearer <X402BOOKS_INTERNAL_SECRET> or X-Internal-Secret header.
+// Requires Authorization: Bearer <ZETTA_INTERNAL_SECRET> or X-Internal-Secret header.
 // Writes to inference_events table (Surplus-facing raw events, separate from agent_economic_events).
 //
 // Body: { agent_id, provider, model?, request_type?, cost_usd?, latency_ms?, status? }

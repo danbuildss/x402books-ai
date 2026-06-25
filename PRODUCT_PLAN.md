@@ -1,8 +1,8 @@
-# x402Books AI — Product-First MVP Plan
+# Zetta AI — Product-First MVP Plan
 
 ## Product Positioning
 - **Positioning:** Financial visibility for AI agents.
-- **One-liner:** x402Books AI turns raw USDC microtransactions into clean books, reports, and budget insights for AI agents and builders.
+- **One-liner:** Zetta AI turns raw USDC microtransactions into clean books, reports, and budget insights for AI agents and builders.
 - **Core promise:** Paste a wallet. Get readable x402 books.
 
 ## MVP Scope

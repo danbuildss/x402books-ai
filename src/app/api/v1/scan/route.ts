@@ -6,11 +6,12 @@ import { buildLedgerScan } from "@/lib/ledger-service";
 import { parseLedgerParams, ledgerErrorResponse } from "@/lib/api-utils";
 
 // x402 pay-per-call: $0.01 USDC/call, 30% off for wallets holding ≥1,000 $LUCA on Base.
-// Set X402BOOKS_PAYMENT_ADDRESS to enable — if unset the route falls back to open access.
+// Set ZETTA_PAYMENT_ADDRESS to enable — if unset the route falls back to open access.
+// Legacy: X402BOOKS_PAYMENT_ADDRESS is also accepted during migration.
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000" as `0x${string}`;
-const PAYMENT_ADDRESS = (process.env.X402BOOKS_PAYMENT_ADDRESS ?? ZERO_ADDRESS) as `0x${string}`;
-const PAYMENT_ENABLED = Boolean(process.env.X402BOOKS_PAYMENT_ADDRESS);
+const PAYMENT_ADDRESS = ((process.env.ZETTA_PAYMENT_ADDRESS || process.env.X402BOOKS_PAYMENT_ADDRESS) ?? ZERO_ADDRESS) as `0x${string}`;
+const PAYMENT_ENABLED = Boolean(process.env.ZETTA_PAYMENT_ADDRESS || process.env.X402BOOKS_PAYMENT_ADDRESS);
 
 async function scanHandler(request: NextRequest): Promise<NextResponse> {
   const params = parseLedgerParams(request);

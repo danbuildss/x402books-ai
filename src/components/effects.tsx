@@ -144,7 +144,11 @@ export function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem("x402books-theme");
+    // Read new key first; fall back to both legacy variants (dash and underscore)
+    const storedTheme =
+      window.localStorage.getItem("zetta_theme") ??
+      window.localStorage.getItem("x402books_theme") ??
+      window.localStorage.getItem("x402books-theme");
     const preferredTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
@@ -157,7 +161,7 @@ export function ThemeToggle() {
     setTheme((current) => {
       const nextTheme = current === "dark" ? "light" : "dark";
       document.documentElement.dataset.theme = nextTheme;
-      window.localStorage.setItem("x402books-theme", nextTheme);
+      window.localStorage.setItem("zetta_theme", nextTheme);
       return nextTheme;
     });
   }
