@@ -316,6 +316,56 @@ export async function fetchB20Activity(
   };
 }
 
+// ── factory log scanner (testnet discovery) ──────────────────────────────────
+
+type FactoryLog = {
+  address: string;
+  topics: string[];
+  data: string;
+  blockNumber: string;
+  transactionHash: string;
+};
+
+export async function fetchB20FactoryLogs(
+  factoryAddress: string,
+  apiKey: string,
+  chain: B20Chain = "base-sepolia",
+): Promise<{ logsScanned: number; candidates: string[] }> {
+  const B20_PREFIX = "0xb200";
+  let logs: FactoryLog[] = [];
+
+  try {
+    const result = await rpc(apiKey, "eth_getLogs", [{
+      fromBlock: "0x0",
+      toBlock: "latest",
+      address: factoryAddress.toLowerCase(),
+    }], chain);
+    logs = (result as FactoryLog[]) ?? [];
+  } catch {
+    // Factory not yet deployed or no logs on this chain
+  }
+
+  const seen = new Set<string>();
+
+  for (const log of logs) {
+    // Topics: 0x + 64 hex — last 40 chars are address
+    for (const topic of log.topics ?? []) {
+      if (topic.length === 66) {
+        const addr = "0x" + topic.slice(26).toLowerCase();
+        if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)) seen.add(addr);
+      }
+    }
+    // Data: ABI-encoded slots of 64 hex chars; address at bytes 12–32 of each slot
+    const data = (log.data ?? "").replace(/^0x/, "");
+    for (let slot = 0; slot + 64 <= data.length; slot += 64) {
+      const addr = "0x" + data.slice(slot + 24, slot + 64).toLowerCase();
+      if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)) seen.add(addr);
+    }
+  }
+
+  return { logsScanned: logs.length, candidates: [...seen] };
+}
+
 // ── issuer → agent linker ─────────────────────────────────────────────────────
 
 type LinkableAgent = {

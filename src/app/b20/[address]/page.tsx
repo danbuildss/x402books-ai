@@ -4,7 +4,13 @@ import { notFound } from "next/navigation";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 
-export const revalidate = 120;
+export const revalidate = 60;
+
+function explorerBase(chain: string): string {
+  return chain === "base-sepolia"
+    ? "https://sepolia.basescan.org"
+    : "https://basescan.org";
+}
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -60,6 +66,8 @@ export default async function B20TokenProfilePage(
     );
   }
 
+  const isTestnet = token.chain === "base-sepolia";
+  const explorer = explorerBase(token.chain);
   const activity = buildActivitySummaryFromDb(address, events);
   const agentSlug = token.linked_agent_name
     ? token.linked_agent_name.toLowerCase().replace(/[^a-z0-9]+/g, "-")
@@ -86,6 +94,23 @@ export default async function B20TokenProfilePage(
 
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: 24 }}>
 
+        {/* Testnet warning */}
+        {isTestnet && (
+          <div style={{
+            background: "#78350f18", border: "1px solid #d97706",
+            borderLeft: "3px solid #d97706", borderRadius: 8,
+            padding: "12px 16px", marginBottom: 20,
+            display: "flex", alignItems: "flex-start", gap: 10,
+          }}>
+            <span style={{ fontSize: 14, lineHeight: 1 }}>⚠</span>
+            <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
+              <strong style={{ color: "#d97706" }}>TESTNET · BASE SEPOLIA · DEMO DATA ONLY.</strong>{" "}
+              This token is not production financial activity. It does not enter Agent Books, Agent GDP,
+              or production B20 intelligence. For proof-of-pipeline use only.
+            </div>
+          </div>
+        )}
+
         {/* Token identity header */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "20px 24px", marginBottom: 20 }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
@@ -95,7 +120,7 @@ export default async function B20TokenProfilePage(
                 {token.name && <span style={{ fontSize: 16, fontWeight: 400, color: "var(--muted)", marginLeft: 10 }}>{token.name}</span>}
               </div>
               <div style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--muted)" }}>
-                <a href={`https://basescan.org/address/${token.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
+                <a href={`${explorer}/address/${token.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
                   {token.address}
                 </a>
                 <span style={{ marginLeft: 8 }}>· Base</span>
@@ -113,8 +138,8 @@ export default async function B20TokenProfilePage(
           <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 18px" }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 12 }}>Token Identity</div>
             {[
-              { label: "Contract",       value: <a href={`https://basescan.org/address/${token.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.address)}</a> },
-              { label: "Chain",          value: token.chain },
+              { label: "Contract",       value: <a href={`${explorer}/address/${token.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.address)}</a> },
+              { label: "Chain",          value: isTestnet ? `${token.chain} (testnet · demo only)` : token.chain },
               { label: "Decimals",       value: token.decimals ?? 18 },
               { label: "Total Supply",   value: formatRaw(token.total_supply ?? "0", token.decimals ?? 18) },
               { label: "Deployed Block", value: token.deployed_block?.toLocaleString() ?? "—" },
@@ -133,13 +158,13 @@ export default async function B20TokenProfilePage(
               {
                 label: "Issuer Wallet",
                 value: token.issuer_wallet
-                  ? <a href={`https://basescan.org/address/${token.issuer_wallet}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.issuer_wallet)}</a>
+                  ? <a href={`${explorer}/address/${token.issuer_wallet}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.issuer_wallet)}</a>
                   : "—",
               },
               {
                 label: "Owner Wallet",
                 value: token.owner_wallet
-                  ? <a href={`https://basescan.org/address/${token.owner_wallet}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.owner_wallet)}</a>
+                  ? <a href={`${explorer}/address/${token.owner_wallet}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)", fontSize: 11 }}>{shortAddr(token.owner_wallet)}</a>
                   : "—",
               },
               {
@@ -193,7 +218,7 @@ export default async function B20TokenProfilePage(
                 <div style={{ fontSize: 12, color: "var(--muted)" }}>No events recorded yet</div>
               ) : evts.slice(0, 5).map((e) => (
                 <div key={e.txHash} style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid var(--line)", fontSize: 11 }}>
-                  <a href={`https://basescan.org/tx/${e.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)" }}>
+                  <a href={`${explorer}/tx/${e.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none", fontFamily: "var(--font-mono)" }}>
                     {e.txHash.slice(0, 10)}…
                   </a>
                   <span style={{ color: "var(--muted)" }}>
