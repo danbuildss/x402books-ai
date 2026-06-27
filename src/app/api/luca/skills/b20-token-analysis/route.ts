@@ -7,6 +7,7 @@ import {
   linkTokenToAgent,
   deriveManifestStatus,
   buildLucaSummary,
+  type B20Chain,
 } from "@/lib/b20-client";
 import { getB20Token, getB20Activity, buildActivitySummaryFromDb } from "@/lib/b20-db";
 
@@ -21,9 +22,9 @@ export async function POST(req: NextRequest) {
   const start = Date.now();
   const endpoint = "/api/luca/skills/b20-token-analysis";
 
-  let body: { address?: string; agent_slug?: string; period?: string };
+  let body: { address?: string; agent_slug?: string; period?: string; chain?: string };
   try {
-    body = await req.json() as { address?: string; agent_slug?: string; period?: string };
+    body = await req.json() as { address?: string; agent_slug?: string; period?: string; chain?: string };
   } catch {
     auth.finish(400, Date.now() - start, endpoint);
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -34,6 +35,9 @@ export async function POST(req: NextRequest) {
     auth.finish(400, Date.now() - start, endpoint);
     return NextResponse.json({ error: "address must be a valid 0x Ethereum address" }, { status: 400 });
   }
+
+  const chain: B20Chain = body.chain === "base-sepolia" ? "base-sepolia" : "base";
+  const isTestnet = chain !== "base";
 
   const apiKey = process.env.ALCHEMY_API_KEY;
   if (!apiKey) {
@@ -66,7 +70,8 @@ export async function POST(req: NextRequest) {
         deploymentTx: cachedToken.deployment_tx,
         deployedBlock: cachedToken.deployed_block,
         metadataUri: cachedToken.metadata_uri,
-        chain: "base" as const,
+        chain: (cachedToken.chain as B20Chain) ?? "base",
+        isTestnet: cachedToken.chain === "base-sepolia",
       };
       link = {
         method: cachedToken.link_method as "manifest" | "known_token" | "erc8004" | "admin" | "none",
@@ -80,18 +85,18 @@ export async function POST(req: NextRequest) {
       manifestStatus = cachedToken.manifest_status as "attributed" | "candidate" | "none";
       activity = storedEvents.length > 0
         ? buildActivitySummaryFromDb(address, storedEvents)
-        : await fetchB20Activity(address, apiKey);
-      lucaSummary = cachedToken.luca_summary ?? buildLucaSummary(identity, link, manifestStatus, activity);
+        : await fetchB20Activity(address, apiKey, chain);
+      lucaSummary = cachedToken.luca_summary ?? buildLucaSummary(identity, link, manifestStatus, activity, isTestnet);
     } else {
       // Live fetch
       const { agents } = await getRegistryAgents();
       [identity, activity] = await Promise.all([
-        fetchB20TokenIdentity(address, apiKey),
-        fetchB20Activity(address, apiKey),
+        fetchB20TokenIdentity(address, apiKey, chain),
+        fetchB20Activity(address, apiKey, chain),
       ]);
       link = linkTokenToAgent(address, identity.issuerWallet, agents);
       manifestStatus = deriveManifestStatus(link);
-      lucaSummary = buildLucaSummary(identity, link, manifestStatus, activity);
+      lucaSummary = buildLucaSummary(identity, link, manifestStatus, activity, isTestnet);
     }
 
     auth.finish(200, Date.now() - start, endpoint);
@@ -104,12 +109,16 @@ export async function POST(req: NextRequest) {
         decimals: identity.decimals,
         total_supply: identity.totalSupply,
         chain: identity.chain,
+        is_testnet: isTestnet,
         deployed_block: identity.deployedBlock,
         issuer_wallet: identity.issuerWallet,
         owner_wallet: identity.ownerWallet,
         books_eligible: false,
         books_eligible_note: "Token contracts are never books-eligible",
       },
+      ...(isTestnet && {
+        testnet_warning: "This is a testnet B20 token (Base Sepolia). It is not production financial activity. It does not enter Agent Books, Agent GDP, or production B20 intelligence. For proof-of-pipeline use only.",
+      }),
       linked_agent: link.agentName
         ? {
             name: link.agentName,

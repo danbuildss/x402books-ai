@@ -77,6 +77,7 @@ export default function B20IntelligencePage() {
   }, [secret]);
 
   const [mode, setMode] = useState<"detect_from_registry" | "from_registry" | "single" | "activity_only">("detect_from_registry");
+  const [chain, setChain] = useState<"base" | "base-sepolia">("base");
   const [address, setAddress] = useState("");
   const [includeActivity, setIncludeActivity] = useState(false);
   const [dryRun, setDryRun] = useState(true);
@@ -91,7 +92,7 @@ export default function B20IntelligencePage() {
     setReport(null);
     setDetectReport(null);
 
-    const body: Record<string, unknown> = { mode, includeActivity, dryRun };
+    const body: Record<string, unknown> = { mode, chain, includeActivity, dryRun };
     if (mode === "single" || mode === "activity_only") body.address = address.trim().toLowerCase();
 
     try {
@@ -137,6 +138,61 @@ export default function B20IntelligencePage() {
           Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
         </div>
 
+        {/* Sourcing checklist */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>B20 Token Sourcing Guide</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 14 }}>
+            Guide only — no automatic activation at any step. Admin must complete all three steps before indexing.
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              {
+                step: "1",
+                label: "Source",
+                color: "#6DB874",
+                items: [
+                  "Collect address from B20 launch announcement",
+                  "Or from partner team / agent builder directly",
+                  "Or from registry submission (b20_token_address field)",
+                ],
+              },
+              {
+                step: "2",
+                label: "Verify",
+                color: "#f59e0b",
+                items: [
+                  "Confirm address starts with 0xB200 (not 0xb2 or anything else)",
+                  "Open on Basescan — contract must exist on Base mainnet",
+                  "Run detect_from_registry — must show confirmed_on_chain: true",
+                ],
+              },
+              {
+                step: "3",
+                label: "Activate",
+                color: "#6DB874",
+                items: [
+                  "Set isB20Token: true in src/app/registry/data.ts for that agent only",
+                  "Deploy the change to production",
+                  "Run from_registry dry run — confirm token appears",
+                  "Run from_registry live — indexed, no DB writes until this step",
+                ],
+              },
+            ].map((s) => (
+              <div key={s.step} style={{ flex: 1, minWidth: 200, background: "var(--bg)", border: "1px solid var(--line)", borderTop: `3px solid ${s.color}`, borderRadius: 7, padding: "12px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: s.color, color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {s.step}
+                  </div>
+                  <span style={{ fontWeight: 700, fontSize: 12, color: "var(--ink)" }}>{s.label}</span>
+                </div>
+                <ul style={{ margin: 0, padding: "0 0 0 14px", fontSize: 11, color: "var(--muted)", lineHeight: 1.7 }}>
+                  {s.items.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Config panel */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>B20 Indexer Config</div>
@@ -175,11 +231,36 @@ export default function B20IntelligencePage() {
             )}
           </div>
 
+          {/* Chain selector — always visible */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Chain</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {([
+                ["base",         "Base Mainnet"],
+                ["base-sepolia", "Base Sepolia (Testnet)"],
+              ] as const).map(([c, label]) => (
+                <button key={c} onClick={() => setChain(c)} style={{
+                  padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#f59e0b60" : "var(--line)"}`,
+                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#6DB874") : "var(--bg)",
+                  color: chain === c ? "#fff" : "var(--ink)",
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {chain === "base-sepolia" && (
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
+                ⚠ Testnet mode — data is for proof/demo only. Will not appear on public /b20 page. Does not enter production stats, Agent Books, or Agent GDP.
+              </div>
+            )}
+          </div>
+
           {(mode === "single" || mode === "activity_only") && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Token Address</div>
               <input value={address} onChange={(e) => setAddress(e.target.value)}
-                placeholder="0x..."
+                placeholder={chain === "base-sepolia" ? "0xB200… (Base Sepolia testnet address)" : "0x..."}
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 340, fontFamily: "var(--font-mono)" }} />
             </div>
           )}
@@ -301,6 +382,7 @@ export default function B20IntelligencePage() {
           <>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
               {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
+              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
               Generated {new Date(report.generated_at).toLocaleString()}
             </div>
 
