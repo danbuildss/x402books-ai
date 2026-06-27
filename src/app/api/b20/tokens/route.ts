@@ -1,19 +1,39 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getB20Tokens, getB20Stats } from "@/lib/b20-db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+const VALID_CHAINS = ["base", "base-sepolia"] as const;
+type B20Chain = (typeof VALID_CHAINS)[number];
+
+export async function GET(req: NextRequest) {
+  const raw = req.nextUrl.searchParams.get("chain") ?? "base";
+  const chain: B20Chain = (VALID_CHAINS as readonly string[]).includes(raw)
+    ? (raw as B20Chain)
+    : "base";
+  const isTestnet = chain !== "base";
+
   try {
-    const [tokens, stats] = await Promise.allSettled([getB20Tokens(), getB20Stats()]);
+    const [tokens, stats] = await Promise.allSettled([
+      getB20Tokens(chain),
+      getB20Stats(chain),
+    ]);
 
     return NextResponse.json(
       {
+        chain,
+        is_testnet: isTestnet,
+        ...(isTestnet && {
+          testnet_warning:
+            "Testnet data is for demo/proof only. It is not production financial activity. Testnet tokens do not enter Agent Books, Agent GDP, or production B20 intelligence.",
+        }),
         tokens: tokens.status === "fulfilled" ? tokens.value : [],
         stats: stats.status === "fulfilled" ? stats.value : null,
         data_integrity: {
           books_eligible: false,
-          note: "Token contracts are never books-eligible. Token transfers are not operating revenue.",
+          note: isTestnet
+            ? "Testnet tokens are never books-eligible. This data is for demo only."
+            : "Token contracts are never books-eligible. Token transfers are not operating revenue.",
         },
         generated_at: new Date().toISOString(),
       },

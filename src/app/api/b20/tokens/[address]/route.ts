@@ -31,20 +31,31 @@ export async function GET(
       );
     }
 
+    const isTestnet = tokenData.chain === "base-sepolia";
     const activity = buildActivitySummaryFromDb(address, eventData);
 
     return NextResponse.json(
       {
         token: tokenData,
+        is_testnet: isTestnet,
+        ...(isTestnet && {
+          testnet_warning:
+            "This is a testnet B20 token (Base Sepolia). It is not production financial activity. It does not enter Agent Books, Agent GDP, or production B20 intelligence. For proof-of-pipeline use only.",
+        }),
         activity,
         data_integrity: {
           books_eligible: false,
-          token_contract_note: "Token contract is not an operator wallet",
-          issuer_wallet_note: tokenData.manifest_status === "attributed"
-            ? "Issuer wallet is manifest-attributed"
-            : "Issuer wallet is not attributed — financial books require .agent/wallets.json",
+          token_contract_note: isTestnet
+            ? "Testnet token — not books-eligible under any circumstances"
+            : "Token contract is not an operator wallet",
+          issuer_wallet_note:
+            tokenData.manifest_status === "attributed"
+              ? "Issuer wallet is manifest-attributed"
+              : "Issuer wallet is not attributed — financial books require .agent/wallets.json",
           revenue_note: "Token transfers are not operating revenue",
-          gdp_note: "B20 activity is excluded from Agent GDP",
+          gdp_note: isTestnet
+            ? "Testnet B20 activity is excluded from Agent GDP"
+            : "B20 activity is excluded from Agent GDP",
         },
         generated_at: new Date().toISOString(),
       },
