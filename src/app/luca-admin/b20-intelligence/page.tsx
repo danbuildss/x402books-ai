@@ -125,9 +125,16 @@ export default function B20IntelligencePage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
 
         {/* Data integrity reminder */}
-        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
           <strong>Data integrity:</strong> Token contracts are never books-eligible · Token transfers are not operating revenue ·
           Issuer wallets are not attributed unless manifest-confirmed · B20 activity is excluded from Agent GDP
+        </div>
+
+        {/* Indexing gate rule */}
+        <div style={{ background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+          <strong>Indexing gate:</strong> Detect mode suggests candidates — it never indexes.
+          To activate indexing, set <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>isB20Token: true</code> in <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>src/app/registry/data.ts</code> only for confirmed <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>0xB200…</code> tokens.
+          Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
         </div>
 
         {/* Config panel */}
