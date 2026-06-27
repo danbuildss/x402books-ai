@@ -137,6 +137,61 @@ export default function B20IntelligencePage() {
           Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
         </div>
 
+        {/* Sourcing checklist */}
+        <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>B20 Token Sourcing Guide</div>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 14 }}>
+            Guide only — no automatic activation at any step. Admin must complete all three steps before indexing.
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {[
+              {
+                step: "1",
+                label: "Source",
+                color: "#6DB874",
+                items: [
+                  "Collect address from B20 launch announcement",
+                  "Or from partner team / agent builder directly",
+                  "Or from registry submission (b20_token_address field)",
+                ],
+              },
+              {
+                step: "2",
+                label: "Verify",
+                color: "#f59e0b",
+                items: [
+                  "Confirm address starts with 0xB200 (not 0xb2 or anything else)",
+                  "Open on Basescan — contract must exist on Base mainnet",
+                  "Run detect_from_registry — must show confirmed_on_chain: true",
+                ],
+              },
+              {
+                step: "3",
+                label: "Activate",
+                color: "#6DB874",
+                items: [
+                  "Set isB20Token: true in src/app/registry/data.ts for that agent only",
+                  "Deploy the change to production",
+                  "Run from_registry dry run — confirm token appears",
+                  "Run from_registry live — indexed, no DB writes until this step",
+                ],
+              },
+            ].map((s) => (
+              <div key={s.step} style={{ flex: 1, minWidth: 200, background: "var(--bg)", border: "1px solid var(--line)", borderTop: `3px solid ${s.color}`, borderRadius: 7, padding: "12px 14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: "50%", background: s.color, color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    {s.step}
+                  </div>
+                  <span style={{ fontWeight: 700, fontSize: 12, color: "var(--ink)" }}>{s.label}</span>
+                </div>
+                <ul style={{ margin: 0, padding: "0 0 0 14px", fontSize: 11, color: "var(--muted)", lineHeight: 1.7 }}>
+                  {s.items.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Config panel */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
           <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 12 }}>B20 Indexer Config</div>

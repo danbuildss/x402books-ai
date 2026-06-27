@@ -35,11 +35,19 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { agent_name, wallet_address, x_handle, notes, gitlawb_repo } = await request.json();
+    const { agent_name, wallet_address, x_handle, notes, gitlawb_repo, b20_token_address } = await request.json();
 
     const name = String(agent_name || "").trim();
     const wallet = String(wallet_address || "").trim().toLowerCase();
     const repo = gitlawb_repo ? String(gitlawb_repo).trim().slice(0, 300) : null;
+
+    // b20_token_address is optional and stored as-is for manual admin review.
+    // Validation: if provided, must look like an address. Prefix check (0xB200) is
+    // done by the admin during review — not enforced here to avoid silent rejections.
+    const b20Addr = b20_token_address
+      ? String(b20_token_address).trim().toLowerCase().slice(0, 42)
+      : null;
+    const b20AddrClean = b20Addr && /^0x[0-9a-f]{40}$/.test(b20Addr) ? b20Addr : null;
 
     if (!name || name.length < 2) {
       return NextResponse.json({ error: "Agent name is required." }, { status: 400 });
@@ -61,6 +69,7 @@ export async function POST(request: NextRequest) {
       x_handle: x_handle ? String(x_handle).trim().replace(/^@/, "") : null,
       notes: notes ? String(notes).trim().slice(0, 500) : null,
       gitlawb_repo: repo,
+      b20_token_address: b20AddrClean,
     }).select("id").single();
 
     if (error?.code === "23505") {

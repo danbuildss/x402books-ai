@@ -217,7 +217,7 @@ type FetchedWallet = { address: string; role: string; label: string; chain: stri
 
 function VerifyCTA() {
   const [tab, setTab] = useState<"manual" | "gitlawb">("gitlawb");
-  const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "" });
+  const [form, setForm] = useState({ agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "", b20_token_address: "" });
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [submittedSlug, setSubmittedSlug] = useState("");
@@ -519,6 +519,20 @@ function VerifyCTA() {
                     <label>Notes <span className="reg-field-opt">(optional)</span></label>
                     <textarea placeholder="Wallet role, ecosystem, anything helpful…" rows={3}
                       value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+                  </div>
+                  <div className="reg-field">
+                    <label>B20 Token Address <span className="reg-field-opt">(optional — B20 tokens only)</span></label>
+                    <input
+                      type="text"
+                      placeholder="0xB200… (must start with 0xB200 to be a B20 token)"
+                      value={form.b20_token_address}
+                      onChange={(e) => setForm((f) => ({ ...f, b20_token_address: e.target.value }))}
+                      style={{ fontFamily: "monospace" }}
+                    />
+                    <p className="reg-field-hint" style={{ marginTop: 4 }}>
+                      Only for B20 tokens on Base. Standard ERC-20 tokens ($LUCA, $BNKR, etc.) should not be entered here.
+                      This field is reviewed manually — it does not activate indexing automatically.
+                    </p>
                   </div>
                   {state === "error" && <p className="reg-form-error">{msg}</p>}
                   <button type="submit" className="reg-submit-btn" disabled={state === "loading"}>

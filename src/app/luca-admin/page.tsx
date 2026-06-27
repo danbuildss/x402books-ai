@@ -323,6 +323,7 @@ type Submission = {
   x_handle: string | null;
   notes: string | null;
   gitlawb_repo: string | null;
+  b20_token_address: string | null;
   status: string;
   admin_notes: string | null;
   created_at: string;
@@ -737,6 +738,17 @@ function RegistrySection({ secret }: { secret: string }) {
                   <code style={{ fontSize: "0.75rem", color: "var(--ink)", wordBreak: "break-all" }}>{s.wallet_address}</code>
                   {s.gitlawb_repo && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>Gitlawb: {s.gitlawb_repo}</p>}
                   {s.notes && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>{s.notes}</p>}
+                  {s.b20_token_address && (
+                    <div style={{ margin: "6px 0 0", padding: "5px 10px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#f59e0b" }}>B20 Token</span>
+                      <code style={{ fontSize: "0.72rem", color: "var(--ink)", fontFamily: "monospace" }}>{s.b20_token_address}</code>
+                      {s.b20_token_address.startsWith("0xb200") ? (
+                        <span style={{ fontSize: "0.65rem", color: "#22c55e", fontWeight: 700 }}>✓ prefix ok</span>
+                      ) : (
+                        <span style={{ fontSize: "0.65rem", color: "#ef4444", fontWeight: 700 }}>✗ not 0xB200 — do not flag</span>
+                      )}
+                    </div>
+                  )}
                   <p style={{ margin: "3px 0 0", fontSize: "0.68rem", color: "var(--muted)" }}>
                     {new Date(s.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                   </p>
