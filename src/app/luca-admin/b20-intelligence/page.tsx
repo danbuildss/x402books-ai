@@ -77,6 +77,7 @@ export default function B20IntelligencePage() {
   }, [secret]);
 
   const [mode, setMode] = useState<"detect_from_registry" | "from_registry" | "single" | "activity_only">("detect_from_registry");
+  const [chain, setChain] = useState<"base" | "base-sepolia">("base");
   const [address, setAddress] = useState("");
   const [includeActivity, setIncludeActivity] = useState(false);
   const [dryRun, setDryRun] = useState(true);
@@ -91,7 +92,7 @@ export default function B20IntelligencePage() {
     setReport(null);
     setDetectReport(null);
 
-    const body: Record<string, unknown> = { mode, includeActivity, dryRun };
+    const body: Record<string, unknown> = { mode, chain, includeActivity, dryRun };
     if (mode === "single" || mode === "activity_only") body.address = address.trim().toLowerCase();
 
     try {
@@ -230,11 +231,36 @@ export default function B20IntelligencePage() {
             )}
           </div>
 
+          {/* Chain selector — always visible */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Chain</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              {([
+                ["base",         "Base Mainnet"],
+                ["base-sepolia", "Base Sepolia (Testnet)"],
+              ] as const).map(([c, label]) => (
+                <button key={c} onClick={() => setChain(c)} style={{
+                  padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#f59e0b60" : "var(--line)"}`,
+                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#6DB874") : "var(--bg)",
+                  color: chain === c ? "#fff" : "var(--ink)",
+                  fontSize: 12, fontWeight: 600, cursor: "pointer",
+                }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+            {chain === "base-sepolia" && (
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
+                ⚠ Testnet mode — data is for proof/demo only. Will not appear on public /b20 page. Does not enter production stats, Agent Books, or Agent GDP.
+              </div>
+            )}
+          </div>
+
           {(mode === "single" || mode === "activity_only") && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Token Address</div>
               <input value={address} onChange={(e) => setAddress(e.target.value)}
-                placeholder="0x..."
+                placeholder={chain === "base-sepolia" ? "0xB200… (Base Sepolia testnet address)" : "0x..."}
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 340, fontFamily: "var(--font-mono)" }} />
             </div>
           )}
@@ -356,6 +382,7 @@ export default function B20IntelligencePage() {
           <>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
               {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
+              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
               Generated {new Date(report.generated_at).toLocaleString()}
             </div>
 

@@ -6,7 +6,13 @@
 //   - issuer wallet is NOT attributed unless manifest-confirmed
 //   - B20 activity does NOT enter Agent GDP
 
-const BASE_RPC = "https://base-mainnet.g.alchemy.com/v2";
+const CHAIN_RPC: Record<B20Chain, string> = {
+  "base":         "https://base-mainnet.g.alchemy.com/v2",
+  "base-sepolia": "https://base-sepolia.g.alchemy.com/v2",
+};
+
+export type B20Chain = "base" | "base-sepolia";
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const ERC20_SEL = {
@@ -28,7 +34,8 @@ export type B20TokenIdentity = {
   deploymentTx: string | null;
   deployedBlock: number | null;
   metadataUri: string | null;
-  chain: "base";
+  chain: B20Chain;
+  isTestnet: boolean;
 };
 
 export type B20AgentLink = {
@@ -93,8 +100,12 @@ function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-async function rpc(apiKey: string, method: string, params: unknown[]): Promise<unknown> {
-  const res = await fetch(`${BASE_RPC}/${apiKey}`, {
+function rpcUrl(apiKey: string, chain: B20Chain): string {
+  return `${CHAIN_RPC[chain]}/${apiKey}`;
+}
+
+async function rpc(apiKey: string, method: string, params: unknown[], chain: B20Chain = "base"): Promise<unknown> {
+  const res = await fetch(rpcUrl(apiKey, chain), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
@@ -105,9 +116,9 @@ async function rpc(apiKey: string, method: string, params: unknown[]): Promise<u
   return json.result;
 }
 
-async function ethCall(apiKey: string, to: string, data: string): Promise<string | null> {
+async function ethCall(apiKey: string, to: string, data: string, chain: B20Chain = "base"): Promise<string | null> {
   try {
-    const result = await rpc(apiKey, "eth_call", [{ to, data }, "latest"]);
+    const result = await rpc(apiKey, "eth_call", [{ to, data }, "latest"], chain);
     const s = result as string;
     return s && s !== "0x" && s !== "0x0" ? s : null;
   } catch {
@@ -150,13 +161,14 @@ function decodeAddress(hex: string): string | null {
 export async function fetchB20TokenIdentity(
   address: string,
   apiKey: string,
+  chain: B20Chain = "base",
 ): Promise<B20TokenIdentity> {
   const addr = address.toLowerCase();
 
   // Primary: Alchemy contract metadata (includes deployer)
   let alchemyMeta: AlchemyContractMeta["contractMetadata"] | null = null;
   try {
-    const result = await rpc(apiKey, "alchemy_getContractMetadata", [addr]);
+    const result = await rpc(apiKey, "alchemy_getContractMetadata", [addr], chain);
     const meta = result as AlchemyContractMeta;
     alchemyMeta = meta?.contractMetadata ?? null;
   } catch {
@@ -166,11 +178,11 @@ export async function fetchB20TokenIdentity(
   // Parallel eth_call fallbacks for fields not in alchemy metadata
   const [nameResult, symbolResult, decimalsResult, supplyResult, ownerResult] =
     await Promise.allSettled([
-      ethCall(apiKey, addr, ERC20_SEL.name),
-      ethCall(apiKey, addr, ERC20_SEL.symbol),
-      ethCall(apiKey, addr, ERC20_SEL.decimals),
-      ethCall(apiKey, addr, ERC20_SEL.totalSupply),
-      ethCall(apiKey, addr, ERC20_SEL.owner),
+      ethCall(apiKey, addr, ERC20_SEL.name, chain),
+      ethCall(apiKey, addr, ERC20_SEL.symbol, chain),
+      ethCall(apiKey, addr, ERC20_SEL.decimals, chain),
+      ethCall(apiKey, addr, ERC20_SEL.totalSupply, chain),
+      ethCall(apiKey, addr, ERC20_SEL.owner, chain),
     ]);
 
   const nameHex   = nameResult.status   === "fulfilled" ? nameResult.value   : null;
@@ -198,7 +210,8 @@ export async function fetchB20TokenIdentity(
     deploymentTx: null,
     deployedBlock,
     metadataUri: null,
-    chain: "base",
+    chain,
+    isTestnet: chain !== "base",
   };
 }
 
@@ -209,6 +222,7 @@ async function fetchTransfersFrom(
   fromAddress: string,
   apiKey: string,
   maxPages = 3,
+  chain: B20Chain = "base",
 ): Promise<AlchemyTransferItem[]> {
   const results: AlchemyTransferItem[] = [];
   let pageKey: string | undefined;
@@ -229,7 +243,7 @@ async function fetchTransfersFrom(
     if (pageKey) params.pageKey = pageKey;
 
     try {
-      const result = await rpc(apiKey, "alchemy_getAssetTransfers", [params]);
+      const result = await rpc(apiKey, "alchemy_getAssetTransfers", [params], chain);
       const data = result as AlchemyTransfersResult;
       results.push(...(data.transfers ?? []));
       pageKey = data.pageKey;
@@ -244,14 +258,15 @@ async function fetchTransfersFrom(
 export async function fetchB20Activity(
   tokenAddress: string,
   apiKey: string,
+  chain: B20Chain = "base",
 ): Promise<B20ActivitySummary> {
   const addr = tokenAddress.toLowerCase();
 
   // Mint: transfer FROM zero address
   // Burns: scan recent transfers and filter for to === ZERO_ADDRESS
   const [mintTransfers, allRecentTransfers] = await Promise.allSettled([
-    fetchTransfersFrom(addr, ZERO_ADDRESS, apiKey, 3),
-    fetchTransfersFrom(addr, "0x0000000000000000000000000000000000000001", apiKey, 1),
+    fetchTransfersFrom(addr, ZERO_ADDRESS, apiKey, 3, chain),
+    fetchTransfersFrom(addr, "0x0000000000000000000000000000000000000001", apiKey, 1, chain),
   ]);
 
   const mints = mintTransfers.status === "fulfilled" ? mintTransfers.value : [];
@@ -387,6 +402,7 @@ export function buildLucaSummary(
   link: B20AgentLink,
   manifestStatus: "attributed" | "candidate" | "none",
   activity: B20ActivitySummary | null,
+  isTestnet = false,
 ): string {
   const name = token.name ?? token.symbol ?? token.address.slice(0, 10);
   const parts: string[] = [];
@@ -416,6 +432,12 @@ export function buildLucaSummary(
     if (activity.burnCount > 0) {
       parts.push(`${activity.burnCount} burn event${activity.burnCount !== 1 ? "s" : ""} recorded.`);
     }
+  }
+
+  if (isTestnet) {
+    parts.push(
+      "⚠ This is a testnet B20 token (Base Sepolia). It is not production financial activity. It does not enter Agent Books, Agent GDP, or production B20 intelligence.",
+    );
   }
 
   parts.push(

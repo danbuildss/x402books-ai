@@ -117,12 +117,13 @@ export async function upsertB20ActivityBatch(
   return { ok: true, inserted: rows.length };
 }
 
-export async function getB20Tokens(): Promise<B20TokenRow[]> {
+export async function getB20Tokens(chain = "base"): Promise<B20TokenRow[]> {
   if (noSupabase()) return [];
   const sb = getSupabaseAdminClient();
   const { data, error } = await sb
     .from("b20_tokens")
     .select("*")
+    .eq("chain", chain)
     .order("created_at", { ascending: false });
   if (error || !data) return [];
   return data as B20TokenRow[];
@@ -167,11 +168,11 @@ export async function getB20Activity(
   }));
 }
 
-export async function getB20Stats(): Promise<B20Stats> {
+export async function getB20Stats(chain = "base"): Promise<B20Stats> {
   if (noSupabase()) return { total: 0, linked: 0, attributed: 0, awaiting_manifest: 0, unlinked: 0 };
   const sb = getSupabaseAdminClient();
 
-  const { data, error } = await sb.from("b20_tokens").select("manifest_status, linked_agent_name");
+  const { data, error } = await sb.from("b20_tokens").select("manifest_status, linked_agent_name").eq("chain", chain);
   if (error || !data) return { total: 0, linked: 0, attributed: 0, awaiting_manifest: 0, unlinked: 0 };
 
   const rows = data as Array<{ manifest_status: string; linked_agent_name: string | null }>;

@@ -8,6 +8,7 @@ import {
   linkTokenToAgent,
   deriveManifestStatus,
   buildLucaSummary,
+  type B20Chain,
 } from "@/lib/b20-client";
 import {
   upsertB20Token,
@@ -24,9 +25,12 @@ function isB20Prefix(addr: string): boolean {
   return addr.toLowerCase().startsWith(B20_PREFIX);
 }
 
+const VALID_CHAINS: B20Chain[] = ["base", "base-sepolia"];
+
 type IndexB20Body = {
   mode: "from_registry" | "single" | "activity_only" | "detect_from_registry";
   address?: string;
+  chain?: B20Chain;
   includeActivity?: boolean;
   dryRun?: boolean;
 };
@@ -63,6 +67,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { mode, address, includeActivity = false, dryRun = false } = body;
+  const chain: B20Chain = body.chain && VALID_CHAINS.includes(body.chain) ? body.chain : "base";
+  const isTestnet = chain !== "base";
 
   if (!["from_registry", "single", "activity_only", "detect_from_registry"].includes(mode)) {
     return NextResponse.json({ ok: false, error: "mode must be from_registry | single | activity_only | detect_from_registry" }, { status: 400 });
@@ -173,7 +179,7 @@ export async function POST(req: NextRequest) {
     try {
       if (mode === "activity_only") {
         // Only refresh activity for existing token
-        const activity = await fetchB20Activity(tokenAddr, apiKey);
+        const activity = await fetchB20Activity(tokenAddr, apiKey, chain);
         let eventsInserted = 0;
         if (!dryRun) {
           const allEvents = [...activity.recentMints, ...activity.recentBurns];
@@ -197,7 +203,7 @@ export async function POST(req: NextRequest) {
       }
 
       // Fetch token identity
-      const identity = await fetchB20TokenIdentity(tokenAddr, apiKey);
+      const identity = await fetchB20TokenIdentity(tokenAddr, apiKey, chain);
 
       // Link to agent
       const link = linkTokenToAgent(tokenAddr, identity.issuerWallet, agents);
@@ -207,7 +213,7 @@ export async function POST(req: NextRequest) {
       let activity = null;
       let eventsInserted = 0;
       if (includeActivity) {
-        activity = await fetchB20Activity(tokenAddr, apiKey);
+        activity = await fetchB20Activity(tokenAddr, apiKey, chain);
         if (!dryRun && activity) {
           const allEvents = [...activity.recentMints, ...activity.recentBurns];
           const res = await upsertB20ActivityBatch(tokenAddr, allEvents);
@@ -215,7 +221,7 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const lucaSummary = buildLucaSummary(identity, link, manifestStatus, activity);
+      const lucaSummary = buildLucaSummary(identity, link, manifestStatus, activity, isTestnet);
 
       if (!dryRun) {
         const res = await upsertB20Token(identity, link, manifestStatus, lucaSummary);
@@ -269,6 +275,8 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     dry_run: dryRun,
+    chain,
+    is_testnet: isTestnet,
     summary: {
       tokens_discovered: tokenAddresses.length,
       tokens_indexed: indexed,
@@ -276,7 +284,9 @@ export async function POST(req: NextRequest) {
       attributed,
       candidates,
       awaiting_manifest: candidates + noManifest,
-      data_integrity_note: "Token contracts are never books-eligible. Token transfers are not operating revenue. B20 activity is excluded from Agent GDP.",
+      data_integrity_note: isTestnet
+        ? "TESTNET (base-sepolia): Token data is for proof/demo only. Does not enter production B20 intelligence, Agent Books, or Agent GDP."
+        : "Token contracts are never books-eligible. Token transfers are not operating revenue. B20 activity is excluded from Agent GDP.",
     },
     tokens: results,
     generated_at: new Date().toISOString(),
