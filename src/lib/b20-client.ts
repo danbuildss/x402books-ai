@@ -13,6 +13,31 @@ const CHAIN_RPC: Record<B20Chain, string> = {
 
 export type B20Chain = "base" | "base-sepolia";
 
+// B20 infrastructure addresses (Base mainnet + Base Sepolia)
+//
+// Factory            — deploys all B20 tokens; use for isB20/isB20Initialized checks
+//                      and factory log discovery ONLY. Never index as a token.
+// Activation Registry — controls whether B20 is active on a given network/address
+// Policy Registry    — governs B20 token policies (transfer rules, burn conditions, etc.)
+export const B20_FACTORY             = "0xB20f000000000000000000000000000000000000";
+export const B20_ACTIVATION_REGISTRY = "0x8453000000000000000000000000000000000001";
+export const B20_POLICY_REGISTRY     = "0x8453000000000000000000000000000000000002";
+
+// Guard: never treat the factory or registry addresses as B20 tokens.
+// Only 0xB200… addresses confirmed via isB20() + isB20Initialized() are indexable.
+export const B20_INFRASTRUCTURE_ADDRESSES = new Set([
+  B20_FACTORY.toLowerCase(),
+  B20_ACTIVATION_REGISTRY.toLowerCase(),
+  B20_POLICY_REGISTRY.toLowerCase(),
+]);
+
+// Factory helper selectors — verify against deployed precompile ABI before use.
+// isB20(address) → bool             keccak256("isB20(address)")[0:4]
+// isB20Initialized(address) → bool  keccak256("isB20Initialized(address)")[0:4]
+// getB20Address(uint8,address,bytes32) → address
+// Selectors are intentionally left as comments until the precompile ABI is public
+// and can be verified on-chain. Do not hardcode until confirmed.
+
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 const ERC20_SEL = {
@@ -352,14 +377,16 @@ export async function fetchB20FactoryLogs(
     for (const topic of log.topics ?? []) {
       if (topic.length === 66) {
         const addr = "0x" + topic.slice(26).toLowerCase();
-        if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)) seen.add(addr);
+        if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
+            && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
       }
     }
     // Data: ABI-encoded slots of 64 hex chars; address at bytes 12–32 of each slot
     const data = (log.data ?? "").replace(/^0x/, "");
     for (let slot = 0; slot + 64 <= data.length; slot += 64) {
       const addr = "0x" + data.slice(slot + 24, slot + 64).toLowerCase();
-      if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)) seen.add(addr);
+      if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
+          && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
     }
   }
 
