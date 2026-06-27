@@ -2574,6 +2574,7 @@ export default function LucaAdminPage() {
           <Link href="/luca-admin/revenue-accuracy-report" className={styles.navItem}>Accuracy Report</Link>
           <Link href="/luca-admin/revenue-audit" className={styles.navItem}>Revenue Audit</Link>
           <Link href="/luca-admin/revenue-confidence" className={styles.navItem}>Confidence Labels</Link>
+          <Link href="/luca-admin/b20-intelligence" className={styles.navItem}>B20 Intelligence</Link>
           <Link href="/registry" className={styles.navItem} target="_blank" rel="noreferrer">Public Registry ↗</Link>
 
           <div className={styles.sidebarFooter}>
