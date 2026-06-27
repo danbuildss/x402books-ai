@@ -17,6 +17,30 @@ type TokenResult = {
   error?: string;
 };
 
+type DetectResult = {
+  address: string;
+  agent_name: string;
+  passes_prefix: boolean;
+  confirmed_on_chain: boolean;
+  name: string | null;
+  symbol: string | null;
+  issuer_wallet: string | null;
+  recommendation: string;
+};
+
+type DetectReport = {
+  ok: boolean;
+  mode: "detect_from_registry";
+  total_with_token_address: number;
+  b20_prefix_matches: number;
+  confirmed_b20: number;
+  results: DetectResult[];
+  non_b20_addresses: { agent_name: string; address: string }[];
+  note: string;
+  generated_at: string;
+  error?: string;
+};
+
 type IndexReport = {
   ok: boolean;
   dry_run: boolean;
@@ -52,21 +76,23 @@ export default function B20IntelligencePage() {
     if (secret) sessionStorage.setItem("luca_admin_secret", secret);
   }, [secret]);
 
-  const [mode, setMode] = useState<"from_registry" | "single" | "activity_only">("from_registry");
+  const [mode, setMode] = useState<"detect_from_registry" | "from_registry" | "single" | "activity_only">("detect_from_registry");
   const [address, setAddress] = useState("");
   const [includeActivity, setIncludeActivity] = useState(false);
   const [dryRun, setDryRun] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<IndexReport | null>(null);
+  const [detectReport, setDetectReport] = useState<DetectReport | null>(null);
 
   async function runIndexer() {
     setLoading(true);
     setError("");
     setReport(null);
+    setDetectReport(null);
 
     const body: Record<string, unknown> = { mode, includeActivity, dryRun };
-    if (mode !== "from_registry") body.address = address.trim().toLowerCase();
+    if (mode === "single" || mode === "activity_only") body.address = address.trim().toLowerCase();
 
     try {
       const res = await fetch("/api/admin/index-b20", {
@@ -74,9 +100,13 @@ export default function B20IntelligencePage() {
         headers: { "Content-Type": "application/json", "x-internal-secret": secret },
         body: JSON.stringify(body),
       });
-      const json = await res.json() as IndexReport;
-      if (!json.ok) { setError(json.error ?? "Indexing failed"); return; }
-      setReport(json);
+      const json = await res.json() as Record<string, unknown>;
+      if (!json.ok) { setError((json.error as string | undefined) ?? "Indexing failed"); return; }
+      if (json.mode === "detect_from_registry") {
+        setDetectReport(json as unknown as DetectReport);
+      } else {
+        setReport(json as unknown as IndexReport);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Network error");
     } finally {
@@ -95,9 +125,16 @@ export default function B20IntelligencePage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
 
         {/* Data integrity reminder */}
-        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
           <strong>Data integrity:</strong> Token contracts are never books-eligible · Token transfers are not operating revenue ·
           Issuer wallets are not attributed unless manifest-confirmed · B20 activity is excluded from Agent GDP
+        </div>
+
+        {/* Indexing gate rule */}
+        <div style={{ background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+          <strong>Indexing gate:</strong> Detect mode suggests candidates — it never indexes.
+          To activate indexing, set <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>isB20Token: true</code> in <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>src/app/registry/data.ts</code> only for confirmed <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>0xB200…</code> tokens.
+          Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
         </div>
 
         {/* Config panel */}
@@ -113,11 +150,12 @@ export default function B20IntelligencePage() {
 
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Mode</div>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {([
-                ["from_registry", "From Registry (all agent tokens)"],
-                ["single",        "Single Token"],
-                ["activity_only", "Activity Only (existing token)"],
+                ["detect_from_registry", "Detect B20 (safe scan)"],
+                ["from_registry",        "Index from Registry"],
+                ["single",               "Single Token"],
+                ["activity_only",        "Activity Only"],
               ] as const).map(([m, label]) => (
                 <button key={m} onClick={() => setMode(m)} style={{
                   padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)",
@@ -129,6 +167,12 @@ export default function B20IntelligencePage() {
                 </button>
               ))}
             </div>
+            {mode === "detect_from_registry" && (
+              <div style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}>
+                Scans all registry tokenAddresses for the 0xB200 prefix, confirms on-chain via Alchemy.
+                Read-only — does not write to DB. Review results before running "Index from Registry".
+              </div>
+            )}
           </div>
 
           {(mode === "single" || mode === "activity_only") && (
@@ -140,7 +184,7 @@ export default function B20IntelligencePage() {
             </div>
           )}
 
-          {mode !== "activity_only" && (
+          {mode !== "activity_only" && mode !== "detect_from_registry" && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <button onClick={() => setIncludeActivity((v) => !v)} style={{
                 width: 36, height: 20, borderRadius: 10,
@@ -154,7 +198,7 @@ export default function B20IntelligencePage() {
             </div>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          {mode !== "detect_from_registry" && <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <button onClick={() => setDryRun((v) => !v)} style={{
               width: 36, height: 20, borderRadius: 10,
               background: dryRun ? "#6DB874" : "var(--line)",
@@ -164,14 +208,14 @@ export default function B20IntelligencePage() {
             </button>
             <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Dry Run</span>
             <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "Preview only — no DB writes" : "Will write to DB"}</span>
-          </div>
+          </div>}
 
           <button onClick={runIndexer} disabled={loading} style={{
             padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff",
             border: "none", cursor: loading ? "not-allowed" : "pointer",
             fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1,
           }}>
-            {loading ? "Indexing…" : "Run B20 Indexer"}
+            {loading ? "Running…" : mode === "detect_from_registry" ? "Detect B20 Tokens" : "Run B20 Indexer"}
           </button>
         </div>
 
@@ -179,6 +223,78 @@ export default function B20IntelligencePage() {
           <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
             {error}
           </div>
+        )}
+
+        {detectReport && (
+          <>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
+              Detect scan completed — {new Date(detectReport.generated_at).toLocaleString()}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              {[
+                { label: "With token address", value: detectReport.total_with_token_address, color: "var(--ink)"  },
+                { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#6DB874"    },
+                { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#22c55e"    },
+              ].map((s) => (
+                <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: s.color, fontFamily: "var(--font-mono)" }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {detectReport.results.length > 0 ? (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+                <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600 }}>
+                  B20 Candidates ({detectReport.results.length})
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                        {["Agent", "Token Address", "Symbol/Name", "Confirmed", "Issuer", "Recommendation"].map((h) => (
+                          <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detectReport.results.map((r, i) => (
+                        <tr key={r.address} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
+                          <td style={{ padding: "8px 10px", fontWeight: 600 }}>{r.agent_name}</td>
+                          <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                            <a href={`https://basescan.org/address/${r.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
+                              {shortAddr(r.address)}
+                            </a>
+                          </td>
+                          <td style={{ padding: "8px 10px", fontSize: 11 }}>
+                            {r.symbol ?? "—"}{r.name ? ` · ${r.name}` : ""}
+                          </td>
+                          <td style={{ padding: "8px 10px" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#22c55e" : "#f59e0b" }}>
+                              {r.confirmed_on_chain ? "Yes" : "Unconfirmed"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>
+                            {r.issuer_wallet ? shortAddr(r.issuer_wallet) : "—"}
+                          </td>
+                          <td style={{ padding: "8px 10px", fontSize: 11, color: "var(--muted)", maxWidth: 280 }}>{r.recommendation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "20px", marginBottom: 16, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                No registry agents have a tokenAddress starting with 0xB200. B20 mainnet may not have launched yet, or tokens are not yet in the registry.
+              </div>
+            )}
+
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "10px 14px", fontSize: 11, color: "var(--muted)" }}>
+              {detectReport.note}
+            </div>
+          </>
         )}
 
         {report && (

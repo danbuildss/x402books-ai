@@ -17,8 +17,15 @@ import {
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
+// B20 prefix: all B20 tokens deployed by the factory start with 0xB200
+const B20_PREFIX = "0xb200";
+
+function isB20Prefix(addr: string): boolean {
+  return addr.toLowerCase().startsWith(B20_PREFIX);
+}
+
 type IndexB20Body = {
-  mode: "from_registry" | "single" | "activity_only";
+  mode: "from_registry" | "single" | "activity_only" | "detect_from_registry";
   address?: string;
   includeActivity?: boolean;
   dryRun?: boolean;
@@ -57,8 +64,8 @@ export async function POST(req: NextRequest) {
 
   const { mode, address, includeActivity = false, dryRun = false } = body;
 
-  if (mode !== "from_registry" && mode !== "single" && mode !== "activity_only") {
-    return NextResponse.json({ ok: false, error: "mode must be from_registry | single | activity_only" }, { status: 400 });
+  if (!["from_registry", "single", "activity_only", "detect_from_registry"].includes(mode)) {
+    return NextResponse.json({ ok: false, error: "mode must be from_registry | single | activity_only | detect_from_registry" }, { status: 400 });
   }
 
   if ((mode === "single" || mode === "activity_only") && !address) {
@@ -71,6 +78,69 @@ export async function POST(req: NextRequest) {
 
   // Load registry agents for linking
   const { agents } = await getRegistryAgents();
+
+  // ── detect_from_registry: scan all tokenAddresses for 0xB200 prefix ─────────
+  if (mode === "detect_from_registry") {
+    type DetectResult = {
+      address: string;
+      agent_name: string;
+      passes_prefix: boolean;
+      confirmed_on_chain: boolean;
+      name: string | null;
+      symbol: string | null;
+      issuer_wallet: string | null;
+      recommendation: string;
+    };
+
+    const candidates = agents
+      .filter((a) => a.tokenAddress)
+      .map((a) => ({ agent: a.name, addr: a.tokenAddress!.trim().toLowerCase() }));
+
+    const prefixMatches = candidates.filter((c) => isB20Prefix(c.addr));
+    const results: DetectResult[] = [];
+
+    for (const c of prefixMatches) {
+      let confirmed = false;
+      let name: string | null = null;
+      let symbol: string | null = null;
+      let issuerWallet: string | null = null;
+
+      try {
+        const identity = await fetchB20TokenIdentity(c.addr, apiKey);
+        confirmed = !!(identity.name ?? identity.symbol ?? identity.totalSupply);
+        name = identity.name;
+        symbol = identity.symbol;
+        issuerWallet = identity.issuerWallet;
+      } catch { /* not confirmed */ }
+
+      results.push({
+        address: c.addr,
+        agent_name: c.agent,
+        passes_prefix: true,
+        confirmed_on_chain: confirmed,
+        name,
+        symbol,
+        issuer_wallet: issuerWallet,
+        recommendation: confirmed
+          ? "Set isB20Token: true in registry data.ts and re-run from_registry mode"
+          : "Prefix matches but contract not confirmed — check address manually",
+      });
+    }
+
+    const nonMatches = candidates.filter((c) => !isB20Prefix(c.addr));
+
+    return NextResponse.json({
+      ok: true,
+      mode: "detect_from_registry",
+      total_with_token_address: candidates.length,
+      b20_prefix_matches: prefixMatches.length,
+      confirmed_b20: results.filter((r) => r.confirmed_on_chain).length,
+      results,
+      non_b20_addresses: nonMatches.map((c) => ({ agent_name: c.agent, address: c.addr })),
+      note: "Only addresses starting with 0xB200 are considered B20 tokens. Set isB20Token: true in data.ts after confirming.",
+      generated_at: new Date().toISOString(),
+    });
+  }
 
   // Determine which token addresses to index
   let tokenAddresses: string[] = [];
