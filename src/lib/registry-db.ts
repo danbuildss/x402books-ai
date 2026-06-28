@@ -479,17 +479,22 @@ export async function seedRegistryFromStaticData(): Promise<{ ok: boolean; error
 
   const walletRows = AGENTS.flatMap((a) =>
     a.wallets.map((w) => ({
-      agent_name: a.name,
-      address: w.address,
-      label: w.label,
-      notes: w.notes ?? null,
+      agent_name:      a.name,
+      address:         w.address,
+      label:           w.label,
+      notes:           w.notes ?? null,
+      chain:           w.chain ?? "base",
+      role:            w.role ?? "unknown",
+      confidence:      w.confidence ?? "declared",
+      evidence_source: w.evidenceSource ?? "manifest",
+      address_type:    w.address_type ?? null,
     }))
   );
 
   if (walletRows.length > 0) {
     const { error: walletError } = await sb
       .from("registry_agent_wallets")
-      .upsert(walletRows, { onConflict: "id" });
+      .upsert(walletRows, { onConflict: "agent_name,address" });
 
     if (walletError) return { ok: false, error: walletError.message };
   }
