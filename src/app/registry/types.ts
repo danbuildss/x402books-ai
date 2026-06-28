@@ -43,12 +43,14 @@ export type VerificationStatus =
 export type WalletLabel =
   | "candidate wallet"
   | "verified wallet"
+  | "treasury"
+  | "deployer"
   | "likely treasury"
   | "likely revenue wallet"
   | "likely fee recipient"
   | "likely expense wallet"
   | "unknown role";
-export type OutreachStatus = "Not started" | "In progress" | "Connected";
+export type OutreachStatus = "Not started" | "In progress" | "Connected" | "Manifest submitted";
 
 export type AddressType =
   | "eoa"               // externally owned account — valid operator wallet
