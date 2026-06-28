@@ -8,7 +8,7 @@ import styles from "./page.module.css";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "roadmap" | "settings" | "subagent-runs" | "pending-replies" | "truth-engine";
+type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "outreach" | "roadmap" | "settings" | "subagent-runs" | "pending-replies" | "truth-engine";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -177,6 +177,7 @@ const NAV: { section: Section; label: string; group: string }[] = [
   { section: "growth",     label: "Growth OS",   group: "ops" },
   { section: "reports",    label: "Reports",     group: "ops" },
   { section: "comm",            label: "Comm Intel",      group: "intel" },
+  { section: "outreach",        label: "Outreach CRM",    group: "intel" },
   { section: "subagent-runs",   label: "Subagent Runs",   group: "intel" },
   { section: "pending-replies", label: "Pending Replies", group: "intel" },
   { section: "roadmap",         label: "Roadmap",         group: "intel" },
@@ -2424,6 +2425,159 @@ function PendingRepliesSection({ secret }: { secret: string }) {
   );
 }
 
+// ── Outreach CRM Section ──────────────────────────────────────────────────────
+
+const DM_TEMPLATES: Record<string, string> = {
+  "Candidate": `Hey [name] 👋 — We've indexed [agent] in the Zetta Agent Financial Registry. Zetta gives agents a public financial identity: declared wallets, books, and leaderboard standing. Takes 5 minutes to declare a manifest. Happy to help if you have questions — just reply here.`,
+  "Wallets Declared": `Hey [name] — [agent]'s wallet manifest is in and books are generating. You're now in the Zetta leaderboard. Let me know if you'd like a deeper financial summary or have questions about the data.`,
+  "Awaiting Manifest": `Hey [name] — [agent] is indexed in Zetta's registry but hasn't declared a wallet manifest yet. A quick .agent/wallets.json in your repo unlocks full financial attribution, leaderboard placement, and your public agent card. Link: https://www.zettaai.co/manifest/spec`,
+};
+
+type OutreachAgent = {
+  name: string;
+  slug: string;
+  verificationStatus: string;
+  outreachStatus: string | null;
+  ecosystem: string;
+  xHandle: string;
+  revenue_usd: number;
+};
+
+function OutreachSection({ secret }: { secret: string }) {
+  const [agents, setAgents] = useState<OutreachAgent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch("/api/v1/registry/agents?include_outreach=1", {
+          headers: { "Authorization": `Bearer ${secret}` },
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        const d = await res.json() as { agents?: OutreachAgent[] };
+        const candidates = (d.agents ?? []).filter((a: OutreachAgent) =>
+          ["Candidate", "Awaiting Manifest", "Needs Verification"].includes(a.verificationStatus)
+        );
+        candidates.sort((a: OutreachAgent, b: OutreachAgent) => b.revenue_usd - a.revenue_usd);
+        setAgents(candidates);
+      } catch {
+        // Fallback: fetch registry list from the public endpoint
+        try {
+          const res2 = await fetch("/api/registry/list");
+          const d2 = await res2.json() as { agents?: OutreachAgent[] };
+          const candidates = (d2.agents ?? []).filter((a: OutreachAgent) =>
+            ["Candidate", "Awaiting Manifest", "Needs Verification"].includes(a.verificationStatus)
+          );
+          setAgents(candidates);
+        } catch {
+          setError("Could not load agent list.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [secret]);
+
+  function generateDm(agent: OutreachAgent): string {
+    const base = DM_TEMPLATES[agent.verificationStatus] ?? DM_TEMPLATES["Candidate"];
+    return base
+      .replace(/\[name\]/g, agent.xHandle || agent.name)
+      .replace(/\[agent\]/g, agent.name);
+  }
+
+  function copyDm(agent: OutreachAgent) {
+    navigator.clipboard.writeText(generateDm(agent)).then(() => {
+      setCopiedSlug(agent.slug);
+      setTimeout(() => setCopiedSlug(null), 2000);
+    });
+  }
+
+  const statusColor: Record<string, string> = {
+    "Not started": "#6b7280",
+    "In progress": "#f59e0b",
+    "Connected": "#6DB874",
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ margin: "0 0 6px", fontSize: "1.3rem", fontWeight: 700 }}>Outreach CRM</h1>
+        <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem" }}>
+          Candidate agents sorted by estimated revenue. DM templates pre-generated — copy and send.
+        </p>
+      </div>
+
+      {loading && <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading agents…</p>}
+      {error && <p style={{ color: "#f87171", fontSize: "0.85rem" }}>{error}</p>}
+
+      {!loading && agents.length === 0 && (
+        <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontSize: "0.85rem" }}>
+          No unclaimed agents found. All agents may already have declared wallets.
+        </div>
+      )}
+
+      {!loading && agents.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "var(--muted)" }}>
+            {agents.length} agent{agents.length !== 1 ? "s" : ""} awaiting outreach
+          </p>
+          {agents.map((a) => (
+            <div key={a.slug} style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "12px 16px", alignItems: "center", background: "var(--surface-soft)" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                    <a href={`/registry/${a.slug}`} target="_blank" rel="noreferrer" style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--ink)", textDecoration: "none" }}>{a.name}</a>
+                    <span style={{ fontSize: "0.7rem", color: "var(--muted)", background: "var(--line)", padding: "1px 7px", borderRadius: 99 }}>{a.ecosystem}</span>
+                    {a.xHandle && (
+                      <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#1d9bf0", textDecoration: "none" }}>{a.xHandle}</a>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</span>
+                    {a.outreachStatus && (
+                      <span style={{ fontSize: "0.68rem", fontWeight: 600, color: statusColor[a.outreachStatus] ?? "var(--muted)" }}>
+                        ● {a.outreachStatus}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right", fontSize: "0.8rem", color: "var(--muted)", whiteSpace: "nowrap" }}>
+                  {a.revenue_usd > 0 ? `$${a.revenue_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })} rev` : "—"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedTemplate(selectedTemplate === a.slug ? null : a.slug)}
+                  style={{ padding: "6px 12px", borderRadius: 7, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.75rem", cursor: "pointer", whiteSpace: "nowrap" }}
+                >
+                  {selectedTemplate === a.slug ? "Hide" : "View DM"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => copyDm(a)}
+                  style={{ padding: "6px 14px", borderRadius: 7, border: "none", background: copiedSlug === a.slug ? "var(--accent)" : "var(--accent-soft)", color: copiedSlug === a.slug ? "#fff" : "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap", transition: "background 0.2s" }}
+                >
+                  {copiedSlug === a.slug ? "Copied!" : "Copy DM"}
+                </button>
+              </div>
+              {selectedTemplate === a.slug && (
+                <div style={{ padding: "12px 16px", borderTop: "1px solid var(--line)", background: "var(--surface)" }}>
+                  <pre style={{ margin: 0, fontFamily: "inherit", fontSize: "0.8rem", color: "var(--ink)", lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                    {generateDm(a)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function LucaAdminPage() {
@@ -2605,6 +2759,7 @@ export default function LucaAdminPage() {
           {section === "growth"    && <GrowthSection secret={secret} />}
           {section === "reports"   && <ReportsSection secret={secret} />}
           {section === "comm"      && <CommIntelSection secret={secret} />}
+          {section === "outreach"  && <OutreachSection secret={secret} />}
           {section === "subagent-runs"   && <SubagentRunsSection secret={secret} />}
           {section === "pending-replies" && <PendingRepliesSection secret={secret} />}
           {section === "roadmap"         && <RoadmapSection />}

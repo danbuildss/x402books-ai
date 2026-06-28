@@ -323,14 +323,12 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
       return { ok: false, error: upsertError.message };
     }
 
-    // If proposed_data includes wallets, upsert them
+    // If proposed_data includes wallets, replace them atomically:
+    // insert new rows first so that if the insert fails the old wallets survive.
     type PendingWallet = AgentWallet & { role?: string; chain?: string; confidence?: string; evidence_source?: string };
     const wallets = proposed.wallets as PendingWallet[] | undefined;
     if (Array.isArray(wallets) && wallets.length > 0) {
       const agentName = String(agentFields.name);
-
-      // Delete old wallet rows for this agent, then insert new ones
-      await sb.from("registry_agent_wallets").delete().eq("agent_name", agentName);
 
       const walletRows = wallets.map((w) => ({
         agent_name:      agentName,
@@ -343,12 +341,25 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
         evidence_source: w.evidence_source ?? "manifest",
       }));
 
+      // Snapshot current wallet IDs before any mutations
+      const { data: oldWallets } = await sb
+        .from("registry_agent_wallets")
+        .select("id")
+        .eq("agent_name", agentName);
+      const oldIds = (oldWallets ?? []).map((w: { id: string }) => w.id);
+
+      // Insert new rows — if this fails, old wallets are untouched
       const { error: walletError } = await sb
         .from("registry_agent_wallets")
         .insert(walletRows);
 
       if (walletError) {
         return { ok: false, error: walletError.message };
+      }
+
+      // Insert succeeded — delete old rows by their specific IDs
+      if (oldIds.length > 0) {
+        await sb.from("registry_agent_wallets").delete().in("id", oldIds);
       }
     }
 
@@ -424,7 +435,26 @@ export async function insertPendingUpdates(
     .select("id");
 
   if (error) return { ok: false, inserted: 0, error: error.message };
-  return { ok: true, inserted: (data ?? []).length };
+
+  const inserted = (data ?? []).length;
+
+  // Notify admin bot on new manifest submissions (fire-and-forget)
+  if (inserted > 0) {
+    const chatId = process.env.LUCA_ADMIN_CHAT_ID;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (chatId && botToken) {
+      const names = updates.map((u) => u.agent_name).join(", ");
+      const type  = updates[0]?.update_type ?? "update";
+      const text  = `📥 <b>New pending update</b>\n\nType: <code>${type}</code>\nAgent(s): <b>${names}</b>\n\n<a href="https://www.zettaai.co/luca-admin/registry-updates">Review in admin →</a>`;
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true }),
+      }).catch(() => { /* non-blocking — failure is silent */ });
+    }
+  }
+
+  return { ok: true, inserted };
 }
 
 // ── Seed helper (used once to populate DB from static data) ──────────────────

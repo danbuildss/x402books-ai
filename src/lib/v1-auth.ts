@@ -8,6 +8,9 @@ import { internalAuth } from "@/lib/internal-auth";
 export type V1AuthOk = {
   ok: true;
   keyId: string;
+  // If set, this key is restricted to a single agent slug — endpoints should
+  // reject requests for any other agent.
+  agentScope: string | null;
   finish: (statusCode: number, durationMs: number, endpoint: string, wallet?: string) => void;
 };
 
@@ -23,6 +26,7 @@ export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
     return {
       ok: true,
       keyId: "bankr-x402",
+      agentScope: null,
       finish() { /* x402 payments tracked by BANKR dashboard, not our DB */ },
     };
   }
@@ -56,6 +60,7 @@ export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
   return {
     ok: true,
     keyId: result.key.id,
+    agentScope: result.key.agent_scope,
     finish(statusCode, durationMs, endpoint, wallet) {
       recordUsage({ keyId: result.key.id, endpoint, wallet, statusCode, durationMs });
     },

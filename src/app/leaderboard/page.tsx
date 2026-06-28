@@ -404,26 +404,31 @@ export default async function LeaderboardPage() {
         {/* Indexed agents awaiting manifest declaration */}
         {awaitingManifest.length > 0 && (
           <div style={{ marginTop: 40 }}>
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: "0 0 4px", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
-                Indexed — Awaiting Manifest Declaration
-              </p>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
-                These agents are indexed in the registry
-                {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via the ERC-8004 on-chain identity standard</>}.
-                Financial data becomes available once they declare a wallet manifest.
-              </p>
+            <div style={{ marginBottom: 14, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+              <div>
+                <p style={{ margin: "0 0 4px", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+                  Indexed — Revenue Locked
+                </p>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                  {awaitingManifest.length} agent{awaitingManifest.length !== 1 ? "s" : ""} indexed
+                  {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via ERC-8004</>}.
+                  {" "}Revenue attribution unlocks when they declare a wallet manifest.
+                </p>
+              </div>
+              <Link href="/manifest/spec" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap", marginTop: 2 }}>
+                Submit manifest →
+              </Link>
             </div>
             <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
               <div style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 100px 160px 80px",
+                gridTemplateColumns: "1fr 100px 130px 120px 100px",
                 gap: 12,
                 padding: "9px 16px",
                 background: "var(--surface-soft)",
                 borderBottom: "1px solid var(--line)",
               }}>
-                {["Agent", "Ecosystem", "Status", ""].map((h, i) => (
+                {["Agent", "Ecosystem", "Status", "30d Revenue", ""].map((h, i) => (
                   <div key={i} style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)" }}>
                     {h}
                   </div>
@@ -432,7 +437,7 @@ export default async function LeaderboardPage() {
               {awaitingManifest.map((a: AwaitingManifestEntry) => (
                 <div key={a.slug} style={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 100px 160px 80px",
+                  gridTemplateColumns: "1fr 100px 130px 120px 100px",
                   gap: 12,
                   padding: "11px 16px",
                   borderBottom: "1px solid var(--line)",
@@ -455,8 +460,23 @@ export default async function LeaderboardPage() {
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.ecosystem}</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>
+                    <span style={{
+                      fontSize: "0.62rem", fontWeight: 600, padding: "1px 6px", borderRadius: 99,
+                      background: "color-mix(in srgb, #f59e0b 10%, transparent)",
+                      border: "1px solid color-mix(in srgb, #f59e0b 25%, transparent)",
+                      color: "#d97706",
+                    }}>unverified</span>
+                  </div>
                   <div style={{ textAlign: "right" }}>
-                    <Link href="/manifest/spec" style={{ fontSize: "0.72rem", color: "var(--accent)" }}>Declare →</Link>
+                    <Link href={`/registry/${a.slug}`} style={{
+                      fontSize: "0.72rem", fontWeight: 600,
+                      color: "var(--accent)", textDecoration: "none",
+                      padding: "4px 10px", borderRadius: 6,
+                      border: "1px solid rgba(109,184,116,0.3)",
+                      background: "var(--accent-soft)",
+                    }}>Declare →</Link>
                   </div>
                 </div>
               ))}

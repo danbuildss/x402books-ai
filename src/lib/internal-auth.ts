@@ -6,13 +6,28 @@
 //   The only escape hatch is ALLOW_DEV_NOAUTH=1, which is ignored in production.
 // - Token comparison is timing-safe (sha256 normalization + timingSafeEqual).
 // - Both ZETTA_INTERNAL_SECRET and X402BOOKS_INTERNAL_SECRET are accepted during migration.
+// - Signed session tokens (issued by /api/admin/auth) are also accepted so that
+//   the raw secret never needs to appear in a response body.
 
-import { createHash, timingSafeEqual } from "crypto";
+import { createHash, createHmac, timingSafeEqual } from "crypto";
 
 function safeEqual(a: string, b: string): boolean {
   const ha = createHash("sha256").update(a).digest();
   const hb = createHash("sha256").update(b).digest();
   return timingSafeEqual(ha, hb);
+}
+
+// Verify an HMAC-signed session token of the form `${ts}.${sig}`.
+// Tokens are valid for 1 hour, matching the admin session cookie maxAge.
+function verifySessionToken(token: string, secret: string): boolean {
+  const dot = token.indexOf(".");
+  if (dot === -1) return false;
+  const ts = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  const tsNum = parseInt(ts, 10);
+  if (isNaN(tsNum) || Date.now() - tsNum > 3_600_000) return false;
+  const expected = createHmac("sha256", secret).update(ts).digest("hex");
+  return safeEqual(sig, expected);
 }
 
 export function internalAuth(req: Request): boolean {
@@ -27,5 +42,7 @@ export function internalAuth(req: Request): boolean {
   const token = bearer || (req.headers.get("x-internal-secret") ?? "").trim();
 
   if (!token) return false;
-  return safeEqual(token, secret);
+
+  // Accept raw secret (crons/internal callers) or signed session token (admin UI)
+  return safeEqual(token, secret) || verifySessionToken(token, secret);
 }
