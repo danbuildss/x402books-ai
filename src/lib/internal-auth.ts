@@ -34,9 +34,19 @@ function verifySessionToken(token: string, secret: string): boolean {
 }
 
 export function internalAuth(req: Request): boolean {
+  return internalAuthDetailed(req).ok;
+}
+
+// Extended variant — returns how auth passed so callers can audit the access.
+// Use this in security-sensitive admin routes; existing callers using the
+// boolean variant are unaffected.
+export function internalAuthDetailed(
+  req: Request,
+): { ok: boolean; via: "raw_secret" | "session_token" | "dev_noauth" | null } {
   const secret = process.env.ZETTA_INTERNAL_SECRET || process.env.X402BOOKS_INTERNAL_SECRET;
   if (!secret) {
-    return process.env.NODE_ENV !== "production" && process.env.ALLOW_DEV_NOAUTH === "1";
+    const devOk = process.env.NODE_ENV !== "production" && process.env.ALLOW_DEV_NOAUTH === "1";
+    return { ok: devOk, via: devOk ? "dev_noauth" : null };
   }
 
   const header = req.headers.get("authorization") ?? "";
@@ -44,8 +54,31 @@ export function internalAuth(req: Request): boolean {
   // Some internal callers (BANKR x402 handlers, crons) send x-internal-secret instead
   const token = bearer || (req.headers.get("x-internal-secret") ?? "").trim();
 
-  if (!token) return false;
+  if (!token) return { ok: false, via: null };
 
-  // Accept raw secret (crons/internal callers) or signed session token (admin UI)
-  return safeEqual(token, secret) || verifySessionToken(token, secret);
+  if (safeEqual(token, secret)) return { ok: true, via: "raw_secret" };
+  if (verifySessionToken(token, secret)) return { ok: true, via: "session_token" };
+  return { ok: false, via: null };
+}
+
+// Fire-and-forget audit log. Emits a structured JSON line to stdout so it
+// appears in Vercel/server logs and can be searched or piped to a SIEM.
+// Call after a successful internalAuthDetailed check in admin routes.
+export function logAdminAccess(params: {
+  via: "raw_secret" | "session_token" | "dev_noauth";
+  endpoint: string;
+  statusCode: number;
+  durationMs: number;
+  ip?: string;
+}): void {
+  const entry = {
+    type:        "admin_access",
+    ts:          new Date().toISOString(),
+    endpoint:    params.endpoint,
+    via:         params.via,
+    status_code: params.statusCode,
+    duration_ms: params.durationMs,
+    ip:          params.ip ?? null,
+  };
+  console.log(JSON.stringify(entry));
 }

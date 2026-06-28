@@ -3,14 +3,17 @@
 // Protected by internalAuth (ZETTA_INTERNAL_SECRET or session token).
 
 import { NextRequest, NextResponse } from "next/server";
-import { internalAuth } from "@/lib/internal-auth";
+import { internalAuthDetailed, logAdminAccess } from "@/lib/internal-auth";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 
 const VALID_STATUSES = ["Not started", "In progress", "Connected"] as const;
 type OutreachStatus = (typeof VALID_STATUSES)[number];
 
 export async function POST(req: NextRequest) {
-  if (!internalAuth(req)) {
+  const start = Date.now();
+  const auth = internalAuthDetailed(req);
+  if (!auth.ok) {
+    logAdminAccess({ via: "raw_secret", endpoint: "/api/admin/registry/outreach-status", statusCode: 401, durationMs: Date.now() - start });
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -43,6 +46,9 @@ export async function POST(req: NextRequest) {
     .from("registry_agents")
     .update({ outreach_status: status, updated_at: new Date().toISOString() })
     .eq("slug", slug.trim().toLowerCase());
+
+  const statusCode = error ? 500 : 200;
+  logAdminAccess({ via: auth.via!, endpoint: "/api/admin/registry/outreach-status", statusCode, durationMs: Date.now() - start });
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

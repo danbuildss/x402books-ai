@@ -4,22 +4,29 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { setConfidenceLabel, getAllConfidenceLabels, type ConfidenceLevel } from "@/lib/revenue-confidence";
+import { internalAuthDetailed, logAdminAccess } from "@/lib/internal-auth";
 
 const VALID_LEVELS: ConfidenceLevel[] = ["high", "medium", "low", "under_review"];
 
-function auth(req: NextRequest): boolean {
-  const s = req.headers.get("x-internal-secret") ?? req.headers.get("authorization")?.replace("Bearer ", "");
-  return !!s && s === process.env.X402BOOKS_INTERNAL_SECRET;
-}
-
 export async function GET(req: NextRequest) {
-  if (!auth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const start = Date.now();
+  const auth = internalAuthDetailed(req);
+  if (!auth.ok) {
+    logAdminAccess({ via: "raw_secret", endpoint: "/api/admin/confidence-label GET", statusCode: 401, durationMs: Date.now() - start });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const labels = await getAllConfidenceLabels();
+  logAdminAccess({ via: auth.via!, endpoint: "/api/admin/confidence-label GET", statusCode: 200, durationMs: Date.now() - start });
   return NextResponse.json({ ok: true, labels });
 }
 
 export async function POST(req: NextRequest) {
-  if (!auth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const start = Date.now();
+  const auth = internalAuthDetailed(req);
+  if (!auth.ok) {
+    logAdminAccess({ via: "raw_secret", endpoint: "/api/admin/confidence-label POST", statusCode: 401, durationMs: Date.now() - start });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   let body: unknown;
   try { body = await req.json(); } catch {
@@ -38,8 +45,10 @@ export async function POST(req: NextRequest) {
 
   try {
     await setConfidenceLabel(slug, level as ConfidenceLevel, { public_note, internal_reason, reviewed_by });
+    logAdminAccess({ via: auth.via!, endpoint: "/api/admin/confidence-label POST", statusCode: 200, durationMs: Date.now() - start });
     return NextResponse.json({ ok: true, slug, level });
-  } catch (e) {
-    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  } catch {
+    logAdminAccess({ via: auth.via!, endpoint: "/api/admin/confidence-label POST", statusCode: 500, durationMs: Date.now() - start });
+    return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }
