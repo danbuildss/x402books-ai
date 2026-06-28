@@ -3,12 +3,15 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { HomeHeader } from "@/app/home-header";
 import { getReportBySlug, listReports } from "@/lib/research-db";
+import { INAUGURAL_REPORT } from "@/lib/inaugural-report";
 
 export const revalidate = 3600;
 
 export async function generateStaticParams() {
   const reports = await listReports(50);
-  return reports.map((r) => ({ slug: r.slug }));
+  const slugs = new Set(reports.map((r) => r.slug));
+  slugs.add(INAUGURAL_REPORT.slug);
+  return [...slugs].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -68,7 +71,7 @@ export default async function ReportPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const report = await getReportBySlug(slug);
+  const report = (await getReportBySlug(slug)) ?? (slug === INAUGURAL_REPORT.slug ? INAUGURAL_REPORT : null);
   if (!report) notFound();
 
   const paragraphs = report.body.split(/\n\n+/).filter(Boolean);

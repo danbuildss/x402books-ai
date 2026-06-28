@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { ResearchFilter } from "@/components/research-filter";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { listReports } from "@/lib/research-db";
+import { INAUGURAL_REPORT } from "@/lib/inaugural-report";
 
 export const revalidate = 3600;
 
@@ -77,16 +78,7 @@ export default async function ResearchPage() {
           {reports.length > 0 ? (
             <ResearchFilter reports={reports} />
           ) : (
-            <div style={{ marginTop: 32, padding: "36px 28px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface-soft)", textAlign: "center" }}>
-              <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: "0.95rem" }}>First report in preparation.</p>
-              <p style={{ margin: "0 0 24px", fontSize: "0.83rem", color: "var(--muted)", maxWidth: 440, marginLeft: "auto", marginRight: "auto" }}>
-                Luca is analyzing Agent GDP data. Follow @Zetta for the first State of the Agent Economy report.
-              </p>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
-                <a href="https://x.com/zettaaidotco" target="_blank" rel="noreferrer" className="lp-btn-primary">Follow on X →</a>
-                <a href="https://t.me/asklucaai" target="_blank" rel="noreferrer" className="lp-btn-ghost">Telegram</a>
-              </div>
-            </div>
+            <ResearchFilter reports={[INAUGURAL_REPORT]} />
           )}
         </FadeContent>
       </section>

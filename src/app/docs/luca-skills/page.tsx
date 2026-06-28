@@ -304,7 +304,7 @@ export default function LucaSkillsDocsPage() {
               <span style={{ color: "var(--muted)" }}>Auth: </span>
               <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>Authorization: Bearer zt_live_...</code>
             </div>
-            <Link href="/developer" style={{ padding: "6px 14px", background: "#6DB874", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/api" style={{ padding: "6px 14px", background: "#6DB874", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               Get API Key →
             </Link>
           </div>
@@ -474,7 +474,7 @@ curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
               ))}
             </div>
             <div style={{ marginTop: 16 }}>
-              <Link href="/developer" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+              <Link href="/api" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
                 Get your API key →
               </Link>
             </div>

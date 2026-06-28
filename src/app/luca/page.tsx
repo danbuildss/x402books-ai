@@ -492,7 +492,7 @@ export default function LucaPage() {
         </div>
         <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link href="/docs/luca-skills" className="lp-btn-primary">View Luca Skills API →</Link>
-          <Link href="/developer" className="lp-btn-ghost">Get API Key</Link>
+          <Link href="/api" className="lp-btn-ghost">Get API Key</Link>
         </div>
       </section>
 

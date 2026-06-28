@@ -26,7 +26,7 @@ const navGroups = [
   {
     label: "Build",
     items: [
-      { href: "/developer",  label: "Developer",  icon: "code" },
+      { href: "/dashboard/keys",  label: "Developer",  icon: "code" },
     ],
   },
   {
@@ -40,7 +40,7 @@ const navGroups = [
 const pageNames: Record<string, string> = {
   "/dashboard":  "My Agent",
   "/registry":   "Registry",
-  "/developer":  "Developer",
+  "/dashboard/keys":  "Developer",
   "/settings":   "Settings",
 };
 

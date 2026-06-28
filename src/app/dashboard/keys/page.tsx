@@ -414,7 +414,7 @@ export default function ApiKeysPage() {
         </div>
         <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10 }}>
           Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://www.zettaai.co/api/v1</code> &nbsp;·&nbsp;
-          <a href="/developer" style={{ color: "var(--accent)" }}>Full API docs →</a>
+          <a href="/api" style={{ color: "var(--accent)" }}>Full API docs →</a>
         </p>
       </div>
     </div>
