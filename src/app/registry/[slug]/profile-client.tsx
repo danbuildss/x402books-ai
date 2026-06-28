@@ -997,9 +997,10 @@ type ClaimState = "idle" | "loading" | "done" | "error";
 
 function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
   // Start expanded for unclaimed/unverified profiles — the CTA is the primary action
-  const isUnclaimed = status === "Candidate" || status === "Awaiting Manifest" || status === "Needs Verification";
-  const [expanded, setExpanded]       = useState(isUnclaimed);
-  const [tab, setTab]                 = useState<ClaimTab>("wallet");
+  const isUnclaimed = status === "Candidate" || status === "Awaiting Manifest";
+  const needsAttention = status === "Needs Verification";
+  const [expanded, setExpanded]       = useState(isUnclaimed || needsAttention);
+  const [tab, setTab]                 = useState<ClaimTab>("manifest");
 
   // wallet tab state
   const [wallet, setWallet]           = useState("");
@@ -1013,6 +1014,10 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const [mfMsg, setMfMsg]             = useState("");
 
   if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
+
+  const bannerHeading = needsAttention
+    ? `Action needed: ${agentName}`
+    : `This profile is unclaimed`;
 
   const done = (tab === "wallet" && walletState === "done") || (tab === "manifest" && mfState === "done");
 
@@ -1067,10 +1072,10 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
   const bannerStyle: React.CSSProperties = {
     borderRadius: 12,
-    border: isUnclaimed ? "1px solid rgba(109,184,116,0.35)" : "1px solid rgba(109,184,116,0.22)",
-    borderLeft: "3px solid var(--accent)",
-    background: "var(--accent-soft)",
-    padding: expanded ? (isUnclaimed ? "20px 22px" : "16px 18px") : "13px 18px",
+    border: needsAttention ? "1px solid rgba(245,158,11,0.35)" : isUnclaimed ? "1px solid rgba(109,184,116,0.35)" : "1px solid rgba(109,184,116,0.22)",
+    borderLeft: needsAttention ? "3px solid #f59e0b" : "3px solid var(--accent)",
+    background: needsAttention ? "rgba(245,158,11,0.06)" : "var(--accent-soft)",
+    padding: expanded ? ((isUnclaimed || needsAttention) ? "20px 22px" : "16px 18px") : "13px 18px",
     marginBottom: 20,
     transition: "padding 0.15s",
   };
@@ -1084,6 +1089,9 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       : isMatch ? "Wallet matched — claim under review" : "Claim submitted for review";
     const color   = (tab === "manifest" || isMatch) ? "var(--accent)" : "#f59e0b";
     const icon    = (tab === "manifest" || isMatch) ? "check_circle" : "info";
+    const nextStep = (!isMatch && tab === "wallet")
+      ? "Our team reviews claims within 24–48 hours. Questions? Message @zettatracker on X."
+      : null;
     return (
       <div style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
@@ -1091,6 +1099,9 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
           <div>
             <p style={{ fontSize: "0.84rem", fontWeight: 700, color, marginBottom: 3 }}>{title}</p>
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{doneMsg}</p>
+            {nextStep && (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 6, lineHeight: 1.5 }}>{nextStep}</p>
+            )}
           </div>
         </div>
       </div>
@@ -1151,12 +1162,17 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: isUnclaimed ? 6 : 12 }}>
         <span className="material-symbols-outlined" style={{ fontSize: isUnclaimed ? 20 : 16, color: "var(--accent)", marginTop: 1, flexShrink: 0 }}>handshake</span>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: isUnclaimed ? "0.97rem" : "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
-            {isUnclaimed ? `This profile is unclaimed` : `Claim ${agentName}`}
+          <p style={{ fontSize: (isUnclaimed || needsAttention) ? "0.97rem" : "0.85rem", fontWeight: 700, color: needsAttention ? "#f59e0b" : "var(--ink)", margin: 0 }}>
+            {bannerHeading}
           </p>
           {isUnclaimed && (
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "3px 0 0", lineHeight: 1.5 }}>
               Submit a wallet manifest to verify ownership, unlock financial attribution, and appear in the leaderboard.
+            </p>
+          )}
+          {needsAttention && (
+            <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "3px 0 0", lineHeight: 1.5 }}>
+              There&apos;s an issue with your wallet claim. Submit a manifest to resolve it or message @zettatracker on X.
             </p>
           )}
         </div>
@@ -1168,7 +1184,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
           ✕
         </button>
       </div>
-      {isUnclaimed && <div style={{ height: 10 }} />}
+      {(isUnclaimed || needsAttention) && <div style={{ height: 10 }} />}
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 0, marginBottom: 14, borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden", width: "fit-content" }}>
@@ -1513,14 +1529,19 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
   const [showShare, setShowShare] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [embedError, setEmbedError] = useState(false);
   const [tab, setTab] = useState<ProfileTab>("overview");
 
-  const embedCode = `<iframe src="https://www.zettaai.co/registry/${slug}/card" width="400" height="280" frameborder="0" style="border-radius:12px;border:none;" loading="lazy"></iframe>`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.zettaai.co";
+  const embedCode = `<iframe src="${baseUrl}/registry/${slug}/card" width="400" height="280" frameborder="0" style="border-radius:12px;border:none;" loading="lazy"></iframe>`;
 
   function copyEmbed() {
+    setEmbedError(false);
     navigator.clipboard.writeText(embedCode).then(() => {
       setEmbedCopied(true);
       setTimeout(() => setEmbedCopied(false), 2000);
+    }).catch(() => {
+      setEmbedError(true);
     });
   }
 
@@ -1848,6 +1869,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 Preview card
               </a>
             </div>
+            {embedError && (
+              <p style={{ margin: "10px 0 0", fontSize: "0.75rem", color: "#ef4444", lineHeight: 1.5 }}>
+                Clipboard unavailable. Select the code above and copy manually.
+              </p>
+            )}
           </div>
         </div>
       )}
