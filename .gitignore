@@ -17,4 +17,6 @@ pnpm-debug.log*
 
 .DS_Store
 tsconfig.tsbuildinfo
-.claude/
+.claude/*
+!.claude/settings.json
+!.claude/hooks/
