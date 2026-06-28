@@ -11,7 +11,20 @@ function unauthorized(message = "Authentication required") {
   });
 }
 
-export function middleware(request: NextRequest) {
+async function timingSafeStringEqual(a: string, b: string): Promise<boolean> {
+  const enc = new TextEncoder();
+  const [ha, hb] = await Promise.all([
+    crypto.subtle.digest("SHA-256", enc.encode(a)),
+    crypto.subtle.digest("SHA-256", enc.encode(b)),
+  ]);
+  const va = new Uint8Array(ha);
+  const vb = new Uint8Array(hb);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
+}
+
+export async function middleware(request: NextRequest) {
   const isProtected = protectedRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route),
   );
@@ -43,7 +56,12 @@ export function middleware(request: NextRequest) {
   const username = decoded.slice(0, separator);
   const password = decoded.slice(separator + 1);
 
-  if (username !== adminUser || password !== adminPassword) {
+  const [userOk, passOk] = await Promise.all([
+    timingSafeStringEqual(username, adminUser),
+    timingSafeStringEqual(password, adminPassword),
+  ]);
+
+  if (!userOk || !passOk) {
     return unauthorized("Invalid Luca admin credentials.");
   }
 

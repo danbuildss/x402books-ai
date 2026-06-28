@@ -23,6 +23,14 @@ export async function GET(
   if (!auth.ok) return auth.response;
 
   const { slug } = await params;
+
+  // Agent-scoped keys may only query their own agent's data
+  if (auth.agentScope && auth.agentScope !== slug) {
+    return NextResponse.json(
+      { error: "This API key is scoped to a different agent." },
+      { status: 403 },
+    );
+  }
   const { searchParams } = new URL(request.url);
   const period = (searchParams.get("range") ?? searchParams.get("period") ?? "30d") as TimeRange;
 

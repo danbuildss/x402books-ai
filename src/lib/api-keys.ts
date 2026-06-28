@@ -39,6 +39,8 @@ export type ApiKeyRecord = {
   wallet_address: string | null;
   created_at: string;
   last_used_at: string | null;
+  // agent_scope: agent slug this key is restricted to, or null for unrestricted
+  agent_scope: string | null;
 };
 
 const SELECT_FIELDS = "id, key_prefix, name, is_active, tier, rate_limit_per_day, requests_today, requests_total, wallet_address, created_at, last_used_at";
@@ -75,11 +77,19 @@ export async function createApiKey(
 
 // ── Validate + rate-limit check ───────────────────────────────────────────────
 
+// Agent-scope convention: keys named "agent:{slug}" are restricted to that agent.
+// Stored in the `name` field — no schema migration needed for v1.
+export function parseAgentScope(name: string): string | null {
+  return name.startsWith("agent:") ? name.slice("agent:".length) : null;
+}
+
 export type ValidatedKey = {
   id: string;
   name: string;
   tier: LucaTier;
   rate_limit_per_day: number;
+  // If set, this key may only access data for this agent slug
+  agent_scope: string | null;
 };
 
 export type AuthResult =
@@ -128,8 +138,20 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
       name: data.name,
       tier: (data.tier ?? "free") as LucaTier,
       rate_limit_per_day: limit,
+      agent_scope: parseAgentScope(data.name ?? ""),
     },
   };
+}
+
+// ── Agent-scoped key creation ─────────────────────────────────────────────────
+
+// Creates a key restricted to a specific agent slug. The agent team uses this
+// key to query only their own agent's financial data via /api/v1/*.
+export async function createAgentApiKey(
+  agentSlug: string,
+  ownerCodeId?: string,
+): Promise<{ key: string; record: ApiKeyRecord } | null> {
+  return createApiKey(`agent:${agentSlug}`, ownerCodeId);
 }
 
 // ── Usage logging + counter increment (fire-and-forget) ──────────────────────

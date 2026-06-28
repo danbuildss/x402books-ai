@@ -996,7 +996,9 @@ type ClaimTab = "wallet" | "manifest";
 type ClaimState = "idle" | "loading" | "done" | "error";
 
 function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
-  const [expanded, setExpanded]       = useState(false);
+  // Start expanded for unclaimed/unverified profiles — the CTA is the primary action
+  const isUnclaimed = status === "Candidate" || status === "Awaiting Manifest" || status === "Needs Verification";
+  const [expanded, setExpanded]       = useState(isUnclaimed);
   const [tab, setTab]                 = useState<ClaimTab>("wallet");
 
   // wallet tab state
@@ -1065,10 +1067,10 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
   const bannerStyle: React.CSSProperties = {
     borderRadius: 12,
-    border: "1px solid rgba(109,184,116,0.22)",
+    border: isUnclaimed ? "1px solid rgba(109,184,116,0.35)" : "1px solid rgba(109,184,116,0.22)",
     borderLeft: "3px solid var(--accent)",
     background: "var(--accent-soft)",
-    padding: expanded ? "16px 18px" : "13px 18px",
+    padding: expanded ? (isUnclaimed ? "20px 22px" : "16px 18px") : "13px 18px",
     marginBottom: 20,
     transition: "padding 0.15s",
   };
@@ -1146,17 +1148,27 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   return (
     <div style={bannerStyle}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>handshake</span>
-        <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>Claim {agentName}</p>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: isUnclaimed ? 6 : 12 }}>
+        <span className="material-symbols-outlined" style={{ fontSize: isUnclaimed ? 20 : 16, color: "var(--accent)", marginTop: 1, flexShrink: 0 }}>handshake</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: isUnclaimed ? "0.97rem" : "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>
+            {isUnclaimed ? `This profile is unclaimed` : `Claim ${agentName}`}
+          </p>
+          {isUnclaimed && (
+            <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "3px 0 0", lineHeight: 1.5 }}>
+              Submit a wallet manifest to verify ownership, unlock financial attribution, and appear in the leaderboard.
+            </p>
+          )}
+        </div>
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.8rem" }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.8rem", flexShrink: 0, marginTop: 2 }}
         >
           ✕
         </button>
       </div>
+      {isUnclaimed && <div style={{ height: 10 }} />}
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: 0, marginBottom: 14, borderRadius: 8, border: "1px solid var(--line)", overflow: "hidden", width: "fit-content" }}>
@@ -1499,7 +1511,18 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
   const [showShare, setShowShare] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
   const [tab, setTab] = useState<ProfileTab>("overview");
+
+  const embedCode = `<iframe src="https://www.zettaai.co/registry/${slug}/card" width="400" height="280" frameborder="0" style="border-radius:12px;border:none;" loading="lazy"></iframe>`;
+
+  function copyEmbed() {
+    navigator.clipboard.writeText(embedCode).then(() => {
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
+    });
+  }
 
   return (
     <div className="prof-page">
@@ -1562,7 +1585,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               )}
             </div>
           </div>
-          <div className="prof-share-wrap">
+          <div className="prof-share-wrap" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button type="button" className="prof-share-btn" onClick={() => setShowEmbed(true)} style={{ opacity: 0.8 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>code</span>
+              Embed
+            </button>
             <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
               Share
@@ -1780,6 +1807,49 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           classification={classification}
           onClose={() => setShowShare(false)}
         />
+      )}
+
+      {showEmbed && (
+        <div
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+          onClick={() => setShowEmbed(false)}
+        >
+          <div
+            style={{ background: "var(--surface)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 520, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18, color: "var(--accent)" }}>code</span>
+              <p style={{ margin: 0, fontWeight: 700, fontSize: "0.95rem", color: "var(--ink)" }}>Embed {agent.name}</p>
+              <button type="button" onClick={() => setShowEmbed(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted)" }}>✕</button>
+            </div>
+            <p style={{ margin: "0 0 14px", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>
+              Add this snippet to any website to display {agent.name}&apos;s live Zetta agent card.
+            </p>
+            <div style={{ background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+              <code style={{ fontSize: "0.72rem", color: "var(--ink)", wordBreak: "break-all", lineHeight: 1.7, fontFamily: "monospace" }}>
+                {embedCode}
+              </code>
+            </div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={copyEmbed}
+                style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: embedCopied ? "var(--accent)" : "var(--accent-soft)", color: embedCopied ? "#fff" : "var(--accent)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", transition: "background 0.2s" }}
+              >
+                {embedCopied ? "Copied!" : "Copy embed code"}
+              </button>
+              <a
+                href={`/registry/${slug}/card`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.82rem", textDecoration: "none", display: "flex", alignItems: "center" }}
+              >
+                Preview card
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       <SiteFooter />
