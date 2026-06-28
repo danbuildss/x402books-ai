@@ -9,6 +9,7 @@ import {
   linkTokenToAgent,
   deriveManifestStatus,
   buildLucaSummary,
+  B20_INFRASTRUCTURE_ADDRESSES,
   type B20Chain,
 } from "@/lib/b20-client";
 import {
@@ -80,6 +81,14 @@ export async function POST(req: NextRequest) {
 
   if ((mode === "single" || mode === "activity_only") && !address) {
     return NextResponse.json({ ok: false, error: "address required for single and activity_only modes" }, { status: 400 });
+  }
+
+  // Guard: factory and registry precompiles are never indexable as B20 tokens
+  if (address && B20_INFRASTRUCTURE_ADDRESSES.has(address.trim().toLowerCase())) {
+    return NextResponse.json({
+      ok: false,
+      error: `${address} is a B20 infrastructure precompile (factory or registry). It cannot be indexed as a B20 token. Only 0xB200… token addresses are indexable.`,
+    }, { status: 400 });
   }
 
   if (!dryRun && !hasSupabaseAdminEnv()) {
