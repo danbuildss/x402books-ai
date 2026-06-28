@@ -36,7 +36,7 @@ async function hasValidAccessCookie(request: NextRequest) {
   const token =
     request.cookies.get(ACCESS_COOKIE_NAME)?.value ??
     request.cookies.get(ACCESS_COOKIE_NAME_LEGACY)?.value;
-  const secret = process.env.ACCESS_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const secret = (process.env.ACCESS_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
   if (!token || !secret) return false;
 

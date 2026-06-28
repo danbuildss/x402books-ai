@@ -98,7 +98,7 @@ export async function GET(
         unknown:             "No reliable classification signal. Awaiting more context.",
       },
     });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Internal server error. Please try again." }, { status: 500 });
   }
 }

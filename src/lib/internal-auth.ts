@@ -25,9 +25,12 @@ function verifySessionToken(token: string, secret: string): boolean {
   const ts = token.slice(0, dot);
   const sig = token.slice(dot + 1);
   const tsNum = parseInt(ts, 10);
-  if (isNaN(tsNum) || Date.now() - tsNum > 3_600_000) return false;
+  // Always run HMAC before checking expiry — early-exit leaks timing information
+  // about whether the timestamp format was valid (timing oracle).
   const expected = createHmac("sha256", secret).update(ts).digest("hex");
-  return safeEqual(sig, expected);
+  const sigOk = safeEqual(sig.length > 0 ? sig : "\0", expected);
+  const notExpired = !isNaN(tsNum) && Date.now() - tsNum <= 3_600_000;
+  return sigOk && notExpired;
 }
 
 export function internalAuth(req: Request): boolean {
