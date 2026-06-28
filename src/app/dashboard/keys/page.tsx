@@ -111,6 +111,15 @@ export default function ApiKeysPage() {
   const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Agent-scoped key creation
+  const [showAgentForm, setShowAgentForm] = useState(false);
+  const [agentSlug, setAgentSlug] = useState("");
+  const [creatingAgent, setCreatingAgent] = useState(false);
+  const [agentKeyResult, setAgentKeyResult] = useState<string | null>(null);
+  const [agentKeyCopied, setAgentKeyCopied] = useState(false);
+  const [agentKeyError, setAgentKeyError] = useState("");
+  const agentSlugRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => { fetchKeys(); }, []);
 
   async function fetchKeys() {
@@ -153,6 +162,35 @@ export default function ApiKeysPage() {
   function handleWalletLinked(keyId: string, wallet: string, tier: LucaTier) {
     setKeys((prev) => prev.map((k) => k.id === keyId ? { ...k, wallet_address: wallet.toLowerCase(), tier, rate_limit_per_day: TIER_LIMITS[tier] } : k));
     setExpandedWallet(null);
+  }
+
+  async function handleCreateAgentKey() {
+    const slug = agentSlug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/^-|-$/g, "");
+    if (!slug) { setAgentKeyError("Enter a valid agent slug."); return; }
+    setCreatingAgent(true);
+    setAgentKeyError("");
+    try {
+      const res = await fetch("/api/developer/keys", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: `agent:${slug}` }),
+      });
+      const data = await res.json() as { key?: string; record?: ApiKeyRecord; error?: string };
+      if (!res.ok || !data.key || !data.record) {
+        setAgentKeyError(data.error ?? "Could not create agent key.");
+        if (res.status === 401) setSignedOut(true);
+        return;
+      }
+      setAgentKeyResult(data.key);
+      setKeys((prev) => [data.record!, ...prev]);
+      setAgentSlug("");
+    } finally { setCreatingAgent(false); }
+  }
+
+  function copyAgentKey(key: string) {
+    navigator.clipboard.writeText(key).then(() => {
+      setAgentKeyCopied(true);
+      setTimeout(() => setAgentKeyCopied(false), 2000);
+    });
   }
 
   return (
@@ -291,6 +329,70 @@ export default function ApiKeysPage() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Agent-scoped key */}
+      <div className="op-card">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showAgentForm || agentKeyResult ? 16 : 0 }}>
+          <div>
+            <h2 className="op-card-title">Agent-scoped key</h2>
+            <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "4px 0 0" }}>
+              Restrict a key to one agent — it can only query that agent&apos;s data.
+            </p>
+          </div>
+          {!agentKeyResult && (
+            <button
+              className="op-btn"
+              onClick={() => { setShowAgentForm((v) => !v); setAgentKeyError(""); setTimeout(() => agentSlugRef.current?.focus(), 50); }}
+            >
+              {showAgentForm ? "Cancel" : "Create agent key"}
+            </button>
+          )}
+        </div>
+
+        {agentKeyResult ? (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Agent key created — copy it now</span>
+            </div>
+            <p style={{ color: "var(--muted)", fontSize: "0.76rem", margin: "0 0 10px" }}>
+              This key will not be shown again. Name it with <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:{agentSlug || "your-slug"}</code> so the API enforces the scope.
+            </p>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <code style={{ flex: 1, background: "var(--surface-soft)", padding: "8px 12px", borderRadius: 6, fontFamily: "var(--font-mono)", fontSize: "0.8rem", border: "1px solid var(--line)", wordBreak: "break-all" }}>
+                {agentKeyResult}
+              </code>
+              <button className="op-btn op-btn-primary" onClick={() => copyAgentKey(agentKeyResult)}>{agentKeyCopied ? "✓ Copied" : "Copy"}</button>
+              <button className="op-btn op-btn-ghost" onClick={() => { setAgentKeyResult(null); setShowAgentForm(false); }}>Done</button>
+            </div>
+          </div>
+        ) : showAgentForm ? (
+          <div>
+            <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
+              Enter your agent&apos;s registry slug (the part after <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>/registry/</code> in its profile URL).
+              The key will be named <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:your-slug</code> and restricted to that agent only.
+            </p>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 220, background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7, padding: "0 10px", gap: 4 }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--muted)", flexShrink: 0 }}>agent:</span>
+                <input
+                  ref={agentSlugRef}
+                  className="op-input"
+                  style={{ border: "none", background: "transparent", padding: "8px 0", flex: 1 }}
+                  placeholder="your-agent-slug"
+                  value={agentSlug}
+                  onChange={(e) => { setAgentSlug(e.target.value); setAgentKeyError(""); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateAgentKey(); if (e.key === "Escape") setShowAgentForm(false); }}
+                  maxLength={64}
+                />
+              </div>
+              <button className="op-btn op-btn-primary" onClick={handleCreateAgentKey} disabled={creatingAgent || !agentSlug.trim()}>
+                {creatingAgent ? "Creating…" : "Create"}
+              </button>
+            </div>
+            {agentKeyError && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
+          </div>
+        ) : null}
       </div>
 
       {/* Auth reference */}

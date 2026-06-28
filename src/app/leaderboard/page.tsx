@@ -415,7 +415,7 @@ export default async function LeaderboardPage() {
                   {" "}Revenue attribution unlocks when they declare a wallet manifest.
                 </p>
               </div>
-              <Link href="/manifest/spec" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap", marginTop: 2 }}>
+              <Link href="/developer#manifest" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap", marginTop: 2 }}>
                 Submit manifest →
               </Link>
             </div>
@@ -470,7 +470,7 @@ export default async function LeaderboardPage() {
                     }}>unverified</span>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <Link href={`/registry/${a.slug}`} style={{
+                    <Link href={`/registry/${a.slug}#claim`} style={{
                       fontSize: "0.72rem", fontWeight: 600,
                       color: "var(--accent)", textDecoration: "none",
                       padding: "4px 10px", borderRadius: 6,

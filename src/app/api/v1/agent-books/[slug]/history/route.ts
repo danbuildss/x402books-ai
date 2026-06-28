@@ -28,6 +28,13 @@ export async function GET(
   if (!auth.ok) return auth.response;
 
   const { slug } = await params;
+
+  if (auth.agentScope && auth.agentScope !== slug) {
+    return NextResponse.json(
+      { error: `This API key is scoped to agent '${auth.agentScope}', not '${slug}'. Use a key scoped to this agent, or an unscoped key.` },
+      { status: 403 },
+    );
+  }
   const { searchParams } = new URL(request.url);
   const period = searchParams.get("period") ?? "30d";
 

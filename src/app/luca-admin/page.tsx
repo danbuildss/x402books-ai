@@ -2449,6 +2449,7 @@ function OutreachSection({ secret }: { secret: string }) {
   const [error, setError] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+  const [updatingSlug, setUpdatingSlug] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -2496,6 +2497,22 @@ function OutreachSection({ secret }: { secret: string }) {
     });
   }
 
+  async function updateOutreachStatus(slug: string, status: string) {
+    setUpdatingSlug(slug);
+    try {
+      const res = await fetch("/api/admin/registry/outreach-status", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${secret}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, status }),
+      });
+      if (res.ok) {
+        setAgents((prev) => prev.map((a) => a.slug === slug ? { ...a, outreachStatus: status } : a));
+      }
+    } finally {
+      setUpdatingSlug(null);
+    }
+  }
+
   const statusColor: Record<string, string> = {
     "Not started": "#6b7280",
     "In progress": "#f59e0b",
@@ -2538,11 +2555,21 @@ function OutreachSection({ secret }: { secret: string }) {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</span>
-                    {a.outreachStatus && (
-                      <span style={{ fontSize: "0.68rem", fontWeight: 600, color: statusColor[a.outreachStatus] ?? "var(--muted)" }}>
-                        ● {a.outreachStatus}
-                      </span>
-                    )}
+                    <select
+                      value={a.outreachStatus ?? "Not started"}
+                      disabled={updatingSlug === a.slug}
+                      onChange={(e) => updateOutreachStatus(a.slug, e.target.value)}
+                      style={{
+                        fontSize: "0.68rem", fontWeight: 600, padding: "2px 6px", borderRadius: 5,
+                        border: "1px solid var(--line)", background: "var(--surface-soft)",
+                        color: statusColor[a.outreachStatus ?? "Not started"] ?? "var(--muted)",
+                        cursor: "pointer", opacity: updatingSlug === a.slug ? 0.5 : 1,
+                      }}
+                    >
+                      <option value="Not started">Not started</option>
+                      <option value="In progress">In progress</option>
+                      <option value="Connected">Connected</option>
+                    </select>
                   </div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: "0.8rem", color: "var(--muted)", whiteSpace: "nowrap" }}>

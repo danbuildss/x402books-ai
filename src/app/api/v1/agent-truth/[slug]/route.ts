@@ -21,6 +21,13 @@ export async function GET(
   const { slug } = await params;
   const agentSlug = slug.toLowerCase().trim();
 
+  if (auth.agentScope && auth.agentScope !== agentSlug) {
+    return NextResponse.json(
+      { error: `This API key is scoped to agent '${auth.agentScope}', not '${agentSlug}'. Use a key scoped to this agent, or an unscoped key.` },
+      { status: 403 },
+    );
+  }
+
   if (!hasSupabaseAdminEnv()) {
     return NextResponse.json({ ok: false, error: "Registry unavailable" }, { status: 503 });
   }
@@ -100,7 +107,7 @@ export async function GET(
         note: "confirmed_revenue_usd counts only high-confidence settlement_revenue from registry wallets. fee_received is possible service income — medium confidence, not confirmed.",
       },
     });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: String(e) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Internal server error. Please try again." }, { status: 500 });
   }
 }

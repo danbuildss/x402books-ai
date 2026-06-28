@@ -242,11 +242,14 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
 
   const sb = getSupabaseAdminClient();
 
-  // Fetch the pending update
+  // Fetch only if still pending — concurrent approvals for the same update
+  // will get null here once the first one marks it approved, preventing
+  // double-wallet insertion.
   const { data: updateData, error: fetchError } = await sb
     .from("registry_pending_updates")
     .select("*")
     .eq("id", id)
+    .eq("status", "pending")
     .single();
 
   if (fetchError || !updateData) {
@@ -264,10 +267,13 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
     const toSlug  = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const rawSlug = toSlug(rawName);
 
+    // Query by slug pattern server-side — avoids the silent 100-row client-side scan
+    // that would miss agents beyond the limit. The slug is a deterministic lowercase
+    // transform of the name, so we match all rows whose name lowercases to rawSlug.
     const { data: existingRows } = await sb
       .from("registry_agents")
       .select("name")
-      .limit(100);
+      .ilike("name", rawName);
 
     const existingMatch = (existingRows ?? []).find(
       (r: { name: string }) => toSlug(r.name) === rawSlug,
