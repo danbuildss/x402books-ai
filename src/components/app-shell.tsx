@@ -8,14 +8,14 @@ import { Logo } from "@/components/logo";
 const navItems = [
   { href: "/dashboard", label: "My Agent",  icon: "M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2Zm0 12c-5.33 0-8 2.67-8 4v2h16v-2c0-1.33-2.67-4-8-4Z" },
   { href: "/registry",  label: "Registry",  icon: "M4 6h16M4 10h16M4 14h10" },
-  { href: "/developer", label: "Developer", icon: "M8 9 4 12l4 3M16 9l4 3-4 3M13 6l-2 12" },
+  { href: "/dashboard/keys", label: "Developer", icon: "M8 9 4 12l4 3M16 9l4 3-4 3M13 6l-2 12" },
   { href: "/settings",  label: "Settings",  icon: "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm0-5v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" },
 ];
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "My Agent",
   "/registry":  "Registry",
-  "/developer": "Developer",
+  "/dashboard/keys": "Developer",
   "/settings":  "Settings",
 };
 
@@ -77,7 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <div className="topbar-actions">
           <Link href="/registry">Registry</Link>
-          <Link href="/developer">API</Link>
+          <Link href="/api">API</Link>
         </div>
       </header>
 

@@ -450,7 +450,7 @@ export default function ValidatePage() {
             <Link href="/dashboard">App</Link>
             <Link href="/registry">Registry</Link>
             <Link href="/luca">Luca</Link>
-            <Link href="/developer">Developer</Link>
+            <Link href="/api">API Reference</Link>
           </div>
           <div className="lp-footer-col">
             <p className="lp-footer-heading">Docs</p>

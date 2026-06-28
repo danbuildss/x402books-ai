@@ -143,7 +143,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
     { href: "/registry", label: "Registry", icon: <IconGrid />, soon: false },
     { href: "/leaderboard", label: "Leaderboard", icon: <IconBar />, soon: false },
     { href: "/research", label: "Research", icon: <IconDoc />, soon: false },
-    { href: "/developer", label: "API", icon: <IconCode />, soon: false },
+    { href: "/dashboard/keys", label: "API", icon: <IconCode />, soon: false },
     { href: "/luca", label: "Luca", icon: <IconBot />, soon: true },
   ];
 

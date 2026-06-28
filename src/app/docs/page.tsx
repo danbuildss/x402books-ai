@@ -431,7 +431,7 @@ Luca Managed       →  Luca actively monitors finances`}</pre>
             <p className="docs-lead">Financial identity data for agents, builders, and prediction markets.</p>
 
             <div className="docs-callout docs-callout-info">
-              Public endpoints require no auth. Financial intelligence endpoints require an API key — generate one at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>. Free tier: 100 req/day. $LUCA holders: up to 2,000/day.
+              Public endpoints require no auth. Financial intelligence endpoints require an API key — generate one at <a href="/api" style={{ color: "var(--accent)" }}>/developer</a>. Free tier: 100 req/day. $LUCA holders: up to 2,000/day.
             </div>
 
             <h2 className="docs-h2">Public — no auth required</h2>
@@ -612,7 +612,7 @@ Authorization: Bearer zt_live_...`}</pre>
             </div>
 
             <div className="docs-callout">
-              <strong>Rate limits:</strong> Free — 100 req/day · $LUCA Holder (≥1,000) — 500/day · $LUCA Whale (≥10,000) — 2,000/day. Generate your key at <a href="/developer" style={{ color: "var(--accent)" }}>/developer</a>.
+              <strong>Rate limits:</strong> Free — 100 req/day · $LUCA Holder (≥1,000) — 500/day · $LUCA Whale (≥10,000) — 2,000/day. Generate your key at <a href="/api" style={{ color: "var(--accent)" }}>/developer</a>.
             </div>
           </section>
 

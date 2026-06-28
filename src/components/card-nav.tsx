@@ -13,7 +13,7 @@ const ITEMS: NavItem[] = [
       { label: "Registry", href: "/registry" },
       { label: "Leaderboard", href: "/leaderboard" },
       { label: "Research", href: "/research" },
-      { label: "API", href: "/developer" },
+      { label: "API", href: "/api" },
       { label: "Luca", href: "/luca" },
     ],
   },

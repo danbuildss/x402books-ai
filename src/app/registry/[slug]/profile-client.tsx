@@ -68,7 +68,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
             Wallets declared but not currently scannable. Verify that declared addresses are agent operational wallets on Base, not token contracts.
           </p>
           <a
-            href="/developer#manifest"
+            href="/api#manifest"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               fontSize: "0.79rem", fontWeight: 600,
@@ -105,7 +105,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
           No books yet. This agent needs declared wallets before Zetta can generate revenue, expense, and profitability data.
         </p>
         <a
-          href="/developer#manifest"
+          href="/api#manifest"
           style={{
             display: "inline-flex", alignItems: "center", gap: 6,
             fontSize: "0.79rem", fontWeight: 600,
@@ -1734,7 +1734,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                         <div style={{ marginBottom: 10, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b30", borderRadius: 6 }}>
                           <p style={{ margin: 0, fontSize: "0.72rem", color: "#f59e0b", lineHeight: 1.5 }}>
                             Wallet manifest required. Contract addresses and discovered addresses are not used for books.{" "}
-                            <a href="/developer#manifest" style={{ color: "#f59e0b", textDecoration: "underline" }}>Add .agent/wallets.json →</a>
+                            <a href="/api#manifest" style={{ color: "#f59e0b", textDecoration: "underline" }}>Add .agent/wallets.json →</a>
                           </p>
                         </div>
                       )}
