@@ -2454,7 +2454,7 @@ function OutreachSection({ secret }: { secret: string }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/v1/registry/agents?include_outreach=1", {
+        const res = await fetch("/api/registry/agents", {
           headers: { "Authorization": `Bearer ${secret}` },
         });
         if (!res.ok) throw new Error(`${res.status}`);
@@ -2465,17 +2465,7 @@ function OutreachSection({ secret }: { secret: string }) {
         candidates.sort((a: OutreachAgent, b: OutreachAgent) => b.revenue_usd - a.revenue_usd);
         setAgents(candidates);
       } catch {
-        // Fallback: fetch registry list from the public endpoint
-        try {
-          const res2 = await fetch("/api/registry/list");
-          const d2 = await res2.json() as { agents?: OutreachAgent[] };
-          const candidates = (d2.agents ?? []).filter((a: OutreachAgent) =>
-            ["Candidate", "Awaiting Manifest", "Needs Verification"].includes(a.verificationStatus)
-          );
-          setAgents(candidates);
-        } catch {
-          setError("Could not load agent list.");
-        }
+        setError("Could not load agent list.");
       } finally {
         setLoading(false);
       }

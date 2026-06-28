@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
@@ -1526,6 +1527,7 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
 }
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
+  const router = useRouter();
   const [showShare, setShowShare] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
@@ -1553,8 +1555,10 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
           <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/adopt">Adopt</Link>
           <Link href="/research">Research</Link>
-          <Link href="/developer">API</Link>
+          <Link href="/api">API</Link>
+          <Link href="/docs">Docs</Link>
           <Link href="/luca">Luca</Link>
         </nav>
         <div className="lp-header-right">
@@ -1566,10 +1570,17 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
       <main className="prof-main">
         {/* Back */}
-        <Link href="/registry" className="prof-back">
+        <button
+          type="button"
+          className="prof-back"
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else router.push("/registry");
+          }}
+        >
           <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_back</span>
           Agent Registry
-        </Link>
+        </button>
 
         {/* Identity card */}
         <div className="prof-identity">

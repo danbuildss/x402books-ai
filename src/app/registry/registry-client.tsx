@@ -706,8 +706,10 @@ export function RegistryClient({
         <nav className="lp-nav" aria-label="Main navigation">
           <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
           <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/adopt">Adopt</Link>
           <Link href="/research">Research</Link>
-          <Link href="/developer">API</Link>
+          <Link href="/api">API</Link>
+          <Link href="/docs">Docs</Link>
           <Link href="/luca">Luca</Link>
         </nav>
         <div className="lp-header-right">
