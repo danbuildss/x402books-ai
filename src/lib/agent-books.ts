@@ -187,6 +187,7 @@ export async function buildAgentBooks(
   if (dbCached) {
     const cachedAnalyzed = dbCached.attributed ? (dbCached as AgentBooks).wallets.analyzed : 0;
     const cacheStale =
+      (!dbCached.attributed && currentEligibleCount > 0) ||
       (dbCached.attributed && currentEligibleCount === 0) ||
       (dbCached.attributed && cachedAnalyzed !== currentEligibleCount);
     if (!cacheStale) {
