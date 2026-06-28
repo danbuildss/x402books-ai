@@ -80,7 +80,9 @@ export async function createApiKey(
 // Agent-scope convention: keys named "agent:{slug}" are restricted to that agent.
 // Stored in the `name` field — no schema migration needed for v1.
 export function parseAgentScope(name: string): string | null {
-  return name.startsWith("agent:") ? name.slice("agent:".length) : null;
+  if (!name.startsWith("agent:")) return null;
+  const slug = name.slice("agent:".length);
+  return slug.length > 0 ? slug : null;
 }
 
 export type ValidatedKey = {
