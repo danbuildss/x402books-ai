@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { AGENTS } from "./data";
@@ -28,5 +29,9 @@ export default async function RegistryPage() {
     }
   }
 
-  return <RegistryClient initialAgents={agents} initialEconomics={economics} />;
+  return (
+    <Suspense fallback={null}>
+      <RegistryClient initialAgents={agents} initialEconomics={economics} />
+    </Suspense>
+  );
 }

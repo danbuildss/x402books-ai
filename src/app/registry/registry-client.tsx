@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -29,16 +30,20 @@ const PAGE_SIZE = 25;
 
 // ── Stats ─────────────────────────────────────────────────────────────────────
 
+const DECLARED_STATUSES: VerificationStatus[] = [
+  "Wallets Declared", "Claimed", "Verified", "Luca Managed", "ERC-8004 Indexed",
+];
+
 function computeStats(agents: PublicAgent[], economics: Record<string, AgentGDPEntry>) {
-  const walletCount  = agents.filter(
-    (a) => a.tokenAddress !== null || (a.wallets ?? []).length > 0
+  const manifestCount = agents.filter(
+    (a) => DECLARED_STATUSES.includes(a.verificationStatus)
   ).length;
   const booksCount = Object.keys(economics).length;
   return [
-    { label: "Agents Tracked",  value: String(agents.length) },
-    { label: "Ecosystems",      value: "5"                   },
-    { label: "Wallets Indexed", value: String(walletCount)   },
-    { label: "With Books",      value: String(booksCount)    },
+    { label: "Agents Tracked",    value: String(agents.length) },
+    { label: "Ecosystems",        value: "5"                   },
+    { label: "Manifests Indexed", value: String(manifestCount) },
+    { label: "With Books",        value: String(booksCount)    },
   ];
 }
 
@@ -608,14 +613,37 @@ export function RegistryClient({
   initialAgents: PublicAgent[];
   initialEconomics: Record<string, AgentGDPEntry>;
 }) {
+  const searchParams = useSearchParams();
+  const router       = useRouter();
+  const pathname     = usePathname();
+
   const [agents]    = useState<PublicAgent[]>(initialAgents);
   const [economics] = useState<Record<string, AgentGDPEntry>>(initialEconomics);
   const [momentum, setMomentum] = useState<Record<string, AgentMomentum>>({});
-  const [search, setSearch]         = useState("");
-  const [ecoFilter, setEcoFilter]   = useState<"All" | Ecosystem>("All");
-  const [statusFilter, setStatusFilter] = useState<"All" | VerificationStatus>("All");
-  const [sortBy, setSortBy]         = useState<SortKey>("activity");
-  const [page, setPage]             = useState(1);
+
+  // All filter state lives in the URL so back-navigation restores scroll + position
+  const search       = searchParams.get("q") ?? "";
+  const ecoFilter    = (searchParams.get("eco") ?? "All") as "All" | Ecosystem;
+  const statusFilter = (searchParams.get("status") ?? "All") as "All" | VerificationStatus;
+  const sortBy       = (searchParams.get("sort") ?? "activity") as SortKey;
+  const page         = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+
+  const updateParams = useCallback((updates: Record<string, string>) => {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(updates)) {
+      const isDefault = !v || v === "All" || (k === "sort" && v === "activity") || (k === "page" && v === "1") || (k === "q" && !v);
+      if (isDefault) { params.delete(k); } else { params.set(k, v); }
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, router, pathname]);
+
+  function setSearch(v: string)                          { updateParams({ q: v, page: "1" }); }
+  function setEcoFilter(v: "All" | Ecosystem)            { updateParams({ eco: v, page: "1" }); }
+  function setStatusFilter(v: "All" | VerificationStatus){ updateParams({ status: v, page: "1" }); }
+  function setSortBy(v: SortKey)                         { updateParams({ sort: v, page: "1" }); }
+  function prevPage()                                    { updateParams({ page: String(page - 1) }); }
+  function nextPage()                                    { updateParams({ page: String(page + 1) }); }
 
   useEffect(() => {
     fetch("/api/registry/momentum")
@@ -625,9 +653,6 @@ export function RegistryClient({
       })
       .catch(() => {});
   }, []);
-
-  // Reset to page 1 whenever filters or sort change
-  useEffect(() => { setPage(1); }, [search, ecoFilter, statusFilter, sortBy]);
 
   const STATS = computeStats(agents, economics);
 
@@ -796,7 +821,7 @@ export function RegistryClient({
             <button
               className="reg-page-btn"
               disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
+              onClick={prevPage}
             >
               ← Prev
             </button>
@@ -806,7 +831,7 @@ export function RegistryClient({
             <button
               className="reg-page-btn"
               disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
+              onClick={nextPage}
             >
               Next →
             </button>
