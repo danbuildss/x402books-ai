@@ -122,10 +122,10 @@ export async function validateApiKey(raw: string): Promise<AuthResult> {
   if (count >= limit) {
     const tier = (data.tier ?? "free") as LucaTier;
     const upgradeHint = tier === "free"
-      ? " Hold ≥1,000 $LUCA and link your wallet on /developer to upgrade to 500/day."
+      ? " Hold ≥1,000 $LUCA and link your wallet on /dashboard/keys to upgrade to 500/day."
       : tier === "holder"
         ? " Hold ≥10,000 $LUCA to upgrade to 2,000/day."
-        : "";
+        : " Contact support on X (@zettatracker) if you need a higher limit.";
     return {
       ok: false,
       status: 429,

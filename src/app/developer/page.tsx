@@ -33,11 +33,18 @@ function TierBadge({ tier }: { tier: LucaTier }) {
 }
 
 const ENDPOINTS = [
-  { method: "GET",  path: "/ledger-summary",       desc: "Income, spend, net flow, budget status",               params: "wallet, range" },
-  { method: "GET",  path: "/transactions",          desc: "Paginated transactions with USD values + categories",  params: "wallet, range, page, limit" },
-  { method: "GET",  path: "/full-report",           desc: "Complete scan: portfolio, daily flows, categories",    params: "wallet, range" },
-  { method: "POST", path: "/categorize",            desc: "AI-powered transaction categorization",                params: "{ wallet, range }" },
-  { method: "GET",  path: "/agent-financial-state", desc: "Agent snapshot: ecosystem, portfolio, x402 activity", params: "wallet, range" },
+  { method: "GET",  path: "/ledger-summary",                  desc: "Income, spend, net flow, budget status",               params: "wallet, range" },
+  { method: "GET",  path: "/transactions",                     desc: "Paginated transactions with USD values + categories",  params: "wallet, range, page, limit" },
+  { method: "GET",  path: "/full-report",                      desc: "Complete scan: portfolio, daily flows, categories",    params: "wallet, range" },
+  { method: "POST", path: "/categorize",                       desc: "AI-powered transaction categorization",                params: "{ wallet, range }" },
+  { method: "GET",  path: "/agent-financial-state",            desc: "Agent snapshot: ecosystem, portfolio, x402 activity", params: "wallet, range" },
+];
+
+const AGENT_ENDPOINTS = [
+  { method: "GET",  path: "/api/v1/agent-books/{slug}",        desc: "Agent financial statement: revenue, spend, net income across all declared wallets", params: "range (7d|14d|30d|90d)" },
+  { method: "GET",  path: "/api/v1/agent-books/{slug}/history",desc: "Historical books snapshots for time-series charting",  params: "period (7d|30d|90d|all)" },
+  { method: "GET",  path: "/api/v1/agent-revenue/{slug}",      desc: "Classified revenue events for one agent",              params: "limit, offset" },
+  { method: "GET",  path: "/api/v1/agent-truth/{slug}",        desc: "Wallet claims, eligibility, manifest status, and revenue evidence summary", params: "—" },
 ];
 
 export default function DeveloperPage() {
@@ -88,7 +95,7 @@ export default function DeveloperPage() {
             Get API Key →
           </Link>
           <Link
-            href="/operators"
+            href="/dashboard/keys"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,
               padding: "10px 20px", borderRadius: 8,
@@ -147,7 +154,7 @@ export default function DeveloperPage() {
         </div>
         <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: 16 }}>
           Tier is determined by $LUCA balance verified via wallet signature. Link your wallet in the{" "}
-          <Link href="/operators" style={{ color: "var(--accent)" }}>Operators Dashboard</Link>.
+          <Link href="/dashboard/keys" style={{ color: "var(--accent)" }}>Operators Dashboard</Link>.
         </p>
       </section>
 
@@ -261,6 +268,101 @@ export default function DeveloperPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* Agent-centric endpoints */}
+      <section id="agent-endpoints" style={{ maxWidth: 900, margin: "0 auto", padding: "0 40px 48px" }}>
+        <h2 style={{
+          fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+          color: "var(--ink)", marginBottom: 8,
+        }}>
+          Agent-Centric Endpoints
+        </h2>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 16, lineHeight: 1.6 }}>
+          Query financial data for a specific registered agent. Use an agent-scoped key
+          (named <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>agent:your-slug</code>) to restrict
+          access to your agent only, or an unscoped key for cross-agent access.
+          Create agent-scoped keys at{" "}
+          <a href="/dashboard/keys" style={{ color: "var(--accent)" }}>/dashboard/keys</a>.
+        </p>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          overflow: "hidden",
+          marginBottom: 16,
+        }}>
+          {AGENT_ENDPOINTS.map((ep, i) => (
+            <div
+              key={ep.path}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "56px 1fr 1fr",
+                gap: "12px 20px",
+                alignItems: "start",
+                padding: "14px 20px",
+                borderBottom: i < AGENT_ENDPOINTS.length - 1 ? "1px solid var(--line)" : "none",
+              }}
+            >
+              <span style={{
+                fontSize: "0.65rem", fontWeight: 700, padding: "3px 6px", borderRadius: 4,
+                textAlign: "center", lineHeight: 1.4,
+                background: "color-mix(in srgb, var(--blue) 14%, transparent)",
+                color: "var(--blue)",
+              }}>
+                {ep.method}
+              </span>
+              <div>
+                <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--ink)", display: "block", marginBottom: 3 }}>
+                  {ep.path}
+                </code>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{ep.desc}</span>
+              </div>
+              <code style={{
+                fontFamily: "var(--font-mono)", fontSize: "0.72rem",
+                color: "var(--muted)", wordBreak: "break-word",
+              }}>
+                {ep.params}
+              </code>
+            </div>
+          ))}
+        </div>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderRadius: 10,
+          padding: "16px 20px",
+        }}>
+          <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>
+            Example — fetch your agent&apos;s 30-day books
+          </p>
+          <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--ink)", display: "block", lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+            {`curl https://www.zettaai.co/api/v1/agent-books/your-slug?range=30d \\\n  -H "Authorization: Bearer zt_live_…"`}
+          </code>
+        </div>
+      </section>
+
+      {/* Agent-scoped key creation */}
+      <section id="manifest" style={{ maxWidth: 900, margin: "0 auto", padding: "0 40px 80px" }}>
+        <h2 style={{
+          fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700,
+          color: "var(--ink)", marginBottom: 8,
+        }}>
+          Agent-Scoped Keys &amp; Manifest
+        </h2>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 16 }}>
+          An agent-scoped key is a standard API key whose name follows the
+          pattern <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>agent:your-slug</code>.
+          The API enforces that this key can only query data for that agent — any cross-agent request
+          returns 403. Create one in{" "}
+          <a href="/dashboard/keys" style={{ color: "var(--accent)" }}>your key dashboard</a>{" "}
+          by entering the key name as <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem" }}>agent:your-slug</code>.
+        </p>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.65, margin: 0 }}>
+          To have your agent indexed and appear on the registry, submit a wallet manifest at{" "}
+          <a href="/manifest" style={{ color: "var(--accent)" }}>/manifest</a>.
+          The manifest links your agent to its treasury and fee wallets, enabling financial attribution.
+        </p>
       </section>
 
       <SiteFooter />
