@@ -69,6 +69,17 @@ const SKILLS = [
     },
   },
   {
+    id: "agent-read",
+    name: "Agent Read",
+    description: "Single-call agent truth resolver. Takes any agent name, slug, or wallet address and returns: whether the agent is indexed in Zetta, the canonical read source label, full books + treasury if indexed, or a clear not-indexed signal for observational fallback. This is the required first call before making any claim about a named agent.",
+    endpoint: "/api/v1/luca/agent-read",
+    method: "POST",
+    input: {
+      agent: { type: "string", required: true, description: "Agent name, slug (e.g. 'aeon', 'bankr'), or 0x wallet address" },
+      period: { type: "string", required: false, default: "30d", enum: ["7d", "14d", "30d", "90d"] },
+    },
+  },
+  {
     id: "b20-token-analysis",
     name: "B20 Token Analysis",
     description: "Analyse a B20 token on Base: identity, issuer wallet, linked agent, manifest status, mint/burn activity, and financial readiness. Enforces strict data integrity — token transfers are not revenue, token contracts are not operator wallets.",
