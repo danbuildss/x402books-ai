@@ -38,13 +38,17 @@ async function logInference(opts: {
   usage: { prompt_tokens?: number; completion_tokens?: number } | null;
   streamed: boolean;
   latencyMs?: number;
+  agentId?: string;
+  agentName?: string;
 }) {
   const cost = estimateCost(opts.model, opts.usage);
+  const agentId   = opts.agentId   ?? "luca";
+  const agentName = opts.agentName ?? "Luca";
 
   // Broader financial ledger (agent_economic_events)
   await logAgentEvent({
-    agentId:   "luca",
-    agentName: "Luca",
+    agentId,
+    agentName,
     eventType: "inference_purchase",
     provider:  "surplus",
     amount:    cost,
@@ -62,7 +66,7 @@ async function logInference(opts: {
 
   // Inference ledger (inference_events) — powers /luca/ledger and profile cards
   await logInferenceEvent({
-    agentId:     "luca",
+    agentId,
     provider:    "surplus",
     model:       opts.model,
     requestType: "chat_completion",
@@ -89,9 +93,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const model    = typeof body.model === "string" ? body.model : "unknown";
-  const isStream = body.stream === true;
-  const t0       = Date.now();
+  const model     = typeof body.model === "string" ? body.model : "unknown";
+  const isStream  = body.stream === true;
+  const t0        = Date.now();
+  // Caller can override which agent gets the spend attributed via header.
+  // Defaults to "luca" so existing behaviour is unchanged.
+  const agentId   = req.headers.get("x-agent-id")?.trim().toLowerCase() || "luca";
+  const agentName = req.headers.get("x-agent-name")?.trim() || "Luca";
 
   // Forward to Surplus, replacing auth header server-side
   let upstream: Response;
@@ -157,7 +165,7 @@ export async function POST(req: NextRequest) {
         }
       } finally {
         writer.close().catch(() => {});
-        await logInference({ model, requestId, usage, streamed: true });
+        await logInference({ model, requestId, usage, streamed: true, agentId, agentName });
       }
     })();
 
@@ -180,7 +188,7 @@ export async function POST(req: NextRequest) {
   }
 
   const usage = (data.usage as { prompt_tokens?: number; completion_tokens?: number } | null) ?? null;
-  await logInference({ model, requestId: requestId ?? (data.id as string | null) ?? null, usage, streamed: false, latencyMs: Date.now() - t0 });
+  await logInference({ model, requestId: requestId ?? (data.id as string | null) ?? null, usage, streamed: false, latencyMs: Date.now() - t0, agentId, agentName });
 
   return NextResponse.json(data);
 }
