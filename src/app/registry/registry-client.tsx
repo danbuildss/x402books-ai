@@ -801,9 +801,10 @@ export function RegistryClient({
 
         {/* Count + live dot */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.78rem", color: "var(--muted)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", display: "inline-block", flexShrink: 0 }} />
             {sorted.length === agents.length
-              ? `${agents.length} agents`
+              ? `${agents.length} agents indexed`
               : `${sorted.length} of ${agents.length} agents`}
           </span>
         </div>
