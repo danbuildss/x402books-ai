@@ -31,10 +31,11 @@ export async function PATCH(req: NextRequest) {
   }
 
   const sb = getSupabaseAdminClient();
+  // Use ilike for case-insensitive match — DB may store mixed-case checksummed addresses
   const { data, error } = await sb
     .from("registry_agent_wallets")
     .update({ address_type })
-    .eq("address", address)
+    .ilike("address", address)
     .select("address, agent_name")
     .maybeSingle();
 
