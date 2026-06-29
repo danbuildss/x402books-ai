@@ -69,6 +69,28 @@ const SKILLS = [
     },
   },
   {
+    id: "surplus-inference",
+    name: "Surplus Inference",
+    description: "OpenAI-compatible chat completions routed through Surplus intelligence via the Zetta inference proxy. SURPLUS_API_KEY stays on Zetta/Vercel — callers only need ZETTA_INTERNAL_SECRET. All spend is automatically logged to inference_events and agent_economic_events under the calling agent's ID. Use this instead of calling Surplus directly so spend flows back into Zetta attribution.",
+    endpoint: "/api/inference/v1/chat/completions",
+    method: "POST",
+    auth: "x-internal-secret: <ZETTA_INTERNAL_SECRET>  (not Bearer API key — internal only)",
+    input: {
+      model: { type: "string", required: true, description: "Model name e.g. 'claude-sonnet-4-6', 'llama-3.3-70b'" },
+      messages: { type: "array", required: true, description: "OpenAI-compatible messages array" },
+      stream: { type: "boolean", required: false, default: false, description: "Set true for SSE streaming" },
+    },
+    headers: {
+      "x-agent-id":   { type: "string", required: false, default: "luca", description: "Agent slug for spend attribution" },
+      "x-agent-name": { type: "string", required: false, default: "Luca",  description: "Agent display name for spend attribution" },
+    },
+    notes: [
+      "SURPLUS_API_KEY is server-side only — never send it from Hermes",
+      "Spend is logged automatically — no separate log call needed",
+      "Call this instead of surplusintelligence.ai directly to keep spend in Zetta",
+    ],
+  },
+  {
     id: "agent-read",
     name: "Agent Read",
     description: "Single-call agent truth resolver. Takes any agent name, slug, or wallet address and returns: whether the agent is indexed in Zetta, the canonical read source label, full books + treasury if indexed, or a clear not-indexed signal for observational fallback. This is the required first call before making any claim about a named agent.",
