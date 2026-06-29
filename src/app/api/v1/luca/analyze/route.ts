@@ -6,6 +6,7 @@ import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import { classifySettlementPattern } from "@/lib/luca-classify";
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress } from "@/lib/ledger";
+import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
 import type { Agent } from "@/app/registry/types";
 
 export const dynamic = "force-dynamic";
@@ -102,17 +103,28 @@ async function analyzeByAgentId(agentId: string) {
     (activitySignals.length > 0 ? activitySignals.join(" ") : null) ??
     `${agent.name} is indexed in the registry. No active economic data available.`;
 
-  const walletsVerified = agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed";
+  // Use the same eligibility gate as agent-books so analyze and revenue-audit
+  // agree on manifest/declaration truth. A wallet only counts as manifest-backed
+  // if it passes isBooksEligibleWallet (evidenceSource=manifest + eligible address_type).
+  const booksEligibleWallets = (agent.wallets ?? []).filter(
+    (w) => isBooksEligibleWallet(w, agent.tokenAddress).eligible,
+  );
+  const walletsVerified =
+    booksEligibleWallets.length > 0 &&
+    (agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed");
 
   return NextResponse.json({
     source: "registry",
     data_quality: {
-      treasury_live_scan: false,
-      wallets_verified:   walletsVerified,
-      inference_live:     inferenceEvents.length > 0,
+      treasury_live_scan:      false,
+      wallets_verified:        walletsVerified,
+      books_eligible_wallets:  booksEligibleWallets.length,
+      inference_live:          inferenceEvents.length > 0,
       note: walletsVerified
-        ? "Agent verified. Wallets confirmed via manifest."
-        : "Treasury health derived from registry signals — not a live wallet scan. Use wallet mode for live data.",
+        ? "Agent verified. Manifest-declared wallets confirmed books-eligible."
+        : booksEligibleWallets.length === 0 && (agent.wallets ?? []).length > 0
+          ? "Wallets present in registry but not manifest-declared (evidenceSource missing or address_type ineligible). Declare wallets via .agent/wallets.json to unlock attributed books."
+          : "Treasury health derived from registry signals — not a live wallet scan. Use wallet mode for live data.",
     },
     agent: {
       name:      agent.name,
@@ -140,11 +152,16 @@ async function analyzeByAgentId(agentId: string) {
     } : null,
     wallets: Array.from(
       new Map(agent.wallets.map((w) => [w.address.toLowerCase(), w])).values()
-    ).map((w) => ({
-      address:  w.address,
-      role:     w.label,
-      verified: walletsVerified,
-    })),
+    ).map((w) => {
+      const eligibility = isBooksEligibleWallet(w, agent.tokenAddress);
+      return {
+        address:       w.address,
+        role:          w.label,
+        verified:      walletsVerified && eligibility.eligible,
+        books_eligible: eligibility.eligible,
+        ineligible_reason: eligibility.eligible ? null : eligibility.reason,
+      };
+    }),
     scores: {
       attribution_confidence: transparencyScoreForAgent(agent),
     },

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       agent_gdp_usd: report.agent_gdp_usd,
       attributed_agents: report.attributed_agents,
       period_label: report.period_label,
-    });
+    }, { upsert: force });
 
     if (!result.ok) {
       return NextResponse.json({ ok: false, error: result.error }, { status: 500 });

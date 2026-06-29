@@ -50,9 +50,22 @@ export async function getReportBySlug(slug: string): Promise<ResearchReport | nu
 
 export async function saveReport(
   report: Omit<ResearchReport, "id" | "published_at">,
+  opts: { upsert?: boolean } = {},
 ): Promise<{ ok: boolean; id?: string; error?: string }> {
   if (!hasSupabaseAdminEnv()) return { ok: false, error: "Supabase not configured" };
   const sb = getSupabaseAdminClient();
+
+  if (opts.upsert) {
+    // force=true: overwrite existing row by slug — idempotent, no 500 on rerun
+    const { data, error } = await sb
+      .from("research_reports")
+      .upsert(report, { onConflict: "slug" })
+      .select("id")
+      .single();
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, id: (data as { id: string }).id };
+  }
+
   const { data, error } = await sb
     .from("research_reports")
     .insert(report)

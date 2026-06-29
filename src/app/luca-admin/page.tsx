@@ -593,7 +593,58 @@ function RegistrySection({ secret }: { secret: string }) {
   const [editSaving,  setEditSaving]  = useState(false);
   const [editMsg,     setEditMsg]     = useState("");
 
+  type RegistryStats = {
+    total: number;
+    byEcosystem: Record<string, number>;
+    byStatus: Record<string, number>;
+    byOutreach: Record<string, number>;
+    coverage: {
+      withWallets: number;
+      withXHandle: number;
+      withWebsite: number;
+      withSymbol: number;
+      withVerdict: number;
+      checkedThisMonth: number;
+    };
+    generatedAt: string;
+  };
+  const [stats, setStats]               = useState<RegistryStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError]     = useState("");
+  const [bulkRefreshing, setBulkRefreshing] = useState(false);
+  const [bulkMsg, setBulkMsg]               = useState("");
+
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  async function loadStats() {
+    setStatsLoading(true);
+    setStatsError("");
+    try {
+      const res = await fetch("/api/admin/registry/stats", { headers });
+      const d = await res.json() as RegistryStats & { ok: boolean; error?: string };
+      if (d.ok) setStats(d);
+      else setStatsError(d.error ?? "Failed");
+    } catch {
+      setStatsError("Network error");
+    } finally {
+      setStatsLoading(false);
+    }
+  }
+
+  async function bulkRefreshVerdicts() {
+    setBulkRefreshing(true);
+    setBulkMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/refresh-all-verdicts", { method: "POST", headers });
+      const d = await res.json() as { ok: boolean; succeeded?: number; failed?: number; total_eligible?: number; error?: string };
+      if (d.ok) setBulkMsg(`✓ Refreshed ${d.succeeded} of ${d.total_eligible} agents${d.failed ? ` (${d.failed} failed)` : ""}`);
+      else setBulkMsg(`✗ ${d.error}`);
+    } catch {
+      setBulkMsg("✗ Network error");
+    } finally {
+      setBulkRefreshing(false);
+    }
+  }
 
   async function seedRegistry() {
     setSeeding(true);
@@ -695,6 +746,100 @@ function RegistrySection({ secret }: { secret: string }) {
         <p className={styles.kicker}>Layer 3</p>
         <h1>Registry</h1>
         <p>Agent verification submissions and Luca&apos;s proposed changes.</p>
+      </div>
+
+      {/* Registry Stats */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <p className={styles.cardTitle} style={{ margin: 0 }}>Registry Stats</p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {stats && (
+              <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>
+                Updated {new Date(stats.generatedAt).toLocaleTimeString()}
+              </span>
+            )}
+            <button type="button" onClick={loadStats} disabled={statsLoading}
+              style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.75rem", cursor: statsLoading ? "not-allowed" : "pointer", opacity: statsLoading ? 0.5 : 1 }}>
+              {statsLoading ? "Loading…" : "Refresh"}
+            </button>
+          </div>
+        </div>
+        {statsError && <p style={{ fontSize: "0.78rem", color: "#ef4444", margin: "0 0 8px" }}>{statsError}</p>}
+        {!stats && !statsLoading && (
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: 0 }}>Click Refresh to load live stats from Supabase.</p>
+        )}
+        {stats && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Top line */}
+            <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+              <div>
+                <span style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--fg)" }}>{stats.total}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted)", marginLeft: 4 }}>agents indexed</span>
+              </div>
+              <div>
+                <span style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--accent)" }}>{stats.coverage.withWallets}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted)", marginLeft: 4 }}>with wallets</span>
+              </div>
+              <div>
+                <span style={{ fontSize: "1.6rem", fontWeight: 800, color: "var(--fg)" }}>{stats.coverage.checkedThisMonth}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--muted)", marginLeft: 4 }}>refreshed this month</span>
+              </div>
+            </div>
+            {/* Ecosystem breakdown */}
+            <div>
+              <p style={{ fontSize: "0.7rem", color: "var(--muted)", margin: "0 0 5px", textTransform: "uppercase", letterSpacing: "0.06em" }}>By Ecosystem</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {Object.entries(stats.byEcosystem).sort((a, b) => b[1] - a[1]).map(([eco, count]) => (
+                  <span key={eco} style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: 999, border: "1px solid var(--line)", color: "var(--fg)" }}>
+                    {eco} <strong>{count}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+            {/* Verification status */}
+            <div>
+              <p style={{ fontSize: "0.7rem", color: "var(--muted)", margin: "0 0 5px", textTransform: "uppercase", letterSpacing: "0.06em" }}>By Verification Status</p>
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {Object.entries(stats.byStatus).sort((a, b) => b[1] - a[1]).map(([st, count]) => (
+                  <span key={st} style={{ fontSize: "0.75rem", padding: "2px 8px", borderRadius: 999, border: "1px solid var(--line)", color: "var(--fg)" }}>
+                    {st} <strong>{count}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
+            {/* Coverage */}
+            <div>
+              <p style={{ fontSize: "0.7rem", color: "var(--muted)", margin: "0 0 5px", textTransform: "uppercase", letterSpacing: "0.06em" }}>Profile Coverage</p>
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                {[
+                  { label: "X handle", val: stats.coverage.withXHandle },
+                  { label: "Website", val: stats.coverage.withWebsite },
+                  { label: "Ticker", val: stats.coverage.withSymbol },
+                  { label: "Verdict", val: stats.coverage.withVerdict },
+                ].map(({ label, val }) => (
+                  <div key={label} style={{ fontSize: "0.78rem" }}>
+                    <span style={{ color: "var(--fg)", fontWeight: 700 }}>{val}</span>
+                    <span style={{ color: "var(--muted)", marginLeft: 4 }}>{label}</span>
+                    <span style={{ color: "var(--muted)", marginLeft: 4, fontSize: "0.7rem" }}>({Math.round(val / stats.total * 100)}%)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Bulk refresh */}
+            <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <button type="button" onClick={bulkRefreshVerdicts} disabled={bulkRefreshing}
+                  style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: bulkRefreshing ? "not-allowed" : "pointer", opacity: bulkRefreshing ? 0.5 : 1 }}>
+                  {bulkRefreshing ? "Refreshing all verdicts…" : "Refresh All Verdicts →"}
+                </button>
+                <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Luca calls this daily — or run manually here.</span>
+              </div>
+              {bulkMsg && (
+                <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: bulkMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{bulkMsg}</p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Manifest Submissions (repo-submitted wallets.json) */}
