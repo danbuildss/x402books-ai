@@ -586,6 +586,13 @@ function RegistrySection({ secret }: { secret: string }) {
   const [verdictMsg, setVerdictMsg]       = useState("");
   const [verdictPreview, setVerdictPreview] = useState("");
 
+  const [editName,    setEditName]    = useState("");
+  const [editHandle,  setEditHandle]  = useState("");
+  const [editWebsite, setEditWebsite] = useState("");
+  const [editSymbol,  setEditSymbol]  = useState("");
+  const [editSaving,  setEditSaving]  = useState(false);
+  const [editMsg,     setEditMsg]     = useState("");
+
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
 
   async function seedRegistry() {
@@ -833,6 +840,63 @@ function RegistrySection({ secret }: { secret: string }) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Edit Agent Profile */}
+      <div className={styles.card} style={{ marginTop: 16 }}>
+        <p className={styles.cardTitle}>Edit Agent Profile</p>
+        <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
+          Update X handle, website URL, and ticker symbol directly in the DB. Enter the exact agent name as it appears in the registry.
+        </p>
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!editName.trim()) return;
+            setEditSaving(true);
+            setEditMsg("");
+            try {
+              const body: Record<string, string> = { name: editName.trim() };
+              if (editHandle.trim() !== "") body.xHandle = editHandle.trim();
+              if (editWebsite.trim() !== "") body.website = editWebsite.trim();
+              if (editSymbol.trim() !== "") body.symbol = editSymbol.trim();
+              const res = await fetch("/api/admin/registry/update-agent", {
+                method: "PATCH",
+                headers,
+                body: JSON.stringify(body),
+              });
+              const d = await res.json() as { ok: boolean; name?: string; error?: string };
+              if (d.ok) {
+                setEditMsg(`✓ Updated "${d.name}"`);
+                setEditHandle(""); setEditWebsite(""); setEditSymbol("");
+              } else {
+                setEditMsg(`✗ ${d.error}`);
+              }
+            } catch {
+              setEditMsg("✗ Network error");
+            } finally {
+              setEditSaving(false);
+            }
+          }}
+          style={{ display: "flex", flexDirection: "column", gap: 8 }}
+        >
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Exact agent name, e.g. AEON" className={styles.formInput} style={{ flex: "2 1 160px" }} required />
+            <input value={editHandle} onChange={(e) => setEditHandle(e.target.value)} placeholder="X handle, e.g. @aeon_agent (leave blank to skip)" className={styles.formInput} style={{ flex: "2 1 180px" }} />
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
+            <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />
+            <button type="submit" disabled={editSaving || !editName.trim()}
+              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+              {editSaving ? "Saving…" : "Save →"}
+            </button>
+          </div>
+        </form>
+        {editMsg && (
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: editMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+            {editMsg}
+          </p>
+        )}
       </div>
 
       {/* Refresh Luca Verdict */}

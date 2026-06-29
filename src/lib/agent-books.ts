@@ -68,6 +68,8 @@ export type AgentBooks = {
   };
   classification: {
     operating_revenue_usd: number;
+    settlement_revenue_usd: number;    // stablecoin inflows from known counterparties (≥3 interactions) — highest-confidence tier
+    agent_token_revenue_usd: number;   // agent-token inflows — medium-confidence tier
     quarantined_inflows_usd: number;
     bridge_excluded_expense_usd: number;
     dex_excluded_usd: number;
@@ -393,6 +395,44 @@ async function computeAgentBooks(
     }
   }
 
+  // ── Revenue tiering ───────────────────────────────────────────────────────
+  // settlement_revenue: stablecoin inflows from known counterparties (≥3 txs)
+  // agent_token_revenue: agent-token inflows passing quarantine (medium-confidence)
+  const settlementRevenueTxs = operatingRevenueTxs.filter((tx) => {
+    const counterparty = (tx.counterparty || tx.from).toLowerCase();
+    const priorInteractions = counterpartyInteractions.get(counterparty) ?? 0;
+    return STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase())
+      && priorInteractions >= KNOWN_COUNTERPARTY_MIN_INTERACTIONS;
+  });
+  const agentTokenRevenueTxs = agent.tokenAddress
+    ? operatingRevenueTxs.filter((tx) =>
+        (tx.tokenAddress ?? "").toLowerCase() === agent.tokenAddress!.toLowerCase()
+        && !STABLECOINS.has((tx.tokenAddress ?? "").toLowerCase()),
+      )
+    : [];
+
+  const settlementRevenueUsd = settlementRevenueTxs.reduce((s, tx) => s + usdOf(tx), 0);
+  const agentTokenRevenueUsd = agentTokenRevenueTxs.reduce((s, tx) => s + usdOf(tx), 0);
+
+  // ── Truth-engine: fee_received signal ────────────────────────────────────
+  // If the truth-engine has recorded confirmed fee_received events for this
+  // agent, that is external corroboration of revenue — boost confidence.
+  let hasTruthEngineFeeReceipts = false;
+  if (hasSupabaseAdminEnv()) {
+    try {
+      const sb = getSupabaseAdminClient();
+      const { data: feeEvents } = await sb
+        .from("revenue_classification_events")
+        .select("id")
+        .eq("agent_slug", slug)
+        .eq("classification", "fee_received")
+        .limit(1);
+      hasTruthEngineFeeReceipts = (feeEvents?.length ?? 0) > 0;
+    } catch {
+      // non-fatal — truth-engine data is advisory
+    }
+  }
+
   const expenseTxs = operational.filter((tx) => tx.direction === "expense");
 
   const revenue  = operatingRevenueTxs.reduce((s, tx) => s + usdOf(tx), 0);
@@ -461,19 +501,30 @@ async function computeAgentBooks(
   const hasQuarantinedEvents = quarantinedEvents.length > 0;
   const walletCoverage = scannable.length / Math.max(declared.length, 1);
 
+  const revenueIsPrimarilyAgentToken = revenue > 0 && agentTokenRevenueUsd / revenue > 0.5;
+  const hasSettlementRevenue = settlementRevenueUsd > 0;
+
   if (!hasMultipleWallets) confidenceFlags.push("single_wallet_only");
   if (!hasTreasuryRole) confidenceFlags.push("no_treasury_wallet");
   if (!hasExpenseWallet) confidenceFlags.push("no_expense_wallet");
   if (hasQuarantinedEvents) confidenceFlags.push(`${quarantinedEvents.length}_quarantined_inflows`);
   if (walletCoverage < 0.8) confidenceFlags.push("wallet_coverage_below_80pct");
   if (attributionConfidence === "low") confidenceFlags.push("low_wallet_attestation");
+  if (revenueIsPrimarilyAgentToken) confidenceFlags.push("revenue_primarily_agent_token");
+  if (hasTruthEngineFeeReceipts) confidenceFlags.push("truth_engine_fee_receipts_confirmed");
 
+  // Revenue confidence tiering:
+  // - low:    quarantined > operating revenue (data dominated by noise)
+  // - medium: low attribution, single wallet, OR revenue is >50% agent token
+  // - high:   stablecoin settlement revenue OR truth-engine fee receipts, clean attribution
   const revenueConfidence: BooksConfidence =
     hasQuarantinedEvents && quarantinedUsd > revenue
       ? "low"
-      : attributionConfidence === "low" || !hasMultipleWallets
+      : revenueIsPrimarilyAgentToken || attributionConfidence === "low" || !hasMultipleWallets
         ? "medium"
-        : "high";
+        : hasSettlementRevenue || hasTruthEngineFeeReceipts
+          ? "high"
+          : "medium";
 
   const expenseConfidence: BooksConfidence =
     !hasExpenseWallet
@@ -522,6 +573,8 @@ async function computeAgentBooks(
     },
     classification: {
       operating_revenue_usd:        round(revenue),
+      settlement_revenue_usd:       round(settlementRevenueUsd),
+      agent_token_revenue_usd:      round(agentTokenRevenueUsd),
       quarantined_inflows_usd:      round(quarantinedUsd),
       bridge_excluded_expense_usd:  round(bridgeExcludedExpenseUsd),
       dex_excluded_usd:             round(dexExcludedUsd),
