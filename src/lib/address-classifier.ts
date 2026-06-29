@@ -13,7 +13,7 @@
 //     add column if not exists address_type text
 //     check (address_type in (
 //       'eoa','token_contract','proxy_contract',
-//       'treasury_contract','vault','smart_contract','unknown'
+//       'treasury_contract','vault','smart_contract','smart_account','unknown'
 //     ))
 //     default 'unknown';
 
@@ -23,16 +23,18 @@ export type AddressType =
   | "proxy_contract"    // upgradeable proxy — inspect manually
   | "treasury_contract" // Gnosis Safe or similar multi-sig — valid treasury wallet
   | "vault"             // yield vault / liquidity position
+  | "smart_account"     // ERC-4337 smart account — valid operator wallet
   | "smart_contract"    // generic contract — not a valid operator wallet
   | "unknown";          // classification failed or not yet run
 
 // ── Selectors ─────────────────────────────────────────────────────────────────
 
 const SEL = {
-  totalSupply:    "0x18160ddd", // ERC-20
-  decimals:       "0x313ce567", // ERC-20
-  implementation: "0x5c60da1b", // EIP-1967 transparent proxy
-  getOwners:      "0xa0e67e2b", // Gnosis Safe
+  totalSupply:     "0x18160ddd", // ERC-20
+  decimals:        "0x313ce567", // ERC-20
+  implementation:  "0x5c60da1b", // EIP-1967 transparent proxy
+  getOwners:       "0xa0e67e2b", // Gnosis Safe
+  validateUserOp:  "0x3a871cdd", // ERC-4337 smart account
 };
 
 const BASE_URL = "https://base-mainnet.g.alchemy.com/v2";
@@ -100,6 +102,11 @@ export async function classifyAddress(
     // Minimum response: 32-byte offset + 32-byte length + 1 address = 128 hex chars (130 with 0x)
     if (ownersData && ownersData.length >= 130) return "treasury_contract";
 
+    // Step 5: ERC-4337 smart account — validateUserOp selector present
+    // These are legitimate operator wallets (Abstract, Coinbase, Biconomy, ZeroDev, etc.)
+    const validateData = await ethCall(apiKey, addr, SEL.validateUserOp);
+    if (validateData) return "smart_account";
+
     return "smart_contract";
   } catch {
     return "unknown";
@@ -143,7 +150,7 @@ export async function classifyAddressBatch(
 
 // ── Valid wallet types (safe for books) ───────────────────────────────────────
 
-const VALID_FOR_BOOKS = new Set<AddressType>(["eoa", "treasury_contract", "unknown"]);
+const VALID_FOR_BOOKS = new Set<AddressType>(["eoa", "treasury_contract", "smart_account", "unknown"]);
 
 export function isValidWalletType(t: AddressType): boolean {
   return VALID_FOR_BOOKS.has(t);

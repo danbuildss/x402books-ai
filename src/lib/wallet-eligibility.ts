@@ -2,7 +2,7 @@ import type { AgentWallet } from "@/app/registry/types";
 
 // Allowlist of address types that are valid operational wallets for books.
 // Only these two types produce attributed revenue/expenses.
-export const BOOKS_ELIGIBLE_ADDRESS_TYPES = new Set<string>(["eoa", "treasury_contract"]);
+export const BOOKS_ELIGIBLE_ADDRESS_TYPES = new Set<string>(["eoa", "treasury_contract", "smart_account"]);
 
 export type EligibilityResult = { eligible: boolean; reason: string | null };
 
@@ -20,7 +20,7 @@ export function isBooksEligibleWallet(
   if (!BOOKS_ELIGIBLE_ADDRESS_TYPES.has(atype)) {
     return {
       eligible: false,
-      reason: `address_type=${atype || "unknown"} — only eoa and treasury_contract are books-eligible`,
+      reason: `address_type=${atype || "unknown"} — only eoa, treasury_contract, and smart_account are books-eligible`,
     };
   }
   if (agentTokenAddress && wallet.address.toLowerCase() === agentTokenAddress.toLowerCase()) {
