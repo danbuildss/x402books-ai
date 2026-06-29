@@ -614,6 +614,11 @@ function RegistrySection({ secret }: { secret: string }) {
   const [bulkRefreshing, setBulkRefreshing] = useState(false);
   const [bulkMsg, setBulkMsg]               = useState("");
 
+  const [overrideAddr, setOverrideAddr]     = useState("");
+  const [overrideType, setOverrideType]     = useState("eoa");
+  const [overrideSaving, setOverrideSaving] = useState(false);
+  const [overrideMsg, setOverrideMsg]       = useState("");
+
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
 
   async function loadStats() {
@@ -628,6 +633,31 @@ function RegistrySection({ secret }: { secret: string }) {
       setStatsError("Network error");
     } finally {
       setStatsLoading(false);
+    }
+  }
+
+  async function overrideWalletType(e: React.FormEvent) {
+    e.preventDefault();
+    if (!overrideAddr.trim()) return;
+    setOverrideSaving(true);
+    setOverrideMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/update-wallet-type", {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ address: overrideAddr.trim(), address_type: overrideType }),
+      });
+      const d = await res.json() as { ok: boolean; agent_name?: string; address_type?: string; error?: string };
+      if (d.ok) {
+        setOverrideMsg(`✓ Set ${d.agent_name ?? overrideAddr} → ${d.address_type}`);
+        setOverrideAddr("");
+      } else {
+        setOverrideMsg(`✗ ${d.error}`);
+      }
+    } catch {
+      setOverrideMsg("✗ Network error");
+    } finally {
+      setOverrideSaving(false);
     }
   }
 
@@ -839,6 +869,46 @@ function RegistrySection({ secret }: { secret: string }) {
               )}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Wallet Address Type Override */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <p className={styles.cardTitle} style={{ margin: "0 0 4px" }}>Wallet Type Override</p>
+        <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)" }}>
+          Manually set the address_type for a wallet that was misclassified (e.g. ERC-4337 smart accounts detected as smart_contract). Use after confirming the wallet is a legitimate operator address.
+        </p>
+        <form onSubmit={overrideWalletType} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 260px" }}>
+            <label style={{ fontSize: "0.72rem", color: "var(--muted)", fontWeight: 600 }}>Wallet Address</label>
+            <input
+              value={overrideAddr}
+              onChange={(e) => setOverrideAddr(e.target.value)}
+              placeholder="0x..."
+              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", fontSize: "0.82rem", fontFamily: "monospace" }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: "0.72rem", color: "var(--muted)", fontWeight: 600 }}>Override Type</label>
+            <select
+              value={overrideType}
+              onChange={(e) => setOverrideType(e.target.value)}
+              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", fontSize: "0.82rem" }}
+            >
+              <option value="eoa">eoa</option>
+              <option value="smart_account">smart_account (ERC-4337)</option>
+              <option value="treasury_contract">treasury_contract</option>
+              <option value="smart_contract">smart_contract</option>
+              <option value="unknown">unknown</option>
+            </select>
+          </div>
+          <button type="submit" disabled={overrideSaving || !overrideAddr.trim()}
+            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: overrideSaving || !overrideAddr.trim() ? "not-allowed" : "pointer", opacity: overrideSaving || !overrideAddr.trim() ? 0.5 : 1 }}>
+            {overrideSaving ? "Saving…" : "Override"}
+          </button>
+        </form>
+        {overrideMsg && (
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: overrideMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{overrideMsg}</p>
         )}
       </div>
 
