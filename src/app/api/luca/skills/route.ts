@@ -71,18 +71,14 @@ const SKILLS = [
   {
     id: "surplus-inference",
     name: "Surplus Inference",
-    description: "OpenAI-compatible chat completions routed through Surplus intelligence via the Zetta inference proxy. SURPLUS_API_KEY stays on Zetta/Vercel — callers only need ZETTA_INTERNAL_SECRET. All spend is automatically logged to inference_events and agent_economic_events under the calling agent's ID. Use this instead of calling Surplus directly so spend flows back into Zetta attribution.",
-    endpoint: "/api/inference/v1/chat/completions",
+    description: "OpenAI-compatible chat completions via Surplus intelligence. Auth: same Bearer API key as all other Luca skills. SURPLUS_API_KEY stays on Vercel — never needed by Hermes. Spend is automatically logged to inference_events and agent_economic_events. Use this instead of calling Surplus directly so all inference cost flows back into Zetta attribution.",
+    endpoint: "/api/v1/luca/inference",
     method: "POST",
-    auth: "x-internal-secret: <ZETTA_INTERNAL_SECRET>  (not Bearer API key — internal only)",
+    auth: "Authorization: Bearer <api-key>  or  X-API-Key: <api-key>  (same key as all other skills)",
     input: {
       model: { type: "string", required: true, description: "Model name e.g. 'claude-sonnet-4-6', 'llama-3.3-70b'" },
       messages: { type: "array", required: true, description: "OpenAI-compatible messages array" },
       stream: { type: "boolean", required: false, default: false, description: "Set true for SSE streaming" },
-    },
-    headers: {
-      "x-agent-id":   { type: "string", required: false, default: "luca", description: "Agent slug for spend attribution" },
-      "x-agent-name": { type: "string", required: false, default: "Luca",  description: "Agent display name for spend attribution" },
     },
     notes: [
       "SURPLUS_API_KEY is server-side only — never send it from Hermes",
