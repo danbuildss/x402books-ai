@@ -80,7 +80,9 @@ export async function POST(req: NextRequest) {
   const auth = await v1Auth(req);
   if (!auth.ok) return auth.response;
 
-  const surplusKey = process.env.SURPLUS_API_KEY;
+  // Prefer Luca's own buyer key so inference costs settle from Luca's wallet.
+  // Fall back to the shared server key if the buyer key isn't set yet.
+  const surplusKey = process.env.LUCA_SURPLUS_BUYER_KEY || process.env.SURPLUS_API_KEY;
   if (!surplusKey) {
     auth.finish(503, 0, "/api/v1/luca/inference");
     return NextResponse.json(
