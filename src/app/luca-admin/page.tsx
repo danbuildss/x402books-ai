@@ -5,10 +5,17 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import styles from "./page.module.css";
+import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, AttributionConfidence } from "@/lib/attribution-health";
+import type { AgentRevenueAudit, AuditTx } from "@/lib/agent-books";
+import type { AuditFlag } from "@/app/api/admin/revenue-audit/route";
+import type { AgentConfidenceLabel, ConfidenceLevel } from "@/lib/revenue-confidence";
+import { CONFIDENCE_META } from "@/lib/revenue-confidence";
+import type { PendingUpdate } from "@/lib/registry-db";
+import type { AddressType } from "@/lib/address-classifier";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "outreach" | "roadmap" | "settings" | "subagent-runs" | "pending-replies" | "truth-engine";
+type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "comm" | "outreach" | "settings" | "subagent-runs" | "pending-replies" | "truth-engine" | "pending-updates" | "attribution-health" | "address-classification" | "erc8004" | "revenue-audit" | "accuracy-report" | "confidence-labels" | "b20";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -144,51 +151,38 @@ const POLICIES = [
   "Wallets are never called official unless verified by evidence.",
 ];
 
-const ROADMAP = [
-  {
-    tag: "CLI",
-    title: "Zetta CLI",
-    color: "var(--blue)",
-    description: "Command-line interface for wallet scanning, reporting, and registry lookups.",
-    items: ["zetta scan <wallet>", "zetta report <wallet>", "zetta score <wallet>", "zetta registry lookup <query>"],
-  },
-  {
-    tag: "SDK",
-    title: "TypeScript SDK",
-    color: "#a78bfa",
-    description: "Typed client for building apps on top of Zetta APIs.",
-    items: ["ledgerSummary(wallet)", "transactions(wallet)", "fullReport(wallet)", "agentFinancialState(wallet)"],
-  },
-  {
-    tag: "MCP",
-    title: "MCP Server",
-    color: "#f59e0b",
-    description: "Model Context Protocol tools so other agents can call Zetta directly.",
-    items: ["scan_wallet", "generate_report", "lookup_agent", "analyze_portfolio", "check_agent_score"],
-  },
-];
 
 const NAV: { section: Section; label: string; group: string }[] = [
   { section: "overview",   label: "Overview",    group: "main" },
-  { section: "registry",     label: "Registry",     group: "ops" },
-  { section: "attribution",  label: "Attribution",  group: "ops" },
-  { section: "economics",    label: "Economics",    group: "ops" },
-  { section: "truth-engine", label: "Truth Engine", group: "ops" },
-  { section: "growth",     label: "Growth OS",   group: "ops" },
-  { section: "reports",    label: "Reports",     group: "ops" },
-  { section: "comm",            label: "Comm Intel",      group: "intel" },
-  { section: "outreach",        label: "Outreach CRM",    group: "intel" },
-  { section: "subagent-runs",   label: "Subagent Runs",   group: "intel" },
-  { section: "pending-replies", label: "Pending Replies", group: "intel" },
-  { section: "roadmap",         label: "Roadmap",         group: "intel" },
-  { section: "settings",   label: "Settings",    group: "system" },
+  { section: "registry",          label: "Registry",          group: "registry-ops" },
+  { section: "pending-updates",   label: "Pending Updates",   group: "registry-ops" },
+  { section: "attribution",       label: "Attribution",       group: "registry-ops" },
+  { section: "attribution-health",label: "Attribution Health",group: "registry-ops" },
+  { section: "address-classification", label: "Address Classification", group: "data-integrity" },
+  { section: "erc8004",           label: "ERC-8004 Ingestion",group: "data-integrity" },
+  { section: "truth-engine",      label: "Truth Engine",      group: "data-integrity" },
+  { section: "economics",         label: "Economics",         group: "financial" },
+  { section: "revenue-audit",     label: "Revenue Audit",     group: "financial" },
+  { section: "accuracy-report",   label: "Accuracy Report",   group: "financial" },
+  { section: "confidence-labels", label: "Confidence Labels", group: "financial" },
+  { section: "growth",            label: "Growth OS",         group: "growth" },
+  { section: "reports",           label: "Reports",           group: "growth" },
+  { section: "b20",               label: "B20 Intelligence",  group: "growth" },
+  { section: "comm",              label: "Comm Intel",        group: "intel" },
+  { section: "outreach",          label: "Outreach CRM",      group: "intel" },
+  { section: "subagent-runs",     label: "Subagent Runs",     group: "intel" },
+  { section: "pending-replies",   label: "Pending Replies",   group: "intel" },
+  { section: "settings",          label: "Settings",          group: "system" },
 ];
 
 const GROUP_LABELS: Record<string, string> = {
-  main:   "Overview",
-  ops:    "Operations",
-  intel:  "Intelligence",
-  system: "System",
+  main:            "Overview",
+  "registry-ops":  "Registry",
+  "data-integrity":"Data Integrity",
+  financial:       "Financial",
+  growth:          "Growth OS",
+  intel:           "Intelligence",
+  system:          "System",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1621,6 +1615,48 @@ function GrowthSection({ secret }: { secret: string }) {
               </div>
             </>
           )}
+
+          {/* Trend signals */}
+          {data && data.sevenDay.length >= 2 && (() => {
+            const rows7 = data.sevenDay;
+            const half  = Math.floor(rows7.length / 2);
+            const recent = rows7.slice(half);
+            const prior  = rows7.slice(0, half);
+            const sumField = (arr: DailyMetric[], f: keyof DailyMetric) =>
+              arr.reduce((t, r) => t + ((r[f] as number) ?? 0), 0);
+            const trend = (a: number, b: number): { label: string; color: string } => {
+              if (b === 0) return a > 0 ? { label: "Growing", color: "#22c55e" } : { label: "No data", color: "#6b7280" };
+              const pct = ((a - b) / b) * 100;
+              if (pct >= 10)  return { label: `▲ ${pct.toFixed(0)}%`, color: "#22c55e" };
+              if (pct <= -10) return { label: `▼ ${Math.abs(pct).toFixed(0)}%`, color: "#ef4444" };
+              return { label: "Flat", color: "#f59e0b" };
+            };
+            const signals = [
+              { label: "Wallet Scans",         a: sumField(recent, "wallet_scans"),         b: sumField(prior, "wallet_scans") },
+              { label: "API Calls",             a: sumField(recent, "api_calls"),            b: sumField(prior, "api_calls") },
+              { label: "Luca Interactions",     a: sumField(recent, "luca_interactions"),    b: sumField(prior, "luca_interactions") },
+              { label: "Registry Submissions",  a: sumField(recent, "registry_submissions"), b: sumField(prior, "registry_submissions") },
+            ];
+            return (
+              <>
+                <p className={styles.subHead}>Trend Signals (recent vs prior half of 7d)</p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+                  {signals.map(({ label, a, b }) => {
+                    const t = trend(a, b);
+                    return (
+                      <div key={label} style={{ background: "var(--surface)", border: `1px solid ${t.color}44`, borderRadius: 8, padding: "10px 16px", minWidth: 140 }}>
+                        <p style={{ fontSize: "0.72rem", color: "var(--muted)", margin: "0 0 4px" }}>{label}</p>
+                        <p style={{ fontSize: "1.1rem", fontWeight: 700, color: t.color, margin: 0 }}>{t.label}</p>
+                        <p style={{ fontSize: "0.68rem", color: "var(--muted)", margin: "2px 0 0" }}>
+                          {n(a)} vs {n(b)}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            );
+          })()}
         </>
       )}
     </div>
@@ -2277,34 +2313,1090 @@ function TruthEngineSection({ secret }: { secret: string }) {
   );
 }
 
-function RoadmapSection() {
+// ── Pending Updates section ───────────────────────────────────────────────────
+
+function PendingUpdatesSection({ secret }: { secret: string }) {
+  const [updates, setUpdates] = useState<PendingUpdate[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [acting, setActing]   = useState<string | null>(null);
+
+  const UPDATE_TYPE_COLORS: Record<string, string> = {
+    new_agent: "#22c55e", score_update: "#3b82f6", wallet_update: "#f59e0b", status_change: "#a855f7",
+  };
+  const UPDATE_TYPE_LABELS: Record<string, string> = {
+    new_agent: "New Agent", score_update: "Score Update", wallet_update: "Wallet Update", status_change: "Status Change",
+  };
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/registry/pending", { headers: { Authorization: `Bearer ${secret}` } });
+      const d = await res.json() as { ok: boolean; updates?: PendingUpdate[] };
+      if (d.ok) setUpdates(d.updates ?? []);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [secret]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function act(id: string, action: "approve" | "reject") {
+    setActing(id);
+    await fetch("/api/registry/approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secret}` },
+      body: JSON.stringify({ id, action }),
+    });
+    setActing(null);
+    setUpdates((prev) => prev.filter((u) => u.id !== id));
+  }
+
   return (
     <div>
       <div className={styles.sectionHead}>
-        <p className={styles.kicker}>Agent Tooling</p>
-        <h1>Roadmap</h1>
-        <p>Planned packages that make Zetta callable by other agents and developers.</p>
+        <p className={styles.kicker}>Registry</p>
+        <h1>Pending Updates</h1>
+        <p>Luca-queued registry changes waiting for human review.</p>
       </div>
-      <div className={styles.roadmapGrid}>
-        {ROADMAP.map((item) => (
-          <div key={item.tag} className={styles.roadmapCard}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span className={styles.roadmapTag}
-                style={{ background: `color-mix(in srgb, ${item.color} 12%, transparent)`, color: item.color }}>
-                {item.tag}
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 16 }}>
+        <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{updates.length} pending</span>
+        <button type="button" onClick={load} disabled={loading} className={styles.navItem} style={{ padding: "4px 10px", fontSize: "0.75rem" }}>
+          {loading ? "…" : "Refresh"}
+        </button>
+      </div>
+      {updates.length === 0 && !loading && (
+        <div className={styles.stateBox}>No pending updates from Luca.</div>
+      )}
+      {updates.map((u) => {
+        const color = UPDATE_TYPE_COLORS[u.update_type] ?? "#888";
+        return (
+          <div key={u.id} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "16px 18px", marginBottom: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+              <strong style={{ fontSize: "0.9rem" }}>{u.agent_name}</strong>
+              <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: `${color}22`, color }}>
+                {UPDATE_TYPE_LABELS[u.update_type] ?? u.update_type}
               </span>
-              <span className={styles.roadmapStatus}>Planned</span>
+              <span style={{ fontSize: "0.72rem", color: "var(--muted)", marginLeft: "auto" }}>
+                {new Date(u.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              </span>
             </div>
-            <p className={styles.roadmapCardTitle}>{item.title}</p>
-            <p className={styles.roadmapCardDesc}>{item.description}</p>
-            <div className={styles.cmdList}>
-              {item.items.map((cmd) => (
-                <code key={cmd} className={styles.cmdItem}>{cmd}</code>
-              ))}
+            {u.diff_summary && <p style={{ fontSize: "0.83rem", marginBottom: 8 }}>{u.diff_summary}</p>}
+            {u.luca_notes && (
+              <div style={{ background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7, padding: "8px 12px", marginBottom: 10, fontSize: "0.83rem" }}>
+                <span style={{ color: "var(--muted)", fontSize: "0.7rem" }}>Luca&apos;s notes · </span>{u.luca_notes}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+              <button type="button" onClick={() => act(u.id, "approve")} disabled={acting === u.id}
+                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#22c55e", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
+                Approve
+              </button>
+              <button type="button" onClick={() => act(u.id, "reject")} disabled={acting === u.id}
+                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#ef4444", color: "#fff", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
+                Reject
+              </button>
             </div>
           </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Attribution Health section ─────────────────────────────────────────────────
+
+const ATTR_STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
+  manifest: { label: "Manifest",     color: "#22c55e" },
+  admin:    { label: "Admin",        color: "#6DB874" },
+  inferred: { label: "Inferred",     color: "#f59e0b" },
+  none:     { label: "Unattributed", color: "#6b7280" },
+};
+
+const ATTR_CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
+  high:         { label: "High",         color: "#22c55e" },
+  medium:       { label: "Medium",       color: "#f59e0b" },
+  low:          { label: "Low",          color: "#ef4444" },
+  unattributed: { label: "–",            color: "#6b7280" },
+};
+
+type AttrSortKey = "name" | "status" | "wallets" | "confidence";
+
+function attrSortAgents(agents: AgentAttributionHealth[], key: AttrSortKey, dir: 1 | -1) {
+  const SR: Record<ManifestStatus, number> = { manifest: 0, admin: 1, inferred: 2, none: 3 };
+  const CR: Record<AttributionConfidence, number> = { high: 0, medium: 1, low: 2, unattributed: 3 };
+  return [...agents].sort((a, b) => {
+    let cmp = 0;
+    if (key === "name")       cmp = a.name.localeCompare(b.name);
+    if (key === "status")     cmp = SR[a.manifest_status] - SR[b.manifest_status];
+    if (key === "wallets")    cmp = b.wallet_count - a.wallet_count;
+    if (key === "confidence") cmp = CR[a.confidence] - CR[b.confidence];
+    return cmp * dir;
+  });
+}
+
+function getAttrBadge(agent: AgentAttributionHealth) {
+  if (agent.attribution_tier === "manifest_attributed") return { label: "Books Eligible", color: "#22c55e" };
+  if (agent.manifest_status === "manifest") return { label: "Manifest Invalid", color: "#ef4444" };
+  if (agent.attribution_tier === "discovered") return { label: "Discovered", color: "#f59e0b" };
+  return { label: "Unattributed", color: "#6b7280" };
+}
+
+function AttributionHealthSection() {
+  const [metrics, setMetrics] = useState<AttributionMetrics | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState("");
+  const [sort, setSort]       = useState<AttrSortKey>("status");
+  const [sortDir, setSortDir] = useState<1 | -1>(1);
+  const [search, setSearch]   = useState("");
+
+  useEffect(() => {
+    fetch("/api/v1/attribution-health")
+      .then((r) => r.json())
+      .then((json: AttributionMetrics & { ok: boolean; error?: string }) => {
+        if (!json.ok) { setError(json.error ?? "Failed to load"); return; }
+        setMetrics(json);
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const visible = metrics
+    ? attrSortAgents(
+        metrics.agents.filter((a) => !search || a.name.toLowerCase().includes(search.toLowerCase())),
+        sort, sortDir,
+      )
+    : [];
+
+  const SBtn = ({ k, label }: { k: AttrSortKey; label: string }) => (
+    <button onClick={() => { if (sort === k) setSortDir((d) => (d === 1 ? -1 : 1)); else { setSort(k); setSortDir(1); } }}
+      style={{ background: "none", border: "none", cursor: "pointer", fontWeight: sort === k ? 700 : 400, color: sort === k ? "var(--ink)" : "var(--muted)", fontSize: 11, padding: "0 4px" }}>
+      {label} {sort === k && (sortDir === 1 ? "↑" : "↓")}
+    </button>
+  );
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Data Integrity</p>
+        <h1>Attribution Health</h1>
+        <p>Wallet attribution status across all indexed agents.</p>
+      </div>
+      {loading && <div className={styles.stateBox}>Loading…</div>}
+      {error   && <div className={styles.errorBox}>{error}</div>}
+      {metrics && (
+        <>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+            {[
+              { label: "Indexed",         value: metrics.total_agents,               color: "var(--ink)" },
+              { label: "Attributed",      value: metrics.manifest_attributed_agents, color: "#22c55e" },
+              { label: "Discovered",      value: metrics.discovered_agents,          color: "#f59e0b" },
+              { label: "Unattributed",    value: metrics.unattributed_agents,        color: "#6b7280" },
+              { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#6DB874" },
+              { label: "Books-eligible",  value: metrics.books_eligible_wallets,     color: "#22c55e" },
+              { label: "Contract wallets",value: metrics.contract_wallets,           color: "#ef4444" },
+            ].map((kpi) => (
+              <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px", minWidth: 100 }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search agents…"
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 200 }} />
+            <span style={{ fontSize: 12, color: "var(--muted)", marginLeft: 10 }}>{visible.length} agents</span>
+          </div>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                  <th style={{ padding: "8px 12px", textAlign: "left" }}><SBtn k="name" label="Agent" /></th>
+                  <th style={{ padding: "8px 12px", textAlign: "left" }}><SBtn k="status" label="Status" /></th>
+                  <th style={{ padding: "8px 12px", textAlign: "left" }}><SBtn k="wallets" label="Wallets" /></th>
+                  <th style={{ padding: "8px 12px", textAlign: "left" }}><SBtn k="confidence" label="Confidence" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((agent, i) => {
+                  const badge = getAttrBadge(agent);
+                  const cMeta = ATTR_CONF_META[agent.confidence];
+                  return (
+                    <tr key={agent.slug} style={{ borderBottom: i < visible.length - 1 ? "1px solid var(--line)" : "none", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
+                      <td style={{ padding: "10px 12px" }}>
+                        <Link href={`/registry/${agent.slug}`} target="_blank" rel="noopener" style={{ fontWeight: 600, fontSize: 13, color: "var(--ink)", textDecoration: "none" }}>
+                          {agent.name}
+                        </Link>
+                        <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: 6 }}>{agent.ecosystem}</span>
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: `${badge.color}18`, color: badge.color }}>{badge.label}</span>
+                      </td>
+                      <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)" }}>
+                        {agent.wallet_count > 0 ? (
+                          <>
+                            {agent.wallet_count}
+                            {agent.books_eligible_wallet_count > 0 && <span style={{ fontSize: 10, color: "#22c55e", marginLeft: 4 }}>({agent.books_eligible_wallet_count} eligible)</span>}
+                          </>
+                        ) : "—"}
+                      </td>
+                      <td style={{ padding: "10px 12px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: `${cMeta.color}18`, color: cMeta.color }}>{cMeta.label}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Address Classification section ────────────────────────────────────────────
+
+const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
+  eoa:               { label: "EOA",               color: "#22c55e" },
+  token_contract:    { label: "Token Contract",    color: "#ef4444" },
+  proxy_contract:    { label: "Proxy Contract",    color: "#8b5cf6" },
+  treasury_contract: { label: "Treasury Contract", color: "#6DB874" },
+  vault:             { label: "Vault",             color: "#5B8FA8" },
+  smart_contract:    { label: "Smart Contract",    color: "#f59e0b" },
+  smart_account:     { label: "Smart Account",     color: "#3b82f6" },
+  unknown:           { label: "Unknown",           color: "#6b7280" },
+};
+
+type AddrClassificationReport = {
+  ok: boolean;
+  write?: { rows_updated: number; error: string | null } | null;
+  summary: {
+    total_agents: number; attributed_agents: number; discovered_only_agents: number; unattributed_agents: number;
+    attribution_coverage_pct: number; total_addresses: number; eoa_count: number; token_contract_count: number;
+    proxy_contract_count: number; treasury_contract_count: number; vault_count: number; smart_contract_count: number;
+    unknown_count: number; valid_for_books_count: number; critical_issues_count: number;
+  };
+  critical_issues: string[];
+  agents: Array<{
+    name: string; slug: string; ecosystem: string; token_address: string | null;
+    wallets: Array<{
+      address: string; label: string; role: string | null; chain: string | null;
+      evidence_source: string | null; address_type: AddressType; attribution: string; is_valid_for_books: boolean;
+    }>;
+    manifest_wallet_count: number; discovered_wallet_count: number; eoa_count: number;
+    contract_count: number; token_contract_count: number;
+    attribution_status: "attributed" | "discovered_only" | "unattributed";
+  }>;
+  error?: string;
+};
+
+function AddressClassificationSection({ secret }: { secret: string }) {
+  const [loading, setLoading]   = useState(false);
+  const [writing, setWriting]   = useState(false);
+  const [report, setReport]     = useState<AddrClassificationReport | null>(null);
+  const [writeMsg, setWriteMsg] = useState("");
+  const [error, setError]       = useState("");
+
+  async function runAudit(write = false) {
+    if (write) { setWriting(true); } else { setLoading(true); }
+    setError(""); setWriteMsg("");
+    try {
+      const res = await fetch(`/api/admin/address-classification${write ? "?write=true" : ""}`, {
+        headers: { "x-internal-secret": secret },
+      });
+      const json = await res.json() as AddrClassificationReport;
+      if (!json.ok) { setError(json.error ?? "Failed"); return; }
+      setReport(json);
+      if (write && json.write) {
+        setWriteMsg(json.write.error ? `Error: ${json.write.error}` : `Wrote ${json.write.rows_updated} rows to DB`);
+      }
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); setWriting(false); }
+  }
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Data Integrity</p>
+        <h1>Address Classification</h1>
+        <p>Classify wallet addresses via Alchemy and write address_type to DB.</p>
+      </div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+        <button type="button" onClick={() => runAudit(false)} disabled={loading || writing}
+          style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: "var(--accent)", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Classifying…" : "Run Classification"}
+        </button>
+        <button type="button" onClick={() => runAudit(true)} disabled={loading || writing}
+          style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: "#3b82f6", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: writing ? 0.6 : 1 }}>
+          {writing ? "Writing…" : "Classify & Write to DB"}
+        </button>
+      </div>
+      {writeMsg && (
+        <div style={{ background: writeMsg.startsWith("Error") ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)", border: `1px solid ${writeMsg.startsWith("Error") ? "#ef4444" : "#22c55e"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: writeMsg.startsWith("Error") ? "#ef4444" : "#22c55e" }}>
+          {writeMsg}
+        </div>
+      )}
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {report && (
+        <>
+          {report.critical_issues.length > 0 && (
+            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 12, color: "#ef4444", marginBottom: 8 }}>Critical Issues ({report.critical_issues.length})</div>
+              {report.critical_issues.map((issue, i) => <div key={i} style={{ fontSize: 13, color: "#ef4444", marginBottom: 4 }}>• {issue}</div>)}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+            {[
+              { label: "Total Agents",    value: report.summary.total_agents },
+              { label: "Attributed",      value: report.summary.attributed_agents },
+              { label: "Discovered Only", value: report.summary.discovered_only_agents },
+              { label: "Unattributed",    value: report.summary.unattributed_agents },
+              { label: "Coverage",        value: `${report.summary.attribution_coverage_pct}%` },
+              { label: "Total Addresses", value: report.summary.total_addresses },
+              { label: "EOA",             value: report.summary.eoa_count },
+              { label: "Token Contracts", value: report.summary.token_contract_count },
+              { label: "Books-eligible",  value: report.summary.valid_for_books_count },
+            ].map((kpi) => (
+              <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.dataTable}>
+              <thead>
+                <tr><th>Agent</th><th>Status</th><th>Wallets</th><th>EOA</th><th>Contracts</th></tr>
+              </thead>
+              <tbody>
+                {report.agents.filter((a) => a.wallets.length > 0).map((a) => (
+                  <tr key={a.slug}>
+                    <td>
+                      <Link href={`/registry/${a.slug}`} target="_blank" rel="noopener" style={{ color: "var(--accent)", textDecoration: "none" }}>{a.name}</Link>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4,
+                        background: a.attribution_status === "attributed" ? "#22c55e18" : a.attribution_status === "discovered_only" ? "#f59e0b18" : "#6b728018",
+                        color: a.attribution_status === "attributed" ? "#22c55e" : a.attribution_status === "discovered_only" ? "#f59e0b" : "#6b7280" }}>
+                        {a.attribution_status}
+                      </span>
+                    </td>
+                    <td style={{ fontFamily: "var(--font-mono)" }}>{a.wallets.length}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: a.eoa_count > 0 ? "#22c55e" : "var(--muted)" }}>{a.eoa_count}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: a.contract_count > 0 ? "#ef4444" : "var(--muted)" }}>{a.contract_count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── ERC-8004 Ingestion section ─────────────────────────────────────────────────
+
+type Erc8004AgentResult = {
+  agent_id: string; name: string; status: "upserted" | "skipped" | "error";
+  has_did: boolean; wallet_address: string | null; wallet_type: string | null;
+  manifest_uri: string | null; books_eligible: boolean; warnings: string[]; error?: string;
+};
+type Erc8004Summary = {
+  total_discovered: number; metadata_coverage_pct: number; did_coverage_pct: number;
+  manifest_coverage_pct: number; books_coverage_pct: number;
+  agents_upserted: number; agents_skipped: number; errors: number;
+};
+type Erc8004Report = { ok: boolean; dry_run: boolean; summary: Erc8004Summary; agents: Erc8004AgentResult[]; generated_at: string; error?: string };
+
+function Erc8004Section({ secret }: { secret: string }) {
+  const [mode, setMode]           = useState<"contract" | "batch">("contract");
+  const [fromBlock, setFromBlock] = useState("0xE4E1C0");
+  const [agentIdsText, setAgentIdsText] = useState("");
+  const [dryRun, setDryRun]       = useState(true);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+  const [report, setReport]       = useState<Erc8004Report | null>(null);
+
+  async function run() {
+    setLoading(true); setError(""); setReport(null);
+    const body: Record<string, unknown> = { mode, dryRun };
+    if (mode === "contract") body.fromBlock = fromBlock || "0xE4E1C0";
+    else body.agentIds = agentIdsText.split(/[\n,\s]+/).map((s) => s.trim()).filter(Boolean);
+    try {
+      const res = await fetch("/api/admin/ingest-erc8004", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-internal-secret": secret },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json() as Erc8004Report;
+      if (!json.ok) { setError(json.error ?? "Ingestion failed"); return; }
+      setReport(json);
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }
+
+  const ERC_STATUS_COLOR: Record<string, string> = { upserted: "#22c55e", skipped: "#f59e0b", error: "#ef4444" };
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Data Integrity</p>
+        <h1>ERC-8004 Ingestion</h1>
+        <p>Scan the on-chain ERC-8004 registry and sync agent metadata to Zetta.</p>
+      </div>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          {(["contract", "batch"] as const).map((m) => (
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: mode === m ? "#6DB874" : "var(--bg)", color: mode === m ? "#fff" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              {m === "contract" ? "All Agents (contract scan)" : "Batch (specific IDs)"}
+            </button>
+          ))}
+        </div>
+        {mode === "contract" && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>From Block (hex)</div>
+            <input value={fromBlock} onChange={(e) => setFromBlock(e.target.value)} placeholder="0xE4E1C0"
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 200, fontFamily: "var(--font-mono)" }} />
+          </div>
+        )}
+        {mode === "batch" && (
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>Agent IDs (one per line or comma-separated)</div>
+            <textarea value={agentIdsText} onChange={(e) => setAgentIdsText(e.target.value)} rows={3}
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: "100%", fontFamily: "var(--font-mono)" }} />
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+          <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+            <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+          </button>
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
+          <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "No DB writes" : "Will write to DB"}</span>
+        </div>
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Running…" : "Run Ingestion"}
+        </button>
+      </div>
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {report && (
+        <>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
+            {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
+            Generated {new Date(report.generated_at).toLocaleString()}
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
+            {[
+              { label: "Discovered", value: report.summary.total_discovered },
+              { label: "Upserted",   value: report.summary.agents_upserted,  color: "#22c55e" },
+              { label: "Skipped",    value: report.summary.agents_skipped,   color: "#f59e0b" },
+              { label: "Errors",     value: report.summary.errors,           color: "#ef4444" },
+              { label: "Metadata %", value: `${report.summary.metadata_coverage_pct}%` },
+              { label: "DID %",      value: `${report.summary.did_coverage_pct}%` },
+              { label: "Manifest %", value: `${report.summary.manifest_coverage_pct}%` },
+              { label: "Books %",    value: `${report.summary.books_coverage_pct}%` },
+            ].map((kpi) => (
+              <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4 }}>{kpi.label}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: (kpi as { color?: string }).color ?? "var(--ink)", fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          {report.agents.length > 0 && (
+            <div className={styles.tableWrap}>
+              <table className={styles.dataTable}>
+                <thead><tr><th>Agent ID</th><th>Name</th><th>Status</th><th>DID</th><th>Books</th><th>Warnings</th></tr></thead>
+                <tbody>
+                  {report.agents.map((a) => (
+                    <tr key={a.agent_id}>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "var(--muted)" }}>{a.agent_id}</td>
+                      <td style={{ fontWeight: 600 }}>{a.name}</td>
+                      <td><span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: `${ERC_STATUS_COLOR[a.status]}18`, color: ERC_STATUS_COLOR[a.status] }}>{a.status}</span></td>
+                      <td style={{ color: a.has_did ? "#a855f7" : "var(--muted)" }}>{a.has_did ? "✓" : "—"}</td>
+                      <td style={{ color: a.books_eligible ? "#22c55e" : "var(--muted)" }}>{a.books_eligible ? "Yes" : "No"}</td>
+                      <td style={{ fontSize: 11, color: "var(--muted)" }}>{a.warnings.join(", ") || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Revenue Audit section ─────────────────────────────────────────────────────
+
+type RATabKey = "revenue" | "quarantined" | "dex" | "bridge" | "internal";
+const RA_TABS: { key: RATabKey; label: string; color: string }[] = [
+  { key: "revenue",     label: "Operating Revenue", color: "#22c55e" },
+  { key: "quarantined", label: "Quarantined",        color: "#f59e0b" },
+  { key: "dex",         label: "DEX Excluded",       color: "#3b82f6" },
+  { key: "bridge",      label: "Bridge Excluded",    color: "#8b5cf6" },
+  { key: "internal",    label: "Internal Transfers", color: "#6b7280" },
+];
+const QUARANTINE_LABELS: Record<string, string> = {
+  capital_injection: "Capital Injection", grant_program: "Grant Program",
+  bridge_receipt: "Bridge Receipt", token_distribution: "Token Distribution",
+  unknown_large_inflow: "Unknown Large Inflow",
+};
+const QUARANTINE_COLORS: Record<string, string> = {
+  capital_injection: "#ef4444", grant_program: "#8b5cf6", bridge_receipt: "#3b82f6",
+  token_distribution: "#f59e0b", unknown_large_inflow: "#6b7280",
+};
+function raFmtUsd(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
+  if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}k`;
+  return `$${v.toFixed(2)}`;
+}
+function raFmtAddr(addr: string) { return addr?.length > 10 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : (addr || "—"); }
+function raFmtHash(hash: string) { return hash?.length > 10 ? `${hash.slice(0, 8)}…${hash.slice(-6)}` : (hash || "—"); }
+
+function RaWaterfall({ audit }: { audit: AgentRevenueAudit }) {
+  const s = audit.summary;
+  const rows = [
+    { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "#e2e8f0" },
+    { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8b5cf6" },
+    { label: "− DEX swaps excluded",                  value: s.dex_excluded_usd,           sign: "−",  color: "#3b82f6" },
+    { label: "− Quarantined (cap. injections/grants)", value: s.quarantined_usd,            sign: "−",  color: "#f59e0b" },
+    { label: "= Operating revenue",                   value: s.operating_revenue_usd,       sign: "=",  color: "#22c55e" },
+  ];
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+      <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", fontWeight: 700, fontSize: 13 }}>Revenue Waterfall — {audit.period}</div>
+      {rows.map((row, i) => (
+        <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderBottom: i < rows.length - 1 ? "1px solid var(--line)" : "none", background: row.sign === "=" ? "rgba(34,197,94,0.06)" : "transparent" }}>
+          <span style={{ fontSize: 13, color: row.sign === "=" ? "#22c55e" : "var(--ink)" }}>{row.label}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: row.sign === "=" ? 700 : 400, color: row.color }}>{row.sign === "−" ? "−" : ""}{raFmtUsd(row.value)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RaTxTable({ txs, tab }: { txs: AuditTx[]; tab: RATabKey }) {
+  if (txs.length === 0) return <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontSize: 14 }}>No transactions.</div>;
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+        <thead>
+          <tr style={{ borderBottom: "1px solid var(--line)", textAlign: "left" }}>
+            {["Tx Hash", "Time", "Amount", "Token", "Counterparty", ...(tab === "quarantined" ? ["Reason"] : []), "Audit Reason"].map((h) => (
+              <th key={h} style={{ padding: "8px 12px", color: "var(--muted)", fontWeight: 600 }}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {txs.map((tx, i) => (
+            <tr key={tx.txHash + i} style={{ borderBottom: "1px solid var(--line)" }}>
+              <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)" }}>
+                <a href={`https://basescan.org/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>{raFmtHash(tx.txHash)}</a>
+              </td>
+              <td style={{ padding: "8px 12px", color: "var(--muted)", whiteSpace: "nowrap" }}>{new Date(tx.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
+              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: tx.direction === "income" ? "#22c55e" : "#ef4444" }}>
+                {tx.direction === "expense" ? "−" : "+"}{raFmtUsd(tx.amount_usd)}
+              </td>
+              <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>{tx.token_symbol}</td>
+              <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)" }}>
+                <a href={`https://basescan.org/address/${tx.counterparty || tx.from}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--ink)", textDecoration: "none" }}>{raFmtAddr(tx.counterparty || tx.from)}</a>
+              </td>
+              {tab === "quarantined" && (
+                <td style={{ padding: "8px 12px" }}>
+                  {tx.quarantine_reason ? (
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: `${QUARANTINE_COLORS[tx.quarantine_reason] ?? "#888"}22`, color: QUARANTINE_COLORS[tx.quarantine_reason] ?? "#888" }}>
+                      {QUARANTINE_LABELS[tx.quarantine_reason] ?? tx.quarantine_reason}
+                    </span>
+                  ) : "—"}
+                </td>
+              )}
+              <td style={{ padding: "8px 12px", color: "var(--muted)", maxWidth: 300 }}>{tx.audit_reason}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function RevenueAuditSection({ secret }: { secret: string }) {
+  const [slug, setSlug]       = useState("");
+  const [period, setPeriod]   = useState<"7d" | "14d" | "30d" | "90d">("30d");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [audit, setAudit]     = useState<AgentRevenueAudit | null>(null);
+  const [tab, setTab]         = useState<RATabKey>("revenue");
+
+  const load = useCallback(async () => {
+    if (!secret || !slug) return;
+    setLoading(true); setError(""); setAudit(null);
+    try {
+      const res = await fetch(`/api/v1/agent/${encodeURIComponent(slug)}/revenue-audit?period=${period}`, {
+        headers: { "x-internal-secret": secret },
+      });
+      const json = await res.json();
+      if (!res.ok) { setError((json as { error?: string }).error ?? `HTTP ${res.status}`); return; }
+      setAudit(json as AgentRevenueAudit);
+      setTab("revenue");
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }, [secret, slug, period]);
+
+  function tabTxs(key: RATabKey): AuditTx[] {
+    if (!audit) return [];
+    switch (key) {
+      case "revenue":     return audit.transactions.operating_revenue;
+      case "quarantined": return audit.transactions.quarantined;
+      case "dex":         return audit.transactions.dex_excluded;
+      case "bridge":      return audit.transactions.bridge_excluded;
+      case "internal":    return audit.transactions.internal_transfers;
+    }
+  }
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Financial</p>
+        <h1>Revenue Audit</h1>
+        <p>Deep per-agent revenue waterfall — gross → excluded → operating.</p>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>AGENT SLUG</div>
+          <input type="text" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().trim())} placeholder="e.g. bankr-bot" onKeyDown={(e) => e.key === "Enter" && load()}
+            style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 13, width: 180 }} />
+        </div>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>PERIOD</div>
+          <select value={period} onChange={(e) => setPeriod(e.target.value as "7d" | "14d" | "30d" | "90d")}
+            style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 13 }}>
+            <option value="7d">Last 7 days</option>
+            <option value="14d">Last 14 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </select>
+        </div>
+        <button onClick={load} disabled={loading || !secret || !slug}
+          style={{ padding: "8px 20px", borderRadius: 6, border: "none", background: loading || !slug ? "var(--line)" : "var(--accent)", color: loading || !slug ? "var(--muted)" : "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", alignSelf: "flex-end" }}>
+          {loading ? "Scanning…" : "Run Audit"}
+        </button>
+      </div>
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {loading && <div className={styles.stateBox}>Scanning on-chain transactions for {slug}… up to 30s.</div>}
+      {audit && (
+        <>
+          <h2 style={{ margin: "0 0 4px", fontSize: 20 }}>{audit.agent.name}</h2>
+          <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>{audit.period} · {new Date(audit.generated_at).toLocaleString()}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
+            {[
+              { label: "Gross Inflows",     value: audit.summary.gross_inflow_usd,           color: "#e2e8f0" },
+              { label: "Operating Revenue", value: audit.summary.operating_revenue_usd,      color: "#22c55e" },
+              { label: "Quarantined",       value: audit.summary.quarantined_usd,            color: "#f59e0b" },
+              { label: "DEX Excluded",      value: audit.summary.dex_excluded_usd,           color: "#3b82f6" },
+              { label: "Bridge Excluded",   value: audit.summary.bridge_excluded_inflow_usd, color: "#8b5cf6" },
+            ].map((c) => (
+              <div key={c.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "12px 14px" }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>{c.label}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 18, fontWeight: 700, color: c.color }}>{raFmtUsd(c.value)}</div>
+              </div>
+            ))}
+          </div>
+          <RaWaterfall audit={audit} />
+          {audit.aeon_diff_notes.length > 0 && (
+            <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
+              <div style={{ fontWeight: 700, fontSize: 12, color: "#ef4444", marginBottom: 8 }}>AEON Diff</div>
+              {audit.aeon_diff_notes.map((note, i) => <div key={i} style={{ fontSize: 13 }}>› {note}</div>)}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 4, marginBottom: 16, flexWrap: "wrap" }}>
+            {RA_TABS.map((t) => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid", borderColor: tab === t.key ? t.color : "var(--line)", background: tab === t.key ? `${t.color}18` : "transparent", color: tab === t.key ? t.color : "var(--muted)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                {t.label} ({tabTxs(t.key).length})
+              </button>
+            ))}
+          </div>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            <RaTxTable txs={tabTxs(tab)} tab={tab} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Accuracy Report section ────────────────────────────────────────────────────
+
+type AccAgentMetrics = { quarantine_rate: number; dex_rate: number; bridge_rate: number; wallet_coverage: number; revenue_per_tx: number };
+type AccAgentResult = { ok: true; audit: AgentRevenueAudit; metrics: AccAgentMetrics; flags: AuditFlag[] } | { ok: false; slug: string; error: string };
+type AccBatchResponse = { ok: boolean; period: string; agent_count: number; generated_at: string; summary: { total_gross_inflows: number; total_operating_revenue: number; total_quarantined: number; high_risk_agents: string[] }; flags: { high: Array<AuditFlag & { agent: string }>; medium: Array<AuditFlag & { agent: string }> }; results: AccAgentResult[] };
+
+const ACC_NAMED_SLUGS = ["luca", "bankr", "virtuals-protocol"];
+
+function accFmtUsd(v: number) {
+  if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
+  if (v >= 1_000)     return `$${(v / 1_000).toFixed(1)}k`;
+  return `$${v.toFixed(2)}`;
+}
+
+function AccuracyReportSection({ secret }: { secret: string }) {
+  const [period, setPeriod]       = useState<"7d" | "14d" | "30d" | "90d">("30d");
+  const [targetAll, setTargetAll] = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState("");
+  const [report, setReport]       = useState<AccBatchResponse | null>(null);
+
+  const run = useCallback(async () => {
+    setLoading(true); setError(""); setReport(null);
+    const body = { period, slugs: targetAll ? null : ACC_NAMED_SLUGS };
+    try {
+      const res = await fetch("/api/admin/revenue-audit", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-internal-secret": secret },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json() as AccBatchResponse;
+      if (!json.ok) { setError("Report failed"); return; }
+      setReport(json);
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }, [secret, period, targetAll]);
+
+  function sevColor(s: AuditFlag["severity"]) { return s === "high" ? "#ef4444" : s === "medium" ? "#f59e0b" : "#6b7280"; }
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Financial</p>
+        <h1>Accuracy Report</h1>
+        <p>Batch revenue audit with anomaly detection and confidence flags.</p>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginBottom: 4 }}>PERIOD</div>
+          <select value={period} onChange={(e) => setPeriod(e.target.value as typeof period)}
+            style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 13 }}>
+            <option value="7d">Last 7 days</option>
+            <option value="14d">Last 14 days</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </select>
+        </div>
+        <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer", alignSelf: "flex-end", paddingBottom: 7 }}>
+          <input type="checkbox" checked={targetAll} onChange={(e) => setTargetAll(e.target.checked)} />
+          All agents (up to 20)
+        </label>
+        <button onClick={run} disabled={loading}
+          style={{ padding: "8px 20px", borderRadius: 6, border: "none", background: loading ? "var(--line)" : "var(--accent)", color: loading ? "var(--muted)" : "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", alignSelf: "flex-end" }}>
+          {loading ? "Running…" : "Run Audit"}
+        </button>
+      </div>
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {loading && <div className={styles.stateBox}>Running batch audit… this may take 1–2 minutes.</div>}
+      {report && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
+            {[
+              { label: "Agents Audited",          value: report.agent_count.toString(),                    color: "var(--ink)" },
+              { label: "Total Gross Inflows",     value: accFmtUsd(report.summary.total_gross_inflows),    color: "#e2e8f0" },
+              { label: "Total Operating Revenue", value: accFmtUsd(report.summary.total_operating_revenue),color: "#22c55e" },
+              { label: "Total Quarantined",       value: accFmtUsd(report.summary.total_quarantined),      color: "#f59e0b" },
+              { label: "High-Risk Agents",        value: report.summary.high_risk_agents.length.toString(),color: "#ef4444" },
+            ].map((c) => (
+              <div key={c.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>{c.label}</div>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 20, fontWeight: 700, color: c.color }}>{c.value}</div>
+              </div>
+            ))}
+          </div>
+          {(report.flags.high.length > 0 || report.flags.medium.length > 0) && (
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 12 }}>Flags</div>
+              {[...report.flags.high, ...report.flags.medium].map((f, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: `${sevColor(f.severity)}22`, color: sevColor(f.severity), flexShrink: 0 }}>{f.severity}</span>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{f.agent} — {f.code}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>{f.message}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={styles.tableWrap}>
+            <table className={styles.dataTable}>
+              <thead><tr><th>Agent</th><th>Gross</th><th>Operating Rev</th><th>Quarantined</th><th>Flags</th></tr></thead>
+              <tbody>
+                {report.results.map((r, i) => {
+                  if (!r.ok) return <tr key={i}><td colSpan={5} style={{ color: "#ef4444", fontSize: 12 }}>{r.slug}: {r.error}</td></tr>;
+                  return (
+                    <tr key={i}>
+                      <td style={{ fontWeight: 600 }}>{r.audit.agent.name}</td>
+                      <td style={{ fontFamily: "var(--font-mono)" }}>{accFmtUsd(r.audit.summary.gross_inflow_usd)}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "#22c55e" }}>{accFmtUsd(r.audit.summary.operating_revenue_usd)}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "#f59e0b" }}>{accFmtUsd(r.audit.summary.quarantined_usd)}</td>
+                      <td style={{ fontSize: 12 }}>
+                        {r.flags.length > 0 ? (
+                          <span style={{ color: r.flags.some((f) => f.severity === "high") ? "#ef4444" : "#f59e0b" }}>{r.flags.length} flag{r.flags.length !== 1 ? "s" : ""}</span>
+                        ) : <span style={{ color: "#22c55e" }}>Clean</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Confidence Labels section ─────────────────────────────────────────────────
+
+type ConfAgentRow = { slug: string; name: string; label: AgentConfidenceLabel | null };
+const CONF_PRIORITY_AGENTS: { slug: string; name: string }[] = [
+  { slug: "luca",              name: "AEON / Luca"       },
+  { slug: "bankr",             name: "Bankr"             },
+  { slug: "virtuals-protocol", name: "Virtuals Protocol" },
+  { slug: "clanker",           name: "Clanker"           },
+  { slug: "autonolas",         name: "Autonolas"         },
+  { slug: "nookplot",          name: "Nookplot"          },
+  { slug: "venice",            name: "Venice"            },
+  { slug: "aixbt",             name: "aixbt"             },
+  { slug: "ethy",              name: "Ethy"              },
+  { slug: "coinbase-agentkit", name: "Coinbase AgentKit" },
+];
+const CONF_LEVELS: { value: ConfidenceLevel; label: string; color: string }[] = [
+  { value: "high",         label: "High Confidence",          color: "#22c55e" },
+  { value: "medium",       label: "Medium Confidence",        color: "#f59e0b" },
+  { value: "low",          label: "Low Confidence",           color: "#ef4444" },
+  { value: "under_review", label: "Attribution Under Review", color: "#6b7280" },
+];
+
+function ConfAgentCard({ row, secret, onSaved }: { row: ConfAgentRow; secret: string; onSaved: () => void }) {
+  const [level,        setLevel]        = useState<ConfidenceLevel | "">(row.label?.confidence_level ?? "");
+  const [publicNote,   setPublicNote]   = useState(row.label?.public_note ?? "");
+  const [internalNote, setInternalNote] = useState(row.label?.internal_reason ?? "");
+  const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
+  const [error,        setError]        = useState("");
+
+  async function save() {
+    if (!level) return;
+    setSaving(true); setError(""); setSaved(false);
+    try {
+      const res = await fetch("/api/admin/confidence-label", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-internal-secret": secret },
+        body: JSON.stringify({ slug: row.slug, level, public_note: publicNote || undefined, internal_reason: internalNote || undefined, reviewed_by: "admin" }),
+      });
+      const json = await res.json();
+      if (!res.ok) { setError((json as { error?: string }).error ?? "Error"); return; }
+      setSaved(true); onSaved();
+    } catch (e) { setError((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  const currentMeta = row.label ? CONFIDENCE_META[row.label.confidence_level] : null;
+  const meta = level ? CONFIDENCE_META[level] : null;
+
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 10 }}>
+        <Link href={`/registry/${row.slug}`} target="_blank" rel="noopener noreferrer" style={{ fontWeight: 700, fontSize: 14, color: "var(--ink)", textDecoration: "none" }}>{row.name}</Link>
+        {currentMeta && <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 4, background: `${currentMeta.color}22`, color: currentMeta.color }}>{currentMeta.label}</span>}
+        {!row.label && <span style={{ fontSize: 11, color: "var(--muted)" }}>not yet labeled</span>}
+      </div>
+      <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {CONF_LEVELS.map((l) => (
+            <button key={l.value} onClick={() => setLevel(l.value)} style={{ padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, border: "1px solid", borderColor: level === l.value ? l.color : "var(--line)", background: level === l.value ? `${l.color}18` : "transparent", color: level === l.value ? l.color : "var(--muted)", cursor: "pointer" }}>
+              {l.label}
+            </button>
+          ))}
+        </div>
+        <textarea value={publicNote} onChange={(e) => setPublicNote(e.target.value)} placeholder="Public note (shown on profile)" rows={2}
+          style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, resize: "vertical", boxSizing: "border-box" }} />
+        <textarea value={internalNote} onChange={(e) => setInternalNote(e.target.value)} placeholder="Internal reason (admin only)" rows={2}
+          style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, resize: "vertical", boxSizing: "border-box" }} />
+        {error && <div style={{ fontSize: 12, color: "#ef4444" }}>{error}</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={save} disabled={saving || !level} style={{ padding: "7px 18px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: 600, background: saving || !level ? "var(--line)" : (meta?.color ?? "var(--accent)"), color: saving || !level ? "var(--muted)" : "#fff", cursor: "pointer" }}>
+            {saving ? "Saving…" : "Save Label"}
+          </button>
+          {saved && <span style={{ fontSize: 12, color: "#22c55e" }}>Saved</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfidenceLabelsSection({ secret }: { secret: string }) {
+  const [rows, setRows]       = useState<ConfAgentRow[]>(CONF_PRIORITY_AGENTS.map((a) => ({ ...a, label: null })));
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+
+  const loadLabels = useCallback(async () => {
+    if (!secret) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/admin/confidence-label", { headers: { "x-internal-secret": secret } });
+      const json = await res.json() as { labels?: AgentConfidenceLabel[]; error?: string };
+      if (!res.ok) { setError(json.error ?? "Failed"); return; }
+      setRows(CONF_PRIORITY_AGENTS.map((a) => ({ ...a, label: (json.labels ?? []).find((l) => l.agent_slug === a.slug) ?? null })));
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }, [secret]);
+
+  useEffect(() => { loadLabels(); }, [loadLabels]);
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Financial</p>
+        <h1>Confidence Labels</h1>
+        <p>Set public revenue attribution confidence levels — appear on agent profiles immediately.</p>
+      </div>
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {loading && <div className={styles.stateBox}>Loading labels…</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {rows.map((row) => (
+          <ConfAgentCard key={row.slug} row={row} secret={secret} onSaved={loadLabels} />
         ))}
       </div>
+    </div>
+  );
+}
+
+// ── B20 Intelligence section ───────────────────────────────────────────────────
+
+type B20TokenResult = { address: string; name: string | null; symbol: string | null; linked_agent: string | null; link_confidence: string; manifest_status: string; activity_events_inserted: number; status: "indexed" | "skipped" | "error"; error?: string };
+type B20IndexReport = { ok: boolean; dry_run: boolean; summary: { tokens_discovered: number; tokens_indexed: number; errors: number; attributed: number; candidates: number; awaiting_manifest: number; data_integrity_note: string }; tokens: B20TokenResult[]; generated_at: string; error?: string };
+type B20DetectResult = { address: string; agent_name: string; passes_prefix: boolean; confirmed_on_chain: boolean; name: string | null; symbol: string | null; recommendation: string };
+type B20DetectReport = { ok: boolean; total_with_token_address: number; b20_prefix_matches: number; confirmed_b20: number; results: B20DetectResult[]; non_b20_addresses: { agent_name: string; address: string }[]; note: string; generated_at: string; error?: string };
+
+type B20Report = B20IndexReport | B20DetectReport;
+
+function B20Section({ secret }: { secret: string }) {
+  const [mode, setMode]       = useState<"detect_from_registry" | "from_registry" | "single" | "activity_only">("detect_from_registry");
+  const [chain, setChain]     = useState<"base" | "base-sepolia">("base");
+  const [dryRun, setDryRun]   = useState(true);
+  const [singleAddr, setSingleAddr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState("");
+  const [report, setReport]   = useState<B20Report | null>(null);
+
+  async function run() {
+    setLoading(true); setError(""); setReport(null);
+    const body: Record<string, unknown> = { mode, chain, dryRun };
+    if (mode === "single") body.tokenAddress = singleAddr;
+    try {
+      const res = await fetch("/api/admin/index-b20", {
+        method: "POST", headers: { "Content-Type": "application/json", "x-internal-secret": secret },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json() as B20Report;
+      if (!json.ok) { setError((json as { error?: string }).error ?? "Failed"); return; }
+      setReport(json);
+    } catch (e) { setError((e as Error).message); }
+    finally { setLoading(false); }
+  }
+
+  const isDetect = mode === "detect_from_registry";
+  const isIndex  = !isDetect && report && "summary" in report;
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Growth OS</p>
+        <h1>B20 Intelligence</h1>
+        <p>Detect and index B20 token contracts linked to registry agents.</p>
+      </div>
+      <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          {(["detect_from_registry", "from_registry", "single", "activity_only"] as const).map((m) => (
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: mode === m ? "#6DB874" : "var(--line)", background: mode === m ? "#6DB87418" : "transparent", color: mode === m ? "#6DB874" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              {m.replace(/_/g, " ")}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
+          {(["base", "base-sepolia"] as const).map((c) => (
+            <button key={c} onClick={() => setChain(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: chain === c ? "#5B8FA8" : "var(--line)", background: chain === c ? "#5B8FA818" : "transparent", color: chain === c ? "#5B8FA8" : "var(--muted)", fontSize: 12, cursor: "pointer" }}>
+              {c}
+            </button>
+          ))}
+        </div>
+        {mode === "single" && (
+          <div style={{ marginBottom: 14 }}>
+            <input value={singleAddr} onChange={(e) => setSingleAddr(e.target.value)} placeholder="Token address (0x…)"
+              style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 340, fontFamily: "var(--font-mono)" }} />
+          </div>
+        )}
+        {!isDetect && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+              <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+            </button>
+            <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
+          </div>
+        )}
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+          {loading ? "Running…" : "Run"}
+        </button>
+      </div>
+      {error && <div className={styles.errorBox}>{error}</div>}
+      {report && isDetect && "results" in report && (
+        <>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+            {[
+              { label: "With Token Address", value: (report as B20DetectReport).total_with_token_address },
+              { label: "B20 Prefix Matches", value: (report as B20DetectReport).b20_prefix_matches },
+              { label: "Confirmed B20",      value: (report as B20DetectReport).confirmed_b20 },
+            ].map((kpi) => (
+              <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4 }}>{kpi.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.dataTable}>
+              <thead><tr><th>Agent</th><th>Token Address</th><th>Symbol</th><th>Confirmed</th><th>Recommendation</th></tr></thead>
+              <tbody>
+                {(report as B20DetectReport).results.map((r, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 600 }}>{r.agent_name}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>{r.address.slice(0, 10)}…</td>
+                    <td style={{ fontFamily: "var(--font-mono)" }}>{r.symbol ?? "—"}</td>
+                    <td style={{ color: r.confirmed_on_chain ? "#22c55e" : "#ef4444" }}>{r.confirmed_on_chain ? "Yes" : "No"}</td>
+                    <td style={{ fontSize: 12, color: "var(--muted)" }}>{r.recommendation}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+      {report && isIndex && "summary" in report && (
+        <>
+          {(report as B20IndexReport).dry_run && <div style={{ color: "#f59e0b", fontWeight: 700, marginBottom: 8 }}>[DRY RUN]</div>}
+          <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "var(--muted)" }}>
+            ⚠ {(report as B20IndexReport).summary.data_integrity_note}
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+            {[
+              { label: "Discovered", value: (report as B20IndexReport).summary.tokens_discovered },
+              { label: "Indexed",    value: (report as B20IndexReport).summary.tokens_indexed },
+              { label: "Attributed", value: (report as B20IndexReport).summary.attributed },
+              { label: "Candidates", value: (report as B20IndexReport).summary.candidates },
+              { label: "Errors",     value: (report as B20IndexReport).summary.errors },
+            ].map((kpi) => (
+              <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
+                <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4 }}>{kpi.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, fontFamily: "var(--font-mono)" }}>{kpi.value}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -3028,15 +4120,6 @@ export default function LucaAdminPage() {
             </div>
           ))}
 
-          <div className={styles.navDivider} />
-          <Link href="/luca-admin/registry-updates" className={styles.navItem}>Pending Updates</Link>
-          <Link href="/luca-admin/attribution-health" className={styles.navItem}>Attribution Health</Link>
-          <Link href="/luca-admin/address-classification" className={styles.navItem}>Address Classification</Link>
-          <Link href="/luca-admin/erc8004-ingestion" className={styles.navItem}>ERC-8004 Ingestion</Link>
-          <Link href="/luca-admin/revenue-accuracy-report" className={styles.navItem}>Accuracy Report</Link>
-          <Link href="/luca-admin/revenue-audit" className={styles.navItem}>Revenue Audit</Link>
-          <Link href="/luca-admin/revenue-confidence" className={styles.navItem}>Confidence Labels</Link>
-          <Link href="/luca-admin/b20-intelligence" className={styles.navItem}>B20 Intelligence</Link>
           <Link href="/registry" className={styles.navItem} target="_blank" rel="noreferrer">Public Registry ↗</Link>
 
           <div className={styles.sidebarFooter}>
@@ -3058,8 +4141,15 @@ export default function LucaAdminPage() {
           {section === "outreach"  && <OutreachSection secret={secret} />}
           {section === "subagent-runs"   && <SubagentRunsSection secret={secret} />}
           {section === "pending-replies" && <PendingRepliesSection secret={secret} />}
-          {section === "roadmap"         && <RoadmapSection />}
-          {section === "settings"        && <SettingsSection onSignOut={handleSignOut} health={health} />}
+          {section === "pending-updates"        && <PendingUpdatesSection secret={secret} />}
+          {section === "attribution-health"    && <AttributionHealthSection />}
+          {section === "address-classification"&& <AddressClassificationSection secret={secret} />}
+          {section === "erc8004"               && <Erc8004Section secret={secret} />}
+          {section === "revenue-audit"         && <RevenueAuditSection secret={secret} />}
+          {section === "accuracy-report"       && <AccuracyReportSection secret={secret} />}
+          {section === "confidence-labels"     && <ConfidenceLabelsSection secret={secret} />}
+          {section === "b20"                   && <B20Section secret={secret} />}
+          {section === "settings"              && <SettingsSection onSignOut={handleSignOut} health={health} />}
         </main>
       </div>
     </div>
