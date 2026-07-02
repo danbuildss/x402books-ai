@@ -16,6 +16,7 @@ import { internalAuth } from "@/lib/internal-auth";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { classifyAddressBatch } from "@/lib/address-classifier";
 import type { AddressType } from "@/lib/address-classifier";
+import { hasSupabaseAdminEnv, getSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120; // classification can be slow for large registries
@@ -51,6 +52,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(req.url);
+  const writeResults = url.searchParams.get("write") === "true";
+
   const apiKey = process.env.ALCHEMY_API_KEY;
   if (!apiKey) {
     return NextResponse.json({ ok: false, error: "ALCHEMY_API_KEY not configured" }, { status: 500 });
@@ -83,6 +87,30 @@ export async function GET(req: NextRequest) {
   const classificationMap = new Map<string, AddressType>();
   for (const r of classificationResults) {
     classificationMap.set(r.address.toLowerCase(), r.address_type);
+  }
+
+  // Write address_type back to DB when ?write=true
+  let rowsUpdated = 0;
+  let writeError: string | null = null;
+  if (writeResults) {
+    if (!hasSupabaseAdminEnv()) {
+      writeError = "Supabase not configured — cannot write results";
+    } else {
+      const supabase = getSupabaseAdminClient();
+      const updates = [...classificationMap.entries()].map(([address, address_type]) => ({
+        address,
+        address_type,
+      }));
+      // Batch upsert by address — relies on address being unique per row (best-effort match)
+      for (const { address, address_type } of updates) {
+        const { error } = await supabase
+          .from("registry_agent_wallets")
+          .update({ address_type })
+          .eq("address", address);
+        if (!error) rowsUpdated++;
+        else if (!writeError) writeError = error.message;
+      }
+    }
   }
 
   // Build per-agent report
@@ -203,6 +231,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    write: writeResults ? { rows_updated: rowsUpdated, error: writeError } : null,
     summary: {
       total_agents: totalAgents,
       attributed_agents: attributedAgents,
@@ -228,7 +257,7 @@ export async function GET(req: NextRequest) {
       "  add column if not exists address_type text",
       "  check (address_type in (",
       "    'eoa','token_contract','proxy_contract',",
-      "    'treasury_contract','vault','smart_contract','unknown'",
+      "    'treasury_contract','vault','smart_contract','smart_account','unknown'",
       "  ))",
       "  default 'unknown';",
     ].join("\n"),
