@@ -98,7 +98,10 @@ export async function POST(req: NextRequest) {
 
   const classificationMap = new Map<string, string>();
   if (allWalletAddresses.length > 0) {
-    const classified = await classifyAddressBatch(allWalletAddresses, apiKey);
+    // All addresses coming through ERC-8004 manifest ingestion are manifest-declared —
+    // give them smart_account benefit of the doubt instead of blocking as smart_contract.
+    const manifestDeclared = new Set(allWalletAddresses.map((a) => a.toLowerCase()));
+    const classified = await classifyAddressBatch(allWalletAddresses, apiKey, undefined, 5, manifestDeclared);
     for (const c of classified) {
       classificationMap.set(c.address.toLowerCase(), c.address_type);
     }
