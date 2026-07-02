@@ -12,6 +12,7 @@ type AddressType =
   | "treasury_contract"
   | "vault"
   | "smart_contract"
+  | "smart_account"
   | "unknown";
 
 type WalletReport = {
@@ -77,6 +78,7 @@ const TYPE_META: Record<AddressType, { label: string; color: string }> = {
   treasury_contract: { label: "Treasury (Safe)", color: "#6DB874" },
   vault:             { label: "Vault",           color: "#a855f7" },
   smart_contract:    { label: "Smart Contract",  color: "#f97316" },
+  smart_account:     { label: "Smart Account",   color: "#3b82f6" },
   unknown:           { label: "Unknown",         color: "#6b7280" },
 };
 
@@ -107,26 +109,34 @@ export default function AddressClassificationPage() {
   }, [secret]);
   const [report, setReport] = useState<ClassificationReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [writing, setWriting] = useState(false);
+  const [writeMsg, setWriteMsg] = useState("");
   const [error, setError] = useState("");
   const [filter, setFilter] = useState<AgentReport["attribution_status"] | "all">("all");
   const [search, setSearch] = useState("");
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [showSql, setShowSql] = useState(false);
 
-  function runAudit() {
-    setLoading(true);
+  function runAudit(write = false) {
+    if (write) { setWriting(true); setWriteMsg(""); }
+    else { setLoading(true); setReport(null); }
     setError("");
-    setReport(null);
-    fetch("/api/admin/address-classification", {
+    fetch(`/api/admin/address-classification${write ? "?write=true" : ""}`, {
       headers: { "x-internal-secret": secret },
     })
       .then((r) => r.json())
-      .then((json: ClassificationReport) => {
+      .then((json: ClassificationReport & { write?: { rows_updated: number; error: string | null } }) => {
         if (!json.ok) { setError(json.error ?? "Classification failed"); return; }
         setReport(json);
+        if (write && json.write) {
+          setWriteMsg(json.write.error
+            ? `Write error: ${json.write.error}`
+            : `Wrote address_type to ${json.write.rows_updated} wallet rows.`
+          );
+        }
       })
       .catch((e: Error) => setError(e.message))
-      .finally(() => setLoading(false));
+      .finally(() => { setLoading(false); setWriting(false); });
   }
 
   const visible = report
@@ -157,7 +167,7 @@ export default function AddressClassificationPage() {
               Takes ~30–90s depending on registry size.
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             <input
               type="password"
               value={secret}
@@ -166,13 +176,26 @@ export default function AddressClassificationPage() {
               style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 260 }}
             />
             <button
-              onClick={runAudit}
-              disabled={loading}
-              style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: loading ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1 }}
+              onClick={() => runAudit(false)}
+              disabled={loading || writing}
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
             >
               {loading ? "Classifying…" : "Run Audit"}
             </button>
+            <button
+              onClick={() => runAudit(true)}
+              disabled={loading || writing}
+              title="Classify all wallets and write address_type back to the database"
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#3b82f6", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
+            >
+              {writing ? "Classifying & Writing…" : "Classify & Write to DB"}
+            </button>
           </div>
+          {writeMsg && (
+            <div style={{ marginTop: 10, fontSize: 12, color: writeMsg.startsWith("Write error") ? "#ef4444" : "#22c55e", fontWeight: 600 }}>
+              {writeMsg}
+            </div>
+          )}
         </div>
 
         {error && (
