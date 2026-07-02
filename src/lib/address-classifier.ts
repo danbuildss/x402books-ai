@@ -74,6 +74,7 @@ export async function classifyAddress(
   address: string,
   apiKey: string,
   knownTokenAddresses?: Set<string>,
+  manifestDeclared?: boolean,
 ): Promise<AddressType> {
   const addr = address.toLowerCase();
 
@@ -107,6 +108,14 @@ export async function classifyAddress(
     const validateData = await ethCall(apiKey, addr, SEL.validateUserOp);
     if (validateData) return "smart_account";
 
+    // Step 6: Manifest-declared benefit of the doubt.
+    // If a founder explicitly declared this address in their manifest and it didn't
+    // match any token/proxy/safe pattern, treat it as a smart_account rather than
+    // blocking it as smart_contract. Coinbase Smart Wallet, Argent, and other
+    // non-ERC-4337 smart accounts don't respond to validateUserOp but are still
+    // legitimate operator wallets.
+    if (manifestDeclared) return "smart_account";
+
     return "smart_contract";
   } catch {
     return "unknown";
@@ -122,6 +131,7 @@ export async function classifyAddressBatch(
   apiKey: string,
   knownTokenAddresses?: Set<string>,
   concurrency = 5,
+  manifestDeclaredAddresses?: Set<string>,
 ): Promise<BatchResult[]> {
   const unique = [...new Set(addresses.map((a) => a.toLowerCase()))];
   const results: BatchResult[] = [];
@@ -129,7 +139,7 @@ export async function classifyAddressBatch(
   for (let i = 0; i < unique.length; i += concurrency) {
     const batch = unique.slice(i, i + concurrency);
     const settled = await Promise.allSettled(
-      batch.map((addr) => classifyAddress(addr, apiKey, knownTokenAddresses)),
+      batch.map((addr) => classifyAddress(addr, apiKey, knownTokenAddresses, manifestDeclaredAddresses?.has(addr))),
     );
     for (let j = 0; j < batch.length; j++) {
       const s = settled[j];
