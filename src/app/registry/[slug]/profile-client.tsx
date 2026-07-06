@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,6 +17,7 @@ import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { computeMomentum } from "@/lib/agent-momentum";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
 import { CONFIDENCE_META } from "@/lib/revenue-confidence";
 
@@ -1003,16 +1004,21 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const [expanded, setExpanded]       = useState(isUnclaimed || needsAttention);
   const [tab, setTab]                 = useState<ClaimTab>("manifest");
 
-  // wallet tab state
-  const [wallet, setWallet]           = useState("");
+  // wallet tab state — Privy-powered
   const [walletState, setWalletState] = useState<ClaimState>("idle");
   const [walletMatched, setWalletMatched] = useState(false);
   const [walletMsg, setWalletMsg]     = useState("");
+  const [sigVerified, setSigVerified] = useState(false);
 
   // manifest tab state
   const [repoUrl, setRepoUrl]         = useState("");
   const [mfState, setMfState]         = useState<ClaimState>("idle");
   const [mfMsg, setMfMsg]             = useState("");
+
+  // Privy hooks for wallet signing
+  const { login, authenticated, ready } = usePrivy();
+  const { wallets } = useWallets();
+  const connectedWallet = useMemo(() => wallets.find((w) => w.walletClientType !== "privy"), [wallets]);
 
   if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
 
@@ -1022,28 +1028,57 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
   const done = (tab === "wallet" && walletState === "done") || (tab === "manifest" && mfState === "done");
 
-  async function submitWallet(e: React.FormEvent) {
-    e.preventDefault();
-    if (!wallet.trim()) return;
+  async function connectAndSign() {
     setWalletState("loading");
     try {
+      // Step 1: ensure a wallet is connected
+      if (!authenticated || !connectedWallet) {
+        setWalletState("idle");
+        login();
+        return;
+      }
+
+      // Step 2: sign a timestamped claim message
+      const timestamp = new Date().toISOString();
+      const message = `Claiming "${agentName}" on Zetta Registry.\nWallet: ${connectedWallet.address}\nTimestamp: ${timestamp}`;
+
+      const provider = await connectedWallet.getEthereumProvider();
+      const signature = await provider.request({
+        method: "personal_sign",
+        params: [message, connectedWallet.address],
+      }) as string;
+
+      // Step 3: submit to claim API with signature
       const res = await fetch("/api/registry/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agent_slug: slug, wallet_address: wallet.trim() }),
+        body: JSON.stringify({
+          agent_slug:     slug,
+          wallet_address: connectedWallet.address,
+          signature,
+          message,
+        }),
       });
-      const d = await res.json() as { ok: boolean; matched?: boolean; message?: string; error?: string };
+      const d = await res.json() as {
+        ok: boolean; matched?: boolean; signature_verified?: boolean; message?: string; error?: string;
+      };
       if (d.ok) {
         setWalletState("done");
         setWalletMatched(d.matched ?? false);
+        setSigVerified(d.signature_verified ?? false);
         setWalletMsg(d.message ?? "Claim submitted.");
       } else {
         setWalletState("error");
         setWalletMsg(d.error ?? "Something went wrong.");
       }
-    } catch {
-      setWalletState("error");
-      setWalletMsg("Network error. Please try again.");
+    } catch (err) {
+      // User rejected the signature request
+      if (err instanceof Error && err.message?.includes("rejected")) {
+        setWalletState("idle");
+      } else {
+        setWalletState("error");
+        setWalletMsg("Signing failed. Please try again.");
+      }
     }
   }
 
@@ -1084,10 +1119,11 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   // ── Done state ────────────────────────────────────────────────────────────
   if (done) {
     const isMatch = tab === "wallet" && walletMatched;
+    const isProven = tab === "wallet" && sigVerified && walletMatched;
     const doneMsg = tab === "wallet" ? walletMsg : mfMsg;
     const title   = tab === "manifest"
       ? "Manifest queued for verification"
-      : isMatch ? "Wallet matched — claim under review" : "Claim submitted for review";
+      : isProven ? "Ownership proven — claim under review" : isMatch ? "Wallet matched — claim under review" : "Claim submitted for review";
     const color   = (tab === "manifest" || isMatch) ? "var(--accent)" : "#f59e0b";
     const icon    = (tab === "manifest" || isMatch) ? "check_circle" : "info";
     const nextStep = (!isMatch && tab === "wallet")
@@ -1215,45 +1251,41 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       {/* Wallet tab */}
       {tab === "wallet" && (
         <>
-          <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 12, lineHeight: 1.55 }}>
-            Enter a wallet address associated with this agent. A match against declared wallets fast-tracks verification.
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", marginBottom: 14, lineHeight: 1.55 }}>
+            Connect a wallet and sign a message to prove ownership. Cryptographic proof fast-tracks your claim.
           </p>
-          <form onSubmit={submitWallet} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input
-              type="text"
-              placeholder="0x… your wallet address"
-              value={wallet}
-              onChange={(e) => setWallet(e.target.value)}
-              pattern="^0x[0-9a-fA-F]{40}$"
-              required
-              autoFocus
-              style={{
-                flex: 1, minWidth: 200,
-                padding: "8px 12px", borderRadius: 8,
-                border: "1px solid var(--line)",
-                background: "var(--surface)",
-                color: "var(--ink)", fontSize: "0.82rem",
-                fontFamily: "monospace", outline: "none",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={walletState === "loading"}
-              style={{
-                padding: "8px 18px", borderRadius: 8, border: "none",
-                background: "var(--accent)", color: "#fff",
-                fontSize: "0.82rem", fontWeight: 700,
-                cursor: walletState === "loading" ? "not-allowed" : "pointer",
-                opacity: walletState === "loading" ? 0.7 : 1,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {walletState === "loading" ? "Checking…" : "Submit Claim →"}
-            </button>
-            {walletState === "error" && (
-              <p style={{ width: "100%", fontSize: "0.78rem", color: "#f87171", margin: "4px 0 0" }}>{walletMsg}</p>
-            )}
-          </form>
+          {connectedWallet && (
+            <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 10 }}>
+              Connected: <code style={{ fontFamily: "monospace", color: "var(--ink)" }}>
+                {connectedWallet.address.slice(0, 8)}…{connectedWallet.address.slice(-6)}
+              </code>
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={connectAndSign}
+            disabled={walletState === "loading" || !ready}
+            style={{
+              padding: "9px 18px", borderRadius: 8, border: "none",
+              background: "var(--accent)", color: "#fff",
+              fontSize: "0.82rem", fontWeight: 700,
+              cursor: (walletState === "loading" || !ready) ? "not-allowed" : "pointer",
+              opacity: (walletState === "loading" || !ready) ? 0.7 : 1,
+              display: "flex", alignItems: "center", gap: 7,
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+              {authenticated && connectedWallet ? "draw" : "account_balance_wallet"}
+            </span>
+            {walletState === "loading"
+              ? "Signing…"
+              : authenticated && connectedWallet
+                ? "Sign to claim →"
+                : "Connect wallet →"}
+          </button>
+          {walletState === "error" && (
+            <p style={{ fontSize: "0.78rem", color: "#f87171", margin: "8px 0 0" }}>{walletMsg}</p>
+          )}
         </>
       )}
 

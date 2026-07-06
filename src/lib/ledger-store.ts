@@ -43,7 +43,7 @@ export async function persistLedgerScan(params: PersistLedgerParams) {
         is_likely_x402: Boolean(transaction.isLikelyX402),
         risk_flag: transaction.riskFlag || "none",
       })),
-      { onConflict: "wallet_address,tx_hash,counterparty,amount_usdc" },
+      { onConflict: "wallet_address,tx_hash" },
     );
 
     if (transactionError) {
