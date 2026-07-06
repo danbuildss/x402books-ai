@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Migration: add project_id and decision_proof_hash columns
 -- Nipmod v0 sends these fields; previously only captured in raw jsonb
 

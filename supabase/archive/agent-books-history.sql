@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Agent Books History
 -- Persists 30d books snapshots for each attributed agent.
 -- One snapshot per agent per snapshot event (triggered by report generation or admin endpoint).

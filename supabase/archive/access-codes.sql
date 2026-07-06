@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 create extension if not exists pgcrypto;
 
 create table if not exists public.access_codes (

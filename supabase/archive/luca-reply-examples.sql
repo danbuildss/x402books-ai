@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Learning loop for Luca X replies.
 --
 -- luca_pending_replies: add question + posted_at columns

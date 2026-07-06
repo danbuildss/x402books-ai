@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Registry claims — agent teams claiming their profile by matching a wallet address
 CREATE TABLE IF NOT EXISTS registry_claims (
   id              uuid        DEFAULT gen_random_uuid() PRIMARY KEY,

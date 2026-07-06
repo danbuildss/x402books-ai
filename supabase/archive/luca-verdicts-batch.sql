@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Luca verdicts batch update — 30 agents
 -- Paste into Supabase SQL editor and run
 

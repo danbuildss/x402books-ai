@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Agent verification submissions
 -- Stores submissions from /registry#verify form (both Manual Submit and Gitlawb tabs)
 

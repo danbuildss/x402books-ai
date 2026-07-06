@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 create table if not exists public.waitlist_signups (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,

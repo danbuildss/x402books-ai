@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Run this in Supabase SQL editor before deploying the Nipmod integration
 
 CREATE TABLE IF NOT EXISTS tool_decision_events (

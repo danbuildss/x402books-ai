@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Growth OS tables (safe version — no FK to api_keys)
 -- Run this if growth-schema.sql failed or tables are missing
 
