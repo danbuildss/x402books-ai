@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- registry_import_candidates: staging table for Bankr tokens from Dune
 -- not yet matched to a registry agent. Reviewed manually before promoting.
 

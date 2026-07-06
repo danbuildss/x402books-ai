@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 create table if not exists public.wallets (
   address text primary key,
   last_scanned_at timestamptz,

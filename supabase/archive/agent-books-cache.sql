@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- agent_books_cache: persistent cache for computed agent books.
 -- Populated by buildAgentBooks() on first scan; refreshed every 4h by the cron job.
 -- Keyed on (agent_slug, period) with upsert — only one row per agent per period.

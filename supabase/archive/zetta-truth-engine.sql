@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- ============================================================
 -- Zetta Truth Engine
 -- Proposed SQL layer for manifest truth, wallet-role evidence,

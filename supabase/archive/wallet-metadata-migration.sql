@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Wallet metadata migration
 -- Adds chain, role, confidence, evidence_source to registry_agent_wallets
 -- Run once in Supabase SQL editor.

@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- inference_events: Surplus-facing raw inference economics table.
 -- Any agent that uses Surplus (or any provider) logs events here via POST /api/inference/log.
 -- Separate from agent_economic_events (broader financial ledger).

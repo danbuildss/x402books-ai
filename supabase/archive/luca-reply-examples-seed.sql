@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Seed luca_reply_examples with golden Fast Read examples.
 -- These train Luca's style before any real approved replies exist.
 -- Run once after creating the luca_reply_examples table.

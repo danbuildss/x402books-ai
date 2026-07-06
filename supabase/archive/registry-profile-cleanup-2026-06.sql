@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- Registry profile cleanup — June 2026
 -- Bulk update of x_handle, website, and symbol for Bankr-linked agents.
 -- Source: Luca research pass against live Bankr profiles + X verification.

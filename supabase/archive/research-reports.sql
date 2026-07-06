@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- State of the Agent Economy research reports
 -- Published reports written by Luca, stored for display on /research
 -- Safe to run multiple times.

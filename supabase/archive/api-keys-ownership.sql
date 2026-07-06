@@ -1,3 +1,6 @@
+-- ARCHIVED 2026-07-06: superseded by supabase/migrations/. DO NOT APPLY.
+-- See supabase/README.md for migration instructions.
+
 -- API key ownership + wallet-link challenge columns
 -- Binds keys to the access-code session that created them, and stores the
 -- single-use nonce for signature-verified wallet linking.
