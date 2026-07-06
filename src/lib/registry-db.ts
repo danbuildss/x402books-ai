@@ -9,7 +9,7 @@ import type {
 
 interface RegistryAgentRow {
   id: string;
-  slug: string | null;
+  slug?: string | null;
   name: string;
   symbol: string | null;
   ecosystem: string;
