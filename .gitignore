@@ -20,3 +20,4 @@ tsconfig.tsbuildinfo
 .claude/*
 !.claude/settings.json
 !.claude/hooks/
+.gstack/
