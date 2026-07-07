@@ -33,6 +33,21 @@ const ENDPOINTS = [
     desc: "Live SVG verification badge — embed in GitHub READMEs.",
     example: `![Zetta](https://zetta.finance/api/badge/my-agent)`,
   },
+  {
+    method: "POST",
+    path: "/api/v1/luca/surplus/webhook",
+    desc: "Surplus inference spend callback. Configure in your Surplus dashboard to record inference costs on your agent's Zetta profile automatically.",
+    example: `# Set in Surplus dashboard:
+# Webhook URL: https://zetta.finance/api/v1/luca/surplus/webhook
+# Secret:      <SURPLUS_WEBHOOK_SECRET from your Zetta env>
+#
+# Surplus POSTs on each settled inference job:
+curl -X POST \\
+  -H "X-Surplus-Secret: YOUR_WEBHOOK_SECRET" \\
+  -H "Content-Type: application/json" \\
+  -d '{"event":"inference.completed","agent_id":"your-agent","model":"llama-3.3-70b","cost_usd":0.0012}' \\
+  https://zetta.finance/api/v1/luca/surplus/webhook`,
+  },
 ];
 
 const TIERS = [
