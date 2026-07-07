@@ -74,6 +74,15 @@ const NAV_GROUPS = [
     label: "Finance",
     items: [
       {
+        label: "Treasury",
+        href: "/dashboard/treasury",
+        icon: (
+          <svg className="op-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="1" y="5" width="14" height="9" rx="1.5" /><path d="M4 5V3.5A1.5 1.5 0 015.5 2h5A1.5 1.5 0 0112 3.5V5" /><circle cx="8" cy="9.5" r="1.5" />
+          </svg>
+        ),
+      },
+      {
         label: "Reports",
         href: "/dashboard/reports",
         icon: (

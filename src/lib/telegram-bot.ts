@@ -1,5 +1,8 @@
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress, type TimeRange } from "@/lib/ledger";
+import { executeTool, type ToolName } from "@/lib/luca-tools";
+import { routeModel } from "@/lib/model-router";
+import OpenAI from "openai";
 
 const APP_URL = "https://www.zettaai.co";
 const VALID_RANGES = new Set(["7d", "14d", "30d", "90d"]);
@@ -136,6 +139,7 @@ async function cmdStart(chatId: number) {
       `Paste any Base wallet address and I'll return a full breakdown of USDC activity — spend, income, categories, x402 agent payments, and more.`,
       ``,
       `<b>Commands</b>`,
+      `/luca <code>&lt;question&gt;</code> — ask Luca about any agent`,
       `/scan <code>&lt;wallet&gt; [range]</code> — full wallet scan with AI categories`,
       `/summary <code>&lt;wallet&gt; [range]</code> — quick stats`,
       `/report <code>&lt;wallet&gt;</code> — public report link`,
@@ -154,6 +158,10 @@ async function cmdHelp(chatId: number) {
     chatId,
     [
       `<b>Zetta — Commands</b>`,
+      ``,
+      `/luca <code>&lt;question&gt;</code>`,
+      `Ask Luca about any indexed agent — revenue, expenses, treasury, anomalies, trends.`,
+      `Example: <code>/luca what is aeon's 30d revenue?</code>`,
       ``,
       `/scan <code>&lt;wallet&gt; [range]</code>`,
       `Full wallet scan — AI-categorized spend, income, net flow, x402 count, top categories, and report link.`,
@@ -370,6 +378,75 @@ async function handleInlineQuery(inlineQuery: InlineQuery) {
   }
 }
 
+// ── Luca command ─────────────────────────────────────────────────────────────
+
+const LUCA_SYSTEM = `You are Luca — Zetta's financial analyst for the autonomous agent economy.
+You have access to live financial data via tools. Call tools before answering questions about agent finances.
+Style: terse, accounting-focused, no hype. Numbers in USD with 2 decimal places.
+Fast Read (default): Signal + Verdict. Max 5 sentences. No markdown — plain text only (Telegram HTML mode).
+Use <b>bold</b> for key numbers only.`;
+
+const LUCA_OAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+  { type: "function", function: { name: "get_agent_books",      description: "Fetch attributed financial books for an agent.",              parameters: { type: "object", properties: { slug: { type: "string" }, period: { type: "string", enum: ["7d", "14d", "30d", "90d"] } }, required: ["slug"] } } },
+  { type: "function", function: { name: "get_treasury_balance", description: "Fetch current stablecoin balance for a wallet address.",        parameters: { type: "object", properties: { address: { type: "string" } }, required: ["address"] } } },
+  { type: "function", function: { name: "get_momentum",         description: "Compute directional momentum for an agent's key metrics.",     parameters: { type: "object", properties: { slug: { type: "string" }, window_days: { type: "number" } }, required: ["slug"] } } },
+  { type: "function", function: { name: "get_anomaly_alerts",   description: "Fetch active anomaly alerts for an agent.",                    parameters: { type: "object", properties: { slug: { type: "string" } }, required: ["slug"] } } },
+  { type: "function", function: { name: "get_agent_info",       description: "Fetch basic registry info for an agent.",                      parameters: { type: "object", properties: { slug: { type: "string" } }, required: ["slug"] } } },
+];
+
+async function cmdLuca(chatId: number, query: string) {
+  if (!query.trim()) {
+    return send(chatId, "Usage: <code>/luca &lt;question&gt;</code>\nExample: <code>/luca what is aeon's revenue this month?</code>");
+  }
+
+  const placeholder = await send(chatId, "🧠 Analyzing…");
+  const msgId = placeholder.result?.message_id;
+
+  try {
+    const client = new OpenAI({
+      apiKey:  process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
+      ...(process.env.LLM_BASE_URL ? { baseURL: process.env.LLM_BASE_URL } : {}),
+    });
+
+    const modelConfig = routeModel({ query, hasToolCalls: false, estimatedTokens: query.length / 4 });
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: "system",  content: LUCA_SYSTEM },
+      { role: "user",    content: query },
+    ];
+
+    let iterations = 0;
+    while (iterations < 5) {
+      iterations++;
+      const response = await client.chat.completions.create({ model: modelConfig.model, max_tokens: 512, tools: LUCA_OAI_TOOLS, messages });
+      const choice   = response.choices[0];
+      const msg      = choice.message;
+
+      if (choice.finish_reason === "tool_calls" && msg.tool_calls?.length) {
+        messages.push(msg);
+        for (const tc of msg.tool_calls) {
+          if (tc.type !== "function") continue;
+          let parsed: Record<string, unknown> = {};
+          try { parsed = JSON.parse(tc.function.arguments) as Record<string, unknown>; } catch { /* ignore */ }
+          const result = await executeTool(tc.function.name as ToolName, parsed);
+          messages.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(result) });
+        }
+        continue;
+      }
+
+      const text = msg.content ?? "Analysis complete.";
+      if (msgId) await edit(chatId, msgId, text);
+      else       await send(chatId, text);
+      return;
+    }
+
+    if (msgId) await edit(chatId, msgId, "Analysis complete.");
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : "Analysis failed";
+    if (msgId) await edit(chatId, msgId, `❌ ${errMsg}`);
+    else       await send(chatId, `❌ ${errMsg}`);
+  }
+}
+
 // ── Update dispatcher ─────────────────────────────────────────────────────────
 
 type TelegramUpdate = {
@@ -412,6 +489,7 @@ export async function handleUpdate(update: TelegramUpdate) {
     case "/scan":    return cmdScan(chatId, arg);
     case "/summary": return cmdSummary(chatId, arg);
     case "/report":  return cmdReport(chatId, arg);
+    case "/luca":    return cmdLuca(chatId, arg);
     default:
       break;
   }
