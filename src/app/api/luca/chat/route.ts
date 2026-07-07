@@ -233,6 +233,7 @@ export async function POST(req: NextRequest) {
             const toolResults: OpenAI.Chat.ChatCompletionToolMessageParam[] = [];
 
             for (const tc of msg.tool_calls) {
+              if (tc.type !== "function") continue;
               let parsed: Record<string, unknown> = {};
               try { parsed = JSON.parse(tc.function.arguments) as Record<string, unknown>; } catch { /* ignore */ }
 
