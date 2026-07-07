@@ -267,6 +267,16 @@ export async function POST(req: NextRequest) {
         }
 
         sendDone();
+
+        logInferenceEvent({
+          agentId:     agentSlug ?? "luca",
+          provider:    "bankr",
+          model:       modelConfig.model,
+          requestType: "chat_completion",
+          costUsd:     null,
+          latencyMs:   Date.now() - t0,
+          status:      "success",
+        }).catch(() => {});
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "Analysis failed";
         send(`Unable to complete analysis: ${errMsg}`);
