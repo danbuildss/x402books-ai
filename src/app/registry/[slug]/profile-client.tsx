@@ -1015,6 +1015,9 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const [mfState, setMfState]         = useState<ClaimState>("idle");
   const [mfMsg, setMfMsg]             = useState("");
 
+  // Luca report — fetched after successful claim
+  const [lucaSummary, setLucaSummary] = useState<string | null>(null);
+
   // Privy hooks for wallet signing
   const { login, authenticated, ready } = usePrivy();
   const { wallets } = useWallets();
@@ -1067,6 +1070,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
         setWalletMatched(d.matched ?? false);
         setSigVerified(d.signature_verified ?? false);
         setWalletMsg(d.message ?? "Claim submitted.");
+        fetchLucaSummary();
       } else {
         setWalletState("error");
         setWalletMsg(d.error ?? "Something went wrong.");
@@ -1096,6 +1100,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       if (d.ok) {
         setMfState("done");
         setMfMsg(d.message ?? "Manifest submitted for verification.");
+        fetchLucaSummary();
       } else {
         setMfState("error");
         setMfMsg(d.error ?? "Something went wrong.");
@@ -1103,6 +1108,21 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
     } catch {
       setMfState("error");
       setMfMsg("Network error. Please try again.");
+    }
+  }
+
+  async function fetchLucaSummary() {
+    try {
+      const res = await fetch(`/api/luca/skills/luca-report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, period: "30d" }),
+      });
+      if (!res.ok) return;
+      const d = await res.json() as { summary?: string | null };
+      if (d.summary) setLucaSummary(d.summary);
+    } catch {
+      // best-effort — silent failure
     }
   }
 
@@ -1133,11 +1153,22 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       <div style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 18, color, marginTop: 1, flexShrink: 0 }}>{icon}</span>
-          <div>
+          <div style={{ flex: 1 }}>
             <p style={{ fontSize: "0.84rem", fontWeight: 700, color, marginBottom: 3 }}>{title}</p>
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{doneMsg}</p>
             {nextStep && (
               <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 6, lineHeight: 1.5 }}>{nextStep}</p>
+            )}
+            {lucaSummary && (
+              <div style={{
+                marginTop: 12, paddingTop: 12,
+                borderTop: "1px solid var(--line)",
+              }}>
+                <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
+                  Luca financial report
+                </p>
+                <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>{lucaSummary}</p>
+              </div>
             )}
           </div>
         </div>
