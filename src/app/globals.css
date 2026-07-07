@@ -12113,7 +12113,10 @@ html, body {
 .op-content {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .op-page {
@@ -12435,8 +12438,8 @@ html, body {
 .op-chat-root {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 0px);
-  max-height: calc(100vh);
+  height: 100%;
+  min-height: 0;
 }
 
 .op-chat-topbar {

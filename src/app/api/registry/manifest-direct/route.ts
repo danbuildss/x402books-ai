@@ -7,9 +7,12 @@ import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admi
 
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+
+// In-memory map is a best-effort guard within a single serverless instance.
+// For cross-instance enforcement the Supabase count check below is the real gate.
 const ipMap = new Map<string, { count: number; resetAt: number }>();
 
-function isRateLimited(ip: string): boolean {
+function isLocalRateLimited(ip: string): boolean {
   const now = Date.now();
   const entry = ipMap.get(ip);
   if (!entry || now > entry.resetAt) {
@@ -21,13 +24,27 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
+async function isDbRateLimited(ip: string, supabase: ReturnType<typeof import("@/lib/supabase-admin").getSupabaseAdminClient>): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - RATE_LIMIT_WINDOW_MS).toISOString();
+    const { count } = await supabase
+      .from("registry_submissions")
+      .select("id", { count: "exact", head: true })
+      .eq("submitter_ip", ip)
+      .gte("created_at", since);
+    return (count ?? 0) >= RATE_LIMIT_MAX;
+  } catch {
+    return false; // fail open — don't block on DB errors
+  }
+}
+
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (isRateLimited(ip)) {
+  if (isLocalRateLimited(ip)) {
     return NextResponse.json({ ok: false, error: "Too many requests. Try again later." }, { status: 429 });
   }
 
@@ -63,6 +80,12 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = getSupabaseAdminClient();
+
+  // Cross-instance rate limit check via DB (catches what in-memory misses on serverless)
+  if (await isDbRateLimited(ip, supabase)) {
+    return NextResponse.json({ ok: false, error: "Too many requests. Try again later." }, { status: 429 });
+  }
+
   const { error } = await supabase.from("registry_submissions").insert({
     agent_name:       name,
     agent_slug:       slug,
@@ -71,6 +94,7 @@ export async function POST(req: NextRequest) {
     x_handle:         body.x_handle ? String(body.x_handle).trim().replace(/^@/, "") : null,
     manifest_json:    manifestJson,
     submission_type:  "manifest_direct",
+    submitter_ip:     ip,
     status:           "pending",
   });
 

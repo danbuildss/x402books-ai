@@ -112,8 +112,14 @@ function LucaChat() {
           const payload = line.slice(6).trim();
           if (payload === "[DONE]") break;
           try {
-            const parsed = JSON.parse(payload) as { text?: string };
-            if (parsed.text) {
+            const parsed = JSON.parse(payload) as { text?: string; error?: string };
+            if (parsed.error) {
+              accumulated = `Unable to complete analysis: ${parsed.error}`;
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { role: "luca", content: accumulated },
+              ]);
+            } else if (parsed.text) {
               accumulated += parsed.text;
               setMessages((prev) => [
                 ...prev.slice(0, -1),
@@ -245,7 +251,7 @@ function LucaChat() {
 
 export default function LucaPage() {
   return (
-    <Suspense fallback={<div className="op-page" style={{ color: "var(--muted)" }}>Loading…</div>}>
+    <Suspense fallback={<div style={{ padding: 40, color: "var(--muted)", fontSize: "0.82rem" }}>Loading…</div>}>
       <LucaChat />
     </Suspense>
   );
