@@ -3,6 +3,9 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
+import { getRegistryAgents } from "@/lib/registry-db";
+import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
+import { AGENTS } from "@/app/registry/data";
 import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
 
@@ -172,14 +175,27 @@ function RankMedal({ rank }: { rank: number }) {
   );
 }
 
-function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number }) {
+function HealthBadge({ grade, score }: { grade: string; score: number }) {
+  const color = gradeColor(grade);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+      <span style={{ fontSize: "0.82rem", fontWeight: 800, color, fontFamily: "monospace" }}>{grade}</span>
+      <div style={{ width: 48, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${score}%`, background: color, borderRadius: 2 }} />
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank: number; healthMap: Map<string, { grade: string; total: number }> }) {
   const net = agent.net_income_usd;
+  const health = healthMap.get(agent.slug);
   return (
     <Link
       href={`/registry/${agent.slug}`}
       style={{
         display: "grid",
-        gridTemplateColumns: "40px 1fr 100px 110px 110px 100px 70px",
+        gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
         alignItems: "center",
         gap: 12,
         padding: "14px 16px",
@@ -201,6 +217,13 @@ function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number })
         <div style={{ marginTop: 2 }}>
           <EcoBadge eco={agent.ecosystem} />
         </div>
+      </div>
+
+      {/* Health */}
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        {health
+          ? <HealthBadge grade={health.grade} score={health.total} />
+          : <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>}
       </div>
 
       {/* Revenue */}
@@ -229,6 +252,10 @@ function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number })
   );
 }
 
+function toSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default async function LeaderboardPage() {
   let gdp = null;
   let gdpFailed = false;
@@ -239,12 +266,26 @@ export default async function LeaderboardPage() {
     // renders empty state
   }
 
-  const historyPromise = getGDPHistory(90);
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("timeout")), 5000)
-  );
-  const history = await Promise.race([historyPromise, timeoutPromise])
-    .catch(() => [] as GDPSnapshot[]);
+  const [historyResult, registryResult] = await Promise.allSettled([
+    Promise.race([
+      getGDPHistory(90),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+    ]),
+    getRegistryAgents().catch(() => ({ agents: AGENTS })),
+  ]);
+
+  const history = historyResult.status === "fulfilled" ? historyResult.value as GDPSnapshot[] : [];
+  const registryAgents = registryResult.status === "fulfilled"
+    ? (registryResult.value as { agents: typeof AGENTS }).agents
+    : AGENTS;
+
+  // Build slug → health score map
+  const healthMap = new Map<string, { grade: string; total: number }>();
+  for (const a of registryAgents) {
+    const slug = toSlug(a.name);
+    const s = agentHealthScore(a);
+    healthMap.set(slug, { grade: s.grade, total: s.total });
+  }
 
   const agents = gdp?.all_attributed ?? [];
   const hasData = agents.length > 0;
@@ -351,7 +392,7 @@ export default async function LeaderboardPage() {
             {/* Table header */}
             <div className="ldb-header" style={{
               display: "grid",
-              gridTemplateColumns: "40px 1fr 100px 110px 110px 100px 70px",
+              gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
               gap: 12,
               padding: "10px 16px",
               background: "var(--surface-soft)",
@@ -360,6 +401,7 @@ export default async function LeaderboardPage() {
               {[
                 { label: "#",          align: "center" },
                 { label: "Agent",      align: "left"   },
+                { label: "Health",     align: "right"  },
                 { label: "Revenue",    align: "right"  },
                 { label: "Expenses",   align: "right"  },
                 { label: "Net Income", align: "right"  },
@@ -381,7 +423,7 @@ export default async function LeaderboardPage() {
 
             {/* Rows */}
             {agents.map((agent, i) => (
-              <LeaderboardRow key={agent.slug} agent={agent} rank={i + 1} />
+              <LeaderboardRow key={agent.slug} agent={agent} rank={i + 1} healthMap={healthMap} />
             ))}
           </div>
         ) : (
