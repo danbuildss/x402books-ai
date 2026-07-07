@@ -67,22 +67,46 @@ export default function LucaPage() {
       <HomeHeader />
 
       {/* ── Hero ── */}
-      <section className="lp-hero" style={{ minHeight: "auto", paddingBottom: "3rem" }}>
-        <div className="lp-hero-copy" style={{ maxWidth: 660 }}>
-          <p className="lp-eyebrow">Financial Analyst · Zetta</p>
-          <h1 className="lp-h1">
-            Luca reads<br />
-            <em>the books.</em>
-          </h1>
-          <p className="lp-hero-sub">
-            Luca is Zetta&rsquo;s financial analyst. Revenue, expenses, treasury activity, attribution gaps —
-            interpreted from on-chain data, written in plain language. Bloomberg Intelligence for the agent economy.
-          </p>
-          <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap", marginTop: "1.5rem" }}>
-            <Link href="/research" className="lp-btn-primary lp-btn-lg">Read the Reports →</Link>
-            <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost lp-btn-lg">
-              @AskLucaBot
-            </a>
+      <section style={{ padding: "3rem 24px 2rem", maxWidth: 860, margin: "0 auto", width: "100%" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "end", flexWrap: "wrap" }}>
+          <div>
+            <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--accent)", margin: "0 0 12px" }}>
+              Financial Analyst · Zetta Intelligence
+            </p>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
+              Luca reads<br /><em>the books.</em>
+            </h1>
+            <p style={{ fontSize: "0.95rem", color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px", maxWidth: 520 }}>
+              Revenue, expenses, treasury activity, attribution gaps — interpreted from on-chain data, written in plain language.
+              Cold. Precise. Factual.
+            </p>
+            <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap" }}>
+              <Link href="/research" className="lp-btn-primary lp-btn-lg">Read the Reports →</Link>
+              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost lp-btn-lg">
+                @AskLucaBot
+              </a>
+            </div>
+          </div>
+          {/* Terminal identity card */}
+          <div style={{
+            background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
+            padding: "16px 18px", minWidth: 220, maxWidth: 260, fontFamily: "var(--font-mono)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6DB874", display: "inline-block" }} />
+              <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>LUCA · ACTIVE</span>
+            </div>
+            {[
+              { k: "ROLE", v: "Financial Analyst" },
+              { k: "LAYER", v: "Zetta Intelligence" },
+              { k: "DATA", v: "On-chain only" },
+              { k: "STYLE", v: "Bloomberg · no hype" },
+            ].map(({ k, v }) => (
+              <div key={k} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.3)", width: 50, flexShrink: 0 }}>{k}</span>
+                <span style={{ fontSize: "0.62rem", color: "rgba(109,184,116,0.9)" }}>{v}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>

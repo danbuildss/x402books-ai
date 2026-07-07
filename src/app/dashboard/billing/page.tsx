@@ -53,9 +53,9 @@ export default function BillingPage() {
             <p className="op-stat-sub">requests / day</p>
           </div>
           <div className="op-stat">
-            <p className="op-stat-label">Pricing Model</p>
-            <p className="op-stat-value" style={{ fontSize: "0.9rem" }}>$LUCA</p>
-            <p className="op-stat-sub">token-gated tiers</p>
+            <p className="op-stat-label">Access Model</p>
+            <p className="op-stat-value" style={{ fontSize: "0.9rem" }}>Token-gated</p>
+            <p className="op-stat-sub">hold $LUCA to unlock</p>
           </div>
           <div className="op-stat">
             <p className="op-stat-label">Linked Wallet</p>

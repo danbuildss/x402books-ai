@@ -30,20 +30,32 @@ export default async function ResearchPage() {
     <div className="lp-root">
       <HomeHeader />
 
-      {/* ── Hero ── */}
-      <section className="lp-hero" style={{ minHeight: "auto", paddingBottom: "3rem" }}>
-        <div className="lp-hero-copy" style={{ maxWidth: 640 }}>
-          <FadeContent>
-            <p className="lp-eyebrow">State of the Agent Economy · by Luca</p>
-            <h1 className="lp-h1">
-              The financial publication<br />
-              <em>of the agent economy.</em>
-            </h1>
-            <p className="lp-hero-sub">
-              Luca tracks revenue, expenses, treasury activity, and economic trends across autonomous agents. Weekly reports. Monthly summaries. Quarterly analysis. Grounded in on-chain data.
+      {/* ── Masthead ── */}
+      <section style={{ borderBottom: "2px solid var(--ink)", padding: "2.5rem 24px 2rem", maxWidth: 860, margin: "0 auto", width: "100%" }}>
+        <FadeContent>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+            <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--muted)", margin: 0 }}>
+              State of the Agent Economy
             </p>
-          </FadeContent>
-        </div>
+            <p style={{ fontSize: "0.68rem", color: "var(--muted)", margin: 0, letterSpacing: "0.04em" }}>
+              Vol. I · Published by Luca · {new Date().getFullYear()}
+            </p>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", padding: "14px 0" }}>
+            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.8rem, 5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, margin: 0, letterSpacing: "-0.02em" }}>
+              The Financial Record<br />of the Agent Economy.
+            </h1>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginTop: 14 }}>
+            <p style={{ fontSize: "0.82rem", color: "var(--muted)", margin: 0, maxWidth: 520, lineHeight: 1.6 }}>
+              Revenue, expenses, treasury activity, and economic trends across autonomous agents — grounded entirely in on-chain data.
+            </p>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/registry#verify" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>Submit Manifest →</Link>
+              <Link href="/luca" className="lp-btn-ghost" style={{ fontSize: "0.8rem" }}>About Luca</Link>
+            </div>
+          </div>
+        </FadeContent>
       </section>
 
       {/* ── Live GDP ── */}
