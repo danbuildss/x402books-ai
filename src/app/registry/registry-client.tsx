@@ -12,6 +12,7 @@ import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import { scoreAgent } from "@/lib/verification-scorer";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
 
@@ -148,6 +149,18 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
       <div className="reg-row-badges">
         <EcoBadge eco={agent.ecosystem} />
         <StatusBadge status={agent.verificationStatus} />
+        {(() => {
+          const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
+          const color = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+          return (
+            <span style={{
+              fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+              background: `color-mix(in srgb, ${color} 10%, transparent)`,
+              border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+              color, fontFamily: "monospace",
+            }}>{vs.total}</span>
+          );
+        })()}
         {economics && (
           <span style={{
             fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",

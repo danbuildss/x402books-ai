@@ -1661,6 +1661,25 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
               <StatusBadge status={agent.verificationStatus} />
               <HealthBadge h={agent.treasuryHealth} />
+              {(() => {
+                if (!booksHistory || booksHistory.length < 2) return null;
+                const m = computeMomentum(booksHistory, 7);
+                if (!m) return null;
+                const dir = m.revenue.direction;
+                const icon  = dir === "growing" ? "↑" : dir === "declining" ? "↓" : "→";
+                const color = dir === "growing" ? "#6DB874" : dir === "declining" ? "#ef4444" : "var(--muted)";
+                const pct   = m.revenue.pct;
+                return (
+                  <span style={{
+                    fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 99,
+                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                    border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+                    color, fontFamily: "monospace",
+                  }}>
+                    {icon} Rev {dir === "stable" ? "stable" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`} 7d
+                  </span>
+                );
+              })()}
             </div>
             <div className="prof-links">
               {agent.xHandle && (

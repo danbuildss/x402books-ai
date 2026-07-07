@@ -5,6 +5,8 @@ import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
+import { scoreAgent } from "@/lib/verification-scorer";
+import { TIER_LABELS } from "@/lib/verification-scorer";
 import { AGENTS } from "@/app/registry/data";
 import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
@@ -281,10 +283,13 @@ export default async function LeaderboardPage() {
 
   // Build slug → health score map
   const healthMap = new Map<string, { grade: string; total: number }>();
+  const vscoreMap = new Map<string, { total: number; tier: string }>();
   for (const a of registryAgents) {
     const slug = toSlug(a.name);
-    const s = agentHealthScore(a);
+    const s  = agentHealthScore(a);
+    const vs = scoreAgent(a, false);
     healthMap.set(slug, { grade: s.grade, total: s.total });
+    vscoreMap.set(slug, { total: vs.total, tier: TIER_LABELS[vs.tier] });
   }
 
   const agents = gdp?.all_attributed ?? [];
@@ -503,13 +508,22 @@ export default async function LeaderboardPage() {
                   <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.ecosystem}</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>
-                    <span style={{
-                      fontSize: "0.62rem", fontWeight: 600, padding: "1px 6px", borderRadius: 99,
-                      background: "color-mix(in srgb, #f59e0b 10%, transparent)",
-                      border: "1px solid color-mix(in srgb, #f59e0b 25%, transparent)",
-                      color: "#d97706",
-                    }}>unverified</span>
+                    {(() => {
+                      const vs = vscoreMap.get(a.slug);
+                      if (!vs) return <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>;
+                      const scoreColor = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+                      return (
+                        <>
+                          <span style={{
+                            fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                            background: `color-mix(in srgb, ${scoreColor} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${scoreColor} 28%, transparent)`,
+                            color: scoreColor, fontFamily: "monospace",
+                          }}>{vs.total}</span>
+                          <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{vs.tier}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <Link href={`/registry/${a.slug}#claim`} style={{
