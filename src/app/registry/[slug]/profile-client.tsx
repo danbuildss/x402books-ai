@@ -14,6 +14,9 @@ import type { SettlementClassification, SettlementPattern } from "@/lib/luca-cla
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
+import type { Anomaly } from "@/lib/anomaly-detector";
+import type { VerificationScore } from "@/lib/verification-scorer";
+import { TIER_LABELS, TIER_BADGE_CLASS } from "@/lib/verification-scorer";
 import { computeMomentum } from "@/lib/agent-momentum";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
@@ -1590,7 +1593,7 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
   );
 }
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory, anomalies = [], verificationScore }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[]; anomalies?: Anomaly[]; verificationScore?: VerificationScore }) {
   const router = useRouter();
   const [showShare, setShowShare] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
@@ -1692,6 +1695,85 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </button>
           </div>
         </div>
+
+        {/* Anomaly alerts */}
+        {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length > 0 && (
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 6,
+            padding: "10px 14px",
+            background: "color-mix(in srgb, #f59e0b 8%, var(--surface))",
+            border: "1px solid color-mix(in srgb, #f59e0b 30%, transparent)",
+            borderLeft: "3px solid #f59e0b",
+            borderRadius: 8,
+            marginBottom: 6,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#f59e0b" }}>
+                {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length} Active Signal{anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length > 1 ? "s" : ""}
+              </span>
+            </div>
+            {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").map((a, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{
+                  fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                  padding: "2px 5px", borderRadius: 3,
+                  background: a.severity === "high" ? "color-mix(in srgb, #ef4444 15%, transparent)" : "color-mix(in srgb, #f59e0b 15%, transparent)",
+                  color: a.severity === "high" ? "#ef4444" : "#f59e0b",
+                  flexShrink: 0, marginTop: 1,
+                }}>
+                  {a.severity}
+                </span>
+                <span style={{ fontSize: "0.78rem", color: "var(--ink)", lineHeight: 1.4 }}>{a.description}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Verification score */}
+        {verificationScore && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "8px 14px",
+            background: "var(--surface-soft)",
+            border: "1px solid var(--line)",
+            borderRadius: 8,
+            marginBottom: 6,
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 36 }}>
+              <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)", lineHeight: 1, fontFamily: "monospace" }}>
+                {verificationScore.total}
+              </span>
+              <span style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>/ 100</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)" }}>Verification Score</span>
+                <span className={`reg-badge ${TIER_BADGE_CLASS[verificationScore.tier]}`} style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                  {TIER_LABELS[verificationScore.tier]}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[
+                  { label: "Manifest",   val: verificationScore.breakdown.manifest,   max: 30 },
+                  { label: "Wallets",    val: verificationScore.breakdown.wallets,     max: 25 },
+                  { label: "Activity",   val: verificationScore.breakdown.activity,    max: 20 },
+                  { label: "Metadata",   val: verificationScore.breakdown.metadata,    max: 15 },
+                  { label: "Ecosystem",  val: verificationScore.breakdown.ecosystem,   max: 10 },
+                ].map((d) => (
+                  <div key={d.label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 52 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{d.label}</span>
+                      <span style={{ fontSize: "0.6rem", color: "var(--muted)", fontFamily: "monospace" }}>{d.val}/{d.max}</span>
+                    </div>
+                    <div style={{ height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${(d.val / d.max) * 100}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.3s ease" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Health score strip */}
         {(() => {
