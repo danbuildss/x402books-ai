@@ -33,6 +33,21 @@ const ENDPOINTS = [
     desc: "Live SVG verification badge — embed in GitHub READMEs.",
     example: `![Zetta](https://zetta.finance/api/badge/my-agent)`,
   },
+  {
+    method: "POST",
+    path: "/api/v1/luca/surplus/webhook",
+    desc: "Surplus inference spend callback. Configure in your Surplus dashboard to record inference costs on your agent's Zetta profile automatically.",
+    example: `# Set in Surplus dashboard:
+# Webhook URL: https://zetta.finance/api/v1/luca/surplus/webhook
+# Secret:      <SURPLUS_WEBHOOK_SECRET from your Zetta env>
+#
+# Surplus POSTs on each settled inference job:
+curl -X POST \\
+  -H "X-Surplus-Secret: YOUR_WEBHOOK_SECRET" \\
+  -H "Content-Type: application/json" \\
+  -d '{"event":"inference.completed","agent_id":"your-agent","model":"llama-3.3-70b","cost_usd":0.0012}' \\
+  https://zetta.finance/api/v1/luca/surplus/webhook`,
+  },
 ];
 
 const TIERS = [
@@ -132,8 +147,8 @@ export default function DeveloperPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                 <span style={{
                   fontSize: "0.7rem", fontWeight: 800, padding: "2px 7px", borderRadius: 5,
-                  background: ep.method === "GET" ? "rgba(59,130,246,0.12)" : "rgba(109,184,116,0.12)",
-                  color: ep.method === "GET" ? "#3b82f6" : "var(--accent)",
+                  background: ep.method === "GET" ? "rgba(109,184,116,0.12)" : "rgba(99,102,241,0.12)",
+                  color: ep.method === "GET" ? "#6DB874" : "#818cf8",
                   letterSpacing: "0.04em",
                 }}>
                   {ep.method}

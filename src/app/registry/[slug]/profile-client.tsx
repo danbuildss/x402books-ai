@@ -17,6 +17,7 @@ import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { computeMomentum } from "@/lib/agent-momentum";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
 import { CONFIDENCE_META } from "@/lib/revenue-confidence";
@@ -1691,6 +1692,48 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </button>
           </div>
         </div>
+
+        {/* Health score strip */}
+        {(() => {
+          const hs = agentHealthScore(agent);
+          const gc = gradeColor(hs.grade);
+          return (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              padding: "10px 16px",
+              background: `color-mix(in srgb, ${gc} 6%, var(--surface-soft))`,
+              border: "1px solid var(--line)",
+              borderLeft: `3px solid ${gc}`,
+              borderRadius: 8,
+              marginBottom: 6,
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                <span style={{ fontSize: "1.4rem", fontWeight: 800, color: gc, lineHeight: 1, fontFamily: "monospace" }}>{hs.grade}</span>
+                <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{hs.total}/100</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+                  {[
+                    { label: "Wallets",      val: hs.wallet_coverage,  max: 30 },
+                    { label: "Verification", val: hs.verification,     max: 35 },
+                    { label: "Evidence",     val: hs.evidence,         max: 20 },
+                    { label: "Activity",     val: hs.activity,         max: 15 },
+                  ].map(({ label, val, max }) => (
+                    <div key={label} style={{ minWidth: 70 }}>
+                      <div style={{ fontSize: "0.6rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+                      <div style={{ height: 3, width: 70, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: gc, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ margin: 0, fontSize: "0.67rem", color: "var(--muted)" }}>
+                  Financial health score — transparency and identity signal, not revenue.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tab navigation */}
         <div className="prof-tabs">

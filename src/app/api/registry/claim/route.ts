@@ -91,13 +91,54 @@ export async function POST(req: NextRequest) {
 
   const sb = getSupabaseAdminClient();
 
+  // Auto-approve signed + matched claims immediately
+  const autoApprove = signatureVerified && walletMatched;
+
+  if (autoApprove) {
+    // Upsert claim as approved
+    const { error: claimErr } = await sb.from("registry_claims").upsert({
+      agent_name:         agentName,
+      wallet_address:     addr,
+      wallet_matched:     true,
+      signature_verified: true,
+      status:             "approved",
+    }, { onConflict: "agent_name,wallet_address" });
+
+    if (claimErr) {
+      return NextResponse.json({ ok: false, error: claimErr.message }, { status: 500 });
+    }
+
+    // Promote agent verification status to "Claimed" if currently below that tier
+    const promotable = ["Candidate", "Needs Verification", "Wallets Declared"];
+    const { data: currentAgent } = await sb
+      .from("registry_agents")
+      .select("verification_status")
+      .eq("name", agentName)
+      .maybeSingle();
+
+    if (currentAgent && promotable.includes(currentAgent.verification_status)) {
+      await sb
+        .from("registry_agents")
+        .update({ verification_status: "Claimed" })
+        .eq("name", agentName);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      matched: true,
+      signature_verified: true,
+      approved: true,
+      message: "Wallet ownership verified — your profile has been claimed.",
+    });
+  }
+
   // Prevent duplicate pending claims for the same agent + wallet
   const { data: existing } = await sb
     .from("registry_claims")
     .select("id, status")
     .eq("agent_name", agentName)
     .eq("wallet_address", addr)
-    .eq("status", "pending")
+    .in("status", ["pending", "pending_signed", "approved"])
     .maybeSingle();
 
   if (existing) {
@@ -105,34 +146,30 @@ export async function POST(req: NextRequest) {
       ok: true,
       matched: walletMatched,
       signature_verified: signatureVerified,
-      message: "Claim already submitted — pending admin review.",
+      message: existing.status === "approved"
+        ? "This wallet is already approved for this agent."
+        : "Claim already submitted — pending admin review.",
     });
   }
-
-  // Signed + matched claims: insert with higher trust level for faster admin approval
-  const claimStatus = (signatureVerified && walletMatched) ? "pending_signed" : "pending";
 
   const { error } = await sb.from("registry_claims").insert({
     agent_name:          agentName,
     wallet_address:      addr,
     wallet_matched:      walletMatched,
     signature_verified:  signatureVerified,
-    status:              claimStatus,
+    status:              "pending",
   });
 
   if (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 
-  const isSigned = signatureVerified && walletMatched;
   return NextResponse.json({
     ok: true,
     matched: walletMatched,
     signature_verified: signatureVerified,
-    message: isSigned
-      ? "Wallet ownership verified — claim submitted for final review."
-      : walletMatched
-        ? "Wallet matched — claim submitted for admin review. You'll be notified when approved."
-        : "Claim submitted. Wallet not found in current manifest — add it to your .agent/wallets.json to strengthen your claim.",
+    message: walletMatched
+      ? "Wallet matched — claim submitted for admin review. You'll be notified when approved."
+      : "Claim submitted. Wallet not found in current manifest — add it to your .agent/wallets.json to strengthen your claim.",
   });
 }
