@@ -12,11 +12,11 @@ function toSlug(name: string) {
 }
 
 const PROMPTS = [
-  "What is my agent's revenue this month?",
+  "What is my agent's revenue this week?",
   "Is my agent profitable?",
-  "What does Luca say about my treasury health?",
-  "Summarise my agent's financial activity.",
-  "What patterns does Luca detect in my books?",
+  "What's my treasury health?",
+  "Are there any anomalies in my books?",
+  "Summarise my financial activity.",
 ];
 
 function LucaChat() {
@@ -30,6 +30,7 @@ function LucaChat() {
   const [selectedSlug, setSelectedSlug] = useState<string>(agentParam ?? "");
   const [wallet, setWallet] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     async function load() {
@@ -65,84 +66,100 @@ function LucaChat() {
     const msg = (text ?? input).trim();
     if (!msg || sending) return;
     setInput("");
+    if (textareaRef.current) textareaRef.current.style.height = "40px";
+
     const userMsg: Message = { role: "user", content: msg };
-    const loadingMsg: Message = { role: "luca", content: "", loading: true };
-    setMessages((prev) => [...prev, userMsg, loadingMsg]);
+    const lucaPlaceholder: Message = { role: "luca", content: "", loading: true };
+    setMessages((prev) => [...prev, userMsg, lucaPlaceholder]);
     setSending(true);
 
     try {
-      const body: Record<string, string> = {};
+      const body: Record<string, string> = { query: msg };
       if (selectedSlug) body.agent_id = selectedSlug;
       else if (wallet) body.wallet = wallet;
-      else { throw new Error("No agent or wallet to analyze."); }
 
-      const res = await fetch("/api/v1/luca/analyze", {
+      const res = await fetch("/api/luca/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
         const errData = await res.json() as { error?: string };
-        throw new Error(errData.error ?? "Luca analysis failed.");
+        throw new Error(errData.error ?? "Luca is unavailable.");
       }
 
-      const data = await res.json() as {
-        verdict?: string;
-        treasury?: { health: string; inflow: number | null; outflow: number | null; net: number | null };
-        activity?: { pattern: string | null; signals: string[] };
-        scores?: { attribution_confidence: number };
-        data_quality?: { note: string };
-      };
+      // Stream SSE chunks
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulated = "";
 
-      const parts: string[] = [];
-      if (data.verdict) parts.push(data.verdict);
-      if (data.treasury?.inflow !== null && data.treasury?.inflow !== undefined) {
-        parts.push(`Treasury — inflow: $${data.treasury.inflow.toFixed(2)}, outflow: $${data.treasury.outflow?.toFixed(2) ?? "—"}, net: ${(data.treasury.net ?? 0) >= 0 ? "+" : ""}$${data.treasury.net?.toFixed(2) ?? "—"}.`);
-      }
-      if (data.activity?.signals && data.activity.signals.length > 0) {
-        parts.push(data.activity.signals.join(" "));
-      }
-      if (data.data_quality?.note) {
-        parts.push(`\n_Data note: ${data.data_quality.note}_`);
-      }
-
-      const response = parts.join("\n\n") || "No financial data available for this agent yet.";
-
+      // Replace loading placeholder with streaming content
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "luca", content: response },
+        { role: "luca", content: "" },
       ]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const payload = line.slice(6).trim();
+          if (payload === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(payload) as { text?: string };
+            if (parsed.text) {
+              accumulated += parsed.text;
+              setMessages((prev) => [
+                ...prev.slice(0, -1),
+                { role: "luca", content: accumulated },
+              ]);
+            }
+          } catch { /* malformed chunk — skip */ }
+        }
+      }
+
+      if (!accumulated) {
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: "luca", content: "No financial data available for this agent yet." },
+        ]);
+      }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Luca is unavailable right now.";
+      const errMsg = e instanceof Error ? e.message : "Luca is unavailable right now.";
       setMessages((prev) => [
         ...prev.slice(0, -1),
-        { role: "luca", content: `Unable to complete analysis: ${msg}` },
+        { role: "luca", content: `Unable to complete analysis: ${errMsg}` },
       ]);
-    } finally { setSending(false); }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
+  function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setInput(e.target.value);
+    // Auto-resize
+    e.target.style.height = "40px";
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   }
 
   const showPrompts = messages.length === 0;
+  const isReady = Boolean(selectedSlug || wallet);
 
   return (
     <div className="op-chat-root">
-      {/* Coming soon banner */}
-      <div style={{
-        background: "var(--surface)", borderBottom: "1px solid var(--line)",
-        padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
-      }}>
-        <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#f59e0b", background: "#f59e0b18", padding: "2px 7px", borderRadius: 4 }}>
-          Coming Soon
-        </span>
-        <span style={{ fontSize: 12, color: "var(--muted)" }}>
-          Luca chat is in development. Use{" "}
-          <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
-            @AskLucaBot on Telegram
-          </a>{" "}
-          for live analysis.
-        </span>
-      </div>
-
       {/* Top bar */}
       <div className="op-chat-topbar">
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -172,7 +189,8 @@ function LucaChat() {
             <div style={{ fontSize: "2rem", marginBottom: 12 }}>◎</div>
             <p style={{ fontWeight: 700, color: "var(--ink)", fontSize: "0.95rem", margin: "0 0 6px" }}>Ask Luca about your agent</p>
             <p style={{ fontSize: "0.8rem", maxWidth: 380, margin: "0 auto", lineHeight: 1.55 }}>
-              Luca reads your agent&apos;s attributed books and answers financial questions. {!selectedSlug && "Select an agent above or link your wallet to get started."}
+              Luca reads your agent&apos;s attributed books and answers financial questions.
+              {!isReady && " Link your wallet or select an agent to get started."}
             </p>
           </div>
         )}
@@ -192,7 +210,7 @@ function LucaChat() {
       </div>
 
       {/* Suggested prompts */}
-      {showPrompts && (
+      {showPrompts && isReady && (
         <div className="op-chat-prompts">
           {PROMPTS.map((p) => (
             <button key={p} className="op-chat-prompt-btn" onClick={() => send(p)}>{p}</button>
@@ -203,14 +221,22 @@ function LucaChat() {
       {/* Input */}
       <div className="op-chat-input-row">
         <textarea
+          ref={textareaRef}
           className="op-chat-input"
-          placeholder="Coming soon — use @AskLucaBot on Telegram for live analysis"
-          disabled
+          placeholder={isReady ? "Ask Luca about your agent's finances…" : "Link your wallet or select an agent to start"}
+          disabled={!isReady || sending}
           rows={1}
-          style={{ minHeight: 40, maxHeight: 120, resize: "none", flex: 1, padding: "9px 12px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--muted)", font: "inherit", fontSize: "0.83rem", outline: "none", cursor: "not-allowed" }}
+          value={input}
+          onChange={handleInputChange}
+          onKeyDown={handleKeyDown}
+          style={{ minHeight: 40, maxHeight: 120, resize: "none", flex: 1 }}
         />
-        <button className="op-btn op-btn-primary" disabled style={{ opacity: 0.4, cursor: "not-allowed" }}>
-          Send
+        <button
+          className="op-btn op-btn-primary"
+          disabled={!isReady || sending || !input.trim()}
+          onClick={() => send()}
+        >
+          {sending ? "…" : "Send"}
         </button>
       </div>
     </div>
