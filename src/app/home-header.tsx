@@ -32,7 +32,6 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/adopt",       label: "Adopt"       },
   { href: "/research",    label: "Research"    },
-  { href: "/api",          label: "API"         },
   { href: "/docs",        label: "Docs"        },
   { href: "/luca",        label: "Luca"        },
 ];

@@ -22,7 +22,6 @@ export function SiteFooter() {
             <Link href="/b20">B20 Intelligence</Link>
             <Link href="/adopt">Adopt</Link>
             <Link href="/research">Research</Link>
-            <Link href="/api">API</Link>
             <Link href="/luca">Luca</Link>
           </div>
           <div>
@@ -31,6 +30,7 @@ export function SiteFooter() {
             <Link href="/methodology">Methodology</Link>
             <Link href="/registry#verify">Submit Agent</Link>
             <Link href="/manifest">Manifest Guide</Link>
+            <Link href="/validate">Validate Manifest</Link>
             <Link href="/docs">Documentation</Link>
           </div>
           <div>
