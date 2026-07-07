@@ -56,6 +56,175 @@ function ConfidenceLabelBadge({ slug }: { slug: string }) {
   );
 }
 
+// ── Attribution onboarding ────────────────────────────────────────────────────
+
+function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; agentSlug: string }) {
+  const [open, setOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [walletInput, setWalletInput] = useState("");
+  const [xHandle, setXHandle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submitManifest() {
+    const wallets = walletInput
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((addr) => ({ address: addr, role: "treasury" }));
+
+    if (!wallets.length) { setError("Enter at least one wallet address."); return; }
+    const invalid = wallets.find((w) => !/^0x[0-9a-fA-F]{40}$/.test(w.address));
+    if (invalid) { setError(`Invalid address: ${invalid.address}`); return; }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/registry/manifest-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agent_name: agentName,
+          wallets,
+          x_handle: xHandle || undefined,
+          notes: `Submitted via agent profile page for ${agentSlug}`,
+        }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!data.ok) { setError(data.error ?? "Submission failed."); setSubmitting(false); return; }
+      setSubmitted(true);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const steps = [
+    {
+      n: "1",
+      title: "Declare your wallets",
+      body: "Submit a wallet manifest — the addresses your agent uses for treasury, fees, and operations.",
+      done: false,
+      active: true,
+    },
+    {
+      n: "2",
+      title: "Pending review",
+      body: "Zetta verifies wallet attribution and classifies on-chain activity. Usually within 24 hours.",
+      done: false,
+      active: false,
+    },
+    {
+      n: "3",
+      title: "Books go live",
+      body: "Revenue, expenses, net income, and treasury health appear on this profile — publicly readable.",
+      done: false,
+      active: false,
+    },
+  ];
+
+  return (
+    <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+          Not attributed
+        </span>
+      </div>
+
+      <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 16px" }}>
+        No financial books yet. Declare your agent&apos;s wallets to generate live revenue and treasury data.
+      </p>
+
+      {/* 3-step path */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {steps.map((s) => (
+          <div key={s.n} style={{
+            display: "flex", gap: 12, alignItems: "flex-start",
+            padding: "10px 12px", borderRadius: 8,
+            background: s.active ? "var(--surface-soft)" : "transparent",
+            border: `1px solid ${s.active ? "var(--accent)40" : "var(--line)"}`,
+            opacity: s.active ? 1 : 0.5,
+          }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              background: s.active ? "var(--accent)" : "var(--line)",
+              fontSize: "0.68rem", fontWeight: 700, color: s.active ? "#fff" : "var(--muted)",
+            }}>{s.n}</span>
+            <div>
+              <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 600, color: s.active ? "var(--ink)" : "var(--muted)" }}>{s.title}</p>
+              <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{s.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Submit form or success */}
+      {submitted ? (
+        <div style={{ padding: "12px 14px", borderRadius: 8, background: "var(--accent)0d", border: "1px solid var(--accent)40", fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600 }}>
+          Manifest submitted. You&apos;ll see books appear on this profile once attribution is confirmed.
+        </div>
+      ) : open ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 4 }}>
+              Wallet addresses (one per line or comma-separated)
+            </label>
+            <textarea
+              className="op-input"
+              rows={3}
+              placeholder={"0x...\n0x..."}
+              value={walletInput}
+              onChange={(e) => setWalletInput(e.target.value)}
+              style={{ width: "100%", fontFamily: "monospace", fontSize: "0.78rem", resize: "vertical" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 4 }}>
+              X handle (optional, for follow-up)
+            </label>
+            <input
+              className="op-input"
+              type="text"
+              placeholder="@yourhandle"
+              value={xHandle}
+              onChange={(e) => setXHandle(e.target.value)}
+              style={{ width: "100%", fontSize: "0.8rem" }}
+            />
+          </div>
+          {error && <p style={{ margin: 0, fontSize: "0.75rem", color: "#f87171" }}>{error}</p>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="op-btn op-btn-primary"
+              onClick={submitManifest}
+              disabled={submitting}
+              style={{ fontSize: "0.79rem" }}
+            >
+              {submitting ? "Submitting…" : "Submit manifest"}
+            </button>
+            <button
+              className="op-btn"
+              onClick={() => { setOpen(false); setError(null); }}
+              style={{ fontSize: "0.79rem" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="op-btn op-btn-primary"
+          onClick={() => setOpen(true)}
+          style={{ fontSize: "0.79rem" }}
+        >
+          Declare wallets
+        </button>
+      )}
+    </section>
+  );
+}
+
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
 function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed }) {
@@ -101,30 +270,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </section>
       );
     }
-    return (
-      <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-        </div>
-        <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
-          No books yet. This agent needs declared wallets before Zetta can generate revenue, expense, and profitability data.
-        </p>
-        <a
-          href="/api#manifest"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: "0.79rem", fontWeight: 600,
-            color: "var(--accent)", textDecoration: "none",
-          }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add_circle</span>
-          Declare wallets with{" "}
-          <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 5px", borderRadius: 3 }}>
-            .agent/wallets.json
-          </code>
-        </a>
-      </section>
-    );
+    return <AttributionOnboarding agentName={books.agent.name} agentSlug={books.agent.slug} />;
   }
 
   const f = books.financials;
