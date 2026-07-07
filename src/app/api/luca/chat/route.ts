@@ -18,7 +18,10 @@ import { routeModel } from "@/lib/model-router";
 
 export const dynamic = "force-dynamic";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const openai = new OpenAI({
+  apiKey:  process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
+  ...(process.env.LLM_BASE_URL ? { baseURL: process.env.LLM_BASE_URL } : {}),
+});
 
 // OpenAI-format tool definitions (converted from Anthropic input_schema format)
 const OPENAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
