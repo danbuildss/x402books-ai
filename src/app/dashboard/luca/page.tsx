@@ -245,7 +245,7 @@ function LucaChat() {
 
 export default function LucaPage() {
   return (
-    <Suspense fallback={<div className="op-page" style={{ color: "var(--muted)" }}>Loading…</div>}>
+    <Suspense fallback={<div style={{ padding: 40, color: "var(--muted)", fontSize: "0.82rem" }}>Loading…</div>}>
       <LucaChat />
     </Suspense>
   );
