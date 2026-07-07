@@ -1,7 +1,7 @@
 // GET /api/cron/weekly-digest
 // Monday morning cron — generates weekly financial digest for all active agents.
-// Vercel Cron schedule: "0 8 * * 1" (08:00 UTC every Monday).
-// Protected by CRON_SECRET header.
+// Called by Luca (Hermes VPS scheduler). Protected by CRON_SECRET header.
+// Suggested schedule: Mondays at 08:00 UTC.
 
 import { NextRequest, NextResponse } from "next/server";
 import { generateWeeklyDigest, formatDigestText } from "@/lib/digest-generator";

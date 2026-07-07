@@ -1,7 +1,7 @@
 // GET /api/cron/anomaly-scan
 // Daily cron — runs anomaly detection across all registry agents that have books.
-// Triggered by Vercel Cron (vercel.json schedule: "0 6 * * *").
-// Protected by CRON_SECRET header.
+// Called by Luca (Hermes VPS scheduler). Protected by CRON_SECRET header.
+// Suggested schedule: daily at 06:00 UTC.
 
 import { NextRequest, NextResponse } from "next/server";
 import { getRegistryAgents } from "@/lib/registry-db";
