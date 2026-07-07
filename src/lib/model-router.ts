@@ -1,5 +1,5 @@
-// Model routing layer — selects the right Claude model based on task complexity.
-// Fast tasks get Haiku 4.5 (low latency, cheap). Complex reasoning gets Sonnet 5.
+// Model routing layer — selects the right model based on task complexity.
+// Fast tasks get gpt-4.1-mini (low latency, cheap). Complex reasoning gets gpt-4.1.
 
 export type ModelTier = "fast" | "capable";
 
@@ -11,12 +11,12 @@ export interface ModelConfig {
 
 const MODELS: Record<ModelTier, ModelConfig> = {
   fast: {
-    model: process.env.LUCA_MODEL_FAST ?? "claude-haiku-4-5-20251001",
+    model: process.env.LUCA_MODEL_FAST ?? process.env.LLM_MODEL ?? "gpt-4.1-mini",
     max_tokens: 512,
     tier: "fast",
   },
   capable: {
-    model: process.env.LUCA_MODEL_CAPABLE ?? "claude-sonnet-5",
+    model: process.env.LUCA_MODEL_CAPABLE ?? process.env.LLM_MODEL ?? "gpt-4.1",
     max_tokens: 2048,
     tier: "capable",
   },

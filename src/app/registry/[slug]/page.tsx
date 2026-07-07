@@ -17,10 +17,14 @@ import { buildAgentBooks } from "@/lib/agent-books";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import { getAgentBooksHistory } from "@/lib/agent-books-history";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
+import { getAnomaliesForAgent } from "@/lib/anomaly-detector";
+import type { Anomaly } from "@/lib/anomaly-detector";
+import { scoreAgent } from "@/lib/verification-scorer";
+import type { VerificationScore } from "@/lib/verification-scorer";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
 
-export const revalidate = 300; // 5 minutes — books are DB-cached for 4h, no need to ISR every 30s
+export const revalidate = 300;
 
 async function getAgent(slug: string): Promise<Agent | null> {
   try {
@@ -79,7 +83,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
   const agent = await getAgent(slug);
   if (!agent) notFound();
 
-  const [economics, inferenceActivity, toolDecisions, books, booksHistory] = await Promise.all([
+  const [economics, inferenceActivity, toolDecisions, books, booksHistory, anomalies] = await Promise.all([
     slug === "luca" ? getLucaEconomics() : Promise.resolve(undefined),
     getInferenceActivity(slug),
     getToolDecisions(slug),
@@ -89,9 +93,9 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       reason: "Books temporarily unavailable.",
     })),
     getAgentBooksHistory(slug, 90).catch((): AgentBooksSnapshot[] => []),
+    getAnomaliesForAgent(slug).catch((): Anomaly[] => []),
   ]);
 
-  // Classification only derived from real on-chain data — never synthetic
   const classification = books.attributed
     ? classifySettlementPattern({
         totalInflow:         books.financials.revenue_usd,
@@ -107,6 +111,12 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       })
     : undefined;
 
+  const verificationScore: VerificationScore = scoreAgent(
+    agent,
+    books.attributed,
+    books.attributed ? books.financials.tx_count : 0,
+  );
+
   return (
     <ProfileClient
       agent={agent}
@@ -117,6 +127,8 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       toolDecisions={toolDecisions}
       books={books}
       booksHistory={booksHistory}
+      anomalies={anomalies}
+      verificationScore={verificationScore}
     />
   );
 }

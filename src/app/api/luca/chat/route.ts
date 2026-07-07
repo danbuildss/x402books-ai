@@ -10,15 +10,101 @@
 
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { ACCESS_COOKIE_NAME, verifyAccessToken } from "@/lib/access-auth";
-import { LUCA_TOOL_DEFINITIONS, executeTool, type ToolName } from "@/lib/luca-tools";
+import { executeTool, type ToolName } from "@/lib/luca-tools";
 import { readMemory, writeMemory, formatMemoryContext } from "@/lib/luca-memory";
 import { routeModel } from "@/lib/model-router";
 
 export const dynamic = "force-dynamic";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+function getOpenAI() {
+  return new OpenAI({
+    apiKey:  process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
+    ...(process.env.LLM_BASE_URL ? { baseURL: process.env.LLM_BASE_URL } : {}),
+  });
+}
+
+// OpenAI-format tool definitions (converted from Anthropic input_schema format)
+const OPENAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
+  {
+    type: "function",
+    function: {
+      name: "get_agent_books",
+      description:
+        "Fetch the attributed financial books for an agent: revenue, expenses, net income, wallet count, and confidence signals. Use this when asked about an agent's financial performance, revenue, costs, or profitability.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug:   { type: "string", description: "Agent slug, e.g. 'aeon'" },
+          period: { type: "string", enum: ["7d", "14d", "30d", "90d"], description: "Lookback window" },
+        },
+        required: ["slug"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_treasury_balance",
+      description:
+        "Fetch the current stablecoin (USDC + USDT) balance for a wallet address. Use this when asked about treasury health, runway, or current balance.",
+      parameters: {
+        type: "object",
+        properties: {
+          address: { type: "string", description: "0x wallet address" },
+        },
+        required: ["address"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_momentum",
+      description:
+        "Compute directional momentum (growing/stable/declining) for an agent's revenue, expenses, net income, and treasury over recent snapshots. Use this when asked about trends, direction, or whether an agent is improving.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug:        { type: "string", description: "Agent slug" },
+          window_days: { type: "number", description: "Lookback window in days (default 30)" },
+        },
+        required: ["slug"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_anomaly_alerts",
+      description:
+        "Fetch active anomaly alerts for an agent: unusual volume, new counterparties, timing gaps, or ratio breakdowns. Use this when asked about risks, red flags, or unusual activity.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug: { type: "string", description: "Agent slug" },
+        },
+        required: ["slug"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_agent_info",
+      description:
+        "Fetch basic registry information for an agent: name, ecosystem, verification status, wallet count. Use this when asked who or what an agent is.",
+      parameters: {
+        type: "object",
+        properties: {
+          slug: { type: "string", description: "Agent slug" },
+        },
+        required: ["slug"],
+      },
+    },
+  },
+];
 
 const SYSTEM_PROMPT = `You are Luca — Zetta's financial analyst for the autonomous agent economy.
 
@@ -62,8 +148,8 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { "Content-Type": "application/json" } });
   }
 
-  // Normalise into message array
-  let apiMessages: Anthropic.MessageParam[];
+  // Normalise into OpenAI message array
+  let apiMessages: OpenAI.Chat.ChatCompletionMessageParam[];
   if (body.messages?.length) {
     apiMessages = body.messages.map((m) => ({ role: m.role, content: m.content }));
   } else if (body.query) {
@@ -81,7 +167,7 @@ export async function POST(req: NextRequest) {
   // Memory context
   const memory    = await readMemory(userId, agentSlug ?? undefined);
   const memoryCtx = formatMemoryContext(memory);
-  const system    = memoryCtx ? `${SYSTEM_PROMPT}\n\n${memoryCtx}` : SYSTEM_PROMPT;
+  const systemMsg = memoryCtx ? `${SYSTEM_PROMPT}\n\n${memoryCtx}` : SYSTEM_PROMPT;
 
   // Route model based on complexity
   const modelConfig = routeModel({
@@ -104,61 +190,64 @@ export async function POST(req: NextRequest) {
         const MAX_ITER = 5;
         let usedToolCall = false;
 
+        // Prepend system message
+        const msgsWithSystem: OpenAI.Chat.ChatCompletionMessageParam[] = [
+          { role: "system", content: systemMsg },
+          ...apiMessages,
+        ];
+
         while (iterCount < MAX_ITER) {
           iterCount++;
 
-          // Re-route after first tool call — more context = use capable model
           const currentModel = (usedToolCall
             ? routeModel({ query: lastUserText, hasToolCalls: true, forceCapable: false })
             : modelConfig
           ).model;
 
-          const response = await anthropic.messages.create({
+          const response = await getOpenAI().chat.completions.create({
             model:      currentModel,
             max_tokens: modelConfig.max_tokens,
-            system,
-            tools:      LUCA_TOOL_DEFINITIONS as unknown as Anthropic.Tool[],
-            messages:   apiMessages,
-            stream:     false,
+            tools:      OPENAI_TOOLS,
+            messages:   msgsWithSystem,
           });
 
-          if (response.stop_reason === "end_turn") {
-            for (const block of response.content) {
-              if (block.type === "text") {
-                const words = block.text.split(" ");
-                for (let i = 0; i < words.length; i++) {
-                  send(words[i] + (i < words.length - 1 ? " " : ""));
-                  await new Promise<void>((r) => setTimeout(r, 0));
-                }
+          const choice = response.choices[0];
+          const msg    = choice.message;
 
-                if (/remember|note that|keep in mind/i.test(lastUserText)) {
-                  await writeMemory(userId, agentSlug, "user_note", lastUserText.slice(0, 200)).catch(() => {});
-                }
-              }
+          if (choice.finish_reason === "stop" || choice.finish_reason === "length") {
+            const text = msg.content ?? "";
+            const words = text.split(" ");
+            for (let i = 0; i < words.length; i++) {
+              send(words[i] + (i < words.length - 1 ? " " : ""));
+              await new Promise<void>((r) => setTimeout(r, 0));
+            }
+
+            if (/remember|note that|keep in mind/i.test(lastUserText)) {
+              await writeMemory(userId, agentSlug, "user_note", lastUserText.slice(0, 200)).catch(() => {});
             }
             break;
           }
 
-          if (response.stop_reason === "tool_use") {
+          if (choice.finish_reason === "tool_calls" && msg.tool_calls?.length) {
             usedToolCall = true;
-            const toolResults: Anthropic.ToolResultBlockParam[] = [];
+            msgsWithSystem.push(msg);
 
-            for (const block of response.content) {
-              if (block.type === "tool_use") {
-                const result = await executeTool(
-                  block.name as ToolName,
-                  block.input as Record<string, unknown>,
-                );
-                toolResults.push({
-                  type:        "tool_result",
-                  tool_use_id: block.id,
-                  content:     JSON.stringify(result),
-                });
-              }
+            const toolResults: OpenAI.Chat.ChatCompletionToolMessageParam[] = [];
+
+            for (const tc of msg.tool_calls) {
+              if (tc.type !== "function") continue;
+              let parsed: Record<string, unknown> = {};
+              try { parsed = JSON.parse(tc.function.arguments) as Record<string, unknown>; } catch { /* ignore */ }
+
+              const result = await executeTool(tc.function.name as ToolName, parsed);
+              toolResults.push({
+                role:         "tool",
+                tool_call_id: tc.id,
+                content:      JSON.stringify(result),
+              });
             }
 
-            apiMessages.push({ role: "assistant", content: response.content });
-            apiMessages.push({ role: "user",      content: toolResults });
+            for (const tr of toolResults) msgsWithSystem.push(tr);
             continue;
           }
 
@@ -168,8 +257,8 @@ export async function POST(req: NextRequest) {
 
         sendDone();
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Analysis failed";
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: msg })}\n\n`));
+        const errMsg = err instanceof Error ? err.message : "Analysis failed";
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`));
       } finally {
         controller.close();
       }
