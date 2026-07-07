@@ -12,7 +12,9 @@ export async function GET(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const period = (req.nextUrl.searchParams.get("period") ?? "30d") as TimeRange;
+  const VALID_PERIODS = new Set(["7d", "14d", "30d", "90d"]);
+  const rawPeriod = req.nextUrl.searchParams.get("period") ?? "30d";
+  const period = (VALID_PERIODS.has(rawPeriod) ? rawPeriod : "30d") as TimeRange;
 
   let agent;
   try {

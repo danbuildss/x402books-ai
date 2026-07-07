@@ -212,7 +212,11 @@ export async function POST(req: NextRequest) {
           });
 
           const choice = response.choices[0];
-          const msg    = choice.message;
+          if (!choice) {
+            send("Analysis unavailable — model returned no response. Please try again.");
+            break;
+          }
+          const msg = choice.message;
 
           if (choice.finish_reason === "stop" || choice.finish_reason === "length") {
             const text = msg.content ?? "";
@@ -258,7 +262,8 @@ export async function POST(req: NextRequest) {
         sendDone();
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "Analysis failed";
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: errMsg })}\n\n`));
+        send(`Unable to complete analysis: ${errMsg}`);
+        sendDone();
       } finally {
         controller.close();
       }
