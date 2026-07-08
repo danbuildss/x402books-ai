@@ -3,6 +3,11 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
+import { getRegistryAgents } from "@/lib/registry-db";
+import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
+import { scoreAgent } from "@/lib/verification-scorer";
+import { TIER_LABELS } from "@/lib/verification-scorer";
+import { AGENTS } from "@/app/registry/data";
 import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
 
@@ -172,14 +177,27 @@ function RankMedal({ rank }: { rank: number }) {
   );
 }
 
-function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number }) {
+function HealthBadge({ grade, score }: { grade: string; score: number }) {
+  const color = gradeColor(grade);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
+      <span style={{ fontSize: "0.82rem", fontWeight: 800, color, fontFamily: "monospace" }}>{grade}</span>
+      <div style={{ width: 48, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${score}%`, background: color, borderRadius: 2 }} />
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank: number; healthMap: Map<string, { grade: string; total: number }> }) {
   const net = agent.net_income_usd;
+  const health = healthMap.get(agent.slug);
   return (
     <Link
       href={`/registry/${agent.slug}`}
       style={{
         display: "grid",
-        gridTemplateColumns: "40px 1fr 100px 110px 110px 100px 70px",
+        gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
         alignItems: "center",
         gap: 12,
         padding: "14px 16px",
@@ -201,6 +219,13 @@ function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number })
         <div style={{ marginTop: 2 }}>
           <EcoBadge eco={agent.ecosystem} />
         </div>
+      </div>
+
+      {/* Health */}
+      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+        {health
+          ? <HealthBadge grade={health.grade} score={health.total} />
+          : <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>}
       </div>
 
       {/* Revenue */}
@@ -229,6 +254,10 @@ function LeaderboardRow({ agent, rank }: { agent: AgentGDPEntry; rank: number })
   );
 }
 
+function toSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 export default async function LeaderboardPage() {
   let gdp = null;
   let gdpFailed = false;
@@ -239,12 +268,29 @@ export default async function LeaderboardPage() {
     // renders empty state
   }
 
-  const historyPromise = getGDPHistory(90);
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("timeout")), 5000)
-  );
-  const history = await Promise.race([historyPromise, timeoutPromise])
-    .catch(() => [] as GDPSnapshot[]);
+  const [historyResult, registryResult] = await Promise.allSettled([
+    Promise.race([
+      getGDPHistory(90),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000)),
+    ]),
+    getRegistryAgents().catch(() => ({ agents: AGENTS })),
+  ]);
+
+  const history = historyResult.status === "fulfilled" ? historyResult.value as GDPSnapshot[] : [];
+  const registryAgents = registryResult.status === "fulfilled"
+    ? (registryResult.value as { agents: typeof AGENTS }).agents
+    : AGENTS;
+
+  // Build slug → health score map
+  const healthMap = new Map<string, { grade: string; total: number }>();
+  const vscoreMap = new Map<string, { total: number; tier: string }>();
+  for (const a of registryAgents) {
+    const slug = toSlug(a.name);
+    const s  = agentHealthScore(a);
+    const vs = scoreAgent(a, false);
+    healthMap.set(slug, { grade: s.grade, total: s.total });
+    vscoreMap.set(slug, { total: vs.total, tier: TIER_LABELS[vs.tier] });
+  }
 
   const agents = gdp?.all_attributed ?? [];
   const hasData = agents.length > 0;
@@ -351,7 +397,7 @@ export default async function LeaderboardPage() {
             {/* Table header */}
             <div className="ldb-header" style={{
               display: "grid",
-              gridTemplateColumns: "40px 1fr 100px 110px 110px 100px 70px",
+              gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
               gap: 12,
               padding: "10px 16px",
               background: "var(--surface-soft)",
@@ -360,6 +406,7 @@ export default async function LeaderboardPage() {
               {[
                 { label: "#",          align: "center" },
                 { label: "Agent",      align: "left"   },
+                { label: "Health",     align: "right"  },
                 { label: "Revenue",    align: "right"  },
                 { label: "Expenses",   align: "right"  },
                 { label: "Net Income", align: "right"  },
@@ -381,7 +428,7 @@ export default async function LeaderboardPage() {
 
             {/* Rows */}
             {agents.map((agent, i) => (
-              <LeaderboardRow key={agent.slug} agent={agent} rank={i + 1} />
+              <LeaderboardRow key={agent.slug} agent={agent} rank={i + 1} healthMap={healthMap} />
             ))}
           </div>
         ) : (
@@ -461,13 +508,22 @@ export default async function LeaderboardPage() {
                   <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.ecosystem}</div>
                   <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</div>
                   <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>
-                    <span style={{
-                      fontSize: "0.62rem", fontWeight: 600, padding: "1px 6px", borderRadius: 99,
-                      background: "color-mix(in srgb, #f59e0b 10%, transparent)",
-                      border: "1px solid color-mix(in srgb, #f59e0b 25%, transparent)",
-                      color: "#d97706",
-                    }}>unverified</span>
+                    {(() => {
+                      const vs = vscoreMap.get(a.slug);
+                      if (!vs) return <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>;
+                      const scoreColor = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+                      return (
+                        <>
+                          <span style={{
+                            fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                            background: `color-mix(in srgb, ${scoreColor} 12%, transparent)`,
+                            border: `1px solid color-mix(in srgb, ${scoreColor} 28%, transparent)`,
+                            color: scoreColor, fontFamily: "monospace",
+                          }}>{vs.total}</span>
+                          <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{vs.tier}</span>
+                        </>
+                      );
+                    })()}
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <Link href={`/registry/${a.slug}#claim`} style={{

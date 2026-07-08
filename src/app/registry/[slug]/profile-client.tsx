@@ -14,8 +14,12 @@ import type { SettlementClassification, SettlementPattern } from "@/lib/luca-cla
 import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
+import type { Anomaly } from "@/lib/anomaly-detector";
+import type { VerificationScore } from "@/lib/verification-scorer";
+import { TIER_LABELS, TIER_BADGE_CLASS } from "@/lib/verification-scorer";
 import { computeMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
 import { CONFIDENCE_META } from "@/lib/revenue-confidence";
@@ -48,6 +52,175 @@ function ConfidenceLabelBadge({ slug }: { slug: string }) {
         <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.55 }}>{label.public_note}</p>
       )}
     </div>
+  );
+}
+
+// ── Attribution onboarding ────────────────────────────────────────────────────
+
+function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; agentSlug: string }) {
+  const [open, setOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [walletInput, setWalletInput] = useState("");
+  const [xHandle, setXHandle] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submitManifest() {
+    const wallets = walletInput
+      .split(/[\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .map((addr) => ({ address: addr, role: "treasury" }));
+
+    if (!wallets.length) { setError("Enter at least one wallet address."); return; }
+    const invalid = wallets.find((w) => !/^0x[0-9a-fA-F]{40}$/.test(w.address));
+    if (invalid) { setError(`Invalid address: ${invalid.address}`); return; }
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/registry/manifest-direct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          agent_name: agentName,
+          wallets,
+          x_handle: xHandle || undefined,
+          notes: `Submitted via agent profile page for ${agentSlug}`,
+        }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!data.ok) { setError(data.error ?? "Submission failed."); setSubmitting(false); return; }
+      setSubmitted(true);
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const steps = [
+    {
+      n: "1",
+      title: "Declare your wallets",
+      body: "Submit a wallet manifest — the addresses your agent uses for treasury, fees, and operations.",
+      done: false,
+      active: true,
+    },
+    {
+      n: "2",
+      title: "Pending review",
+      body: "Zetta verifies wallet attribution and classifies on-chain activity. Usually within 24 hours.",
+      done: false,
+      active: false,
+    },
+    {
+      n: "3",
+      title: "Books go live",
+      body: "Revenue, expenses, net income, and treasury health appear on this profile — publicly readable.",
+      done: false,
+      active: false,
+    },
+  ];
+
+  return (
+    <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
+        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+          Not attributed
+        </span>
+      </div>
+
+      <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 16px" }}>
+        No financial books yet. Declare your agent&apos;s wallets to generate live revenue and treasury data.
+      </p>
+
+      {/* 3-step path */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {steps.map((s) => (
+          <div key={s.n} style={{
+            display: "flex", gap: 12, alignItems: "flex-start",
+            padding: "10px 12px", borderRadius: 8,
+            background: s.active ? "var(--surface-soft)" : "transparent",
+            border: `1px solid ${s.active ? "var(--accent)40" : "var(--line)"}`,
+            opacity: s.active ? 1 : 0.5,
+          }}>
+            <span style={{
+              width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              background: s.active ? "var(--accent)" : "var(--line)",
+              fontSize: "0.68rem", fontWeight: 700, color: s.active ? "#fff" : "var(--muted)",
+            }}>{s.n}</span>
+            <div>
+              <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 600, color: s.active ? "var(--ink)" : "var(--muted)" }}>{s.title}</p>
+              <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{s.body}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Submit form or success */}
+      {submitted ? (
+        <div style={{ padding: "12px 14px", borderRadius: 8, background: "var(--accent)0d", border: "1px solid var(--accent)40", fontSize: "0.8rem", color: "var(--accent)", fontWeight: 600 }}>
+          Manifest submitted. You&apos;ll see books appear on this profile once attribution is confirmed.
+        </div>
+      ) : open ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 4 }}>
+              Wallet addresses (one per line or comma-separated)
+            </label>
+            <textarea
+              className="op-input"
+              rows={3}
+              placeholder={"0x...\n0x..."}
+              value={walletInput}
+              onChange={(e) => setWalletInput(e.target.value)}
+              style={{ width: "100%", fontFamily: "monospace", fontSize: "0.78rem", resize: "vertical" }}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 4 }}>
+              X handle (optional, for follow-up)
+            </label>
+            <input
+              className="op-input"
+              type="text"
+              placeholder="@yourhandle"
+              value={xHandle}
+              onChange={(e) => setXHandle(e.target.value)}
+              style={{ width: "100%", fontSize: "0.8rem" }}
+            />
+          </div>
+          {error && <p style={{ margin: 0, fontSize: "0.75rem", color: "#f87171" }}>{error}</p>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              className="op-btn op-btn-primary"
+              onClick={submitManifest}
+              disabled={submitting}
+              style={{ fontSize: "0.79rem" }}
+            >
+              {submitting ? "Submitting…" : "Submit manifest"}
+            </button>
+            <button
+              className="op-btn"
+              onClick={() => { setOpen(false); setError(null); }}
+              style={{ fontSize: "0.79rem" }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          className="op-btn op-btn-primary"
+          onClick={() => setOpen(true)}
+          style={{ fontSize: "0.79rem" }}
+        >
+          Declare wallets
+        </button>
+      )}
+    </section>
   );
 }
 
@@ -96,30 +269,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </section>
       );
     }
-    return (
-      <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-          <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-        </div>
-        <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 14 }}>
-          No books yet. This agent needs declared wallets before Zetta can generate revenue, expense, and profitability data.
-        </p>
-        <a
-          href="/api#manifest"
-          style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            fontSize: "0.79rem", fontWeight: 600,
-            color: "var(--accent)", textDecoration: "none",
-          }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add_circle</span>
-          Declare wallets with{" "}
-          <code style={{ fontFamily: "monospace", background: "var(--line)", padding: "1px 5px", borderRadius: 3 }}>
-            .agent/wallets.json
-          </code>
-        </a>
-      </section>
-    );
+    return <AttributionOnboarding agentName={books.agent.name} agentSlug={books.agent.slug} />;
   }
 
   const f = books.financials;
@@ -961,6 +1111,9 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const [mfState, setMfState]         = useState<ClaimState>("idle");
   const [mfMsg, setMfMsg]             = useState("");
 
+  // Luca report — fetched after successful claim
+  const [lucaSummary, setLucaSummary] = useState<string | null>(null);
+
   // Privy hooks for wallet signing
   const { login, authenticated, ready } = usePrivy();
   const { wallets } = useWallets();
@@ -1013,6 +1166,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
         setWalletMatched(d.matched ?? false);
         setSigVerified(d.signature_verified ?? false);
         setWalletMsg(d.message ?? "Claim submitted.");
+        fetchLucaSummary();
       } else {
         setWalletState("error");
         setWalletMsg(d.error ?? "Something went wrong.");
@@ -1042,6 +1196,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       if (d.ok) {
         setMfState("done");
         setMfMsg(d.message ?? "Manifest submitted for verification.");
+        fetchLucaSummary();
       } else {
         setMfState("error");
         setMfMsg(d.error ?? "Something went wrong.");
@@ -1049,6 +1204,21 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
     } catch {
       setMfState("error");
       setMfMsg("Network error. Please try again.");
+    }
+  }
+
+  async function fetchLucaSummary() {
+    try {
+      const res = await fetch(`/api/luca/skills/luca-report`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, period: "30d" }),
+      });
+      if (!res.ok) return;
+      const d = await res.json() as { summary?: string | null };
+      if (d.summary) setLucaSummary(d.summary);
+    } catch {
+      // best-effort — silent failure
     }
   }
 
@@ -1079,11 +1249,22 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       <div style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 18, color, marginTop: 1, flexShrink: 0 }}>{icon}</span>
-          <div>
+          <div style={{ flex: 1 }}>
             <p style={{ fontSize: "0.84rem", fontWeight: 700, color, marginBottom: 3 }}>{title}</p>
             <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}>{doneMsg}</p>
             {nextStep && (
               <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 6, lineHeight: 1.5 }}>{nextStep}</p>
+            )}
+            {lucaSummary && (
+              <div style={{
+                marginTop: 12, paddingTop: 12,
+                borderTop: "1px solid var(--line)",
+              }}>
+                <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
+                  Luca financial report
+                </p>
+                <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>{lucaSummary}</p>
+              </div>
             )}
           </div>
         </div>
@@ -1504,7 +1685,7 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
   );
 }
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[] }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory, anomalies = [], verificationScore }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[]; anomalies?: Anomaly[]; verificationScore?: VerificationScore }) {
   const router = useRouter();
   const [showShare, setShowShare] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
@@ -1572,6 +1753,25 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
               <StatusBadge status={agent.verificationStatus} />
               <HealthBadge h={agent.treasuryHealth} />
+              {(() => {
+                if (!booksHistory || booksHistory.length < 2) return null;
+                const m = computeMomentum(booksHistory, 7);
+                if (!m) return null;
+                const dir = m.revenue.direction;
+                const icon  = dir === "growing" ? "↑" : dir === "declining" ? "↓" : "→";
+                const color = dir === "growing" ? "#6DB874" : dir === "declining" ? "#ef4444" : "var(--muted)";
+                const pct   = m.revenue.pct;
+                return (
+                  <span style={{
+                    fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 99,
+                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                    border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+                    color, fontFamily: "monospace",
+                  }}>
+                    {icon} Rev {dir === "stable" ? "stable" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`} 7d
+                  </span>
+                );
+              })()}
             </div>
             <div className="prof-links">
               {agent.xHandle && (
@@ -1606,6 +1806,127 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </button>
           </div>
         </div>
+
+        {/* Anomaly alerts */}
+        {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length > 0 && (
+          <div style={{
+            display: "flex", flexDirection: "column", gap: 6,
+            padding: "10px 14px",
+            background: "color-mix(in srgb, #f59e0b 8%, var(--surface))",
+            border: "1px solid color-mix(in srgb, #f59e0b 30%, transparent)",
+            borderLeft: "3px solid #f59e0b",
+            borderRadius: 8,
+            marginBottom: 6,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#f59e0b" }}>
+                {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length} Active Signal{anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length > 1 ? "s" : ""}
+              </span>
+            </div>
+            {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").map((a, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <span style={{
+                  fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                  padding: "2px 5px", borderRadius: 3,
+                  background: a.severity === "high" ? "color-mix(in srgb, #ef4444 15%, transparent)" : "color-mix(in srgb, #f59e0b 15%, transparent)",
+                  color: a.severity === "high" ? "#ef4444" : "#f59e0b",
+                  flexShrink: 0, marginTop: 1,
+                }}>
+                  {a.severity}
+                </span>
+                <span style={{ fontSize: "0.78rem", color: "var(--ink)", lineHeight: 1.4 }}>{a.description}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Verification score */}
+        {verificationScore && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "8px 14px",
+            background: "var(--surface-soft)",
+            border: "1px solid var(--line)",
+            borderRadius: 8,
+            marginBottom: 6,
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 36 }}>
+              <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)", lineHeight: 1, fontFamily: "monospace" }}>
+                {verificationScore.total}
+              </span>
+              <span style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>/ 100</span>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)" }}>Verification Score</span>
+                <span className={`reg-badge ${TIER_BADGE_CLASS[verificationScore.tier]}`} style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                  {TIER_LABELS[verificationScore.tier]}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                {[
+                  { label: "Manifest",   val: verificationScore.breakdown.manifest,   max: 30 },
+                  { label: "Wallets",    val: verificationScore.breakdown.wallets,     max: 25 },
+                  { label: "Activity",   val: verificationScore.breakdown.activity,    max: 20 },
+                  { label: "Metadata",   val: verificationScore.breakdown.metadata,    max: 15 },
+                  { label: "Ecosystem",  val: verificationScore.breakdown.ecosystem,   max: 10 },
+                ].map((d) => (
+                  <div key={d.label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 52 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{d.label}</span>
+                      <span style={{ fontSize: "0.6rem", color: "var(--muted)", fontFamily: "monospace" }}>{d.val}/{d.max}</span>
+                    </div>
+                    <div style={{ height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${(d.val / d.max) * 100}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.3s ease" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Health score strip */}
+        {(() => {
+          const hs = agentHealthScore(agent);
+          const gc = gradeColor(hs.grade);
+          return (
+            <div style={{
+              display: "flex", alignItems: "center", gap: 16,
+              padding: "10px 16px",
+              background: `color-mix(in srgb, ${gc} 6%, var(--surface-soft))`,
+              border: "1px solid var(--line)",
+              borderLeft: `3px solid ${gc}`,
+              borderRadius: 8,
+              marginBottom: 6,
+            }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+                <span style={{ fontSize: "1.4rem", fontWeight: 800, color: gc, lineHeight: 1, fontFamily: "monospace" }}>{hs.grade}</span>
+                <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{hs.total}/100</span>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+                  {[
+                    { label: "Wallets",      val: hs.wallet_coverage,  max: 30 },
+                    { label: "Verification", val: hs.verification,     max: 35 },
+                    { label: "Evidence",     val: hs.evidence,         max: 20 },
+                    { label: "Activity",     val: hs.activity,         max: 15 },
+                  ].map(({ label, val, max }) => (
+                    <div key={label} style={{ minWidth: 70 }}>
+                      <div style={{ fontSize: "0.6rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+                      <div style={{ height: 3, width: 70, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: gc, borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ margin: 0, fontSize: "0.67rem", color: "var(--muted)" }}>
+                  Financial health score — transparency and identity signal, not revenue.
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Tab navigation */}
         <div className="prof-tabs">

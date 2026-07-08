@@ -11,6 +11,13 @@ type Agent = {
   wallets: { address: string; label?: string }[];
 };
 
+type Anomaly = {
+  type: string;
+  severity: "low" | "medium" | "high";
+  description: string;
+  detected_at: string;
+};
+
 type RegistryResponse = {
   agents: Agent[];
 };
@@ -30,6 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function OverviewPage() {
   const [wallet, setWallet] = useState<string | null>(null);
   const [myAgents, setMyAgents] = useState<Agent[]>([]);
+  const [anomalyMap, setAnomalyMap] = useState<Record<string, Anomaly[]>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,12 +58,30 @@ export default function OverviewPage() {
             a.wallets?.some((w) => w.address.toLowerCase() === linked)
           );
           setMyAgents(matched);
+
+          // Fetch anomalies for each linked agent in parallel
+          const slugs = matched.map((a) => toSlug(a.name));
+          const anomalyResults = await Promise.all(
+            slugs.map((s) =>
+              fetch(`/api/agent-anomalies/${s}`)
+                .then((r) => r.json() as Promise<{ anomalies: Anomaly[] }>)
+                .then((d) => ({ slug: s, anomalies: d.anomalies ?? [] }))
+                .catch(() => ({ slug: s, anomalies: [] }))
+            )
+          );
+          const map: Record<string, Anomaly[]> = {};
+          for (const r of anomalyResults) map[r.slug] = r.anomalies;
+          setAnomalyMap(map);
         }
       } catch { /* unavailable */ }
       finally { setLoading(false); }
     }
     load();
   }, []);
+
+  const totalAnomalies = Object.values(anomalyMap).flat().filter(
+    (a) => a.severity === "high" || a.severity === "medium"
+  ).length;
 
   if (loading) {
     return (
@@ -92,6 +118,28 @@ export default function OverviewPage() {
         </div>
       )}
 
+      {/* Anomaly alert banner */}
+      {totalAnomalies > 0 && (
+        <div className="op-alert" style={{
+          background: "color-mix(in srgb, #f59e0b 8%, var(--surface))",
+          border: "1px solid color-mix(in srgb, #f59e0b 30%, transparent)",
+          borderLeft: "3px solid #f59e0b",
+          color: "var(--ink)",
+        }}>
+          <span style={{ fontSize: "1rem", color: "#f59e0b" }}>⚠</span>
+          <div>
+            <strong>{totalAnomalies} active signal{totalAnomalies > 1 ? "s" : ""} detected</strong> across your agents.{" "}
+            {Object.entries(anomalyMap)
+              .filter(([, a]) => a.some((x) => x.severity === "high" || x.severity === "medium"))
+              .map(([slug]) => (
+                <Link key={slug} href={`/registry/${slug}`} style={{ color: "var(--accent)", marginRight: 8 }}>
+                  {slug} →
+                </Link>
+              ))}
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div className="op-stat-grid">
         <div className="op-stat">
@@ -108,11 +156,11 @@ export default function OverviewPage() {
           <p className="op-stat-sub">of {myAgents.length} agents</p>
         </div>
         <div className="op-stat">
-          <p className="op-stat-label">Wallet</p>
-          <p className="op-stat-value" style={{ fontSize: "0.85rem" }}>
-            {wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "—"}
+          <p className="op-stat-label">Active Signals</p>
+          <p className="op-stat-value" style={{ color: totalAnomalies > 0 ? "#f59e0b" : "var(--ink)" }}>
+            {totalAnomalies}
           </p>
-          <p className="op-stat-sub">{wallet ? "linked" : "not linked"}</p>
+          <p className="op-stat-sub">{totalAnomalies > 0 ? "require attention" : "all clear"}</p>
         </div>
         <div className="op-stat">
           <p className="op-stat-label">Quick Links</p>
@@ -136,7 +184,7 @@ export default function OverviewPage() {
                 <th>Agent</th>
                 <th>Ecosystem</th>
                 <th>Status</th>
-                <th>Wallets</th>
+                <th>Signals</th>
                 <th></th>
               </tr>
             </thead>
@@ -144,6 +192,9 @@ export default function OverviewPage() {
               {myAgents.slice(0, 5).map((agent) => {
                 const slug = toSlug(agent.name);
                 const color = STATUS_COLORS[agent.verificationStatus] ?? "var(--muted)";
+                const agentAnomalies = (anomalyMap[slug] ?? []).filter(
+                  (a) => a.severity === "high" || a.severity === "medium"
+                );
                 return (
                   <tr key={agent.name}>
                     <td style={{ fontWeight: 600 }}>{agent.name}</td>
@@ -153,8 +204,18 @@ export default function OverviewPage() {
                         {agent.verificationStatus}
                       </span>
                     </td>
-                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.76rem", color: "var(--muted)" }}>
-                      {agent.wallets?.length ?? 0}
+                    <td>
+                      {agentAnomalies.length > 0 ? (
+                        <span className="op-badge" style={{
+                          background: "color-mix(in srgb, #f59e0b 14%, transparent)",
+                          color: "#f59e0b",
+                          fontSize: "0.7rem",
+                        }}>
+                          ⚠ {agentAnomalies.length}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>
+                      )}
                     </td>
                     <td>
                       <Link href={`/dashboard/luca?agent=${slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Ask Luca</Link>

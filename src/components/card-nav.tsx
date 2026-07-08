@@ -13,7 +13,6 @@ const ITEMS: NavItem[] = [
       { label: "Registry", href: "/registry" },
       { label: "Leaderboard", href: "/leaderboard" },
       { label: "Research", href: "/research" },
-      { label: "API", href: "/api" },
       { label: "Luca", href: "/luca" },
     ],
   },
@@ -22,6 +21,7 @@ const ITEMS: NavItem[] = [
     links: [
       { label: "Methodology", href: "/methodology" },
       { label: "Submit Agent", href: "/registry#verify" },
+      { label: "Validate Manifest", href: "/validate" },
       { label: "Documentation", href: "/docs" },
     ],
   },

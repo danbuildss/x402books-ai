@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { handleUpdate } from "@/lib/telegram-bot";
 
 const BOT_COMMANDS = [
+  { command: "luca",    description: "Ask Luca about any agent — /luca what is aeon's revenue?" },
   { command: "scan",    description: "Full AI wallet scan — /scan 0x... [7d|14d|30d|90d]" },
   { command: "summary", description: "Quick stats — /summary 0x... [7d|14d|30d|90d]" },
   { command: "report",  description: "Get public report link — /report 0x..." },

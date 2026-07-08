@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function DeveloperPage() {
-  redirect("/dashboard/keys");
+export default function DeveloperRedirect() {
+  redirect("/dashboard/developer");
 }
