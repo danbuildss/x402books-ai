@@ -103,7 +103,7 @@ function buildStats(rows: AgentRow[]) {
       "100_manifests_before_august":    wallets_declared_or_above >= 100,
       "50_claimed_before_q4":           claimed_or_above >= 50,
       "25_verified_before_year_end":    verified_or_above >= 25,
-      top_ecosystem_by_verified:        topEcosystem(byEcosystem, "verified"),
+      top_ecosystem_by_verified:        topEcosystem(byEcosystem),
     },
     updated_at: new Date().toISOString(),
   };
@@ -111,7 +111,6 @@ function buildStats(rows: AgentRow[]) {
 
 function topEcosystem(
   byEco: Record<string, { verified: number; luca_managed: number }>,
-  metric: "verified",
 ): { ecosystem: string; count: number } {
   let top = { ecosystem: "none", count: 0 };
   for (const [eco, data] of Object.entries(byEco)) {

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAttributionMetrics } from "@/lib/attribution-health";
-import type { ManifestStatus, AttributionConfidence, AgentAttributionHealth, AttributionTier } from "@/lib/attribution-health";
+import type { ManifestStatus, AttributionConfidence, AgentAttributionHealth } from "@/lib/attribution-health";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {

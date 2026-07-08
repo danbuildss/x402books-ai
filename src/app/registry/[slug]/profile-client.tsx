@@ -15,7 +15,6 @@ import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import type { AgentBooksSnapshot } from "@/lib/agent-books-history";
 import { computeMomentum } from "@/lib/agent-momentum";
-import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
@@ -440,32 +439,6 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
 
 // ── Settlement pattern display ────────────────────────────────────────────────
 
-const PATTERN_STYLE: Record<SettlementPattern, { bg: string; color: string; border: string }> = {
-  dormant:                       { bg: "rgba(125,130,141,0.08)", color: "var(--muted)",  border: "rgba(125,130,141,0.14)" },
-  active_operational:            { bg: "rgba(109,184,116,0.08)", color: "var(--accent)", border: "rgba(109,184,116,0.15)" },
-  stable_treasury:               { bg: "rgba(109,184,116,0.08)", color: "var(--accent)", border: "rgba(109,184,116,0.15)" },
-  revenue_generating:            { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  high_spend_low_revenue:        { bg: "rgba(248,113,113,0.08)", color: "#f87171",        border: "rgba(248,113,113,0.15)" },
-  heavy_outbound_settlement:     { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
-  high_internal_transfer:        { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  recurring_flow_detected:       { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  incomplete_wallet_role:        { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
-  unknown_counterparty_dominant: { bg: "rgba(251,191,36,0.08)",  color: "#f59e0b",        border: "rgba(251,191,36,0.15)"  },
-};
-
-const PATTERN_LABEL: Record<SettlementPattern, string> = {
-  dormant:                       "Dormant",
-  active_operational:            "Active",
-  stable_treasury:               "Stable Treasury",
-  revenue_generating:            "Revenue Generating",
-  high_spend_low_revenue:        "High Spend",
-  heavy_outbound_settlement:     "Heavy Outbound",
-  high_internal_transfer:        "High Internal Transfer",
-  recurring_flow_detected:       "Recurring Flows",
-  incomplete_wallet_role:        "Roles Unverified",
-  unknown_counterparty_dominant: "Unknown Counterparties",
-};
-
 function SettlementSection({ classification }: { classification: SettlementClassification }) {
   if (classification.signals.length === 0) return null;
   return (
@@ -517,20 +490,6 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.min(100, Math.max(0, value));
-  const color = pct >= 70 ? "var(--accent)" : pct >= 40 ? "var(--blue)" : "var(--muted)";
-  return (
-    <div className="reg-score-row">
-      <span className="reg-score-label">{label}</span>
-      <div className="reg-score-bar-wrap">
-        <div className="reg-score-bar-fill" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <span className="reg-score-val">{value}</span>
-    </div>
-  );
-}
-
 // ── Card helpers (shared with share modal) ───────────────────────────────────
 
 const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
@@ -541,11 +500,6 @@ const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
   recurring_flow_detected:   "Recurring Flows",
   incomplete_wallet_role:    "Roles Unverified",
 };
-
-function cardTreasuryScore(agent: Agent): number {
-  const map: Record<string, number> = { Active: 92, Stable: 78, Unverified: 45, Inactive: 18 };
-  return map[agent.treasuryHealth] ?? 0;
-}
 
 function cardAttributionScore(agent: Agent): number {
   let s = 0;
@@ -578,13 +532,6 @@ function cardStatusLabel(agent: Agent): string {
   return map[agent.verificationStatus] ?? agent.verificationStatus;
 }
 
-function cardStatusColor(agent: Agent): string {
-  const s = agent.verificationStatus;
-  if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#6DB874";
-  if (s === "Wallets Declared") return "#5B8FA8";
-  return "#7d828d";
-}
-
 // ── Share card modal ──────────────────────────────────────────────────────────
 
 function ShareCardModal({ agent, slug, classification, onClose }: {
@@ -596,7 +543,6 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
 
-  const treasuryScore   = cardTreasuryScore(agent);
   const transpScore     = cardAttributionScore(agent);
   const verdict         = cardVerdictSnippet(agent);
   const vstatus         = cardStatusLabel(agent);

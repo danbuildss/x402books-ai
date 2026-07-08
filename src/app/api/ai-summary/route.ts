@@ -3,7 +3,6 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { LedgerSummary, CategorySummary, TimeRange } from "@/lib/ledger";
 
 function buildFallbackSummary(
-  wallet: string,
   range: string,
   summary: LedgerSummary,
   categories: CategorySummary[],
@@ -44,7 +43,7 @@ export async function POST(request: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json({
-      summary: buildFallbackSummary(wallet, rangeLabel, summary, categories),
+      summary: buildFallbackSummary(rangeLabel, summary, categories),
       provider: "rules",
     });
   }
@@ -82,7 +81,7 @@ Write a concise 2-3 sentence financial summary for this wallet. Be specific with
     return NextResponse.json({ summary: text, provider: "claude" });
   } catch {
     return NextResponse.json({
-      summary: buildFallbackSummary(wallet, rangeLabel, summary, categories),
+      summary: buildFallbackSummary(rangeLabel, summary, categories),
       provider: "rules",
     });
   }

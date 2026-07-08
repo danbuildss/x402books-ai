@@ -31,7 +31,6 @@ async function treasuryHandler(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Range must be 7d, 14d, 30d, or 90d." }, { status: 400 });
   }
 
-  const start = Date.now();
   try {
     const [scan, registry] = await Promise.all([
       buildLedgerScan({ wallet, range, persist: false }),

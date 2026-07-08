@@ -6,13 +6,6 @@ import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, Attrib
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
-  manifest: { label: "Manifest",     color: "#22c55e" },
-  admin:    { label: "Admin",        color: "#6DB874" },
-  inferred: { label: "Inferred",     color: "#f59e0b" },
-  none:     { label: "Unattributed", color: "#6b7280" },
-};
-
 const CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
   high:         { label: "High",         color: "#22c55e" },
   medium:       { label: "Medium",       color: "#f59e0b" },
@@ -55,7 +48,7 @@ export default function AttributionHealthAdminPage() {
   const [metrics, setMetrics] = useState<AttributionMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
-  const [filter, setFilter]   = useState<ManifestStatus | "all">("all");
+  const [filter]              = useState<ManifestStatus | "all">("all");
   const [sort, setSort]       = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [search, setSearch]   = useState("");

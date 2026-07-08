@@ -20,8 +20,6 @@ export default async function ConfidenceReportPage() {
     getRegistryAgents(),
   ]);
 
-  const labelsBySlug = Object.fromEntries(labels.map((l) => [l.agent_slug, l]));
-
   // Group labeled agents by level
   const grouped: Record<ConfidenceLevel, typeof labels> = {
     high:         labels.filter((l) => l.confidence_level === "high"),
