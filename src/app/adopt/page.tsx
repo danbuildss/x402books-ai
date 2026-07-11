@@ -222,32 +222,84 @@ export default async function AdoptPage() {
             </div>
 
             {/* Right: steps */}
-            <LedgerCard eyebrow="How it works">
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
               {[
-                { num: "01", title: "Create .agent/wallets.json", desc: "Declare your treasury, operator, and revenue wallets with roles and chain." },
-                { num: "02", title: "Submit to Zetta Registry", desc: "Add your agent profile and link the manifest. Zetta verifies and indexes." },
-                { num: "03", title: "Books go live", desc: "Your revenue, expenses, and net income appear in Luca's reports and the registry." },
-              ].map((step, i, arr) => (
-                <LedgerRow
-                  key={step.num}
-                  first={i === 0}
-                  last={i === arr.length - 1}
-                  label={
-                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                {
+                  num: "01",
+                  title: "Create .agent/wallets.json",
+                  desc: "Declare your treasury, operator, and revenue wallets with roles and chain.",
+                  code: `// .agent/wallets.json
+{
+  "agent": "Your Agent",
+  "wallets": [
+    {
+      "address": "0x...",
+      "role": "treasury",
+      "chain": "base"
+    }
+  ]
+}`,
+                },
+                {
+                  num: "02",
+                  title: "Submit to Zetta Registry",
+                  desc: "Add your agent profile and link the manifest. Zetta verifies and indexes.",
+                  code: `# Submit via registry form
+# or POST to the API
+
+POST /api/registry/submit
+{
+  "name": "Your Agent",
+  "manifestUrl": "https://...",
+  "ecosystem": "Base"
+}`,
+                },
+                {
+                  num: "03",
+                  title: "Books go live",
+                  desc: "Revenue, expenses, and net income appear in Luca's reports and the registry.",
+                  code: `// Luca financial report
+{
+  "revenue_usd": 1240.50,
+  "expenses_usd": 340.20,
+  "net_income_usd": 900.30,
+  "treasury_balance_usd": 8420.00,
+  "period": "30d"
+}`,
+                },
+              ].map((step) => (
+                <div key={step.num} style={{
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  background: "var(--surface)",
+                }}>
+                  <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+                    <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                       <span style={{
-                        fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 700,
-                        color: "#4AE8A0", minWidth: 22, paddingTop: 1,
+                        fontFamily: "var(--font-mono)", fontSize: "0.65rem", fontWeight: 700,
+                        color: "#4AE8A0", paddingTop: 2,
                       }}>{step.num}</span>
                       <div>
-                        <p style={{ margin: "0 0 2px", fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)" }}>{step.title}</p>
-                        <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.55 }}>{step.desc}</p>
+                        <p style={{ margin: "0 0 3px", fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)" }}>{step.title}</p>
+                        <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{step.desc}</p>
                       </div>
                     </div>
-                  }
-                  value=""
-                />
+                  </div>
+                  <pre style={{
+                    margin: 0,
+                    padding: "12px 16px",
+                    fontSize: "0.68rem",
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--muted)",
+                    background: "var(--surface-soft)",
+                    lineHeight: 1.6,
+                    overflowX: "auto",
+                    whiteSpace: "pre",
+                  }}>{step.code}</pre>
+                </div>
               ))}
-            </LedgerCard>
+            </div>
           </div>
         </div>
       </div>

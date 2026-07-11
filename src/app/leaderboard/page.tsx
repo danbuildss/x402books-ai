@@ -3,15 +3,16 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
-import { StatusBadge, EcoBadge } from "@/components/ui/badge";
+import { EcoBadge, StatusBadge } from "@/components/ui/badge";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getRegistryAgents } from "@/lib/registry-db";
-import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
+import { agentHealthScore } from "@/lib/agent-health-score";
 import { scoreAgent } from "@/lib/verification-scorer";
 import { TIER_LABELS } from "@/lib/verification-scorer";
 import { AGENTS } from "@/app/registry/data";
-import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
+import { LeaderboardTable } from "./leaderboard-table";
+import type { AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
 
 export const revalidate = 3600;
@@ -132,123 +133,6 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
   );
 }
 
-function RankMedal({ rank }: { rank: number }) {
-  const top3: Record<number, { bg: string; color: string }> = {
-    1: { bg: "rgba(74,232,160,0.15)", color: "#4AE8A0" },
-    2: { bg: "rgba(255,255,255,0.08)", color: "var(--ink)" },
-    3: { bg: "rgba(249,115,22,0.12)", color: "#F4B942" },
-  };
-  if (top3[rank]) {
-    return (
-      <span style={{
-        display: "inline-flex", alignItems: "center", justifyContent: "center",
-        width: 26, height: 26, borderRadius: 6,
-        background: top3[rank].bg, color: top3[rank].color,
-        fontWeight: 700, fontSize: "0.8rem", fontFamily: "var(--font-mono)",
-        border: `1px solid color-mix(in srgb, ${top3[rank].color} 30%, transparent)`,
-      }}>
-        {rank}
-      </span>
-    );
-  }
-  return (
-    <span style={{ fontSize: "0.78rem", color: "var(--muted)", fontFamily: "var(--font-mono)", minWidth: 24, display: "inline-block", textAlign: "center" }}>
-      {rank}
-    </span>
-  );
-}
-
-function HealthBadge({ grade, score }: { grade: string; score: number }) {
-  const color = gradeColor(grade);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3 }}>
-      <span style={{ fontSize: "0.82rem", fontWeight: 800, color, fontFamily: "monospace" }}>{grade}</span>
-      <div style={{ width: 48, height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-        <div style={{ height: "100%", width: `${score}%`, background: color, borderRadius: 2 }} />
-      </div>
-    </div>
-  );
-}
-
-function LeaderboardRow({
-  agent,
-  rank,
-  healthMap,
-  first,
-  last,
-}: {
-  agent: AgentGDPEntry;
-  rank: number;
-  healthMap: Map<string, { grade: string; total: number }>;
-  first?: boolean;
-  last?: boolean;
-}) {
-  const net = agent.net_income_usd;
-  const health = healthMap.get(agent.slug);
-  const borderRadius = first && last ? 0 : first ? "0 0 0 0" : last ? "0 0 0 0" : 0;
-  return (
-    <Link
-      href={`/registry/${agent.slug}`}
-      style={{
-        display: "grid",
-        gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
-        alignItems: "center",
-        gap: 12,
-        padding: "14px 16px",
-        borderBottom: last ? "none" : "1px solid var(--line)",
-        textDecoration: "none",
-        color: "inherit",
-        transition: "background 0.1s",
-        borderRadius,
-      }}
-      className="ldb-row"
-    >
-      {/* Rank */}
-      <div style={{ textAlign: "center" }}>
-        <RankMedal rank={rank} />
-      </div>
-
-      {/* Agent */}
-      <div>
-        <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--fg)" }}>{agent.name}</span>
-        <div style={{ marginTop: 2 }}>
-          <EcoBadge ecosystem={agent.ecosystem} />
-        </div>
-      </div>
-
-      {/* Health */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        {health
-          ? <HealthBadge grade={health.grade} score={health.total} />
-          : <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>}
-      </div>
-
-      {/* Revenue */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 600, color: "#4AE8A0", textAlign: "right" }}>
-        {fmtUSD(agent.revenue_usd)}
-      </div>
-
-      {/* Expenses */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--muted)", textAlign: "right" }}>
-        {fmtUSD(agent.expenses_usd)}
-      </div>
-
-      {/* Net Income */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 700, color: netColor(net), textAlign: "right" }}>
-        {net >= 0 ? "+" : ""}{fmtUSD(net)}
-      </div>
-
-      {/* Txs */}
-      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--muted)", textAlign: "right" }}>
-        {agent.tx_count.toLocaleString()}
-      </div>
-
-      {/* Arrow */}
-      <div style={{ textAlign: "right", color: "var(--muted)", fontSize: "0.75rem" }}>→</div>
-    </Link>
-  );
-}
-
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -276,14 +160,11 @@ export default async function LeaderboardPage() {
     ? (registryResult.value as { agents: typeof AGENTS }).agents
     : AGENTS;
 
-  // Build slug → health score map
-  const healthMap = new Map<string, { grade: string; total: number }>();
+  // Build slug → verification score map
   const vscoreMap = new Map<string, { total: number; tier: string }>();
   for (const a of registryAgents) {
     const slug = toSlug(a.name);
-    const s  = agentHealthScore(a);
     const vs = scoreAgent(a, false);
-    healthMap.set(slug, { grade: s.grade, total: s.total });
     vscoreMap.set(slug, { total: vs.total, tier: TIER_LABELS[vs.tier] });
   }
 
@@ -390,73 +271,7 @@ export default async function LeaderboardPage() {
         )}
 
         {/* Table */}
-        {hasData ? (
-          <LedgerCard
-            eyebrow="Top Agents by Revenue · 30 Days"
-            style={{ marginBottom: 0 }}
-          >
-            <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
-
-              {/* Table header */}
-              <div className="ldb-header" style={{
-                display: "grid",
-                gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
-                gap: 12,
-                padding: "10px 16px",
-                background: "var(--surface-soft)",
-                borderBottom: "1px solid var(--line)",
-              }}>
-                {[
-                  { label: "#",          align: "center" },
-                  { label: "Agent",      align: "left"   },
-                  { label: "Health",     align: "right"  },
-                  { label: "Revenue",    align: "right"  },
-                  { label: "Expenses",   align: "right"  },
-                  { label: "Net Income", align: "right"  },
-                  { label: "Txs",        align: "right"  },
-                  { label: "",           align: "right"  },
-                ].map((h, i) => (
-                  <div key={i} style={{
-                    fontSize: "0.62rem",
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.07em",
-                    color: "var(--muted)",
-                    textAlign: h.align as React.CSSProperties["textAlign"],
-                  }}>
-                    {h.label}
-                  </div>
-                ))}
-              </div>
-
-              {/* Rows */}
-              {agents.map((agent, i) => (
-                <LeaderboardRow
-                  key={agent.slug}
-                  agent={agent}
-                  rank={i + 1}
-                  healthMap={healthMap}
-                  first={i === 0}
-                  last={i === agents.length - 1}
-                />
-              ))}
-            </div>
-          </LedgerCard>
-        ) : (
-          <div style={{
-            padding: "48px 28px",
-            border: "1px solid var(--line)",
-            borderRadius: 10,
-            background: "var(--surface-soft)",
-            textAlign: "center",
-          }}>
-            <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: "0.95rem" }}>No attributed agents yet.</p>
-            <p style={{ margin: "0 0 24px", fontSize: "0.83rem", color: "var(--muted)", maxWidth: 420, marginLeft: "auto", marginRight: "auto" }}>
-              Agents appear here once they declare a wallet manifest. Attribution is the prerequisite for inclusion.
-            </p>
-            <Link href="/registry#verify" className="lp-btn-primary">Submit Manifest →</Link>
-          </div>
-        )}
+        <LeaderboardTable agents={agents} vscoreMap={vscoreMap} />
 
 
         {/* Indexed agents awaiting manifest declaration */}

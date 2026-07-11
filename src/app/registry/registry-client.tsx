@@ -135,64 +135,66 @@ function MomentumBadge({ m }: { m: AgentMomentum }) {
   );
 }
 
+const REG_GRID = "52px 1fr 100px 100px 100px 80px 20px";
+
 function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economics?: AgentGDPEntry; momentum?: AgentMomentum }) {
   const slug = toSlug(agent.name);
+  const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
+  const scoreColor = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)";
   return (
-    <Link href={`/registry/${slug}`} className="reg-row">
+    <Link
+      href={`/registry/${slug}`}
+      className="reg-row"
+      style={{ display: "grid", gridTemplateColumns: REG_GRID, alignItems: "center", gap: 12 }}
+    >
+      {/* Avatar */}
       <AgentAvatar agent={agent} size={32} />
-      <div className="reg-row-name">
-        <span className="reg-row-agent-name">{agent.name}</span>
-        {agent.symbol && agent.symbol !== "—" && (
-          <span className="reg-row-sym">{agent.symbol}</span>
-        )}
+
+      {/* Agent name + badges */}
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <span className="reg-row-agent-name">{agent.name}</span>
+          {agent.symbol && agent.symbol !== "—" && (
+            <span className="reg-row-sym">{agent.symbol}</span>
+          )}
+          {momentum && <MomentumBadge m={momentum} />}
+        </div>
+        <div style={{ display: "flex", gap: 6, marginTop: 3, flexWrap: "wrap" }}>
+          <EcoBadge eco={agent.ecosystem} />
+          <StatusBadge status={agent.verificationStatus} />
+        </div>
       </div>
-      <div className="reg-row-badges">
-        <EcoBadge eco={agent.ecosystem} />
-        <StatusBadge status={agent.verificationStatus} />
-        {(() => {
-          const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
-          const color = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)";
-          return (
-            <span style={{
-              fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
-              background: `color-mix(in srgb, ${color} 10%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-              color, fontFamily: "monospace",
-            }}>{vs.total}</span>
-          );
-        })()}
-        {economics && (
-          <span style={{
-            fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",
-            borderRadius: 99, background: "rgba(74,232,160,0.12)",
-            border: "1px solid rgba(74,232,160,0.3)", color: "#4AE8A0",
-            letterSpacing: "0.02em",
-          }}>
-            Books
-          </span>
-        )}
-        {momentum && <MomentumBadge m={momentum} />}
+
+      {/* Treasury */}
+      <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>
+        {economics?.treasury_balance_usd != null
+          ? <span style={{ color: "#5B9EF4", fontWeight: 600 }}>{fmtUSD(economics.treasury_balance_usd)}</span>
+          : <span style={{ color: "var(--muted)" }}>—</span>}
       </div>
-      <div className="reg-row-score-wrap">
-        {economics ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: "var(--fg)" }}>
-              {fmtUSD(economics.revenue_usd)}
-            </span>
-            <span style={{
-              fontSize: "0.7rem",
-              fontFamily: "monospace",
-              color: economics.net_income_usd >= 0 ? "#4AE8A0" : "#F46060",
-            }}>
-              {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
-            </span>
-            <span className="reg-row-score-label">30d op. rev / net</span>
-          </div>
-        ) : (
-          <span className="reg-row-score-empty">—</span>
-        )}
+
+      {/* 30D Rev */}
+      <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>
+        {economics
+          ? <span style={{ color: "#4AE8A0", fontWeight: 700 }}>{fmtUSD(economics.revenue_usd)}</span>
+          : <span style={{ color: "var(--muted)" }}>—</span>}
       </div>
-      <span className="material-symbols-outlined reg-row-arrow">chevron_right</span>
+
+      {/* Inference */}
+      <div style={{ textAlign: "right", fontFamily: "var(--font-mono)", fontSize: "0.8rem" }}>
+        {economics && economics.inference_spend_usd > 0
+          ? <span style={{ color: "#8B7CF6", fontWeight: 600 }}>{fmtUSD(economics.inference_spend_usd)}</span>
+          : <span style={{ color: "var(--muted)" }}>—</span>}
+      </div>
+
+      {/* Score */}
+      <div style={{ textAlign: "right" }}>
+        <span style={{
+          fontFamily: "var(--font-mono)", fontSize: "0.8rem", fontWeight: 700, color: scoreColor,
+        }}>{vs.total}</span>
+      </div>
+
+      {/* Arrow */}
+      <span className="material-symbols-outlined reg-row-arrow" style={{ fontSize: "1rem", color: "var(--muted)" }}>chevron_right</span>
     </Link>
   );
 }
@@ -824,17 +826,21 @@ export function RegistryClient({
 
         {/* Column headers */}
         <div style={{
-          display: "flex", alignItems: "center",
-          padding: "5px 14px 5px 52px",
+          display: "grid",
+          gridTemplateColumns: REG_GRID,
+          gap: 12,
+          padding: "6px 14px",
           marginBottom: 2,
+          alignItems: "center",
         }}>
-          <span style={{ flex: 1, fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
-            Agent
-          </span>
-          <span style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", minWidth: 100, textAlign: "right" }}>
-            30d Rev / Net
-          </span>
-          <span style={{ width: 20 }} />
+          <span />
+          {["Agent", "Treasury", "30D Rev", "Inference", "Score", ""].map((label, i) => (
+            <span key={i} style={{
+              fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase",
+              letterSpacing: "0.08em", color: "var(--muted)",
+              textAlign: i === 0 ? "left" : "right",
+            }}>{label}</span>
+          ))}
         </div>
 
         {/* List */}

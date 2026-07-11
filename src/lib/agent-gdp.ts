@@ -11,6 +11,8 @@ export type AgentGDPEntry = {
   expenses_usd: number;
   net_income_usd: number;
   tx_count: number;
+  treasury_balance_usd: number | null;
+  inference_spend_usd: number;
 };
 
 export type AwaitingManifestEntry = {
@@ -76,6 +78,8 @@ export async function getAgentGDP(): Promise<AgentGDP> {
       expenses_usd: b.financials.expenses_usd,
       net_income_usd: b.financials.net_income_usd,
       tx_count: b.financials.tx_count,
+      treasury_balance_usd: b.financials.treasury_balance_usd,
+      inference_spend_usd: b.breakdown.expenses_by_category.find((c: { category: string; total_usd: number }) => c.category === "inference_spend")?.total_usd ?? 0,
     });
   }
 
