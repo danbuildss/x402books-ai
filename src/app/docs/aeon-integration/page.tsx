@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
 
 export const metadata: Metadata = {
   title: "AEON Integration Guide | Zetta",
@@ -17,9 +19,7 @@ export default function AeonIntegrationPage() {
 
       {/* Header */}
       <div style={{ marginBottom: 44 }}>
-        <p style={{ fontSize: "0.72rem", fontWeight: 800, letterSpacing: "0.1em", color: "var(--accent)", textTransform: "uppercase", marginBottom: 8 }}>
-          Partnership Guide
-        </p>
+        <SectionLabel style={{ marginBottom: 8 }}>Partnership Guide</SectionLabel>
         <h1 style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: 14 }}>
           Zetta × AEON
         </h1>
@@ -32,56 +32,45 @@ export default function AeonIntegrationPage() {
       </div>
 
       {/* The triangle */}
-      <section style={{
-        marginBottom: 48, padding: "20px 24px", borderRadius: 12,
-        border: "1px solid var(--line)", background: "var(--surface)",
-      }}>
-        <p style={{ fontSize: "0.78rem", fontWeight: 700, marginBottom: 12, color: "var(--muted)", letterSpacing: "0.05em", textTransform: "uppercase" }}>
-          The infrastructure triangle
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          {[
-            { name: "AEON",  role: "Execution + settlement layer",        color: "#4AE8A0" },
-            { name: "Zetta", role: "Financial visibility layer",           color: "#5B9EF4" },
-            { name: "Luca",  role: "Operational intelligence layer",       color: "#8B7CF6" },
-          ].map(n => (
-            <div key={n.name} style={{ textAlign: "center" }}>
-              <p style={{ fontSize: "1.1rem", fontWeight: 800, color: n.color, marginBottom: 4 }}>{n.name}</p>
-              <p style={{ fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>{n.role}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <LedgerCard eyebrow="The infrastructure triangle" style={{ marginBottom: 48 }}>
+        <MetricGrid cols={3}>
+          <MetricCard label="AEON" value="Execution" sub="Settlement layer" valueColor="#4AE8A0" />
+          <MetricCard label="Zetta" value="Visibility" sub="Financial identity layer" valueColor="#5B9EF4" />
+          <MetricCard label="Luca" value="Intelligence" sub="Operational intel layer" valueColor="#8B7CF6" />
+        </MetricGrid>
+      </LedgerCard>
 
       {/* What Zetta provides AEON agents */}
       <section style={{ marginBottom: 48 }}>
-        <h2 style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-          What Zetta provides AEON agents
-        </h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <SectionLabel style={{ marginBottom: 16 }}>What Zetta provides AEON agents</SectionLabel>
+        <LedgerCard>
           {[
-            { icon: "verified_user", title: "Verified financial identity",    body: "A public, on-chain-verifiable profile for every AEON agent. Wallets declared via ERC-8004 manifest, signatures verified, claims tracked." },
-            { icon: "analytics",     title: "Settlement classification",       body: "Zetta reads AEON wallet transactions and classifies them: settlement revenue, inference spend, treasury movement, internal transfers." },
-            { icon: "psychology",    title: "Luca financial intelligence",     body: "Luca generates plain-English summaries of every agent's financial patterns — settlement quality, revenue attribution, treasury health." },
-            { icon: "badge",         title: "Embeddable verification badges",  body: "One-line badge for any agent's GitHub README. Auto-updates as verification status and score change." },
-            { icon: "timeline",      title: "Surplus inference logging",       body: "AEON agents using Surplus can log inference spend to Zetta. Completeness: Luca sees the full cost side, not just revenue." },
-          ].map(f => (
-            <div key={f.title} style={{ display: "flex", gap: 14, padding: "16px 18px", borderRadius: 10, border: "1px solid var(--line)", alignItems: "flex-start" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--accent)", flexShrink: 0, marginTop: 1 }}>{f.icon}</span>
-              <div>
-                <p style={{ fontSize: "0.84rem", fontWeight: 700, marginBottom: 4 }}>{f.title}</p>
-                <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>{f.body}</p>
-              </div>
-            </div>
+            { title: "Verified financial identity",    body: "A public, on-chain-verifiable profile for every AEON agent. Wallets declared via ERC-8004 manifest, signatures verified, claims tracked." },
+            { title: "Settlement classification",       body: "Zetta reads AEON wallet transactions and classifies them: settlement revenue, inference spend, treasury movement, internal transfers." },
+            { title: "Luca financial intelligence",     body: "Luca generates plain-English summaries of every agent's financial patterns — settlement quality, revenue attribution, treasury health." },
+            { title: "Embeddable verification badges",  body: "One-line badge for any agent's GitHub README. Auto-updates as verification status and score change." },
+            { title: "Surplus inference logging",       body: "AEON agents using Surplus can log inference spend to Zetta. Completeness: Luca sees the full cost side, not just revenue." },
+          ].map((f, i, arr) => (
+            <LedgerRow
+              key={f.title}
+              first={i === 0}
+              last={i === arr.length - 1}
+              label={
+                <div>
+                  <strong style={{ display: "block", marginBottom: 3 }}>{f.title}</strong>
+                  <span style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.6 }}>{f.body}</span>
+                </div>
+              }
+              value=""
+              style={{ alignItems: "flex-start", padding: "12px 14px" }}
+            />
           ))}
-        </div>
+        </LedgerCard>
       </section>
 
       {/* Integration steps */}
       <section style={{ marginBottom: 48 }}>
-        <h2 style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 16, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-          Integration steps for AEON agents
-        </h2>
+        <SectionLabel style={{ marginBottom: 16 }}>Integration steps for AEON agents</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
           {[
             {
@@ -133,7 +122,7 @@ mkdir -p .agent
                 {s.code && (
                   <pre style={{
                     fontSize: "0.75rem", lineHeight: 1.6,
-                    background: "var(--code-bg, rgba(0,0,0,0.04))", borderRadius: 8,
+                    background: "var(--bg)", borderRadius: 8,
                     padding: "10px 14px", overflowX: "auto", margin: 0,
                     border: "1px solid var(--line)",
                   }}>
@@ -158,7 +147,7 @@ mkdir -p .agent
         <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.7, marginBottom: 14 }}>
           If you run an AEON-based project and want deeper integration — co-indexed
           agents, shared verification pipelines, or joint reporting — reach out directly.
-          We're building this for the ecosystem, not just one agent at a time.
+          We&apos;re building this for the ecosystem, not just one agent at a time.
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{
