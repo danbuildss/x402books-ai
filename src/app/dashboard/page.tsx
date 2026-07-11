@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type Agent = {
   name: string;
@@ -141,35 +143,35 @@ export default function OverviewPage() {
       )}
 
       {/* Stats */}
-      <div className="op-stat-grid">
-        <div className="op-stat">
-          <p className="op-stat-label">My Agents</p>
-          <p className="op-stat-value">{myAgents.length}</p>
-          <p className="op-stat-sub">{wallet ? "linked to your wallet" : "wallet not linked"}</p>
-        </div>
-        <div className="op-stat">
-          <p className="op-stat-label">Attribution</p>
-          <p className="op-stat-value">
-            {myAgents.filter((a) => a.verificationStatus === "Verified" || a.verificationStatus === "Luca Managed").length}
-            <span style={{ fontSize: "0.75rem", fontWeight: 400, color: "var(--muted)", marginLeft: 4 }}>verified</span>
-          </p>
-          <p className="op-stat-sub">of {myAgents.length} agents</p>
-        </div>
-        <div className="op-stat">
-          <p className="op-stat-label">Active Signals</p>
-          <p className="op-stat-value" style={{ color: totalAnomalies > 0 ? "#F4B942" : "var(--ink)" }}>
-            {totalAnomalies}
-          </p>
-          <p className="op-stat-sub">{totalAnomalies > 0 ? "require attention" : "all clear"}</p>
-        </div>
-        <div className="op-stat">
-          <p className="op-stat-label">Quick Links</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 4 }}>
-            <Link href="/dashboard/keys" style={{ fontSize: "0.75rem", color: "var(--accent)" }}>API Keys →</Link>
-            <Link href="/dashboard/luca" style={{ fontSize: "0.75rem", color: "var(--accent)" }}>Ask Luca →</Link>
-          </div>
-        </div>
-      </div>
+      <MetricGrid cols={4}>
+        <MetricCard
+          label="My Agents"
+          value={myAgents.length}
+          sub={wallet ? "linked to your wallet" : "wallet not linked"}
+        />
+        <MetricCard
+          label="Attribution"
+          value={myAgents.filter((a) => a.verificationStatus === "Verified" || a.verificationStatus === "Luca Managed").length}
+          sub={`of ${myAgents.length} agents`}
+          trend={myAgents.filter((a) => a.verificationStatus === "Verified" || a.verificationStatus === "Luca Managed").length > 0 ? "verified" : undefined}
+          trendPositive
+        />
+        <MetricCard
+          label="Active Signals"
+          value={totalAnomalies}
+          sub={totalAnomalies > 0 ? "require attention" : "all clear"}
+          valueColor={totalAnomalies > 0 ? "#F4B942" : undefined}
+        />
+        <MetricCard
+          label="Quick Links"
+          value={
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
+              <Link href="/dashboard/keys" style={{ fontSize: "0.8rem", color: "var(--accent)", fontFamily: "var(--font-sans)", fontWeight: 600 }}>API Keys →</Link>
+              <Link href="/dashboard/luca" style={{ fontSize: "0.8rem", color: "var(--accent)", fontFamily: "var(--font-sans)", fontWeight: 600 }}>Ask Luca →</Link>
+            </div>
+          }
+        />
+      </MetricGrid>
 
       {/* My Agents summary */}
       {myAgents.length > 0 && (

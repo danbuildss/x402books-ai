@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
 
 type Agent = {
   name: string;
@@ -162,30 +163,29 @@ export default function TreasuryPage() {
       {entries.length > 0 && (
         <>
           {/* Summary tiles */}
-          <div className="op-stat-grid" style={{ marginBottom: 24 }}>
-            <div className="op-stat">
-              <p className="op-stat-label">Total Treasury</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + (e.treasuryUsd ?? 0), 0))}</p>
-              <p className="op-stat-sub">across {entries.filter((e) => e.treasuryUsd !== null).length} attributed agents</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Daily Burn</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + (e.burnRateUsd ?? 0), 0))}</p>
-              <p className="op-stat-sub">combined 30d avg</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Daily Revenue</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + ((e.revenueUsd ?? 0) / 30), 0))}</p>
-              <p className="op-stat-sub">combined 30d avg</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Critical Agents</p>
-              <p className="op-stat-value" style={{ color: entries.filter((e) => e.status === "critical").length > 0 ? "#F46060" : "var(--ink)" }}>
-                {entries.filter((e) => e.status === "critical").length}
-              </p>
-              <p className="op-stat-sub">runway &lt; 14 days</p>
-            </div>
-          </div>
+          <MetricGrid cols={4} style={{ marginBottom: 24 }}>
+            <MetricCard
+              label="Total Treasury"
+              value={fmtUsd(entries.reduce((s, e) => s + (e.treasuryUsd ?? 0), 0))}
+              sub={`across ${entries.filter((e) => e.treasuryUsd !== null).length} attributed agents`}
+            />
+            <MetricCard
+              label="Daily Burn"
+              value={fmtUsd(entries.reduce((s, e) => s + (e.burnRateUsd ?? 0), 0))}
+              sub="combined 30d avg"
+            />
+            <MetricCard
+              label="Daily Revenue"
+              value={fmtUsd(entries.reduce((s, e) => s + ((e.revenueUsd ?? 0) / 30), 0))}
+              sub="combined 30d avg"
+            />
+            <MetricCard
+              label="Critical Agents"
+              value={entries.filter((e) => e.status === "critical").length}
+              sub="runway < 14 days"
+              valueColor={entries.filter((e) => e.status === "critical").length > 0 ? "#F46060" : undefined}
+            />
+          </MetricGrid>
 
           {/* Per-agent table */}
           <div className="op-card">
