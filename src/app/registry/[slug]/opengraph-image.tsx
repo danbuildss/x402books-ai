@@ -18,10 +18,10 @@ async function getAgent(slug: string): Promise<Agent | null> {
 }
 
 const HEALTH_COLOR: Record<string, string> = {
-  Active:     "#16a34a",
-  Stable:     "#2563eb",
+  Active:     "#4AE8A0",
+  Stable:     "#5B9EF4",
   Unverified: "#d97706",
-  Inactive:   "#dc2626",
+  Inactive:   "#F46060",
   Pending:    "#52525b",
 };
 

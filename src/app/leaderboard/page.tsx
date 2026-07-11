@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getRegistryAgents } from "@/lib/registry-db";
@@ -325,30 +326,36 @@ export default async function LeaderboardPage() {
 
         {/* GDP aggregate bar */}
         {gdp && (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            gap: 10,
-            marginBottom: 36,
-            padding: "18px 20px",
-            background: "var(--surface-soft)",
-            border: "1px solid var(--line)",
-            borderRadius: 10,
-          }}>
-            {[
-              { label: "Agent GDP (Revenue)", value: fmtUSD(gdp.total_revenue_usd), color: "#4AE8A0" },
-              { label: "Total Expenses",      value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
-              { label: "Net Income",          value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#F46060" },
-              { label: "Attributed Agents",  value: String(gdp.attributed_agents), color: "var(--fg)" },
-              { label: "ERC-8004 Indexed",   value: String(gdp.erc8004_agents),    color: "#8B7CF6"   },
-              { label: "Total Indexed",       value: `${gdp.total_agents}`, color: "var(--muted)" },
-            ].map((s) => (
-              <div key={s.label}>
-                <p style={{ margin: "0 0 4px", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600 }}>{s.label}</p>
-                <p style={{ margin: 0, fontSize: "1.15rem", fontWeight: 700, fontFamily: "monospace", color: s.color }}>{s.value}</p>
-              </div>
-            ))}
-          </div>
+          <MetricGrid cols={3} style={{ marginBottom: 36 }}>
+            <MetricCard
+              label="Agent GDP (Revenue)"
+              value={fmtUSD(gdp.total_revenue_usd)}
+              valueColor="#4AE8A0"
+            />
+            <MetricCard
+              label="Total Expenses"
+              value={fmtUSD(gdp.total_expenses_usd)}
+            />
+            <MetricCard
+              label="Net Income"
+              value={fmtUSD(gdp.total_net_income_usd)}
+              valueColor={gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#F46060"}
+            />
+            <MetricCard
+              label="Attributed Agents"
+              value={String(gdp.attributed_agents)}
+            />
+            <MetricCard
+              label="ERC-8004 Indexed"
+              value={String(gdp.erc8004_agents)}
+              valueColor="#8B7CF6"
+            />
+            <MetricCard
+              label="Total Indexed"
+              value={String(gdp.total_agents)}
+              valueColor="var(--muted)"
+            />
+          </MetricGrid>
         )}
 
         {/* Last updated + methodology link */}

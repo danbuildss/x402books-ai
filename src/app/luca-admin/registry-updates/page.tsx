@@ -333,7 +333,7 @@ export default function RegistryUpdatesPage() {
                 padding: "10px",
                 borderRadius: 7,
                 border: "none",
-                background: "#7c3aed",
+                background: "#8B7CF6",
                 color: "#fff",
                 fontWeight: 600,
                 fontSize: 14,

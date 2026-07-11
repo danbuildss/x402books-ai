@@ -70,8 +70,8 @@ export function agentHealthScore(agent: ScoredAgent): HealthScoreBreakdown {
 }
 
 export function gradeColor(grade: string): string {
-  return grade === "A" ? "#16a34a" :
+  return grade === "A" ? "#4AE8A0" :
          grade === "B" ? "#4AE8A0" :
-         grade === "C" ? "#ca8a04" :
-         grade === "D" ? "#ea580c" : "#dc2626";
+         grade === "C" ? "#F4B942" :
+         grade === "D" ? "#F4B942" : "#F46060";
 }

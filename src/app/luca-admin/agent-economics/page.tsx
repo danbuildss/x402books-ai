@@ -34,7 +34,7 @@ const usd = (n: number) => `$${Math.abs(n).toFixed(2)}`;
 const sign = (n: number) => (n >= 0 ? "+" : "-");
 
 function Row({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: "green" | "red" | "blue" }) {
-  const color = highlight === "green" ? "#16a34a" : highlight === "red" ? "#dc2626" : highlight === "blue" ? "#5B9EF4" : "#e5e7eb";
+  const color = highlight === "green" ? "#4AE8A0" : highlight === "red" ? "#F46060" : highlight === "blue" ? "#5B9EF4" : "#e5e7eb";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #1f2937" }}>
       <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>{label}</span>

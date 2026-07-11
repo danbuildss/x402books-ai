@@ -131,7 +131,7 @@ export default function ImportCandidatesPage() {
                         style={{
                           marginRight: "0.4rem",
                           padding: "0.2rem 0.6rem",
-                          background: "#16a34a",
+                          background: "#4AE8A0",
                           color: "#fff",
                           border: "none",
                           borderRadius: 3,
