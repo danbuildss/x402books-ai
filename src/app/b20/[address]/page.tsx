@@ -74,8 +74,8 @@ export default async function B20TokenProfilePage(
     : null;
 
   const manifestColor =
-    token.manifest_status === "attributed" ? "#22c55e" :
-    token.manifest_status === "candidate"  ? "#f59e0b" : "#6b7280";
+    token.manifest_status === "attributed" ? "#4AE8A0" :
+    token.manifest_status === "candidate"  ? "#F4B942" : "var(--muted)";
 
   const manifestLabel =
     token.manifest_status === "attributed" ? "Attributed" :
@@ -97,14 +97,14 @@ export default async function B20TokenProfilePage(
         {/* Testnet warning */}
         {isTestnet && (
           <div style={{
-            background: "#78350f18", border: "1px solid #d97706",
-            borderLeft: "3px solid #d97706", borderRadius: 8,
+            background: "rgba(244,185,66,0.08)", border: "1px solid #F4B942",
+            borderLeft: "3px solid #F4B942", borderRadius: 8,
             padding: "12px 16px", marginBottom: 20,
             display: "flex", alignItems: "flex-start", gap: 10,
           }}>
             <span style={{ fontSize: 14, lineHeight: 1 }}>⚠</span>
             <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
-              <strong style={{ color: "#d97706" }}>TESTNET · BASE SEPOLIA · DEMO DATA ONLY.</strong>{" "}
+              <strong style={{ color: "#F4B942" }}>TESTNET · BASE SEPOLIA · DEMO DATA ONLY.</strong>{" "}
               This token is not production financial activity. It does not enter Agent Books, Agent GDP,
               or production B20 intelligence. For proof-of-pipeline use only.
             </div>
@@ -189,10 +189,10 @@ export default async function B20TokenProfilePage(
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>Financial Readiness</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             {[
-              { label: "Books Eligible",    value: "No",                                         note: "Token contracts are never books-eligible",              color: "#6b7280" },
-              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#22c55e" : "#6b7280" },
-              { label: "In Agent GDP",      value: "No",                                         note: "B20 activity excluded from GDP",                        color: "#6b7280" },
-              { label: "Token Transfers = Revenue", value: "No",                                  note: "Token transfers are not operating revenue",            color: "#6b7280" },
+              { label: "Books Eligible",    value: "No",                                         note: "Token contracts are never books-eligible",              color: "var(--muted)" },
+              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#4AE8A0" : "var(--muted)" },
+              { label: "In Agent GDP",      value: "No",                                         note: "B20 activity excluded from GDP",                        color: "var(--muted)" },
+              { label: "Token Transfers = Revenue", value: "No",                                  note: "Token transfers are not operating revenue",            color: "var(--muted)" },
             ].map((r) => (
               <div key={r.label} style={{ background: "var(--bg)", borderRadius: 6, padding: "10px 12px" }}>
                 <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4 }}>{r.label}</div>
@@ -237,8 +237,8 @@ export default async function B20TokenProfilePage(
 
         {/* Luca summary */}
         {token.luca_summary && (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #6DB874", borderRadius: 8, padding: "16px 18px", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#6DB874", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Luca Read</div>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #4AE8A0", borderRadius: 8, padding: "16px 18px", marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#4AE8A0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Luca Read</div>
             <p style={{ fontSize: 13, color: "var(--ink)", margin: 0, lineHeight: 1.65 }}>{token.luca_summary}</p>
           </div>
         )}
