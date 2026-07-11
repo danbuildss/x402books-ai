@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { TIER_LABELS, TIER_LIMITS, type LucaTier } from "@/lib/luca-token";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type ApiKeyRecord = {
   id: string;
@@ -19,6 +22,10 @@ type ApiKeyRecord = {
 
 const TIER_COLORS: Record<LucaTier, string> = {
   free: "var(--muted)", holder: "var(--blue, #5B9EF4)", whale: "var(--accent)", luca: "#8B7CF6",
+};
+
+const TIER_BADGE_VARIANT: Record<LucaTier, "neutral" | "blue" | "green" | "purple"> = {
+  free: "neutral", holder: "blue", whale: "green", luca: "purple",
 };
 
 function relDate(iso: string | null) {
@@ -206,24 +213,26 @@ export default function ApiKeysPage() {
       </div>
 
       {/* Tier overview */}
-      <div className="op-stat-grid">
+      <MetricGrid cols={4} style={{ marginBottom: 24 }}>
         {(["free", "holder", "whale"] as LucaTier[]).map((tier) => (
-          <div key={tier} className="op-stat">
-            <p className="op-stat-label">{TIER_LABELS[tier]}</p>
-            <p className="op-stat-value" style={{ color: TIER_COLORS[tier] }}>{TIER_LIMITS[tier].toLocaleString()}</p>
-            <p className="op-stat-sub">requests / day</p>
-          </div>
+          <MetricCard
+            key={tier}
+            label={TIER_LABELS[tier]}
+            value={TIER_LIMITS[tier].toLocaleString()}
+            sub="requests / day"
+            valueColor={TIER_COLORS[tier]}
+          />
         ))}
-        <div className="op-stat">
-          <p className="op-stat-label">Active Keys</p>
-          <p className="op-stat-value">{keys.filter((k) => k.is_active !== false).length}</p>
-          <p className="op-stat-sub">of {keys.length} total</p>
-        </div>
-      </div>
+        <MetricCard
+          label="Active Keys"
+          value={keys.filter((k) => k.is_active !== false).length}
+          sub={`of ${keys.length} total`}
+        />
+      </MetricGrid>
 
       {/* New key banner */}
       {newKey && (
-        <div className="op-card" style={{ borderColor: "var(--accent)", background: "var(--accent-soft)" }}>
+        <div className="op-card" style={{ borderColor: "var(--accent)", background: "var(--accent-soft)", marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
             <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: "0.85rem" }}>✓ API key created — copy it now</span>
           </div>
@@ -239,25 +248,36 @@ export default function ApiKeysPage() {
       )}
 
       {/* Keys list */}
-      <div className="op-card">
+      <LedgerCard
+        eyebrow="Keys"
+        title="API Keys"
+        action={
+          <button className="op-btn op-btn-primary" style={{ fontSize: "0.75rem", padding: "5px 10px" }}
+            onClick={() => { setShowForm(true); setTimeout(() => inputRef.current?.focus(), 50); }}>
+            + New Key
+          </button>
+        }
+      >
         {showForm && (
-          <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            <input
-              ref={inputRef}
-              className="op-input"
-              placeholder="Key name (e.g. Production, My Agent)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") setShowForm(false); }}
-              maxLength={64}
-            />
-            <button className="op-btn op-btn-primary" onClick={handleCreate} disabled={creating || !newName.trim()}>{creating ? "Creating…" : "Create"}</button>
-            <button className="op-btn op-btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+          <div style={{ padding: "14px", borderBottom: "1px solid var(--line)" }}>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                ref={inputRef}
+                className="op-input"
+                placeholder="Key name (e.g. Production, My Agent)"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") setShowForm(false); }}
+                maxLength={64}
+              />
+              <button className="op-btn op-btn-primary" onClick={handleCreate} disabled={creating || !newName.trim()}>{creating ? "Creating…" : "Create"}</button>
+              <button className="op-btn op-btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+            </div>
           </div>
         )}
 
         {loading ? (
-          <div style={{ color: "var(--muted)", fontSize: "0.82rem" }}>Loading keys…</div>
+          <div style={{ padding: "14px", color: "var(--muted)", fontSize: "0.82rem" }}>Loading keys…</div>
         ) : signedOut ? (
           <div className="op-empty">
             <p className="op-empty-title">Session expired</p>
@@ -271,22 +291,21 @@ export default function ApiKeysPage() {
             <button className="op-btn op-btn-primary" onClick={() => { setShowForm(true); setTimeout(() => inputRef.current?.focus(), 50); }}>Create First Key →</button>
           </div>
         ) : (
-          <div>
-            {keys.map((key) => (
-              <div key={key.id} style={{ paddingBottom: 16, marginBottom: 16, borderBottom: "1px solid var(--line)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 12, justifyContent: "space-between" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>{key.name}</span>
+          keys.map((key, i) => (
+            <div key={key.id}>
+              <LedgerRow
+                first={i === 0 && !showForm}
+                last={i === keys.length - 1 && expandedWallet !== key.id}
+                label={
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.84rem" }}>{key.name}</span>
                       <code style={{ fontSize: "0.7rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{key.key_prefix}…</code>
-                      <span className="op-badge" style={{ background: `color-mix(in srgb, ${TIER_COLORS[key.tier ?? "free"]} 14%, transparent)`, color: TIER_COLORS[key.tier ?? "free"] }}>
-                        {TIER_LABELS[key.tier ?? "free"]}
-                      </span>
                     </div>
-                    <div style={{ display: "flex", gap: 16, fontSize: "0.74rem", color: "var(--muted)" }}>
+                    <div style={{ display: "flex", gap: 10, fontSize: "0.72rem", color: "var(--muted)" }}>
                       <span>Created {relDate(key.created_at)}</span>
                       <span>Last used: {relDate(key.last_used_at)}</span>
-                      <span>{key.requests_total.toLocaleString()} total requests</span>
+                      <span>{key.requests_total.toLocaleString()} total</span>
                       {key.wallet_address && (
                         <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem" }}>
                           {key.wallet_address.slice(0, 6)}…{key.wallet_address.slice(-4)}
@@ -294,7 +313,7 @@ export default function ApiKeysPage() {
                       )}
                     </div>
                     {/* Usage bar */}
-                    <div style={{ marginTop: 8, maxWidth: 260 }}>
+                    <div style={{ marginTop: 6, maxWidth: 240 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.68rem", color: "var(--muted)", marginBottom: 3 }}>
                         <span>{key.requests_today} / {key.rate_limit_per_day} today</span>
                         <span>{Math.round((key.requests_today / key.rate_limit_per_day) * 100)}%</span>
@@ -307,7 +326,10 @@ export default function ApiKeysPage() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                }
+                badge={<StatusBadge variant={TIER_BADGE_VARIANT[key.tier ?? "free"]}>{TIER_LABELS[key.tier ?? "free"]}</StatusBadge>}
+                value={
+                  <div style={{ display: "flex", gap: 6 }}>
                     <button className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}
                       onClick={() => setExpandedWallet(expandedWallet === key.id ? null : key.id)}>
                       {key.wallet_address ? "Re-verify" : "Link Wallet"}
@@ -317,106 +339,123 @@ export default function ApiKeysPage() {
                       Revoke
                     </button>
                   </div>
-                </div>
-                {expandedWallet === key.id && (
+                }
+                style={{ alignItems: "flex-start", padding: "12px 14px" }}
+              />
+              {expandedWallet === key.id && (
+                <div style={{
+                  padding: "0 14px 14px",
+                  background: "var(--surface)",
+                  border: "1px solid var(--line)",
+                  borderTop: "none",
+                  borderRadius: i === keys.length - 1 ? "0 0 8px 8px" : 0,
+                }}>
                   <WalletLinker
                     keyId={key.id}
                     currentTier={key.tier ?? "free"}
                     onLinked={(wallet, tier) => handleWalletLinked(key.id, wallet, tier)}
                   />
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+              )}
+            </div>
+          ))
         )}
-      </div>
+      </LedgerCard>
 
       {/* Agent-scoped key */}
-      <div className="op-card">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: showAgentForm || agentKeyResult ? 16 : 0 }}>
-          <div>
-            <h2 className="op-card-title">Agent-scoped key</h2>
-            <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "4px 0 0" }}>
-              Restrict a key to one agent — it can only query that agent&apos;s data.
-            </p>
-          </div>
-          {!agentKeyResult && (
+      <LedgerCard eyebrow="Scoped Keys" title="Agent-scoped key">
+        <div style={{ padding: "14px" }}>
+          <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "0 0 12px" }}>
+            Restrict a key to one agent — it can only query that agent&apos;s data.
+          </p>
+          {agentKeyResult ? (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Agent key created — copy it now</span>
+              </div>
+              <p style={{ color: "var(--muted)", fontSize: "0.76rem", margin: "0 0 10px" }}>
+                This key will not be shown again. Name it with <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:{agentSlug || "your-slug"}</code> so the API enforces the scope.
+              </p>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <code style={{ flex: 1, background: "var(--surface-soft)", padding: "8px 12px", borderRadius: 6, fontFamily: "var(--font-mono)", fontSize: "0.8rem", border: "1px solid var(--line)", wordBreak: "break-all" }}>
+                  {agentKeyResult}
+                </code>
+                <button className="op-btn op-btn-primary" onClick={() => copyAgentKey(agentKeyResult)}>{agentKeyCopied ? "✓ Copied" : "Copy"}</button>
+                <button className="op-btn op-btn-ghost" onClick={() => { setAgentKeyResult(null); setShowAgentForm(false); }}>Done</button>
+              </div>
+            </div>
+          ) : showAgentForm ? (
+            <div>
+              <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
+                Enter your agent&apos;s registry slug (the part after <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>/registry/</code> in its profile URL).
+                The key will be named <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:your-slug</code> and restricted to that agent only.
+              </p>
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 220, background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7, padding: "0 10px", gap: 4 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--muted)", flexShrink: 0 }}>agent:</span>
+                  <input
+                    ref={agentSlugRef}
+                    className="op-input"
+                    style={{ border: "none", background: "transparent", padding: "8px 0", flex: 1 }}
+                    placeholder="your-agent-slug"
+                    value={agentSlug}
+                    onChange={(e) => { setAgentSlug(e.target.value); setAgentKeyError(""); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleCreateAgentKey(); if (e.key === "Escape") setShowAgentForm(false); }}
+                    maxLength={64}
+                  />
+                </div>
+                <button className="op-btn op-btn-primary" onClick={handleCreateAgentKey} disabled={creatingAgent || !agentSlug.trim()}>
+                  {creatingAgent ? "Creating…" : "Create"}
+                </button>
+                <button className="op-btn op-btn-ghost" onClick={() => setShowAgentForm(false)}>Cancel</button>
+              </div>
+              {agentKeyError && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
+            </div>
+          ) : (
             <button
               className="op-btn"
-              onClick={() => { setShowAgentForm((v) => !v); setAgentKeyError(""); setTimeout(() => agentSlugRef.current?.focus(), 50); }}
+              onClick={() => { setShowAgentForm(true); setAgentKeyError(""); setTimeout(() => agentSlugRef.current?.focus(), 50); }}
             >
-              {showAgentForm ? "Cancel" : "Create agent key"}
+              Create agent key
             </button>
           )}
         </div>
-
-        {agentKeyResult ? (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{ color: "var(--accent)", fontWeight: 700, fontSize: "0.85rem" }}>✓ Agent key created — copy it now</span>
-            </div>
-            <p style={{ color: "var(--muted)", fontSize: "0.76rem", margin: "0 0 10px" }}>
-              This key will not be shown again. Name it with <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:{agentSlug || "your-slug"}</code> so the API enforces the scope.
-            </p>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <code style={{ flex: 1, background: "var(--surface-soft)", padding: "8px 12px", borderRadius: 6, fontFamily: "var(--font-mono)", fontSize: "0.8rem", border: "1px solid var(--line)", wordBreak: "break-all" }}>
-                {agentKeyResult}
-              </code>
-              <button className="op-btn op-btn-primary" onClick={() => copyAgentKey(agentKeyResult)}>{agentKeyCopied ? "✓ Copied" : "Copy"}</button>
-              <button className="op-btn op-btn-ghost" onClick={() => { setAgentKeyResult(null); setShowAgentForm(false); }}>Done</button>
-            </div>
-          </div>
-        ) : showAgentForm ? (
-          <div>
-            <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "0 0 10px", lineHeight: 1.6 }}>
-              Enter your agent&apos;s registry slug (the part after <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>/registry/</code> in its profile URL).
-              The key will be named <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>agent:your-slug</code> and restricted to that agent only.
-            </p>
-            <div style={{ display: "flex", gap: 8, alignItems: "flex-start", flexWrap: "wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 220, background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7, padding: "0 10px", gap: 4 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--muted)", flexShrink: 0 }}>agent:</span>
-                <input
-                  ref={agentSlugRef}
-                  className="op-input"
-                  style={{ border: "none", background: "transparent", padding: "8px 0", flex: 1 }}
-                  placeholder="your-agent-slug"
-                  value={agentSlug}
-                  onChange={(e) => { setAgentSlug(e.target.value); setAgentKeyError(""); }}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleCreateAgentKey(); if (e.key === "Escape") setShowAgentForm(false); }}
-                  maxLength={64}
-                />
-              </div>
-              <button className="op-btn op-btn-primary" onClick={handleCreateAgentKey} disabled={creatingAgent || !agentSlug.trim()}>
-                {creatingAgent ? "Creating…" : "Create"}
-              </button>
-            </div>
-            {agentKeyError && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
-          </div>
-        ) : null}
-      </div>
+      </LedgerCard>
 
       {/* Auth reference */}
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 12 }}>Using your key</h2>
-        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-          <div>
-            <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>Bearer token</p>
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "6px 10px", borderRadius: 6, display: "block" }}>
+      <LedgerCard eyebrow="Usage" title="Using your key">
+        <LedgerRow
+          first
+          label="Bearer token"
+          value={
+            <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "4px 8px", borderRadius: 6 }}>
               Authorization: Bearer zt_live_…
             </code>
-          </div>
-          <div>
-            <p style={{ fontSize: "0.68rem", color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 700 }}>API key header</p>
-            <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "6px 10px", borderRadius: 6, display: "block" }}>
+          }
+        />
+        <LedgerRow
+          label="API key header"
+          value={
+            <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", padding: "4px 8px", borderRadius: 6 }}>
               X-API-Key: zt_live_…
             </code>
-          </div>
+          }
+        />
+        <LedgerRow
+          last
+          label="Base URL"
+          value={
+            <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>
+              https://www.zettaai.co/api/v1
+            </code>
+          }
+        />
+        <div style={{ padding: "10px 14px", borderTop: "1px solid var(--line)" }}>
+          <SectionLabel>
+            <a href="/api" style={{ color: "var(--accent)" }}>Full API docs →</a>
+          </SectionLabel>
         </div>
-        <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10 }}>
-          Base URL: <code style={{ fontFamily: "var(--font-mono)" }}>https://www.zettaai.co/api/v1</code> &nbsp;·&nbsp;
-          <a href="/api" style={{ color: "var(--accent)" }}>Full API docs →</a>
-        </p>
-      </div>
+      </LedgerCard>
     </div>
   );
 }

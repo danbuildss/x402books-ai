@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 export default function SettingsPage() {
   const [wallet, setWallet] = useState<string | null>(null);
@@ -78,74 +80,90 @@ export default function SettingsPage() {
         <p className="op-page-sub">Manage your workspace preferences.</p>
       </div>
 
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 4 }}>Linked Wallet</h2>
-        <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.55 }}>
-          Your linked wallet is used to match agents in the registry and determine your API tier based on $LUCA balance.
-        </p>
-
-        {wallet && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "var(--surface-soft)", borderRadius: 7, border: "1px solid var(--line)" }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", flexShrink: 0 }} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--ink)", flex: 1 }}>{wallet}</span>
-            <button
-              className="op-btn op-btn-danger"
-              style={{ fontSize: "0.72rem", padding: "4px 8px" }}
-              onClick={unlinkWallet}
-              disabled={unlinking}
-            >
-              {unlinking ? "Unlinking…" : "Unlink"}
-            </button>
-          </div>
-        )}
-
-        <div className="op-field">
-          <label className="op-label">{wallet ? "Update wallet address" : "Wallet address"}</label>
-          <div style={{ display: "flex", gap: 8 }}>
-            <input
-              className="op-input"
-              placeholder="0x..."
-              value={walletInput}
-              onChange={(e) => setWalletInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && saveWallet()}
-            />
-            <button
-              className="op-btn op-btn-primary"
-              onClick={saveWallet}
-              disabled={saving || !walletInput.trim() || walletInput.trim() === wallet}
-            >
-              {saving ? "Saving…" : wallet ? "Update" : "Link"}
-            </button>
-          </div>
-        </div>
-
-        {saveMsg && (
-          <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "#4AE8A0" : "#F46060", marginTop: 8 }}>
-            {saveMsg}
+      {/* Linked Wallet */}
+      <LedgerCard eyebrow="Identity" title="Linked Wallet">
+        <LedgerRow
+          first
+          label="Status"
+          badge={
+            wallet
+              ? <StatusBadge variant="green">Linked</StatusBadge>
+              : <StatusBadge variant="neutral">Not linked</StatusBadge>
+          }
+          value={wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "—"}
+          valueStyle={{ color: wallet ? "var(--ink)" : "var(--muted)" }}
+        />
+        <LedgerRow
+          last
+          label="Purpose"
+          value="Agent attribution + API tier detection"
+          valueStyle={{ color: "var(--muted)", fontFamily: "inherit", fontWeight: 400, fontSize: "0.75rem" }}
+        />
+        <div style={{ padding: "14px", borderTop: "1px solid var(--line)" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 12px", lineHeight: 1.55 }}>
+            Your linked wallet is used to match agents in the registry and determine your API tier based on $LUCA balance.
           </p>
-        )}
-      </div>
-
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 12 }}>Account</h2>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-            <div>
-              <p style={{ margin: 0, fontSize: "0.84rem", fontWeight: 600, color: "var(--ink)" }}>Session</p>
-              <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)" }}>Your access is tied to a session token via the access code flow.</p>
+          {wallet && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "var(--surface-soft)", borderRadius: 7, border: "1px solid var(--line)" }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", flexShrink: 0 }} />
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--ink)", flex: 1 }}>{wallet}</span>
+              <button
+                className="op-btn op-btn-danger"
+                style={{ fontSize: "0.72rem", padding: "4px 8px" }}
+                onClick={unlinkWallet}
+                disabled={unlinking}
+              >
+                {unlinking ? "Unlinking…" : "Unlink"}
+              </button>
             </div>
+          )}
+          <div className="op-field">
+            <label className="op-label">{wallet ? "Update wallet address" : "Wallet address"}</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                className="op-input"
+                placeholder="0x..."
+                value={walletInput}
+                onChange={(e) => setWalletInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && saveWallet()}
+              />
+              <button
+                className="op-btn op-btn-primary"
+                onClick={saveWallet}
+                disabled={saving || !walletInput.trim() || walletInput.trim() === wallet}
+              >
+                {saving ? "Saving…" : wallet ? "Update" : "Link"}
+              </button>
+            </div>
+          </div>
+          {saveMsg && (
+            <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "#4AE8A0" : "#F46060", marginTop: 8 }}>
+              {saveMsg}
+            </p>
+          )}
+        </div>
+      </LedgerCard>
+
+      {/* Account */}
+      <LedgerCard eyebrow="Account" title="Account">
+        <LedgerRow
+          first
+          label="Session"
+          detail="Access code flow — session token"
+          value={
             <button className="op-btn op-btn-ghost" style={{ fontSize: "0.76rem" }} onClick={signOut}>
               Sign Out
             </button>
-          </div>
-          <div style={{ padding: "10px 0" }}>
-            <p style={{ margin: 0, fontSize: "0.84rem", fontWeight: 600, color: "var(--ink)" }}>Access code</p>
-            <p style={{ margin: "4px 0 0", fontSize: "0.74rem", color: "var(--muted)" }}>
-              Access codes are managed by the Zetta team. Contact us if you need to rotate your code.
-            </p>
-          </div>
-        </div>
-      </div>
+          }
+        />
+        <LedgerRow
+          last
+          label="Access code"
+          value="Managed by Zetta team"
+          valueStyle={{ color: "var(--muted)", fontFamily: "inherit", fontWeight: 400 }}
+          detail="Contact us to rotate"
+        />
+      </LedgerCard>
     </div>
   );
 }
