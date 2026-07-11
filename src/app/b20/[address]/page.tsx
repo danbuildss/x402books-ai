@@ -97,14 +97,14 @@ export default async function B20TokenProfilePage(
         {/* Testnet warning */}
         {isTestnet && (
           <div style={{
-            background: "#78350f18", border: "1px solid #d97706",
-            borderLeft: "3px solid #d97706", borderRadius: 8,
+            background: "rgba(244,185,66,0.08)", border: "1px solid #F4B942",
+            borderLeft: "3px solid #F4B942", borderRadius: 8,
             padding: "12px 16px", marginBottom: 20,
             display: "flex", alignItems: "flex-start", gap: 10,
           }}>
             <span style={{ fontSize: 14, lineHeight: 1 }}>⚠</span>
             <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
-              <strong style={{ color: "#d97706" }}>TESTNET · BASE SEPOLIA · DEMO DATA ONLY.</strong>{" "}
+              <strong style={{ color: "#F4B942" }}>TESTNET · BASE SEPOLIA · DEMO DATA ONLY.</strong>{" "}
               This token is not production financial activity. It does not enter Agent Books, Agent GDP,
               or production B20 intelligence. For proof-of-pipeline use only.
             </div>

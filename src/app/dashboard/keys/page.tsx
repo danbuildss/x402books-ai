@@ -84,7 +84,7 @@ function WalletLinker({ keyId, currentTier, onLinked }: {
         Sign with your wallet to check $LUCA balance and unlock a higher tier. The signature is free — no transaction.
       </p>
       <button className="op-btn" onClick={handleLink} disabled={loading}>{loading ? stepLabel : "Connect & Sign"}</button>
-      {error && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: 6 }}>{error}</p>}
+      {error && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 6 }}>{error}</p>}
       {result && (
         <p style={{ fontSize: "0.75rem", color: "var(--accent)", marginTop: 6 }}>
           ✓ Wallet verified — {TIER_LABELS[result.tier]} tier ({TIER_LIMITS[result.tier].toLocaleString()} req/day)
@@ -302,7 +302,7 @@ export default function ApiKeysPage() {
                       <div className="op-usage-bar-track">
                         <div className="op-usage-bar-fill" style={{
                           width: `${Math.min(100, (key.requests_today / key.rate_limit_per_day) * 100)}%`,
-                          background: key.requests_today >= key.rate_limit_per_day ? "#c0392b" : TIER_COLORS[key.tier ?? "free"],
+                          background: key.requests_today >= key.rate_limit_per_day ? "#F46060" : TIER_COLORS[key.tier ?? "free"],
                         }} />
                       </div>
                     </div>
@@ -390,7 +390,7 @@ export default function ApiKeysPage() {
                 {creatingAgent ? "Creating…" : "Create"}
               </button>
             </div>
-            {agentKeyError && <p style={{ color: "#c0392b", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
+            {agentKeyError && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
           </div>
         ) : null}
       </div>

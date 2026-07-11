@@ -20,7 +20,7 @@ async function getAgent(slug: string): Promise<Agent | null> {
 const HEALTH_COLOR: Record<string, string> = {
   Active:     "#4AE8A0",
   Stable:     "#5B9EF4",
-  Unverified: "#d97706",
+  Unverified: "#F4B942",
   Inactive:   "#F46060",
   Pending:    "#52525b",
 };
@@ -126,7 +126,7 @@ export default async function OgImage({
           {agent.ecosystem}
         </span>
         {agent.xHandle && (
-          <span style={{ color: "#4a9eff", fontSize: 18 }}>{agent.xHandle}</span>
+          <span style={{ color: "#5B9EF4", fontSize: 18 }}>{agent.xHandle}</span>
         )}
       </div>
 

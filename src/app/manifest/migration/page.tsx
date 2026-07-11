@@ -61,7 +61,7 @@ export default function ManifestMigrationPage() {
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 24 }}>
             <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8 }}>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#c0392b", marginBottom: 10 }}>Before</div>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#F46060", marginBottom: 10 }}>Before</div>
               <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.83rem", ...muted }}>
                 .x402books/wallets.json
               </code>

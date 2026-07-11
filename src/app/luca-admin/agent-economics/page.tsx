@@ -37,7 +37,7 @@ function Row({ label, value, sub, highlight }: { label: string; value: string; s
   const color = highlight === "green" ? "#4AE8A0" : highlight === "red" ? "#F46060" : highlight === "blue" ? "#5B9EF4" : "#e5e7eb";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #1f2937" }}>
-      <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>{label}</span>
+      <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>{label}</span>
       <div style={{ textAlign: "right" }}>
         <span style={{ color, fontFamily: "monospace", fontSize: "0.9rem", fontWeight: 600 }}>{value}</span>
         {sub && <div style={{ color: "var(--muted)", fontSize: "0.75rem", marginTop: 2 }}>{sub}</div>}
@@ -99,8 +99,8 @@ export default function AgentEconomicsPage() {
                   padding: "4px 12px",
                   borderRadius: 4,
                   border: `1px solid ${period === p ? "#5B9EF4" : "#374151"}`,
-                  background: period === p ? "#1d4ed8" : "transparent",
-                  color: period === p ? "#fff" : "#9ca3af",
+                  background: period === p ? "#5B9EF4" : "transparent",
+                  color: period === p ? "#fff" : "var(--muted)",
                   cursor: "pointer",
                   fontSize: "0.8rem",
                 }}
@@ -116,7 +116,7 @@ export default function AgentEconomicsPage() {
                 borderRadius: 4,
                 border: "1px solid #374151",
                 background: "transparent",
-                color: loading ? "#4b5563" : "#9ca3af",
+                color: loading ? "#4b5563" : "var(--muted)",
                 cursor: loading ? "default" : "pointer",
                 fontSize: "0.8rem",
               }}
@@ -127,7 +127,7 @@ export default function AgentEconomicsPage() {
         </div>
 
         {error && (
-          <div style={{ background: "#1f0a0a", border: "1px solid #7f1d1d", borderRadius: 8, padding: "1rem", marginBottom: "1.5rem", color: "#fca5a5", fontSize: "0.85rem" }}>
+          <div style={{ background: "rgba(244,96,96,0.08)", border: "1px solid rgba(244,96,96,0.30)", borderRadius: 8, padding: "1rem", marginBottom: "1.5rem", color: "#F46060", fontSize: "0.85rem" }}>
             {error}
           </div>
         )}
@@ -146,8 +146,8 @@ export default function AgentEconomicsPage() {
 
             {/* Net position banner */}
             <div style={{
-              background: s.netAgentPosition > 0.01 ? "#052e16" : s.netAgentPosition < -0.01 ? "#1f0a0a" : "#111827",
-              border: `1px solid ${s.netAgentPosition > 0.01 ? "#166534" : s.netAgentPosition < -0.01 ? "#7f1d1d" : "#1f2937"}`,
+              background: s.netAgentPosition > 0.01 ? "rgba(74,232,160,0.08)" : s.netAgentPosition < -0.01 ? "rgba(244,96,96,0.08)" : "#111827",
+              border: `1px solid ${s.netAgentPosition > 0.01 ? "#166534" : s.netAgentPosition < -0.01 ? "rgba(244,96,96,0.30)" : "#1f2937"}`,
               borderRadius: 8,
               padding: "1rem 1.25rem",
               marginBottom: "1.5rem",
@@ -155,7 +155,7 @@ export default function AgentEconomicsPage() {
               justifyContent: "space-between",
               alignItems: "center",
             }}>
-              <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>Net Agent Position</span>
+              <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Net Agent Position</span>
               <span style={{
                 fontSize: "1.4rem",
                 fontWeight: 700,

@@ -120,7 +120,7 @@ export default function SettingsPage() {
         </div>
 
         {saveMsg && (
-          <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "#4AE8A0" : "#c0392b", marginTop: 8 }}>
+          <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "#4AE8A0" : "#F46060", marginTop: 8 }}>
             {saveMsg}
           </p>
         )}

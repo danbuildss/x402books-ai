@@ -39,7 +39,7 @@ function FetchTab() {
           <input className="op-input" placeholder="https://github.com/your-org/your-agent-repo" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && fetchManifest()} />
           <button className="op-btn op-btn-primary" onClick={fetchManifest} disabled={fetching || !repoUrl.trim()}>{fetching ? "Fetching…" : "Fetch"}</button>
         </div>
-        {error && <p style={{ color: "#c0392b", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
+        {error && <p style={{ color: "#F46060", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
       </div>
 
       {preview && (
@@ -170,7 +170,7 @@ function BuildTab() {
                 <input className="op-input" style={{ flex: 1, fontSize: "0.78rem" }} placeholder="Label (optional)" value={w.label ?? ""} onChange={(e) => updateWallet(i, "label", e.target.value)} />
               </div>
               {w.address && !/^0x[0-9a-fA-F]{40}$/.test(w.address.trim()) && (
-                <p style={{ fontSize: "0.72rem", color: "#c0392b", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
+                <p style={{ fontSize: "0.72rem", color: "#F46060", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
               )}
             </div>
           ))}

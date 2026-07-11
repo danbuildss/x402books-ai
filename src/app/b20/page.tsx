@@ -95,14 +95,14 @@ export default async function B20Page(
         {/* Testnet warning banner */}
         {isTestnet && (
           <div style={{
-            background: "#78350f18", border: "1px solid #d97706",
-            borderLeft: "3px solid #d97706", borderRadius: 8,
+            background: "rgba(244,185,66,0.08)", border: "1px solid #F4B942",
+            borderLeft: "3px solid #F4B942", borderRadius: 8,
             padding: "14px 18px", marginBottom: 20,
             display: "flex", alignItems: "flex-start", gap: 12,
           }}>
             <span style={{ fontSize: 16, lineHeight: 1 }}>⚠</span>
             <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#d97706", marginBottom: 4 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#F4B942", marginBottom: 4 }}>
                 TESTNET — BASE SEPOLIA · DEMO DATA ONLY
               </div>
               <p style={{ margin: 0, fontSize: 12, color: "var(--muted)", lineHeight: 1.6 }}>
@@ -117,12 +117,12 @@ export default async function B20Page(
         {/* Live status banner */}
         <div style={{
           background: "var(--surface)", border: "1px solid var(--line)",
-          borderLeft: `3px solid ${isTestnet ? "#d97706" : "#4AE8A0"}`, borderRadius: 10,
+          borderLeft: `3px solid ${isTestnet ? "#F4B942" : "#4AE8A0"}`, borderRadius: 10,
           padding: "16px 20px", marginBottom: 24,
           display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap",
         }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: isTestnet ? "#d97706" : "#4AE8A0", marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: isTestnet ? "#F4B942" : "#4AE8A0", marginBottom: 6 }}>
               {isTestnet ? "B20 Intelligence · Testnet Demo" : "B20 Intelligence · Mainnet Live"}
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.65 }}>
@@ -176,7 +176,7 @@ export default async function B20Page(
             <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 10 }}>
               <span>B20 Tokens ({tokens.length})</span>
               {isTestnet && (
-                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "#d9770620", color: "#d97706" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 4, background: "#F4B94220", color: "#F4B942" }}>
                   TESTNET · BASE SEPOLIA
                 </span>
               )}
@@ -202,7 +202,7 @@ export default async function B20Page(
                           </a>
                           {t.name && <span style={{ fontWeight: 400, color: "var(--muted)", marginLeft: 5, fontSize: 11 }}>{t.name}</span>}
                           {!t.symbol && !t.name && isTestnet && (
-                            <span style={{ fontWeight: 400, color: "#d97706", marginLeft: 5, fontSize: 10 }}>no metadata</span>
+                            <span style={{ fontWeight: 400, color: "#F4B942", marginLeft: 5, fontSize: 10 }}>no metadata</span>
                           )}
                         </td>
                         <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
@@ -264,7 +264,7 @@ export default async function B20Page(
             Issuer wallets require manifest declaration for attribution ·
             B20 activity is excluded from Agent GDP
             {isTestnet && (
-              <> · <span style={{ color: "#d97706", fontWeight: 600 }}>Testnet data excluded from all production stats</span></>
+              <> · <span style={{ color: "#F4B942", fontWeight: 600 }}>Testnet data excluded from all production stats</span></>
             )}
           </div>
         </div>
