@@ -822,6 +822,21 @@ export function RegistryClient({
           </span>
         </div>
 
+        {/* Column headers */}
+        <div style={{
+          display: "flex", alignItems: "center",
+          padding: "5px 14px 5px 52px",
+          marginBottom: 2,
+        }}>
+          <span style={{ flex: 1, fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+            Agent
+          </span>
+          <span style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", minWidth: 100, textAlign: "right" }}>
+            30d Rev / Net
+          </span>
+          <span style={{ width: 20 }} />
+        </div>
+
         {/* List */}
         <div className="reg-list">
           {paginated.length === 0 ? (

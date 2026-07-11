@@ -7,6 +7,9 @@ import Image from "next/image";
 import { toPng } from "html-to-image";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { StatusBadge as UIStatusBadge, CostStatusBadge } from "@/components/ui/badge";
 import type { Agent, Health, VerificationStatus } from "@/app/registry/types";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import type { InferenceSummary } from "@/lib/inference-events";
@@ -301,26 +304,11 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
       )}
 
       {/* Primary stats: Revenue / Expenses / Net Income */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 14 }}>
-        {([
-          { label: "Revenue",    value: usd(f.revenue_usd),     color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" },
-          { label: "Expenses",   value: usd(f.expenses_usd),    color: f.expenses_usd > 0 ? "#F46060"      : "var(--muted)" },
-          { label: "Net Income", value: (netPositive ? "+" : "−") + usd(f.net_income_usd), color: netPositive ? "var(--accent)" : "#F46060" },
-        ] as const).map(({ label, value, color }) => (
-          <div key={label} style={{
-            display: "flex", flexDirection: "column", gap: 4,
-            padding: "10px 12px", borderRadius: 8,
-            background: "var(--surface-soft)", border: "1px solid var(--line)",
-          }}>
-            <span style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 500 }}>
-              {label}
-            </span>
-            <span style={{ fontSize: "1.05rem", fontWeight: 700, color, letterSpacing: "-0.02em", fontFamily: "monospace" }}>
-              {value}
-            </span>
-          </div>
-        ))}
-      </div>
+      <MetricGrid cols={3} style={{ marginBottom: 14 }}>
+        <MetricCard label="Revenue"    value={usd(f.revenue_usd)}    valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
+        <MetricCard label="Expenses"   value={usd(f.expenses_usd)}   valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
+        <MetricCard label="Net Income" value={(netPositive ? "+" : "−") + usd(f.net_income_usd)} valueColor={netPositive ? "var(--accent)" : "#F46060"} />
+      </MetricGrid>
 
       {/* Secondary stats */}
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: "0.77rem", color: "var(--muted)", marginBottom: 12 }}>
@@ -349,9 +337,7 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
 
       {/* Confidence scores */}
       <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: "0 0 6px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-          Data Confidence
-        </p>
+        <SectionLabel style={{ marginBottom: 6 }}>Data Confidence</SectionLabel>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {(
             [
@@ -360,20 +346,11 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
               { label: "Treasury", value: books.confidence.treasury },
               { label: "Overall",  value: books.confidence.overall  },
             ] as const
-          ).map(({ label, value }) => {
-            const color = value === "high" ? "#4AE8A0" : value === "medium" ? "#F4B942" : "#F46060";
-            return (
-              <span key={label} style={{
-                fontSize: "0.68rem", padding: "2px 9px", borderRadius: 99,
-                background: `color-mix(in srgb, ${color} 10%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
-                color,
-                fontWeight: 600,
-              }}>
-                {label}: {value.charAt(0).toUpperCase() + value.slice(1)}
-              </span>
-            );
-          })}
+          ).map(({ label, value }) => (
+            <UIStatusBadge key={label} variant={value === "high" ? "green" : value === "medium" ? "amber" : "red"}>
+              {label}: {value.charAt(0).toUpperCase() + value.slice(1)}
+            </UIStatusBadge>
+          ))}
         </div>
         {books.confidence.flags.length > 0 && (
           <p style={{ margin: "5px 0 0", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.5 }}>
@@ -384,54 +361,42 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
 
       {/* Quarantine disclosure */}
       {books.classification.quarantined_inflows_usd > 0 && (
-        <div style={{
-          marginBottom: 12,
-          padding: "10px 12px",
-          borderRadius: 8,
-          border: "1px solid rgba(245,158,11,0.28)",
-          background: "rgba(245,158,11,0.06)",
-        }}>
-          <p style={{ margin: "0 0 7px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#F4B942" }}>
-            Classification · Quarantined Inflows
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
-              <span style={{ color: "var(--muted)" }}>Operating Revenue</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" }}>
-                {usd(f.revenue_usd)}
-              </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
-              <span style={{ color: "var(--muted)" }}>Quarantined Inflows</span>
-              <span style={{ fontFamily: "monospace", color: "#F4B942" }}>
-                {usd(books.classification.quarantined_inflows_usd)}
-              </span>
-            </div>
-          </div>
+        <LedgerCard eyebrow="Classification · Quarantined Inflows" style={{ marginBottom: 12 }}>
+          <LedgerRow
+            first
+            label="Operating Revenue"
+            value={usd(f.revenue_usd)}
+            valueStyle={{ color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" }}
+          />
+          <LedgerRow
+            last
+            label="Quarantined Inflows"
+            value={usd(books.classification.quarantined_inflows_usd)}
+            valueStyle={{ color: "#F4B942" }}
+          />
           {books.classification.quarantined_events.length > 0 && (
             <p style={{ margin: "6px 0 0", fontSize: "0.7rem", color: "var(--muted)", lineHeight: 1.5 }}>
               Reason:{" "}
               {[...new Set(books.classification.quarantined_events.map((e) => e.reason.replace(/_/g, " ")))].join(", ")}
             </p>
           )}
-        </div>
+        </LedgerCard>
       )}
 
       {/* Expense breakdown */}
       {books.breakdown.expenses_by_category.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <p style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600, marginBottom: 6 }}>
-            Expenses by Category
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {books.breakdown.expenses_by_category.slice(0, 4).map((e) => (
-              <div key={e.category} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem" }}>
-                <span style={{ color: "var(--muted)" }}>{e.label}</span>
-                <span style={{ fontFamily: "monospace", color: "#F46060" }}>−{usd(e.total_usd)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <LedgerCard eyebrow="Expenses by Category" style={{ marginBottom: 12 }}>
+          {books.breakdown.expenses_by_category.slice(0, 4).map((e, i, arr) => (
+            <LedgerRow
+              key={e.category}
+              first={i === 0}
+              last={i === arr.length - 1}
+              label={e.label}
+              value={`−${usd(e.total_usd)}`}
+              valueStyle={{ color: "#F46060" }}
+            />
+          ))}
+        </LedgerCard>
       )}
 
       {/* Luca financial summary */}
@@ -477,109 +442,119 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
 
   if (isInactive) return null;
 
+  const rowCount = [
+    true, // profitability
+    coveragePct !== null,
+    f.expenses_usd > 0,
+    f.margin_pct !== null,
+    true, // treasury
+    f.runway_months !== null,
+    topSource !== null && topSourcePct !== null,
+  ].filter(Boolean).length;
+  let rowIndex = 0;
+
   return (
     <section className="prof-section">
       <p className="prof-section-title">Treasury Signals</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column" }}>
 
         {/* Profitability verdict */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>Profitability</span>
-          <span style={{ fontWeight: 700, color: verdictColor }}>
-            ● {verdictLabel}
-          </span>
-        </div>
+        <LedgerRow
+          first={rowIndex++ === 0}
+          last={rowIndex === rowCount}
+          label="Profitability"
+          value={<span style={{ color: verdictColor }}>● {verdictLabel}</span>}
+        />
 
         {/* Revenue coverage bar */}
         {coveragePct !== null && (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: 5 }}>
-              <span style={{ color: "var(--muted)" }}>Revenue vs Expenses</span>
-              <span style={{ color: verdictColor, fontWeight: 600 }}>{coverageLabel}</span>
-            </div>
-            <div style={{ height: 6, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
-              <div style={{
-                height: "100%",
-                width: `${Math.min(100, coveragePct)}%`,
-                background: isProfitable ? "#4AE8A0" : "#F46060",
-                borderRadius: 99,
-                transition: "width 0.4s",
-              }} />
-            </div>
-          </div>
+          <LedgerRow
+            first={false}
+            last={rowIndex++ === rowCount - 1}
+            label="Revenue vs Expenses"
+            value={
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, minWidth: 120 }}>
+                <span style={{ fontSize: "0.82rem", color: verdictColor, fontWeight: 600, fontFamily: "var(--font-mono)" }}>{coverageLabel}</span>
+                <div style={{ height: 4, width: 100, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.min(100, coveragePct)}%`, background: isProfitable ? "#4AE8A0" : "#F46060", borderRadius: 99 }} />
+                </div>
+              </div>
+            }
+          />
         )}
 
         {/* 30d burn rate */}
         {f.expenses_usd > 0 && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>30d Burn Rate</span>
-            <span style={{ fontFamily: "monospace", color: "#F46060" }}>−{usd(f.expenses_usd)}</span>
-          </div>
+          <LedgerRow
+            first={false}
+            last={rowIndex++ === rowCount - 1}
+            label="30d Burn Rate"
+            value={`−${usd(f.expenses_usd)}`}
+            valueStyle={{ color: "#F46060" }}
+          />
         )}
 
         {/* Margin */}
         {f.margin_pct !== null && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Net Margin</span>
-            <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.margin_pct >= 0 ? "#4AE8A0" : "#F46060" }}>
-              {f.margin_pct.toFixed(1)}%
-            </span>
-          </div>
+          <LedgerRow
+            first={false}
+            last={rowIndex++ === rowCount - 1}
+            label="Net Margin"
+            value={`${f.margin_pct.toFixed(1)}%`}
+            valueStyle={{ color: f.margin_pct >= 0 ? "#4AE8A0" : "#F46060" }}
+          />
         )}
 
-        {/* Treasury balance + runway */}
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>Treasury (stables)</span>
-          {f.treasury_balance_usd !== null
-            ? <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--fg)" }}>{usd(f.treasury_balance_usd)}</span>
-            : <span style={{ color: "var(--muted)", fontSize: "0.8rem" }}>— <span style={{ fontSize: "0.7rem" }}>No stablecoin balance detected</span></span>
-          }
-        </div>
+        {/* Treasury balance */}
+        <LedgerRow
+          first={false}
+          last={f.runway_months === null && (!topSource || topSourcePct === null)}
+          label="Treasury (stables)"
+          value={f.treasury_balance_usd !== null ? usd(f.treasury_balance_usd) : "—"}
+          detail={f.treasury_balance_usd === null ? "No stablecoin balance detected" : undefined}
+          valueStyle={{ color: f.treasury_balance_usd !== null ? "var(--ink)" : "var(--muted)" }}
+        />
         {f.runway_months !== null && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Runway</span>
-            <span style={{ fontFamily: "monospace", fontWeight: 600, color: f.runway_months >= 3 ? "#4AE8A0" : f.runway_months >= 1 ? "#F4B942" : "#F46060" }}>
-              {f.runway_months < 1 ? "< 1 mo" : `${f.runway_months.toFixed(1)} mo`}
-            </span>
-          </div>
+          <LedgerRow
+            first={false}
+            last={!topSource || topSourcePct === null}
+            label="Runway"
+            value={f.runway_months < 1 ? "< 1 mo" : `${f.runway_months.toFixed(1)} mo`}
+            valueStyle={{ color: f.runway_months >= 3 ? "#4AE8A0" : f.runway_months >= 1 ? "#F4B942" : "#F46060" }}
+          />
         )}
 
         {/* Revenue concentration */}
         {topSource && topSourcePct !== null && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Top Revenue Source</span>
-            <div style={{ textAlign: "right" }}>
-              <span style={{ fontFamily: "monospace", fontSize: "0.72rem", color: "var(--muted)" }}>
-                {topSource.address.slice(0, 6)}…{topSource.address.slice(-4)}
-              </span>
-              <span style={{ marginLeft: 6, color: "var(--fg)", fontWeight: 600 }}>{topSourcePct}%</span>
-            </div>
-          </div>
+          <LedgerRow
+            first={false}
+            last
+            label="Top Revenue Source"
+            value={`${topSourcePct}%`}
+            detail={`${topSource.address.slice(0, 6)}…${topSource.address.slice(-4)}`}
+          />
         )}
 
-        {/* Attribution source tag */}
-        <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+        {/* Attribution source footer */}
+        <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <UIStatusBadge variant="neutral">
             {books.attribution.source === "manifest" ? "Declared manifest" : "Registry attribution"}
-          </span>
+          </UIStatusBadge>
           {(() => {
             const c = books.attribution.confidence;
-            const color = c === "high" ? "#4AE8A0" : c === "medium" ? "#F4B942" : "#F46060";
-            const icon  = c === "high" ? "✓" : c === "medium" ? "~" : "⚠";
-            const tip   = c === "high"
+            const icon = c === "high" ? "✓" : c === "medium" ? "~" : "⚠";
+            const tip = c === "high"
               ? "Wallets declared via signed manifest"
               : c === "medium"
               ? "Wallets inferred from public data"
               : "Unverified — declaration unconfirmed";
             return (
-              <span title={tip} style={{
-                fontSize: "0.68rem", padding: "2px 8px", borderRadius: 99, cursor: "default",
-                background: `color-mix(in srgb, ${color} 10%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-                color,
-              }}>
+              <UIStatusBadge
+                variant={c === "high" ? "green" : c === "medium" ? "amber" : "red"}
+                style={{ cursor: "default" }}
+              >
                 {icon} {c} confidence
-              </span>
+              </UIStatusBadge>
             );
           })()}
         </div>
@@ -1205,17 +1180,10 @@ function InferenceTab({
       {net !== null && (
         <section className="prof-section">
           <p className="prof-section-title">Revenue vs Inference Cost</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {([
-              { label: "Operating Revenue",  value: revenue != null ? `+${usd(revenue)}` : "—",  color: revenue && revenue > 0 ? "var(--accent)" : "var(--muted)" },
-              { label: "Inference Spend",    value: ia.hasCostData ? `−${usd(spend)}` : "—",       color: ia.hasCostData && spend > 0 ? "#F46060" : "var(--muted)" },
-              { label: "Net Position",       value: net >= 0 ? `+${usd(net)}` : `−${usd(Math.abs(net))}`, color: net >= 0 ? "var(--accent)" : "#F46060" },
-            ] as const).map(({ label, value, color }) => (
-              <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", paddingBottom: label === "Inference Spend" ? 8 : 0, borderBottom: label === "Inference Spend" ? "1px solid var(--line)" : undefined }}>
-                <span style={{ color: "var(--muted)" }}>{label}</span>
-                <span style={{ fontFamily: "var(--font-mono)", fontWeight: label === "Net Position" ? 700 : 400, color }}>{value}</span>
-              </div>
-            ))}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <LedgerRow first label="Operating Revenue" value={revenue != null ? `+${usd(revenue)}` : "—"} valueStyle={{ color: revenue && revenue > 0 ? "var(--accent)" : "var(--muted)" }} />
+            <LedgerRow       label="Inference Spend"   value={ia.hasCostData ? `−${usd(spend)}` : "—"}   valueStyle={{ color: ia.hasCostData && spend > 0 ? "#F46060" : "var(--muted)" }} />
+            <LedgerRow last  label="Net Position"      value={net >= 0 ? `+${usd(net)}` : `−${usd(Math.abs(net))}`} valueStyle={{ color: net >= 0 ? "var(--accent)" : "#F46060", fontWeight: 700 }} />
           </div>
         </section>
       )}
@@ -1288,6 +1256,9 @@ function InferenceTab({
 function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
   const usd = (n: number) => n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`;
 
+  const spendDisplay = ia.hasCostData && ia.totalCostUsd > 0 ? `-${usd(ia.totalCostUsd)}` : "—";
+  const avgDisplay   = ia.hasCostData ? usd(ia.avgCostPerRequest) : "—";
+
   return (
     <section className="prof-section">
       <p className="prof-section-title">
@@ -1298,29 +1269,14 @@ function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
           </a>
         )}
       </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>30d Spend</span>
-          <span style={{ fontFamily: "monospace", color: "#F46060" }}>-{usd(ia.totalCostUsd)}</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>Requests</span>
-          <span style={{ fontFamily: "monospace" }}>{ia.requestCount}</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>Primary Provider</span>
-          <span style={{ color: "var(--ink)", textTransform: "capitalize" }}>{ia.primaryProvider ?? "—"}</span>
-        </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <LedgerRow first label="30d Spend"        value={spendDisplay} valueStyle={{ color: ia.hasCostData && ia.totalCostUsd > 0 ? "#F46060" : "var(--muted)" }} badge={<CostStatusBadge status={ia.costStatus} />} />
+        <LedgerRow       label="Requests"         value={ia.requestCount.toLocaleString()} />
+        <LedgerRow       label="Primary Provider" value={ia.primaryProvider ?? "—"} valueStyle={{ textTransform: "capitalize", fontFamily: "inherit" }} />
         {ia.providerBreakdown.length > 1 && (
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Providers Used</span>
-            <span style={{ color: "var(--ink)" }}>{ia.providersUsed.join(", ")}</span>
-          </div>
+          <LedgerRow label="Providers Used" value={ia.providersUsed.join(", ")} valueStyle={{ fontFamily: "inherit" }} />
         )}
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-          <span style={{ color: "var(--muted)" }}>Avg Cost / Request</span>
-          <span style={{ fontFamily: "monospace" }}>{usd(ia.avgCostPerRequest)}</span>
-        </div>
+        <LedgerRow last  label="Avg Cost / Request" value={avgDisplay} />
       </div>
     </section>
   );
@@ -2031,18 +1987,11 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
         <p className="prof-section-title" style={{ margin: 0 }}>Financial Summary</p>
         <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{books.period}</span>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 10 }}>
-        {([
-          { label: "Revenue",    value: usd(f.revenue_usd),    color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" },
-          { label: "Expenses",   value: usd(f.expenses_usd),   color: f.expenses_usd > 0 ? "#F46060"      : "var(--muted)" },
-          { label: "Net Income", value: (netPos ? "+" : "−") + usd(f.net_income_usd), color: netPos ? "var(--accent)" : "#F46060" },
-        ] as const).map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "12px 14px", borderRadius: 8, background: "var(--surface-soft)", border: "1px solid var(--line)" }}>
-            <p style={{ margin: "0 0 5px", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)", fontWeight: 600 }}>{label}</p>
-            <p style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700, fontFamily: "var(--font-mono)", color }}>{value}</p>
-          </div>
-        ))}
-      </div>
+      <MetricGrid cols={3} style={{ marginBottom: 10 }}>
+        <MetricCard label="Revenue"    value={usd(f.revenue_usd)}    valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
+        <MetricCard label="Expenses"   value={usd(f.expenses_usd)}   valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
+        <MetricCard label="Net Income" value={(netPos ? "+" : "−") + usd(f.net_income_usd)} valueColor={netPos ? "var(--accent)" : "#F46060"} />
+      </MetricGrid>
       {f.tx_count > 0 && (
         <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)" }}>
           {f.tx_count} txs · {books.wallets.analyzed} wallets
