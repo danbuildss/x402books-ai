@@ -22,7 +22,7 @@ async function getAgent(slug: string): Promise<Agent | null> {
 
 function statusColor(s: string): string {
   if (s === "Verified" || s === "Luca Managed") return "#16a34a";
-  if (s === "ERC-8004 Indexed" || s === "Claimed") return "#6DB874";
+  if (s === "ERC-8004 Indexed" || s === "Claimed") return "#4AE8A0";
   if (s === "Wallets Declared") return "#3b82f6";
   return "#94a3b8";
 }
@@ -73,7 +73,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
           {/* Top row — name + grade */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: "0.72rem", color: "#6DB874", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
+              <p style={{ fontSize: "0.72rem", color: "#4AE8A0", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>
                 Zetta Registry
               </p>
               <p style={{ fontSize: "1.1rem", fontWeight: 800, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
@@ -126,7 +126,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
               </div>
             ))}
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-              <span style={{ fontSize: "0.65rem", color: "#6DB874", fontWeight: 600 }}>zetta.finance →</span>
+              <span style={{ fontSize: "0.65rem", color: "#4AE8A0", fontWeight: 600 }}>zetta.finance →</span>
             </div>
           </div>
         </a>

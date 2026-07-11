@@ -29,7 +29,7 @@ function fmtDate(iso: string): string {
 }
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#6DB874",
+  BANKR: "#4AE8A0",
   Virtuals: "#5B8FA8",
   AEON: "#8B5CF6",
   EigenCloud: "#F97316",
@@ -61,12 +61,12 @@ function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, display: "block" }}>
       <defs>
         <linearGradient id="gdp-fill-lp" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6DB874" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#6DB874" stopOpacity="0" />
+          <stop offset="0%" stopColor="#4AE8A0" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#4AE8A0" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={fillPts} fill="url(#gdp-fill-lp)" />
-      <polyline points={pts} fill="none" stroke="#6DB874" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke="#4AE8A0" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -102,7 +102,7 @@ export default async function HomePage() {
               <h1 className="lp-h1" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.4rem)", maxWidth: 480 }}>
                 Financial Intelligence<br />
                 for the{" "}
-                <em style={{ fontStyle: "italic", color: "#6DB874" }}>Agent Economy.</em>
+                <em style={{ fontStyle: "italic", color: "#4AE8A0" }}>Agent Economy.</em>
               </h1>
               <p className="lp-hero-sub">
                 Autonomous agents earn, spend, and manage capital on-chain. Zetta is the attribution layer that turns wallet activity into auditable books: revenue, expenses, treasury, and net income — per agent.
@@ -118,7 +118,7 @@ export default async function HomePage() {
                 {[
                   { name: "BASE", color: "#4F46E5" },
                   { name: "AEON", color: "#8B5CF6" },
-                  { name: "BANKR", color: "#6DB874" },
+                  { name: "BANKR", color: "#4AE8A0" },
                   { name: "EigenCloud", color: "#F97316" },
                   { name: "VIRTUALS", color: "#5B8FA8" },
                 ].map((e) => (
@@ -159,11 +159,11 @@ export default async function HomePage() {
           <p className="zetta-stack-eyebrow">How Zetta Works</p>
           <div className="zetta-stack-flow">
             {[
-              { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#6DB874" },
+              { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#4AE8A0" },
               { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B8FA8" },
               { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B5CF6" },
               { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F97316" },
-              { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#6DB874" },
+              { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#4AE8A0" },
             ].map((item, i, arr) => (
               <div key={item.step} className="zetta-stack-item">
                 <div className="zetta-stack-step-head">
@@ -197,7 +197,7 @@ export default async function HomePage() {
             </thead>
             <tbody>
               {topAgents.length > 0 ? topAgents.slice(0, 6).map((agent, i) => {
-                const ecoColor = ECO_COLORS[agent.ecosystem] ?? "#6DB874";
+                const ecoColor = ECO_COLORS[agent.ecosystem] ?? "#4AE8A0";
                 return (
                   <tr key={agent.slug}>
                     <td style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{i + 1}</td>
@@ -207,7 +207,7 @@ export default async function HomePage() {
                         <Link href={`/registry/${agent.slug}`} style={{ fontWeight: 600, color: "var(--ink)", fontSize: "0.78rem" }}>{agent.name}</Link>
                       </div>
                     </td>
-                    <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: "#4AE8A0", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
                   </tr>
                 );
               }) : (
@@ -242,7 +242,7 @@ export default async function HomePage() {
             </div>
             <div className="zetta-economy-stat">
               <p className="zetta-stat-label">Net Income</p>
-              <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#6DB874" }}>
+              <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#4AE8A0" }}>
                 {gdp ? fmtUSD(gdp.total_net_income_usd) : "$—"}
               </p>
             </div>
@@ -295,7 +295,7 @@ export default async function HomePage() {
             return (
               <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", marginBottom: 14, display: "flex" }}>
                 <div style={{ width: `${mPct}%`, background: "#22c55e", transition: "width 0.4s" }} />
-                <div style={{ width: `${aPct}%`, background: "#6DB874", opacity: 0.7, transition: "width 0.4s" }} />
+                <div style={{ width: `${aPct}%`, background: "#4AE8A0", opacity: 0.7, transition: "width 0.4s" }} />
                 <div style={{ width: `${iPct}%`, background: "#f59e0b", opacity: 0.5, transition: "width 0.4s" }} />
               </div>
             );
@@ -305,7 +305,7 @@ export default async function HomePage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", marginBottom: 16 }}>
             {[
               { label: "Manifest",    value: attr?.status_breakdown.manifest ?? 0,        color: "#22c55e" },
-              { label: "Admin",       value: attr?.status_breakdown.admin_attributed ?? 0, color: "#6DB874" },
+              { label: "Admin",       value: attr?.status_breakdown.admin_attributed ?? 0, color: "#4AE8A0" },
               { label: "Inferred",    value: attr?.status_breakdown.inferred ?? 0,         color: "#f59e0b" },
               { label: "Unattributed",value: attr?.status_breakdown.none ?? 0,             color: "var(--muted)" },
             ].map((row) => (
@@ -352,13 +352,13 @@ export default async function HomePage() {
         <div style={{
           background: "var(--surface)",
           border: "1px solid var(--line)",
-          borderLeft: "3px solid #6DB874",
+          borderLeft: "3px solid #4AE8A0",
           borderRadius: 10,
           padding: "24px 28px",
         }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6DB874" }}>Token Intelligence</p>
+              <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#4AE8A0" }}>Token Intelligence</p>
               <h3 style={{ margin: "0 0 10px", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>B20 Intelligence</h3>
               <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 400 }}>
                 Zetta indexes B20 tokens, links them to agents and issuers, and checks financial readiness.
@@ -389,7 +389,7 @@ export default async function HomePage() {
       {/* ── LIVE SIGNALS (tabbed) ── */}
       <HomeSignals liveSignals={topAgents.length > 0 ? topAgents.slice(0, 4).map((agent, i) => ({
         eco: agent.ecosystem,
-        color: ECO_COLORS[agent.ecosystem] ?? "#6DB874",
+        color: ECO_COLORS[agent.ecosystem] ?? "#4AE8A0",
         text: `${agent.name} attributed ${fmtUSD(agent.revenue_usd)} in operating revenue over 30 days.`,
         ago: `${(i + 1) * 12}m ago`,
       })) : undefined} />

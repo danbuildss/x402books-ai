@@ -41,7 +41,7 @@ export default function AeonIntegrationPage() {
         </p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {[
-            { name: "AEON",  role: "Execution + settlement layer",        color: "#6DB874" },
+            { name: "AEON",  role: "Execution + settlement layer",        color: "#4AE8A0" },
             { name: "Zetta", role: "Financial visibility layer",           color: "#3b82f6" },
             { name: "Luca",  role: "Operational intelligence layer",       color: "#a78bfa" },
           ].map(n => (
@@ -149,7 +149,7 @@ mkdir -p .agent
       {/* Partnership CTA */}
       <section style={{
         marginBottom: 48, padding: "24px 26px", borderRadius: 12,
-        border: "1px solid rgba(109,184,116,0.3)", background: "rgba(109,184,116,0.04)",
+        border: "1px solid rgba(74,232,160,0.3)", background: "rgba(74,232,160,0.04)",
         borderLeft: "3px solid var(--accent)",
       }}>
         <p style={{ fontSize: "0.88rem", fontWeight: 700, marginBottom: 8 }}>

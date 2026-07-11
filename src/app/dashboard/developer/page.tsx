@@ -147,8 +147,8 @@ export default function DeveloperPage() {
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
                 <span style={{
                   fontSize: "0.7rem", fontWeight: 800, padding: "2px 7px", borderRadius: 5,
-                  background: ep.method === "GET" ? "rgba(109,184,116,0.12)" : "rgba(99,102,241,0.12)",
-                  color: ep.method === "GET" ? "#6DB874" : "#818cf8",
+                  background: ep.method === "GET" ? "rgba(74,232,160,0.12)" : "rgba(99,102,241,0.12)",
+                  color: ep.method === "GET" ? "#4AE8A0" : "#818cf8",
                   letterSpacing: "0.04em",
                 }}>
                   {ep.method}

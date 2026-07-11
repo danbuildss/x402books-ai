@@ -176,9 +176,9 @@ export function RegisterClient() {
           {[
             { label: "Candidate", color: "#94a3b8" },
             { arrow: true },
-            { label: "Wallets Declared", color: "#6DB874" },
+            { label: "Wallets Declared", color: "#4AE8A0" },
             { arrow: true },
-            { label: "Verified", color: "#6DB874", icon: "verified" },
+            { label: "Verified", color: "#4AE8A0", icon: "verified" },
           ].map((item, i) =>
             "arrow" in item ? (
               <span key={i} style={{ color: "var(--muted)", fontSize: "0.7rem" }}>→</span>
@@ -266,8 +266,8 @@ export function RegisterClient() {
 
             {repoState === "done" && fetchedAgent ? (
               <div style={{
-                padding: "20px", background: "rgba(109,184,116,0.06)",
-                border: "1px solid rgba(109,184,116,0.3)", borderRadius: 10, marginBottom: 20,
+                padding: "20px", background: "rgba(74,232,160,0.06)",
+                border: "1px solid rgba(74,232,160,0.3)", borderRadius: 10, marginBottom: 20,
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--accent)" }}>check_circle</span>
@@ -307,7 +307,7 @@ export function RegisterClient() {
                       }}>
                         <span style={{
                           padding: "1px 7px", borderRadius: 99, fontSize: "0.65rem", fontWeight: 700,
-                          background: "rgba(109,184,116,0.12)", border: "1px solid rgba(109,184,116,0.3)", color: "var(--accent)",
+                          background: "rgba(74,232,160,0.12)", border: "1px solid rgba(74,232,160,0.3)", color: "var(--accent)",
                         }}>{w.role}</span>
                         <code style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "0.72rem" }}>
                           {w.address.slice(0, 8)}…{w.address.slice(-6)}
@@ -368,8 +368,8 @@ export function RegisterClient() {
           <div>
             {manualState === "done" ? (
               <div style={{
-                padding: "24px", background: "rgba(109,184,116,0.06)",
-                border: "1px solid rgba(109,184,116,0.3)", borderRadius: 10,
+                padding: "24px", background: "rgba(74,232,160,0.06)",
+                border: "1px solid rgba(74,232,160,0.3)", borderRadius: 10,
               }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--accent)", display: "block", marginBottom: 10 }}>check_circle</span>
                 <p style={{ fontWeight: 700, marginBottom: 6 }}>{manualMsg}</p>
@@ -499,8 +499,8 @@ export function RegisterClient() {
             ].map(({ step, title, body }) => (
               <div key={step} style={{ display: "flex", gap: 16 }}>
                 <div style={{
-                  width: 28, height: 28, borderRadius: "50%", background: "rgba(109,184,116,0.12)",
-                  border: "1px solid rgba(109,184,116,0.3)", color: "var(--accent)",
+                  width: 28, height: 28, borderRadius: "50%", background: "rgba(74,232,160,0.12)",
+                  border: "1px solid rgba(74,232,160,0.3)", color: "var(--accent)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: "0.72rem", fontWeight: 800, flexShrink: 0, marginTop: 1,
                 }}>{step}</div>

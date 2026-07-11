@@ -304,7 +304,7 @@ export default function LucaSkillsDocsPage() {
               <span style={{ color: "var(--muted)" }}>Auth: </span>
               <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>Authorization: Bearer zt_live_...</code>
             </div>
-            <Link href="/api" style={{ padding: "6px 14px", background: "#6DB874", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/api" style={{ padding: "6px 14px", background: "#4AE8A0", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               Get API Key →
             </Link>
           </div>
@@ -325,8 +325,8 @@ export default function LucaSkillsDocsPage() {
                   display: "block", width: "100%", textAlign: "left",
                   padding: "8px 12px", borderRadius: 6, marginBottom: 2,
                   border: "none", cursor: "pointer", fontSize: 13,
-                  background: activeSkill === s.id ? "#6DB87420" : "transparent",
-                  color: activeSkill === s.id ? "#6DB874" : "var(--ink)",
+                  background: activeSkill === s.id ? "#4AE8A020" : "transparent",
+                  color: activeSkill === s.id ? "#4AE8A0" : "var(--ink)",
                   fontWeight: activeSkill === s.id ? 700 : 400,
                 }}
               >
@@ -350,7 +350,7 @@ export default function LucaSkillsDocsPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
               <span style={{
                 fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                background: "#6DB87420", color: "#6DB874",
+                background: "#4AE8A020", color: "#4AE8A0",
               }}>
                 {skill.method}
               </span>
@@ -374,7 +374,7 @@ export default function LucaSkillsDocsPage() {
                   <div key={inp.field} style={{ display: "grid", gridTemplateColumns: "140px 80px 70px 1fr", padding: "8px 12px", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
                     <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>{inp.field}</code>
                     <span style={{ color: "var(--muted)" }}>{inp.type}</span>
-                    <span style={{ color: inp.required ? "#6DB874" : "var(--muted)" }}>{inp.required ? "Yes" : "No"}</span>
+                    <span style={{ color: inp.required ? "#4AE8A0" : "var(--muted)" }}>{inp.required ? "Yes" : "No"}</span>
                     <span style={{ color: "var(--muted)", lineHeight: 1.4 }}>{inp.desc}</span>
                   </div>
                 ))}
@@ -421,7 +421,7 @@ export default function LucaSkillsDocsPage() {
                 style={{
                   padding: "5px 12px", borderRadius: 16, fontSize: 12, cursor: "pointer",
                   border: "1px solid var(--line)",
-                  background: activeSkill === s.id ? "#6DB874" : "var(--surface)",
+                  background: activeSkill === s.id ? "#4AE8A0" : "var(--surface)",
                   color: activeSkill === s.id ? "#fff" : "var(--ink)",
                   fontWeight: 600,
                 }}
@@ -469,7 +469,7 @@ curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
                 <div key={t.tier} style={{ padding: "10px 16px", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 6, minWidth: 160 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>{t.tier}</div>
                   <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>{t.req}</div>
-                  <div style={{ fontSize: 11, color: "#6DB874", fontWeight: 600 }}>{t.rpm}</div>
+                  <div style={{ fontSize: 11, color: "#4AE8A0", fontWeight: 600 }}>{t.rpm}</div>
                 </div>
               ))}
             </div>
@@ -481,14 +481,14 @@ curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
           </div>
 
           {/* Data Integrity */}
-          <div id="integrity" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #6DB874", borderRadius: 10, padding: "24px 28px" }}>
+          <div id="integrity" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #4AE8A0", borderRadius: 10, padding: "24px 28px" }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>Data Integrity Rules</h3>
             <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.6 }}>
               Every skill enforces these rules on every response. They cannot be overridden.
             </p>
             {INTEGRITY_RULES.map((r) => (
               <div key={r.rule} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-                <span style={{ fontSize: 14, color: "#6DB874", flexShrink: 0 }}>✓</span>
+                <span style={{ fontSize: 14, color: "#4AE8A0", flexShrink: 0 }}>✓</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{r.rule}</div>
                   <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{r.detail}</div>

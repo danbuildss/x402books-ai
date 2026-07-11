@@ -20,13 +20,13 @@ function fmtUSD(n: number): string {
 }
 
 function netColor(n: number): string {
-  if (n > 0) return "#6DB874";
+  if (n > 0) return "#4AE8A0";
   if (n < 0) return "#ef4444";
   return "var(--muted)";
 }
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#6DB874",
+  BANKR: "#4AE8A0",
   Virtuals: "#5B8FA8",
   AEON: "#8B5CF6",
   EigenCloud: "#F97316",
@@ -103,7 +103,7 @@ function GDPSparkline({
           fill={color}
         />
       </svg>
-      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#6DB874" : "#ef4444", fontFamily: "monospace", fontWeight: 600 }}>
+      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#4AE8A0" : "#ef4444", fontFamily: "monospace", fontWeight: 600 }}>
         {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
         <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
           across {snapshots.length} snapshots
@@ -134,7 +134,7 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
       </p>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
         {([
-          { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "#6DB874" },
+          { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "#4AE8A0" },
           { label: "Expenses",   field: "total_expenses_usd"   as TrendField, color: "#ef4444" },
           { label: "Net Income", field: "total_net_income_usd" as TrendField, color: "#5B8FA8" },
         ]).map(({ label, field, color }) => (
@@ -153,7 +153,7 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
 
 function RankMedal({ rank }: { rank: number }) {
   const top3: Record<number, { bg: string; color: string }> = {
-    1: { bg: "rgba(109,184,116,0.15)", color: "#6DB874" },
+    1: { bg: "rgba(74,232,160,0.15)", color: "#4AE8A0" },
     2: { bg: "rgba(255,255,255,0.08)", color: "var(--ink)" },
     3: { bg: "rgba(249,115,22,0.12)", color: "#F97316" },
   };
@@ -229,7 +229,7 @@ function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank
       </div>
 
       {/* Revenue */}
-      <div style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 600, color: "#6DB874", textAlign: "right" }}>
+      <div style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 600, color: "#4AE8A0", textAlign: "right" }}>
         {fmtUSD(agent.revenue_usd)}
       </div>
 
@@ -336,9 +336,9 @@ export default async function LeaderboardPage() {
             borderRadius: 10,
           }}>
             {[
-              { label: "Agent GDP (Revenue)", value: fmtUSD(gdp.total_revenue_usd), color: "#6DB874" },
+              { label: "Agent GDP (Revenue)", value: fmtUSD(gdp.total_revenue_usd), color: "#4AE8A0" },
               { label: "Total Expenses",      value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
-              { label: "Net Income",          value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#6DB874" : "#ef4444" },
+              { label: "Net Income",          value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#ef4444" },
               { label: "Attributed Agents",  value: String(gdp.attributed_agents), color: "var(--fg)" },
               { label: "ERC-8004 Indexed",   value: String(gdp.erc8004_agents),    color: "#8B5CF6"   },
               { label: "Total Indexed",       value: `${gdp.total_agents}`, color: "var(--muted)" },
@@ -511,7 +511,7 @@ export default async function LeaderboardPage() {
                     {(() => {
                       const vs = vscoreMap.get(a.slug);
                       if (!vs) return <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>;
-                      const scoreColor = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+                      const scoreColor = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
                       return (
                         <>
                           <span style={{
@@ -530,7 +530,7 @@ export default async function LeaderboardPage() {
                       fontSize: "0.72rem", fontWeight: 600,
                       color: "var(--accent)", textDecoration: "none",
                       padding: "4px 10px", borderRadius: 6,
-                      border: "1px solid rgba(109,184,116,0.3)",
+                      border: "1px solid rgba(74,232,160,0.3)",
                       background: "var(--accent-soft)",
                     }}>Declare →</Link>
                   </div>

@@ -78,24 +78,24 @@ export default function HowItWorksPage() {
               <div style={{
                 minWidth: 150,
                 background: "var(--surface)",
-                border: step.highlight ? "1px solid #6DB874" : "1px solid var(--line)",
+                border: step.highlight ? "1px solid #4AE8A0" : "1px solid var(--line)",
                 borderRadius: 8,
                 padding: "14px 16px",
-                boxShadow: step.highlight ? "0 0 0 1px rgba(109,184,116,0.15)" : "none",
+                boxShadow: step.highlight ? "0 0 0 1px rgba(74,232,160,0.15)" : "none",
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
                   <span style={{
                     fontSize: "0.65rem",
                     fontWeight: 700,
                     fontFamily: "var(--font-mono)",
-                    color: step.highlight ? "#6DB874" : "var(--muted)",
+                    color: step.highlight ? "#4AE8A0" : "var(--muted)",
                   }}>
                     {step.num}
                   </span>
                   <span style={{
                     fontSize: "0.88rem",
                     fontWeight: 700,
-                    color: step.highlight ? "#6DB874" : "var(--ink)",
+                    color: step.highlight ? "#4AE8A0" : "var(--ink)",
                   }}>
                     {step.title}
                   </span>
@@ -119,11 +119,11 @@ export default function HowItWorksPage() {
         <div style={{
           background: "var(--surface)",
           border: "1px solid var(--line)",
-          borderLeft: "3px solid #6DB874",
+          borderLeft: "3px solid #4AE8A0",
           borderRadius: 8,
           padding: "20px 24px",
         }}>
-          <p style={{ margin: "0 0 8px", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6DB874" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#4AE8A0" }}>
             Why the Manifest is Step 1
           </p>
           <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)", lineHeight: 1.7 }}>

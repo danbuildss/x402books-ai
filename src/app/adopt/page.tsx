@@ -6,7 +6,7 @@ import { getAttributionMetrics } from "@/lib/attribution-health";
 export const revalidate = 300;
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#6DB874",
+  BANKR: "#4AE8A0",
   Virtuals: "#5B8FA8",
   AEON: "#8B5CF6",
   EigenCloud: "#F97316",
@@ -84,8 +84,8 @@ export default async function AdoptPage() {
             fontWeight: 700,
             textTransform: "uppercase",
             letterSpacing: "0.1em",
-            color: "#6DB874",
-            border: "1px solid #6DB874",
+            color: "#4AE8A0",
+            border: "1px solid #4AE8A0",
             borderRadius: 4,
             padding: "3px 10px",
           }}>
@@ -117,7 +117,7 @@ export default async function AdoptPage() {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {[
             { label: "Manifest Adopters", value: manifestAdopters, color: "#22c55e", sub: "of 25 target" },
-            { label: "Wallets Declared", value: walletsDeclared, color: "#6DB874", sub: "of 100 target" },
+            { label: "Wallets Declared", value: walletsDeclared, color: "#4AE8A0", sub: "of 100 target" },
             { label: "Ecosystems", value: 5, color: "var(--ink)", sub: "active" },
             { label: "Coverage", value: coveragePct + "%", color: "#5B8FA8", sub: "of registry" },
           ].map((stat) => (
@@ -181,7 +181,7 @@ export default async function AdoptPage() {
                 </span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: "var(--line)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${walletBarPct}%`, borderRadius: 3, background: "#6DB874", transition: "width 0.4s" }} />
+                <div style={{ height: "100%", width: `${walletBarPct}%`, borderRadius: 3, background: "#4AE8A0", transition: "width 0.4s" }} />
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default async function AdoptPage() {
         <h2 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700, color: "var(--ink)" }}>Early Adopters</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
           {ADOPTERS.map((adopter) => {
-            const ecoColor = ECO_COLORS[adopter.ecosystem] ?? "#6DB874";
+            const ecoColor = ECO_COLORS[adopter.ecosystem] ?? "#4AE8A0";
             return (
               <div key={adopter.name} style={{
                 background: "var(--surface)",
@@ -330,9 +330,9 @@ export default async function AdoptPage() {
                     width: 32,
                     height: 32,
                     borderRadius: "50%",
-                    background: "rgba(109,184,116,0.15)",
-                    border: "1px solid rgba(109,184,116,0.3)",
-                    color: "#6DB874",
+                    background: "rgba(74,232,160,0.15)",
+                    border: "1px solid rgba(74,232,160,0.3)",
+                    color: "#4AE8A0",
                     fontFamily: "var(--font-mono)",
                     fontSize: "0.72rem",
                     fontWeight: 700,

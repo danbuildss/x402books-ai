@@ -55,7 +55,7 @@ function runwayLabel(days: number | null, netDaily: number | null) {
 }
 
 function statusColor(status: TreasuryEntry["status"]) {
-  if (status === "healthy")  return "#6DB874";
+  if (status === "healthy")  return "#4AE8A0";
   if (status === "watch")    return "#f59e0b";
   if (status === "critical") return "#e74c3c";
   return "var(--muted)";
@@ -211,7 +211,7 @@ export default function TreasuryPage() {
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.treasuryUsd)}</td>
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.burnRateUsd)}</td>
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}</td>
-                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#6DB874" : "#e74c3c") : "var(--muted)", fontWeight: 600 }}>
+                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#e74c3c") : "var(--muted)", fontWeight: 600 }}>
                         {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : (e.netDaily !== null ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) : "—")}
                       </td>
                       <td style={{ fontWeight: 600, color }}>
