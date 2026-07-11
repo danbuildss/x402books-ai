@@ -167,7 +167,7 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((r, i) => {
+            {sorted.map((r) => {
               if (!r.ok) {
                 return (
                   <tr key={r.slug} style={{ borderBottom: "1px solid var(--line)", background: "rgba(239,68,68,0.04)" }}>

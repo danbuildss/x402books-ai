@@ -72,9 +72,6 @@ export default function AgentEconomicsPage() {
   useEffect(() => { load(period); }, [period, load]);
 
   const s = data?.summary;
-  const netColor = s
-    ? s.netAgentPosition > 0.01 ? "green" : s.netAgentPosition < -0.01 ? "red" : undefined
-    : undefined;
 
   return (
     <div style={{ background: "#030712", minHeight: "100vh", color: "#e5e7eb", fontFamily: "monospace" }}>

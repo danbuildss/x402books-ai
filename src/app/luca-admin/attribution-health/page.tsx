@@ -55,7 +55,7 @@ export default function AttributionHealthAdminPage() {
   const [metrics, setMetrics] = useState<AttributionMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState("");
-  const [filter, setFilter]   = useState<ManifestStatus | "all">("all");
+  const [filter]              = useState<ManifestStatus | "all">("all");
   const [sort, setSort]       = useState<SortKey>("status");
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [search, setSearch]   = useState("");

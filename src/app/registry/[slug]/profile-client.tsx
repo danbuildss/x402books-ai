@@ -21,7 +21,6 @@ import type { Anomaly } from "@/lib/anomaly-detector";
 import type { VerificationScore } from "@/lib/verification-scorer";
 import { TIER_LABELS, TIER_BADGE_CLASS } from "@/lib/verification-scorer";
 import { computeMomentum } from "@/lib/agent-momentum";
-import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
 import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
@@ -642,20 +641,6 @@ function StatusBadge({ status }: { status: VerificationStatus }) {
   );
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
-  const pct = Math.min(100, Math.max(0, value));
-  const color = pct >= 70 ? "var(--accent)" : pct >= 40 ? "var(--blue)" : "var(--muted)";
-  return (
-    <div className="reg-score-row">
-      <span className="reg-score-label">{label}</span>
-      <div className="reg-score-bar-wrap">
-        <div className="reg-score-bar-fill" style={{ width: `${pct}%`, background: color }} />
-      </div>
-      <span className="reg-score-val">{value}</span>
-    </div>
-  );
-}
-
 // ── Card helpers (shared with share modal) ───────────────────────────────────
 
 const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
@@ -666,11 +651,6 @@ const CARD_PATTERN_LABEL: Partial<Record<SettlementPattern, string>> = {
   recurring_flow_detected:   "Recurring Flows",
   incomplete_wallet_role:    "Roles Unverified",
 };
-
-function cardTreasuryScore(agent: Agent): number {
-  const map: Record<string, number> = { Active: 92, Stable: 78, Unverified: 45, Inactive: 18 };
-  return map[agent.treasuryHealth] ?? 0;
-}
 
 function cardAttributionScore(agent: Agent): number {
   let s = 0;
@@ -721,7 +701,6 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
   const cardRef = useRef<HTMLDivElement>(null);
   const [downloading, setDownloading] = useState(false);
 
-  const treasuryScore   = cardTreasuryScore(agent);
   const transpScore     = cardAttributionScore(agent);
   const verdict         = cardVerdictSnippet(agent);
   const vstatus         = cardStatusLabel(agent);
