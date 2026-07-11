@@ -126,7 +126,7 @@ export default function B20IntelligencePage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
 
         {/* Data integrity reminder */}
-        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
+        <div style={{ background: "#4AE8A010", border: "1px solid #4AE8A040", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
           <strong>Data integrity:</strong> Token contracts are never books-eligible · Token transfers are not operating revenue ·
           Issuer wallets are not attributed unless manifest-confirmed · B20 activity is excluded from Agent GDP
         </div>
@@ -149,7 +149,7 @@ export default function B20IntelligencePage() {
               {
                 step: "1",
                 label: "Source",
-                color: "#6DB874",
+                color: "#4AE8A0",
                 items: [
                   "Collect address from B20 launch announcement",
                   "Or from partner team / agent builder directly",
@@ -169,7 +169,7 @@ export default function B20IntelligencePage() {
               {
                 step: "3",
                 label: "Activate",
-                color: "#6DB874",
+                color: "#4AE8A0",
                 items: [
                   "Set isB20Token: true in src/app/registry/data.ts for that agent only",
                   "Deploy the change to production",
@@ -215,7 +215,7 @@ export default function B20IntelligencePage() {
               ] as const).map(([m, label]) => (
                 <button key={m} onClick={() => setMode(m)} style={{
                   padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)",
-                  background: mode === m ? "#6DB874" : "var(--bg)",
+                  background: mode === m ? "#4AE8A0" : "var(--bg)",
                   color: mode === m ? "#fff" : "var(--ink)",
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}>
@@ -241,7 +241,7 @@ export default function B20IntelligencePage() {
               ] as const).map(([c, label]) => (
                 <button key={c} onClick={() => setChain(c)} style={{
                   padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#f59e0b60" : "var(--line)"}`,
-                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#6DB874") : "var(--bg)",
+                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#4AE8A0") : "var(--bg)",
                   color: chain === c ? "#fff" : "var(--ink)",
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}>
@@ -269,7 +269,7 @@ export default function B20IntelligencePage() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <button onClick={() => setIncludeActivity((v) => !v)} style={{
                 width: 36, height: 20, borderRadius: 10,
-                background: includeActivity ? "#6DB874" : "var(--line)",
+                background: includeActivity ? "#4AE8A0" : "var(--line)",
                 border: "none", cursor: "pointer", position: "relative",
               }}>
                 <span style={{ position: "absolute", top: 3, left: includeActivity ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
@@ -282,7 +282,7 @@ export default function B20IntelligencePage() {
           {mode !== "detect_from_registry" && <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
             <button onClick={() => setDryRun((v) => !v)} style={{
               width: 36, height: 20, borderRadius: 10,
-              background: dryRun ? "#6DB874" : "var(--line)",
+              background: dryRun ? "#4AE8A0" : "var(--line)",
               border: "none", cursor: "pointer", position: "relative",
             }}>
               <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
@@ -292,7 +292,7 @@ export default function B20IntelligencePage() {
           </div>}
 
           <button onClick={runIndexer} disabled={loading} style={{
-            padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff",
+            padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff",
             border: "none", cursor: loading ? "not-allowed" : "pointer",
             fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1,
           }}>
@@ -315,7 +315,7 @@ export default function B20IntelligencePage() {
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               {[
                 { label: "With token address", value: detectReport.total_with_token_address, color: "var(--ink)"  },
-                { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#6DB874"    },
+                { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#4AE8A0"    },
                 { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#22c55e"    },
               ].map((s) => (
                 <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>

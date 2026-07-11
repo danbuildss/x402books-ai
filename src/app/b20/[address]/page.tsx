@@ -237,8 +237,8 @@ export default async function B20TokenProfilePage(
 
         {/* Luca summary */}
         {token.luca_summary && (
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #6DB874", borderRadius: 8, padding: "16px 18px", marginBottom: 20 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#6DB874", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Luca Read</div>
+          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #4AE8A0", borderRadius: 8, padding: "16px 18px", marginBottom: 20 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#4AE8A0", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Luca Read</div>
             <p style={{ fontSize: 13, color: "var(--ink)", margin: 0, lineHeight: 1.65 }}>{token.luca_summary}</p>
           </div>
         )}

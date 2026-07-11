@@ -20,7 +20,7 @@ export function LogoMark({ size = 32 }: { size?: number }) {
     >
       <g transform="matrix(0.985,-0.174,-0.423,0.906,53,12)">
         <rect x="0" y="0"   width="68" height="14" rx="6" fill="currentColor" />
-        <rect x="0" y="37"  width="68" height="14" rx="6" fill="#6DB874" />
+        <rect x="0" y="37"  width="68" height="14" rx="6" fill="#4AE8A0" />
         <rect x="0" y="74"  width="68" height="14" rx="6" fill="currentColor" />
         <rect x="0" y="111" width="68" height="14" rx="6" fill="currentColor" />
       </g>

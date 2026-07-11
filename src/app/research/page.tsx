@@ -65,9 +65,9 @@ export default async function ResearchPage() {
             <p className="lp-section-label">Agent GDP · Live · 30 days</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginTop: 20 }}>
               {[
-                { label: "Operating Revenue", value: fmtUSD(gdp.total_revenue_usd), color: "#6DB874" },
+                { label: "Operating Revenue", value: fmtUSD(gdp.total_revenue_usd), color: "#4AE8A0" },
                 { label: "Expenses", value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
-                { label: "Net Income", value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#6DB874" : "#ef4444" },
+                { label: "Net Income", value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#ef4444" },
                 { label: "Attributed Agents", value: String(gdp.attributed_agents), color: "var(--fg)" },
               ].map((s) => (
                 <div key={s.label} style={{ padding: "16px 20px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>

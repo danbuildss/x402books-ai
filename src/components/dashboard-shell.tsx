@@ -20,7 +20,7 @@ function fmtDate(iso: string): string {
 }
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#6DB874",
+  BANKR: "#4AE8A0",
   Virtuals: "#5B8FA8",
   AEON: "#8B5CF6",
   EigenCloud: "#F97316",
@@ -53,12 +53,12 @@ function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, display: "block" }}>
       <defs>
         <linearGradient id="gdp-fill-dash" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6DB874" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#6DB874" stopOpacity="0" />
+          <stop offset="0%" stopColor="#4AE8A0" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#4AE8A0" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon points={fillPts} fill="url(#gdp-fill-dash)" />
-      <polyline points={pts} fill="none" stroke="#6DB874" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <polyline points={pts} fill="none" stroke="#4AE8A0" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
   );
 }
@@ -178,7 +178,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                   {item.label}
                 </span>
                 {item.soon && (
-                  <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(109,184,116,0.12)", color: "#6DB874", letterSpacing: "0.05em", textTransform: "uppercase" }}>Soon</span>
+                  <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(74,232,160,0.12)", color: "#4AE8A0", letterSpacing: "0.05em", textTransform: "uppercase" }}>Soon</span>
                 )}
               </Link>
             ))}
@@ -194,7 +194,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
           <div className="zetta-luca-card">
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
               <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 700, color: "var(--ink)" }}>Luca by Zetta</p>
-              <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(109,184,116,0.12)", color: "#6DB874", textTransform: "uppercase", letterSpacing: "0.05em" }}>Soon</span>
+              <span style={{ fontSize: "0.55rem", fontWeight: 700, padding: "2px 5px", borderRadius: 4, background: "rgba(74,232,160,0.12)", color: "#4AE8A0", textTransform: "uppercase", letterSpacing: "0.05em" }}>Soon</span>
             </div>
             <p style={{ margin: "0 0 8px", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.45 }}>
               Chat with Luca — your financial analyst for agent books.
@@ -222,7 +222,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
               <p style={{ margin: "0 0 8px", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Agent Economy Dashboard</p>
               <h1 style={{ margin: "0 0 12px", fontFamily: "var(--font-serif)", fontSize: "2.4rem", fontWeight: 700, lineHeight: 1.2, color: "var(--ink)" }}>
                 Financial intelligence<br />
-                <em style={{ fontStyle: "italic", color: "#6DB874" }}>for the agent economy.</em>
+                <em style={{ fontStyle: "italic", color: "#4AE8A0" }}>for the agent economy.</em>
               </h1>
               <p style={{ margin: "0 0 24px", fontSize: "0.95rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 460 }}>
                 Live attribution data, revenue tracking, and ecosystem health signals across every indexed autonomous agent.
@@ -238,7 +238,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                 {[
                   { name: "BASE", color: "#4F46E5" },
                   { name: "AEON", color: "#8B5CF6" },
-                  { name: "BANKR", color: "#6DB874" },
+                  { name: "BANKR", color: "#4AE8A0" },
                   { name: "EigenCloud", color: "#F97316" },
                   { name: "VIRTUALS", color: "#5B8FA8" },
                 ].map((e) => (
@@ -291,7 +291,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
               </thead>
               <tbody>
                 {topAgents.length > 0 ? topAgents.slice(0, 6).map((agent, i) => {
-                  const ecoColor = ECO_COLORS[agent.ecosystem] ?? "#6DB874";
+                  const ecoColor = ECO_COLORS[agent.ecosystem] ?? "#4AE8A0";
                   return (
                     <tr key={agent.slug}>
                       <td style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{i + 1}</td>
@@ -301,7 +301,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                           <Link href={`/registry/${agent.slug}`} style={{ fontWeight: 600, color: "var(--ink)", fontSize: "0.78rem" }}>{agent.name}</Link>
                         </div>
                       </td>
-                      <td style={{ fontFamily: "var(--font-mono)", color: "#6DB874", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "#4AE8A0", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
                     </tr>
                   );
                 }) : (
@@ -336,7 +336,7 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
               </div>
               <div className="zetta-economy-stat">
                 <p className="zetta-stat-label">Net Income</p>
-                <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#6DB874" }}>
+                <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#4AE8A0" }}>
                   {gdp ? fmtUSD(gdp.total_net_income_usd) : "$—"}
                 </p>
               </div>

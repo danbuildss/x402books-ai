@@ -57,9 +57,9 @@ export function AnimatedGlobe() {
         <circle cx="200" cy="200" r="158" fill="url(#zg-highlight)" clipPath="url(#zg-clip)" />
 
         {/* Atmosphere rim — outer soft green glow */}
-        <circle cx="200" cy="200" r="170" fill="none" stroke="#6DB874" strokeWidth="22" strokeOpacity="0.07" />
-        <circle cx="200" cy="200" r="163" fill="none" stroke="#6DB874" strokeWidth="8"  strokeOpacity="0.09" />
-        <circle cx="200" cy="200" r="158" fill="none" stroke="rgba(109,184,116,0.18)"  strokeWidth="1.2" />
+        <circle cx="200" cy="200" r="170" fill="none" stroke="#4AE8A0" strokeWidth="22" strokeOpacity="0.07" />
+        <circle cx="200" cy="200" r="163" fill="none" stroke="#4AE8A0" strokeWidth="8"  strokeOpacity="0.09" />
+        <circle cx="200" cy="200" r="158" fill="none" stroke="rgba(74,232,160,0.18)"  strokeWidth="1.2" />
 
         {/* Connection arcs — draw in on mount */}
         {/* AEON (183,112) → BANKR (139,191) */}
@@ -67,7 +67,7 @@ export function AnimatedGlobe() {
           <animate attributeName="strokeDashoffset" from="200" to="0" dur="1.5s" fill="freeze" begin="0.3s" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
         </path>
         {/* BANKR (139,191) → VIRTUALS (297,165) */}
-        <path d="M139,191 C188,202 242,188 297,165" fill="none" stroke="#6DB874" strokeWidth="1.2" opacity="0.65" strokeDasharray="175" strokeDashoffset="175">
+        <path d="M139,191 C188,202 242,188 297,165" fill="none" stroke="#4AE8A0" strokeWidth="1.2" opacity="0.65" strokeDasharray="175" strokeDashoffset="175">
           <animate attributeName="strokeDashoffset" from="175" to="0" dur="1.6s" fill="freeze" begin="0.6s" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
         </path>
         {/* AEON (183,112) → VIRTUALS (297,165) */}
@@ -90,11 +90,11 @@ export function AnimatedGlobe() {
         </circle>
 
         {/* BANKR node — Atlantic / West Africa */}
-        <circle cx="139" cy="191" r="14" fill="#6DB874" opacity="0">
+        <circle cx="139" cy="191" r="14" fill="#4AE8A0" opacity="0">
           <animate attributeName="r" values="6;18;6" dur="2.9s" repeatCount="indefinite" begin="0.8s" />
           <animate attributeName="opacity" values="0.3;0;0.3" dur="2.9s" repeatCount="indefinite" begin="0.8s" />
         </circle>
-        <circle cx="139" cy="191" r="5.5" fill="#6DB874">
+        <circle cx="139" cy="191" r="5.5" fill="#4AE8A0">
           <animate attributeName="r" values="5.5;6.5;5.5" dur="2.9s" repeatCount="indefinite" begin="0.3s" />
           <animate attributeName="opacity" values="0.9;1;0.9" dur="2.9s" repeatCount="indefinite" begin="0.3s" />
         </circle>
@@ -119,10 +119,10 @@ export function AnimatedGlobe() {
         </div>
       </div>
       <div className="zg-chip zg-chip-2">
-        <span className="zg-chip-dot" style={{ background: "#6DB874" }} />
+        <span className="zg-chip-dot" style={{ background: "#4AE8A0" }} />
         <div className="zg-chip-body">
           <span className="zg-chip-name">BANKR</span>
-          <span className="zg-chip-rev" style={{ color: "#6DB874" }}>Attributed</span>
+          <span className="zg-chip-rev" style={{ color: "#4AE8A0" }}>Attributed</span>
         </div>
       </div>
       <div className="zg-chip zg-chip-3">

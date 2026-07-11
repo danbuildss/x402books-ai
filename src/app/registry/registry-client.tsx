@@ -121,7 +121,7 @@ function fmtUSD(n: number): string {
 function MomentumBadge({ m }: { m: AgentMomentum }) {
   const rev   = m.revenue;
   const icon  = rev.direction === "growing" ? "↑" : rev.direction === "declining" ? "↓" : "→";
-  const color = rev.direction === "growing" ? "#6DB874" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
+  const color = rev.direction === "growing" ? "#4AE8A0" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
   const label = rev.direction === "stable" ? "stable" : `${Math.abs(rev.pct).toFixed(0)}%`;
   return (
     <span title={`Revenue momentum (30d): ${rev.direction}`} style={{
@@ -151,7 +151,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
         <StatusBadge status={agent.verificationStatus} />
         {(() => {
           const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
-          const color = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+          const color = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
           return (
             <span style={{
               fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
@@ -164,8 +164,8 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
         {economics && (
           <span style={{
             fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",
-            borderRadius: 99, background: "rgba(109,184,116,0.12)",
-            border: "1px solid rgba(109,184,116,0.3)", color: "#6DB874",
+            borderRadius: 99, background: "rgba(74,232,160,0.12)",
+            border: "1px solid rgba(74,232,160,0.3)", color: "#4AE8A0",
             letterSpacing: "0.02em",
           }}>
             Books
@@ -182,7 +182,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
             <span style={{
               fontSize: "0.7rem",
               fontFamily: "monospace",
-              color: economics.net_income_usd >= 0 ? "#6DB874" : "#ef4444",
+              color: economics.net_income_usd >= 0 ? "#4AE8A0" : "#ef4444",
             }}>
               {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
             </span>

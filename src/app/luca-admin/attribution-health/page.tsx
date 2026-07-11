@@ -8,7 +8,7 @@ import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, Attrib
 
 const STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
   manifest: { label: "Manifest",     color: "#22c55e" },
-  admin:    { label: "Admin",        color: "#6DB874" },
+  admin:    { label: "Admin",        color: "#4AE8A0" },
   inferred: { label: "Inferred",     color: "#f59e0b" },
   none:     { label: "Unattributed", color: "#6b7280" },
 };
@@ -123,7 +123,7 @@ export default function AttributionHealthAdminPage() {
                 { label: "Attributed",          value: metrics.manifest_attributed_agents,          color: "#22c55e" },
                 { label: "Discovered",          value: metrics.discovered_agents,                   color: "#f59e0b" },
                 { label: "Unattributed",        value: metrics.unattributed_agents,                 color: "#6b7280" },
-                { label: "Coverage",            value: `${metrics.attribution_coverage_pct}%`,      color: "#6DB874" },
+                { label: "Coverage",            value: `${metrics.attribution_coverage_pct}%`,      color: "#4AE8A0" },
                 { label: "Books-eligible",      value: metrics.books_eligible_wallets,              color: "#22c55e" },
                 { label: "Contract wallets",    value: metrics.contract_wallets,                    color: "#ef4444" },
               ].map((kpi) => (

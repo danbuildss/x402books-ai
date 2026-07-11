@@ -66,8 +66,8 @@ export default function ManifestMigrationPage() {
                 .x402books/wallets.json
               </code>
             </div>
-            <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid color-mix(in srgb, #6DB874 40%, var(--line))", borderRadius: 8 }}>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#6DB874", marginBottom: 10 }}>After</div>
+            <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid color-mix(in srgb, #4AE8A0 40%, var(--line))", borderRadius: 8 }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#4AE8A0", marginBottom: 10 }}>After</div>
               <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.83rem", color: "var(--ink)" }}>
                 .agent/wallets.json
               </code>

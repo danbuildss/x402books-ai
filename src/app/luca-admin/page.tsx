@@ -434,7 +434,7 @@ function ManifestSubmissions({ secret }: { secret: string }) {
                 {m.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(m.id, "approve")} disabled={acting === m.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(m.id, "reject")} disabled={acting === m.id}
@@ -546,7 +546,7 @@ function ClaimsReview({ secret }: { secret: string }) {
                 {c.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(c.id, "approve")} disabled={acting === c.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(c.id, "reject")} disabled={acting === c.id}
@@ -853,7 +853,7 @@ function RegistrySection({ secret }: { secret: string }) {
             <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <button type="button" onClick={bulkRefreshVerdicts} disabled={bulkRefreshing}
-                  style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: bulkRefreshing ? "not-allowed" : "pointer", opacity: bulkRefreshing ? 0.5 : 1 }}>
+                  style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: bulkRefreshing ? "not-allowed" : "pointer", opacity: bulkRefreshing ? 0.5 : 1 }}>
                   {bulkRefreshing ? "Refreshing all verdicts…" : "Refresh All Verdicts →"}
                 </button>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Luca calls this daily — or run manually here.</span>
@@ -897,7 +897,7 @@ function RegistrySection({ secret }: { secret: string }) {
             </select>
           </div>
           <button type="submit" disabled={overrideSaving || !overrideAddr.trim()}
-            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: overrideSaving || !overrideAddr.trim() ? "not-allowed" : "pointer", opacity: overrideSaving || !overrideAddr.trim() ? 0.5 : 1 }}>
+            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: overrideSaving || !overrideAddr.trim() ? "not-allowed" : "pointer", opacity: overrideSaving || !overrideAddr.trim() ? 0.5 : 1 }}>
             {overrideSaving ? "Saving…" : "Override"}
           </button>
         </form>
@@ -973,7 +973,7 @@ function RegistrySection({ secret }: { secret: string }) {
                 {s.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(s.id, "approved")} disabled={acting === s.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(s.id, "rejected")} disabled={acting === s.id}
@@ -1006,7 +1006,7 @@ function RegistrySection({ secret }: { secret: string }) {
             type="button"
             onClick={seedRegistry}
             disabled={seeding}
-            style={{ padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
           >
             {seeding ? "Seeding…" : "Seed Registry →"}
           </button>
@@ -1096,7 +1096,7 @@ function RegistrySection({ secret }: { secret: string }) {
             <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
             <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />
             <button type="submit" disabled={editSaving || !editName.trim()}
-              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
               {editSaving ? "Saving…" : "Save →"}
             </button>
           </div>
@@ -1126,7 +1126,7 @@ function RegistrySection({ secret }: { secret: string }) {
           <button
             type="submit"
             disabled={refreshing || !verdictTarget.trim()}
-            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: refreshing || !verdictTarget.trim() ? "not-allowed" : "pointer", opacity: refreshing || !verdictTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: refreshing || !verdictTarget.trim() ? "not-allowed" : "pointer", opacity: refreshing || !verdictTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
           >
             {refreshing ? "Generating…" : "Refresh Verdict →"}
           </button>
@@ -1258,7 +1258,7 @@ function AttributionSection({ secret }: { secret: string }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 20 }}>
           {[
             { label: "Total Indexed",    value: data.total_indexed,                     color: "var(--fg)" },
-            { label: "Attributed",       value: data.total_attributed,                  color: "#6DB874" },
+            { label: "Attributed",       value: data.total_attributed,                  color: "#4AE8A0" },
             { label: "Anomaly (wallets, not attributed)", value: data.total_unattributed_with_wallets, color: "#f59e0b" },
             { label: "No Wallets",       value: data.total_no_wallets,                  color: "var(--muted)" },
           ].map((t) => (
@@ -1317,7 +1317,7 @@ function AttributionSection({ secret }: { secret: string }) {
           )}
 
           {filtered.map((a) => {
-            const statusColor = a.attributed === true ? "#6DB874" : a.attributed === false && a.wallets_declared > 0 ? "#f59e0b" : "var(--muted)";
+            const statusColor = a.attributed === true ? "#4AE8A0" : a.attributed === false && a.wallets_declared > 0 ? "#f59e0b" : "var(--muted)";
             const statusLabel = a.attributed === true ? "✓ attributed" : a.attributed === false ? "✗ not attributed" : "not scanned";
             return (
               <div key={a.slug} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 90px 110px 110px 140px", gap: 10, padding: "10px 14px", borderBottom: "1px solid var(--line)", alignItems: "center" }}>
@@ -1330,7 +1330,7 @@ function AttributionSection({ secret }: { secret: string }) {
                 </div>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.wallets_declared}</span>
                 <span style={{ fontSize: "0.72rem", fontWeight: 600, color: statusColor }}>{statusLabel}</span>
-                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6DB874" }}>{fmtUSD(a.revenue_usd)}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#4AE8A0" }}>{fmtUSD(a.revenue_usd)}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{fmtUSD(a.expenses_usd)}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.tx_count?.toLocaleString() ?? "—"}</span>
                 <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{fmtTime(a.last_refresh)}</span>
@@ -2179,7 +2179,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
             </div>
           </div>
           <button type="submit" disabled={walletLoading}
-            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: walletLoading ? "not-allowed" : "pointer", opacity: walletLoading ? 0.6 : 1 }}>
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: walletLoading ? "not-allowed" : "pointer", opacity: walletLoading ? 0.6 : 1 }}>
             {walletLoading ? "Indexing…" : "Index Wallet →"}
           </button>
         </form>
@@ -2239,7 +2239,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
             </div>
           </div>
           <button type="submit" disabled={allLoading}
-            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: allLoading ? "not-allowed" : "pointer", opacity: allLoading ? 0.6 : 1 }}>
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: allLoading ? "not-allowed" : "pointer", opacity: allLoading ? 0.6 : 1 }}>
             {allLoading ? "Running… (may take 30–60s)" : "Index All →"}
           </button>
         </form>
@@ -2406,7 +2406,7 @@ function PendingUpdatesSection({ secret }: { secret: string }) {
 
 const ATTR_STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
   manifest: { label: "Manifest",     color: "#22c55e" },
-  admin:    { label: "Admin",        color: "#6DB874" },
+  admin:    { label: "Admin",        color: "#4AE8A0" },
   inferred: { label: "Inferred",     color: "#f59e0b" },
   none:     { label: "Unattributed", color: "#6b7280" },
 };
@@ -2490,7 +2490,7 @@ function AttributionHealthSection() {
               { label: "Attributed",      value: metrics.manifest_attributed_agents, color: "#22c55e" },
               { label: "Discovered",      value: metrics.discovered_agents,          color: "#f59e0b" },
               { label: "Unattributed",    value: metrics.unattributed_agents,        color: "#6b7280" },
-              { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#6DB874" },
+              { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#4AE8A0" },
               { label: "Books-eligible",  value: metrics.books_eligible_wallets,     color: "#22c55e" },
               { label: "Contract wallets",value: metrics.contract_wallets,           color: "#ef4444" },
             ].map((kpi) => (
@@ -2559,7 +2559,7 @@ const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
   eoa:               { label: "EOA",               color: "#22c55e" },
   token_contract:    { label: "Token Contract",    color: "#ef4444" },
   proxy_contract:    { label: "Proxy Contract",    color: "#8b5cf6" },
-  treasury_contract: { label: "Treasury Contract", color: "#6DB874" },
+  treasury_contract: { label: "Treasury Contract", color: "#4AE8A0" },
   vault:             { label: "Vault",             color: "#5B8FA8" },
   smart_contract:    { label: "Smart Contract",    color: "#f59e0b" },
   smart_account:     { label: "Smart Account",     color: "#3b82f6" },
@@ -2746,7 +2746,7 @@ function Erc8004Section({ secret }: { secret: string }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["contract", "batch"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: mode === m ? "#6DB874" : "var(--bg)", color: mode === m ? "#fff" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: mode === m ? "#4AE8A0" : "var(--bg)", color: mode === m ? "#fff" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {m === "contract" ? "All Agents (contract scan)" : "Batch (specific IDs)"}
             </button>
           ))}
@@ -2766,13 +2766,13 @@ function Erc8004Section({ secret }: { secret: string }) {
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+          <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#4AE8A0" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
             <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
           </button>
           <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
           <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "No DB writes" : "Will write to DB"}</span>
         </div>
-        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Running…" : "Run Ingestion"}
         </button>
       </div>
@@ -3312,7 +3312,7 @@ function B20Section({ secret }: { secret: string }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
           {(["detect_from_registry", "from_registry", "single", "activity_only"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: mode === m ? "#6DB874" : "var(--line)", background: mode === m ? "#6DB87418" : "transparent", color: mode === m ? "#6DB874" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: mode === m ? "#4AE8A0" : "var(--line)", background: mode === m ? "#4AE8A018" : "transparent", color: mode === m ? "#4AE8A0" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {m.replace(/_/g, " ")}
             </button>
           ))}
@@ -3332,13 +3332,13 @@ function B20Section({ secret }: { secret: string }) {
         )}
         {!isDetect && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+            <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#4AE8A0" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
               <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
             </button>
             <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
           </div>
         )}
-        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Running…" : "Run"}
         </button>
       </div>
@@ -3877,7 +3877,7 @@ function OutreachSection({ secret }: { secret: string }) {
   const statusColor: Record<string, string> = {
     "Not started": "#6b7280",
     "In progress": "#f59e0b",
-    "Connected": "#6DB874",
+    "Connected": "#4AE8A0",
   };
 
   return (

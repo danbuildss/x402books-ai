@@ -117,12 +117,12 @@ export default async function B20Page(
         {/* Live status banner */}
         <div style={{
           background: "var(--surface)", border: "1px solid var(--line)",
-          borderLeft: `3px solid ${isTestnet ? "#d97706" : "#6DB874"}`, borderRadius: 10,
+          borderLeft: `3px solid ${isTestnet ? "#d97706" : "#4AE8A0"}`, borderRadius: 10,
           padding: "16px 20px", marginBottom: 24,
           display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap",
         }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: isTestnet ? "#d97706" : "#6DB874", marginBottom: 6 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: isTestnet ? "#d97706" : "#4AE8A0", marginBottom: 6 }}>
               {isTestnet ? "B20 Intelligence · Testnet Demo" : "B20 Intelligence · Mainnet Live"}
             </div>
             <p style={{ margin: 0, fontSize: 13, color: "var(--muted)", lineHeight: 1.65 }}>

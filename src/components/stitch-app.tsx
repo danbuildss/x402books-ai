@@ -526,8 +526,8 @@ export function StitchLineChart({
           >
             <defs>
               <linearGradient id="area-gradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"  stopColor="#6DB874" stopOpacity="0.30" />
-                <stop offset="85%" stopColor="#6DB874" stopOpacity="0.02" />
+                <stop offset="0%"  stopColor="#4AE8A0" stopOpacity="0.30" />
+                <stop offset="85%" stopColor="#4AE8A0" stopOpacity="0.02" />
               </linearGradient>
             </defs>
             {gridYs.map((y) => (

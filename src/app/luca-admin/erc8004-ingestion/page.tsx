@@ -161,7 +161,7 @@ export default function Erc8004IngestionPage() {
                   onClick={() => setMode(m)}
                   style={{
                     padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)",
-                    background: mode === m ? "#6DB874" : "var(--bg)",
+                    background: mode === m ? "#4AE8A0" : "var(--bg)",
                     color: mode === m ? "#fff" : "var(--ink)",
                     fontSize: 12, fontWeight: 600, cursor: "pointer",
                   }}
@@ -203,7 +203,7 @@ export default function Erc8004IngestionPage() {
               onClick={() => setDryRun((v) => !v)}
               style={{
                 width: 36, height: 20, borderRadius: 10,
-                background: dryRun ? "#6DB874" : "var(--line)",
+                background: dryRun ? "#4AE8A0" : "var(--line)",
                 border: "none", cursor: "pointer", position: "relative", transition: "background 0.15s",
               }}
             >
@@ -221,7 +221,7 @@ export default function Erc8004IngestionPage() {
             onClick={runIngestion}
             disabled={loading}
             style={{
-              padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff",
+              padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff",
               border: "none", cursor: loading ? "not-allowed" : "pointer",
               fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1,
             }}
@@ -306,7 +306,7 @@ export default function Erc8004IngestionPage() {
                 { label: "DID",         pct: report.summary.did_coverage_pct,         count: report.summary.agents_with_did,      color: "#a855f7",  note: "with DID" },
                 { label: "Reputation",  pct: report.summary.reputation_coverage_pct,  count: null,                                color: "#5B8FA8",  note: "Phase 2" },
                 { label: "Validation",  pct: report.summary.validation_coverage_pct,  count: null,                                color: "#f59e0b",  note: "Phase 2" },
-                { label: "Manifest",    pct: report.summary.manifest_coverage_pct,    count: report.summary.manifest_uris_found,  color: "#6DB874",  note: "manifest URIs" },
+                { label: "Manifest",    pct: report.summary.manifest_coverage_pct,    count: report.summary.manifest_uris_found,  color: "#4AE8A0",  note: "manifest URIs" },
                 { label: "Books",       pct: report.summary.books_coverage_pct,       count: report.summary.books_eligible_wallets, color: "#6b7280", note: "books-eligible" },
               ] as const).map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>

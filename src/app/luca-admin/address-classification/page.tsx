@@ -75,7 +75,7 @@ const TYPE_META: Record<AddressType, { label: string; color: string }> = {
   eoa:               { label: "EOA",             color: "#22c55e" },
   token_contract:    { label: "Token Contract",  color: "#ef4444" },
   proxy_contract:    { label: "Proxy Contract",  color: "#f59e0b" },
-  treasury_contract: { label: "Treasury (Safe)", color: "#6DB874" },
+  treasury_contract: { label: "Treasury (Safe)", color: "#4AE8A0" },
   vault:             { label: "Vault",           color: "#a855f7" },
   smart_contract:    { label: "Smart Contract",  color: "#f97316" },
   smart_account:     { label: "Smart Account",   color: "#3b82f6" },
@@ -178,7 +178,7 @@ export default function AddressClassificationPage() {
             <button
               onClick={() => runAudit(false)}
               disabled={loading || writing}
-              style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
             >
               {loading ? "Classifying…" : "Run Audit"}
             </button>
@@ -230,13 +230,13 @@ export default function AddressClassificationPage() {
                 { label: "Attributed",           value: report.summary.attributed_agents,         color: "#22c55e" },
                 { label: "Discovered Only",      value: report.summary.discovered_only_agents,    color: "#f59e0b" },
                 { label: "Unattributed",         value: report.summary.unattributed_agents,       color: "#6b7280" },
-                { label: "Coverage",             value: `${report.summary.attribution_coverage_pct}%`, color: "#6DB874" },
+                { label: "Coverage",             value: `${report.summary.attribution_coverage_pct}%`, color: "#4AE8A0" },
                 { label: "Total Addresses",      value: report.summary.total_addresses,           color: "var(--ink)" },
                 { label: "EOA",                  value: report.summary.eoa_count,                 color: "#22c55e" },
                 { label: "Token Contracts",      value: report.summary.token_contract_count,      color: "#ef4444" },
                 { label: "Smart Contracts",      value: report.summary.smart_contract_count,      color: "#f97316" },
                 { label: "Proxy Contracts",      value: report.summary.proxy_contract_count,      color: "#f59e0b" },
-                { label: "Treasury (Safe)",      value: report.summary.treasury_contract_count,   color: "#6DB874" },
+                { label: "Treasury (Safe)",      value: report.summary.treasury_contract_count,   color: "#4AE8A0" },
                 { label: "Valid for Books",      value: report.summary.valid_for_books_count,     color: "#22c55e" },
               ].map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>

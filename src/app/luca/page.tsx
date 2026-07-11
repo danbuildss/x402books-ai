@@ -93,7 +93,7 @@ export default function LucaPage() {
             padding: "16px 18px", minWidth: 220, maxWidth: 260, fontFamily: "var(--font-mono)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6DB874", display: "inline-block" }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", display: "inline-block" }} />
               <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>LUCA · ACTIVE</span>
             </div>
             {[
@@ -104,7 +104,7 @@ export default function LucaPage() {
             ].map(({ k, v }) => (
               <div key={k} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                 <span style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.3)", width: 50, flexShrink: 0 }}>{k}</span>
-                <span style={{ fontSize: "0.62rem", color: "rgba(109,184,116,0.9)" }}>{v}</span>
+                <span style={{ fontSize: "0.62rem", color: "rgba(74,232,160,0.9)" }}>{v}</span>
               </div>
             ))}
           </div>
