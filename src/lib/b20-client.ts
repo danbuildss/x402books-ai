@@ -355,13 +355,14 @@ export async function fetchB20FactoryLogs(
   factoryAddress: string,
   apiKey: string,
   chain: B20Chain = "base-sepolia",
+  fromBlock = "0x0",
 ): Promise<{ logsScanned: number; candidates: string[] }> {
   const B20_PREFIX = "0xb200";
   let logs: FactoryLog[] = [];
 
   try {
     const result = await rpc(apiKey, "eth_getLogs", [{
-      fromBlock: "0x0",
+      fromBlock,
       toBlock: "latest",
       address: factoryAddress.toLowerCase(),
     }], chain);
