@@ -57,6 +57,7 @@ export function RegisterClient() {
   const [form, setForm] = useState({
     agent_name: "", wallet_address: "", x_handle: "", notes: "", gitlawb_repo: "",
   });
+  const [surplusPilot, setSurplusPilot] = useState(false);
   const [manualState, setManualState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [manualMsg, setManualMsg]     = useState("");
   const [submittedSlug, setSubmittedSlug] = useState("");
@@ -108,7 +109,10 @@ export function RegisterClient() {
       const res = await fetch("/api/registry/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          notes: [form.notes, surplusPilot ? "[surplus_pilot_candidate]" : ""].filter(Boolean).join(" ").trim(),
+        }),
       });
       const data = await res.json() as {
         ok?: boolean; error?: string; duplicate?: boolean; slug?: string; ref_id?: string;
@@ -430,6 +434,22 @@ export function RegisterClient() {
                     />
                   </div>
                 ))}
+
+                {/* Surplus pilot opt-in */}
+                <label style={{ display: "flex", alignItems: "flex-start", gap: 10, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={surplusPilot}
+                    onChange={(e) => setSurplusPilot(e.target.checked)}
+                    style={{ marginTop: 3, accentColor: "var(--accent)", width: 14, height: 14, flexShrink: 0 }}
+                  />
+                  <span style={{ fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.55 }}>
+                    My agent uses{" "}
+                    <a href="https://surplusintelligence.ai" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>Surplus</a>
+                    {" "}for inference — I&apos;m interested in the{" "}
+                    <Link href="/surplus" style={{ color: "var(--accent)", textDecoration: "none" }}>Surplus × Zetta pilot</Link>.
+                  </span>
+                </label>
 
                 {manualState === "error" && (
                   <p style={{ color: "#ef4444", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
