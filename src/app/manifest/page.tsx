@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 export const metadata = {
   title: ".agent/wallets.json — Open Wallet Declaration Standard · Zetta",
@@ -9,6 +11,37 @@ export const metadata = {
 
 const code = { fontFamily: "var(--font-mono)", fontSize: "0.85em", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 4, padding: "1px 5px" } as const;
 const muted = { color: "var(--muted)" } as const;
+
+const FLOW_STEPS = [
+  { step: "01", title: "Attribution", body: "Wallet declarations connect your agent's on-chain addresses to its operational identity. No declaration — no attribution." },
+  { step: "02", title: "Books",       body: "Attributed wallets generate financial books: revenue, expenses, treasury balance, 30-day P&L. Built from confirmed on-chain activity only." },
+  { step: "03", title: "Profile",     body: "Books populate your public agent profile: financial statements, transparency score, settlement classification, Luca verdict." },
+  { step: "04", title: "Intelligence", body: "Luca reads your books to generate financial summaries, settlement analysis, and include your agent in the State of the Agent Economy." },
+];
+
+const WALLET_ROLES = [
+  { role: "treasury",            cls: "Asset",    use: "Primary operating capital" },
+  { role: "revenue",             cls: "Inflow",   use: "Revenue and income collection" },
+  { role: "fee_recipient",       cls: "Inflow",   use: "Protocol fees, revenue share" },
+  { role: "payment_receiver",    cls: "Inflow",   use: "API payments, per-call settlement" },
+  { role: "expense",             cls: "Outflow",  use: "Operational expense wallet" },
+  { role: "operator",            cls: "Outflow",  use: "Hot wallet, day-to-day execution" },
+  { role: "deployer",            cls: "Neutral",  use: "Contract deployer (historical)" },
+  { role: "token_contract",      cls: "Contract", use: "ERC-20 token contract address" },
+  { role: "token_bound_account", cls: "Asset",    use: "ERC-6551 token-bound account" },
+  { role: "unknown",             cls: "Pending",  use: "Declared but role unclear" },
+];
+
+function clsBadgeVariant(cls: string): "green" | "blue" | "red" | "neutral" | "amber" | "purple" {
+  switch (cls) {
+    case "Inflow":   return "green";
+    case "Asset":    return "blue";
+    case "Outflow":  return "red";
+    case "Contract": return "purple";
+    case "Pending":  return "amber";
+    default:         return "neutral";
+  }
+}
 
 export default function ManifestPage() {
   return (
@@ -26,9 +59,7 @@ export default function ManifestPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 48 }}>
-          <p style={{ margin: "0 0 10px", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", ...muted }}>
-            Open Standard — v1.0
-          </p>
+          <SectionLabel>Open Standard — v1.0</SectionLabel>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.9rem, 4vw, 2.6rem)", fontWeight: 700, lineHeight: 1.15, margin: "0 0 16px" }}>
             .agent/wallets.json
           </h1>
@@ -102,22 +133,25 @@ export default function ManifestPage() {
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 20px" }}>
             What happens after you submit
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {[
-              { step: "01", title: "Attribution", body: "Wallet declarations connect your agent's on-chain addresses to its operational identity. No declaration — no attribution." },
-              { step: "02", title: "Books", body: "Attributed wallets generate financial books: revenue, expenses, treasury balance, 30-day P&L. Built from confirmed on-chain activity only." },
-              { step: "03", title: "Profile", body: "Books populate your public agent profile: financial statements, transparency score, settlement classification, Luca verdict." },
-              { step: "04", title: "Intelligence", body: "Luca reads your books to generate financial summaries, settlement analysis, and include your agent in the State of the Agent Economy." },
-            ].map((s, i, arr) => (
-              <div key={s.step} style={{ display: "flex", gap: 20, padding: "20px 0", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.06em", paddingTop: 2, flexShrink: 0 }}>{s.step}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "0.88rem", marginBottom: 4 }}>{s.title}</div>
-                  <div style={{ fontSize: "0.82rem", lineHeight: 1.6, ...muted }}>{s.body}</div>
-                </div>
-              </div>
+          <LedgerCard>
+            {FLOW_STEPS.map((s, i) => (
+              <LedgerRow
+                key={s.step}
+                first={i === 0}
+                last={i === FLOW_STEPS.length - 1}
+                label={
+                  <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--accent)", width: 24, flexShrink: 0 }}>
+                      {s.step}
+                    </span>
+                    {s.title}
+                  </span>
+                }
+                value={s.body}
+                valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.78rem", color: "var(--muted)", textAlign: "right", maxWidth: 340 }}
+              />
             ))}
-          </div>
+          </LedgerCard>
         </section>
 
         {/* Why open */}
@@ -143,37 +177,21 @@ export default function ManifestPage() {
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 20px" }}>
             Wallet roles
           </h2>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                  {["Role", "Financial classification", "Use"].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontWeight: 600, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.06em", ...muted, whiteSpace: "nowrap" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { role: "treasury",            cls: "Asset",    use: "Primary operating capital" },
-                  { role: "revenue",             cls: "Inflow",   use: "Revenue and income collection" },
-                  { role: "fee_recipient",       cls: "Inflow",   use: "Protocol fees, revenue share" },
-                  { role: "payment_receiver",    cls: "Inflow",   use: "API payments, per-call settlement" },
-                  { role: "expense",             cls: "Outflow",  use: "Operational expense wallet" },
-                  { role: "operator",            cls: "Outflow",  use: "Hot wallet, day-to-day execution" },
-                  { role: "deployer",            cls: "Neutral",  use: "Contract deployer (historical)" },
-                  { role: "token_contract",      cls: "Contract", use: "ERC-20 token contract address" },
-                  { role: "token_bound_account", cls: "Asset",    use: "ERC-6551 token-bound account" },
-                  { role: "unknown",             cls: "Pending",  use: "Declared but role unclear" },
-                ].map((r, i) => (
-                  <tr key={r.role} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--surface)" }}>
-                    <td style={{ padding: "9px 12px", fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>{r.role}</td>
-                    <td style={{ padding: "9px 12px", ...muted }}>{r.cls}</td>
-                    <td style={{ padding: "9px 12px", ...muted }}>{r.use}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LedgerCard eyebrow="10 roles" title="Supported wallet role classifications">
+            {WALLET_ROLES.map((r, i) => (
+              <LedgerRow
+                key={r.role}
+                first={i === 0}
+                last={i === WALLET_ROLES.length - 1}
+                label={
+                  <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>{r.role}</code>
+                }
+                badge={<StatusBadge variant={clsBadgeVariant(r.cls)}>{r.cls}</StatusBadge>}
+                value={r.use}
+                valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.78rem", color: "var(--muted)" }}
+              />
+            ))}
+          </LedgerCard>
         </section>
 
         {/* CTA */}
