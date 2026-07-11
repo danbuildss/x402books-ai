@@ -31,9 +31,9 @@ function fmtDate(iso: string): string {
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#4AE8A0",
   Virtuals: "#5B8FA8",
-  AEON: "#8B5CF6",
+  AEON: "#8B7CF6",
   EigenCloud: "#F97316",
-  Base: "#4F46E5",
+  Base: "#5B9EF4",
 };
 
 
@@ -116,8 +116,8 @@ export default async function HomePage() {
               <div className="zetta-trusted-row">
                 <span className="zetta-trusted-label">Active in</span>
                 {[
-                  { name: "BASE", color: "#4F46E5" },
-                  { name: "AEON", color: "#8B5CF6" },
+                  { name: "BASE", color: "#5B9EF4" },
+                  { name: "AEON", color: "#8B7CF6" },
                   { name: "BANKR", color: "#4AE8A0" },
                   { name: "EigenCloud", color: "#F97316" },
                   { name: "VIRTUALS", color: "#5B8FA8" },
@@ -161,7 +161,7 @@ export default async function HomePage() {
             {[
               { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#4AE8A0" },
               { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B8FA8" },
-              { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B5CF6" },
+              { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B7CF6" },
               { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F97316" },
               { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#4AE8A0" },
             ].map((item, i, arr) => (

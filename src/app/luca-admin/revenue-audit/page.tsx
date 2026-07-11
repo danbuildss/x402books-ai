@@ -12,7 +12,7 @@ const TABS: { key: TabKey; label: string; color: string }[] = [
   { key: "revenue",    label: "Operating Revenue", color: "#22c55e" },
   { key: "quarantined",label: "Quarantined",        color: "#f59e0b" },
   { key: "dex",        label: "DEX Excluded",       color: "#3b82f6" },
-  { key: "bridge",     label: "Bridge Excluded",    color: "#8b5cf6" },
+  { key: "bridge",     label: "Bridge Excluded",    color: "#8B7CF6" },
   { key: "internal",   label: "Internal Transfers", color: "#6b7280" },
 ];
 
@@ -26,7 +26,7 @@ const QUARANTINE_LABELS: Record<string, string> = {
 
 const QUARANTINE_COLORS: Record<string, string> = {
   capital_injection:    "#ef4444",
-  grant_program:        "#8b5cf6",
+  grant_program:        "#8B7CF6",
   bridge_receipt:       "#3b82f6",
   token_distribution:   "#f59e0b",
   unknown_large_inflow: "#6b7280",
@@ -64,7 +64,7 @@ function SummaryWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const { summary } = audit;
   const rows = [
     { label: "Gross inflows (all income transfers)",    value: summary.gross_inflow_usd,           sign: null,  color: "#e2e8f0" },
-    { label: "− Bridge receipts excluded",              value: summary.bridge_excluded_inflow_usd,  sign: "−",   color: "#8b5cf6" },
+    { label: "− Bridge receipts excluded",              value: summary.bridge_excluded_inflow_usd,  sign: "−",   color: "#8B7CF6" },
     { label: "− DEX swaps excluded",                   value: summary.dex_excluded_usd,            sign: "−",   color: "#3b82f6" },
     { label: "− Quarantined (cap. injections / grants)",value: summary.quarantined_usd,             sign: "−",   color: "#f59e0b" },
     { label: "= Operating revenue (what we report)",   value: summary.operating_revenue_usd,        sign: "=",   color: "#22c55e" },
@@ -363,7 +363,7 @@ export default function RevenueAuditPage() {
                 { label: "Operating Revenue",    value: audit.summary.operating_revenue_usd,      color: "#22c55e" },
                 { label: "Quarantined",          value: audit.summary.quarantined_usd,            color: "#f59e0b" },
                 { label: "DEX Excluded",         value: audit.summary.dex_excluded_usd,           color: "#3b82f6" },
-                { label: "Bridge Excluded",      value: audit.summary.bridge_excluded_inflow_usd, color: "#8b5cf6" },
+                { label: "Bridge Excluded",      value: audit.summary.bridge_excluded_inflow_usd, color: "#8B7CF6" },
                 { label: "Internal Transfers",   value: audit.summary.internal_transfer_usd,      color: "#6b7280" },
               ].map((card) => (
                 <div key={card.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>

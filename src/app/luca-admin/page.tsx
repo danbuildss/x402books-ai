@@ -2558,7 +2558,7 @@ function AttributionHealthSection() {
 const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
   eoa:               { label: "EOA",               color: "#22c55e" },
   token_contract:    { label: "Token Contract",    color: "#ef4444" },
-  proxy_contract:    { label: "Proxy Contract",    color: "#8b5cf6" },
+  proxy_contract:    { label: "Proxy Contract",    color: "#8B7CF6" },
   treasury_contract: { label: "Treasury Contract", color: "#4AE8A0" },
   vault:             { label: "Vault",             color: "#5B8FA8" },
   smart_contract:    { label: "Smart Contract",    color: "#f59e0b" },
@@ -2832,7 +2832,7 @@ const RA_TABS: { key: RATabKey; label: string; color: string }[] = [
   { key: "revenue",     label: "Operating Revenue", color: "#22c55e" },
   { key: "quarantined", label: "Quarantined",        color: "#f59e0b" },
   { key: "dex",         label: "DEX Excluded",       color: "#3b82f6" },
-  { key: "bridge",      label: "Bridge Excluded",    color: "#8b5cf6" },
+  { key: "bridge",      label: "Bridge Excluded",    color: "#8B7CF6" },
   { key: "internal",    label: "Internal Transfers", color: "#6b7280" },
 ];
 const QUARANTINE_LABELS: Record<string, string> = {
@@ -2841,7 +2841,7 @@ const QUARANTINE_LABELS: Record<string, string> = {
   unknown_large_inflow: "Unknown Large Inflow",
 };
 const QUARANTINE_COLORS: Record<string, string> = {
-  capital_injection: "#ef4444", grant_program: "#8b5cf6", bridge_receipt: "#3b82f6",
+  capital_injection: "#ef4444", grant_program: "#8B7CF6", bridge_receipt: "#3b82f6",
   token_distribution: "#f59e0b", unknown_large_inflow: "#6b7280",
 };
 function raFmtUsd(v: number) {
@@ -2856,7 +2856,7 @@ function RaWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const s = audit.summary;
   const rows = [
     { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "#e2e8f0" },
-    { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8b5cf6" },
+    { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8B7CF6" },
     { label: "− DEX swaps excluded",                  value: s.dex_excluded_usd,           sign: "−",  color: "#3b82f6" },
     { label: "− Quarantined (cap. injections/grants)", value: s.quarantined_usd,            sign: "−",  color: "#f59e0b" },
     { label: "= Operating revenue",                   value: s.operating_revenue_usd,       sign: "=",  color: "#22c55e" },
@@ -2992,7 +2992,7 @@ function RevenueAuditSection({ secret }: { secret: string }) {
               { label: "Operating Revenue", value: audit.summary.operating_revenue_usd,      color: "#22c55e" },
               { label: "Quarantined",       value: audit.summary.quarantined_usd,            color: "#f59e0b" },
               { label: "DEX Excluded",      value: audit.summary.dex_excluded_usd,           color: "#3b82f6" },
-              { label: "Bridge Excluded",   value: audit.summary.bridge_excluded_inflow_usd, color: "#8b5cf6" },
+              { label: "Bridge Excluded",   value: audit.summary.bridge_excluded_inflow_usd, color: "#8B7CF6" },
             ].map((c) => (
               <div key={c.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "12px 14px" }}>
                 <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>{c.label}</div>

@@ -1979,7 +1979,7 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
   ];
 
   if (hasTreasury) {
-    cols.push({ label: "Treasury", field: "treasury_usd", color: "#8B5CF6", value: latest.treasury_usd });
+    cols.push({ label: "Treasury", field: "treasury_usd", color: "#8B7CF6", value: latest.treasury_usd });
   }
 
   return (

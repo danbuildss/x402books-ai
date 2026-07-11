@@ -33,7 +33,7 @@
   --rose:  #8A3A38;
   --glow-a: #4AE8A0;
   --glow-b: #82C888;
-  --glow-c: #5B8FA8;
+  --glow-c: #5B9EF4;
 
   /* Transitions */
   --t-fast: 80ms ease;
@@ -3177,7 +3177,7 @@ iframe[src*="privy"] { display: none !important; }
   --st-primary-strong: #82C888;
   --st-on-primary:     #0E0F0E;
   --st-green:          #4AE8A0;
-  --st-blue:           #5B8FA8;
+  --st-blue:           #5B9EF4;
   --st-red:            #B85450;
   /* ---- Polish additions ---- */
   --st-mono:           var(--font-mono), 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
@@ -8041,9 +8041,9 @@ html, body {
 }
 
 .stitch-ecosystem-badge.virtuals {
-  background: rgba(139,92,246,0.15);
+  background: rgba(139,124,246,0.15);
   color: #a78bfa;
-  border: 1px solid rgba(139,92,246,0.25);
+  border: 1px solid rgba(139,124,246,0.25);
 }
 
 .stitch-ecosystem-badge.bankr {
@@ -9717,8 +9717,8 @@ html, body {
 
 /* ── Registry additions ── */
 .reg-eco-base { background: rgba(201,168,76,0.1); color: #C9A84C; border: 1px solid rgba(201,168,76,0.18); }
-.reg-eco-aeon        { background: rgba(139,92,246,0.1);  color: #8B5CF6; border: 1px solid rgba(139,92,246,0.22); }
-.reg-eco-eigencloud  { background: rgba(249,115,22,0.08); color: #F97316; border: 1px solid rgba(249,115,22,0.22); }
+.reg-eco-aeon        { background: rgba(139,124,246,0.1);  color: #8B7CF6; border: 1px solid rgba(139,124,246,0.22); }
+.reg-eco-eigencloud  { background: rgba(244,185,66,0.08); color: #F4B942; border: 1px solid rgba(244,185,66,0.22); }
 
 .reg-role-token-contract { background: rgba(74,232,160,0.08); color: var(--accent); border: 1px solid rgba(74,232,160,0.15); }
 .reg-role-fee-recipient  { background: rgba(91,143,168,0.08);  color: var(--blue);   border: 1px solid rgba(91,143,168,0.15); }
@@ -12458,8 +12458,8 @@ html, body {
 }
 
 .op-alert-warn {
-  background: rgba(249,115,22,0.07);
-  border-color: rgba(249,115,22,0.2);
+  background: rgba(244,185,66,0.07);
+  border-color: rgba(244,185,66,0.2);
   color: var(--ink);
 }
 
@@ -12646,7 +12646,7 @@ html, body {
 .badge-verified  { background: rgba(34,165,90,0.12);  color: #1A8A4A; border: 1px solid rgba(34,165,90,0.2); }
 .badge-claimed   { background: rgba(232,147,10,0.12); color: #B56B00; border: 1px solid rgba(232,147,10,0.2); }
 .badge-candidate { background: rgba(94,93,98,0.10);   color: var(--muted); border: 1px solid var(--line); }
-.badge-luca      { background: rgba(139,92,246,0.10); color: #7C3AED; border: 1px solid rgba(139,92,246,0.15); }
+.badge-luca      { background: rgba(139,124,246,0.10); color: #7C3AED; border: 1px solid rgba(139,124,246,0.15); }
 
 [data-theme="dark"] .badge-verified  { color: #4ADE80; background: rgba(74,222,128,0.10); }
 [data-theme="dark"] .badge-claimed   { color: #FBB740; background: rgba(251,183,64,0.10); }

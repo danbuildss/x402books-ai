@@ -205,7 +205,7 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
                   <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
                     {fmtUsd(s.dex_excluded_usd)}
                   </td>
-                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: s.bridge_excluded_inflow_usd > 0 ? "#8b5cf6" : "var(--muted)" }}>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: s.bridge_excluded_inflow_usd > 0 ? "#8B7CF6" : "var(--muted)" }}>
                     {fmtUsd(s.bridge_excluded_inflow_usd)}
                   </td>
                   <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>

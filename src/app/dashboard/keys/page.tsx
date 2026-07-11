@@ -18,7 +18,7 @@ type ApiKeyRecord = {
 };
 
 const TIER_COLORS: Record<LucaTier, string> = {
-  free: "var(--muted)", holder: "var(--blue, #5B8FA8)", whale: "var(--accent)", luca: "#8B5CF6",
+  free: "var(--muted)", holder: "var(--blue, #5B8FA8)", whale: "var(--accent)", luca: "#8B7CF6",
 };
 
 function relDate(iso: string | null) {

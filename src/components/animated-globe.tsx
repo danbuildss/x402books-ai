@@ -63,7 +63,7 @@ export function AnimatedGlobe() {
 
         {/* Connection arcs — draw in on mount */}
         {/* AEON (183,112) → BANKR (139,191) */}
-        <path d="M183,112 C165,140 148,168 139,191" fill="none" stroke="#8B5CF6" strokeWidth="1.2" opacity="0.65" strokeDasharray="200" strokeDashoffset="200">
+        <path d="M183,112 C165,140 148,168 139,191" fill="none" stroke="#8B7CF6" strokeWidth="1.2" opacity="0.65" strokeDasharray="200" strokeDashoffset="200">
           <animate attributeName="strokeDashoffset" from="200" to="0" dur="1.5s" fill="freeze" begin="0.3s" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
         </path>
         {/* BANKR (139,191) → VIRTUALS (297,165) */}
@@ -80,11 +80,11 @@ export function AnimatedGlobe() {
         </path>
 
         {/* AEON node — Western Europe cluster */}
-        <circle cx="183" cy="112" r="14" fill="#8B5CF6" opacity="0">
+        <circle cx="183" cy="112" r="14" fill="#8B7CF6" opacity="0">
           <animate attributeName="r" values="6;18;6" dur="2.4s" repeatCount="indefinite" begin="0.5s" />
           <animate attributeName="opacity" values="0.3;0;0.3" dur="2.4s" repeatCount="indefinite" begin="0.5s" />
         </circle>
-        <circle cx="183" cy="112" r="5.5" fill="#8B5CF6">
+        <circle cx="183" cy="112" r="5.5" fill="#8B7CF6">
           <animate attributeName="r" values="5.5;6.5;5.5" dur="2.4s" repeatCount="indefinite" />
           <animate attributeName="opacity" values="0.9;1;0.9" dur="2.4s" repeatCount="indefinite" />
         </circle>
@@ -112,10 +112,10 @@ export function AnimatedGlobe() {
 
       {/* Floating chips — slide in from sides */}
       <div className="zg-chip zg-chip-1">
-        <span className="zg-chip-dot" style={{ background: "#8B5CF6" }} />
+        <span className="zg-chip-dot" style={{ background: "#8B7CF6" }} />
         <div className="zg-chip-body">
           <span className="zg-chip-name">AEON</span>
-          <span className="zg-chip-rev" style={{ color: "#8B5CF6" }}>Attributed</span>
+          <span className="zg-chip-rev" style={{ color: "#8B7CF6" }}>Attributed</span>
         </div>
       </div>
       <div className="zg-chip zg-chip-2">

@@ -7,7 +7,7 @@ const TIER_COLORS: Record<LucaTier, string> = {
   free:   "var(--muted)",
   holder: "var(--blue)",
   whale:  "var(--accent)",
-  luca:   "#8B5CF6",
+  luca:   "#8B7CF6",
 };
 
 const TIER_DESCS: Record<LucaTier, string> = {

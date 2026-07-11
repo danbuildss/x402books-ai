@@ -19,7 +19,7 @@ function toSlug(name: string) {
 }
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#4AE8A0", Virtuals: "#5B8FA8", AEON: "#8B5CF6", EigenCloud: "#F97316", Base: "#4F46E5",
+  BANKR: "#4AE8A0", Virtuals: "#5B8FA8", AEON: "#8B7CF6", EigenCloud: "#F97316", Base: "#5B9EF4",
 };
 
 const STATUS_COLORS: Record<string, string> = {
