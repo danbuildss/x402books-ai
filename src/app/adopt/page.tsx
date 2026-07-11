@@ -2,6 +2,9 @@ import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { getAttributionMetrics } from "@/lib/attribution-health";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 export const revalidate = 300;
 
@@ -114,175 +117,87 @@ export default async function AdoptPage() {
 
       {/* Live stats bar */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          {[
-            { label: "Manifest Adopters", value: manifestAdopters, color: "#4AE8A0", sub: "of 25 target" },
-            { label: "Wallets Declared", value: walletsDeclared, color: "#4AE8A0", sub: "of 100 target" },
-            { label: "Ecosystems", value: 5, color: "var(--ink)", sub: "active" },
-            { label: "Coverage", value: coveragePct + "%", color: "#5B9EF4", sub: "of registry" },
-          ].map((stat) => (
-            <div key={stat.label} style={{
-              background: "var(--surface)",
-              border: "1px solid var(--line)",
-              borderRadius: 10,
-              padding: "16px 22px",
-              minWidth: 150,
-              flex: "1 1 150px",
-            }}>
-              <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
-                {stat.label}
-              </p>
-              <p style={{ margin: "0 0 2px", fontSize: "1.6rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: stat.color }}>
-                {stat.value}
-              </p>
-              <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)" }}>{stat.sub}</p>
-            </div>
-          ))}
-        </div>
+        <MetricGrid cols={4}>
+          <MetricCard label="Manifest Adopters" value={String(manifestAdopters)} sub={`of ${agentTarget} target`} valueColor="#4AE8A0" />
+          <MetricCard label="Wallets Declared"  value={String(walletsDeclared)}  sub={`of ${walletTarget} target`} valueColor="#4AE8A0" />
+          <MetricCard label="Ecosystems"        value="5"                         sub="active" />
+          <MetricCard label="Attribution Cover" value={coveragePct + "%"}         sub="of registry" valueColor="#5B9EF4" />
+        </MetricGrid>
       </div>
 
       {/* KPI progress section */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 40px" }}>
-        <div style={{
-          background: "var(--surface)",
-          border: "1px solid var(--line)",
-          borderRadius: 10,
-          padding: "24px 28px",
-        }}>
-          <p style={{
-            margin: "0 0 20px",
-            fontSize: "0.68rem",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.1em",
-            color: "var(--muted)",
-          }}>
-            30-Day Adoption Goal
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--ink)" }}>Agents with manifest</span>
-                <span style={{ fontSize: "0.82rem", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
-                  {manifestAdopters} / {agentTarget}
-                </span>
+        <LedgerCard eyebrow="30-Day Adoption Goal">
+          <LedgerRow
+            first
+            label="Agents with manifest"
+            value={`${manifestAdopters} / ${agentTarget}`}
+            valueStyle={{ color: "#4AE8A0" }}
+            detail={
+              <div style={{ height: 4, width: 80, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${agentBarPct}%`, background: "#4AE8A0", borderRadius: 99 }} />
               </div>
-              <div style={{ height: 6, borderRadius: 3, background: "var(--line)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${agentBarPct}%`, borderRadius: 3, background: "#4AE8A0", transition: "width 0.4s" }} />
+            }
+          />
+          <LedgerRow
+            last
+            label="Wallets declared"
+            value={`${walletsDeclared} / ${walletTarget}`}
+            valueStyle={{ color: "#4AE8A0" }}
+            detail={
+              <div style={{ height: 4, width: 80, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${walletBarPct}%`, background: "#4AE8A0", borderRadius: 99 }} />
               </div>
-            </div>
-
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--ink)" }}>Wallets declared</span>
-                <span style={{ fontSize: "0.82rem", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
-                  {walletsDeclared} / {walletTarget}
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: "var(--line)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${walletBarPct}%`, borderRadius: 3, background: "#4AE8A0", transition: "width 0.4s" }} />
-              </div>
-            </div>
-          </div>
-        </div>
+            }
+          />
+        </LedgerCard>
       </div>
 
-      {/* Early adopters grid */}
+      {/* Early adopters */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 48px" }}>
-        <h2 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700, color: "var(--ink)" }}>Early Adopters</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 14 }}>
-          {ADOPTERS.map((adopter) => {
+        <LedgerCard eyebrow="Early Adopters">
+          {ADOPTERS.map((adopter, i) => {
             const ecoColor = ECO_COLORS[adopter.ecosystem] ?? "#4AE8A0";
             return (
-              <div key={adopter.name} style={{
-                background: "var(--surface)",
-                border: "1px solid var(--line)",
-                borderLeft: adopter.manifestDeclared ? `3px solid ${ecoColor}` : "3px solid var(--line)",
-                borderRadius: 10,
-                padding: "18px 20px",
-                opacity: adopter.manifestDeclared ? 1 : 0.75,
-              }}>
-                {/* Name + badge */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                  <span style={{ fontWeight: 700, fontSize: "1rem", color: "var(--ink)" }}>{adopter.name}</span>
-                  {adopter.manifestDeclared ? (
-                    <span style={{
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.07em",
-                      color: "#4AE8A0",
-                      background: "rgba(34,197,94,0.1)",
-                      border: "1px solid rgba(34,197,94,0.25)",
-                      borderRadius: 4,
-                      padding: "2px 8px",
-                    }}>
-                      Manifest Declared
-                    </span>
-                  ) : (
-                    <span style={{
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.07em",
-                      color: "var(--muted)",
-                      background: "var(--surface-soft)",
-                      border: "1px solid var(--line)",
-                      borderRadius: 4,
-                      padding: "2px 8px",
-                    }}>
-                      Pending
-                    </span>
-                  )}
-                </div>
-
-                {/* Tag row */}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
-                  <span style={{
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    color: ecoColor,
-                    background: `${ecoColor}2E`,
-                    borderRadius: 4,
-                    padding: "2px 8px",
-                  }}>
-                    {adopter.ecosystem}
-                  </span>
-                  {adopter.walletCount > 0 && (
-                    <span style={{
-                      fontSize: "0.7rem",
-                      color: "var(--muted)",
-                      background: "var(--surface-soft)",
-                      border: "1px solid var(--line)",
-                      borderRadius: 4,
-                      padding: "2px 8px",
-                    }}>
-                      {adopter.walletCount} wallet{adopter.walletCount !== 1 ? "s" : ""} declared
-                    </span>
-                  )}
-                </div>
-
-                {/* Note */}
-                <p style={{ margin: "0 0 12px", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55 }}>
-                  {adopter.note}
-                </p>
-
-                {/* Profile link */}
-                {adopter.slug && (
-                  <Link href={`/registry/${adopter.slug}`} style={{
-                    fontSize: "0.78rem",
-                    color: "var(--accent)",
-                    textDecoration: "none",
-                    fontWeight: 600,
-                  }}>
-                    View profile →
+              <LedgerRow
+                key={adopter.name}
+                first={i === 0}
+                last={i === ADOPTERS.length - 1}
+                label={
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--ink)" }}>{adopter.name}</span>
+                      <span style={{
+                        fontSize: "0.62rem", fontWeight: 600,
+                        color: ecoColor, background: `${ecoColor}2E`,
+                        borderRadius: 4, padding: "1px 7px",
+                      }}>{adopter.ecosystem}</span>
+                      {adopter.walletCount > 0 && (
+                        <span style={{
+                          fontSize: "0.62rem", color: "var(--muted)",
+                          background: "var(--surface-soft)", border: "1px solid var(--line)",
+                          borderRadius: 4, padding: "1px 7px",
+                        }}>{adopter.walletCount}w</span>
+                      )}
+                    </div>
+                    <span style={{ fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{adopter.note}</span>
+                  </div>
+                }
+                value={adopter.slug ? (
+                  <Link href={`/registry/${adopter.slug}`} style={{ fontSize: "0.78rem", color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+                    View →
                   </Link>
-                )}
-              </div>
+                ) : ""}
+                badge={
+                  <StatusBadge variant={adopter.manifestDeclared ? "green" : "neutral"}>
+                    {adopter.manifestDeclared ? "Manifest Declared" : "Pending"}
+                  </StatusBadge>
+                }
+                style={{ opacity: adopter.manifestDeclared ? 1 : 0.75 }}
+              />
             );
           })}
-        </div>
+        </LedgerCard>
       </div>
 
       {/* "Your agent should be on this list" panel */}
@@ -307,49 +222,32 @@ export default async function AdoptPage() {
             </div>
 
             {/* Right: steps */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <LedgerCard eyebrow="How it works">
               {[
-                {
-                  num: "01",
-                  title: "Create .agent/wallets.json",
-                  desc: "Declare your treasury, operator, and revenue wallets with roles and chain.",
-                },
-                {
-                  num: "02",
-                  title: "Submit to Zetta Registry",
-                  desc: "Add your agent profile and link the manifest. Zetta verifies and indexes.",
-                },
-                {
-                  num: "03",
-                  title: "Books go live",
-                  desc: "Your revenue, expenses, and net income appear in Luca's reports and the registry.",
-                },
-              ].map((step) => (
-                <div key={step.num} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
-                  <div style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: "50%",
-                    background: "rgba(74,232,160,0.15)",
-                    border: "1px solid rgba(74,232,160,0.3)",
-                    color: "#4AE8A0",
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.72rem",
-                    fontWeight: 700,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                  }}>
-                    {step.num}
-                  </div>
-                  <div>
-                    <p style={{ margin: "0 0 3px", fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)" }}>{step.title}</p>
-                    <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55 }}>{step.desc}</p>
-                  </div>
-                </div>
+                { num: "01", title: "Create .agent/wallets.json", desc: "Declare your treasury, operator, and revenue wallets with roles and chain." },
+                { num: "02", title: "Submit to Zetta Registry", desc: "Add your agent profile and link the manifest. Zetta verifies and indexes." },
+                { num: "03", title: "Books go live", desc: "Your revenue, expenses, and net income appear in Luca's reports and the registry." },
+              ].map((step, i, arr) => (
+                <LedgerRow
+                  key={step.num}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={
+                    <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                      <span style={{
+                        fontFamily: "var(--font-mono)", fontSize: "0.7rem", fontWeight: 700,
+                        color: "#4AE8A0", minWidth: 22, paddingTop: 1,
+                      }}>{step.num}</span>
+                      <div>
+                        <p style={{ margin: "0 0 2px", fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)" }}>{step.title}</p>
+                        <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.55 }}>{step.desc}</p>
+                      </div>
+                    </div>
+                  }
+                  value=""
+                />
               ))}
-            </div>
+            </LedgerCard>
           </div>
         </div>
       </div>

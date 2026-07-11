@@ -4,8 +4,12 @@ import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { ResearchFilter } from "@/components/research-filter";
 import { getAgentGDP } from "@/lib/agent-gdp";
+import { getRegistryAgents } from "@/lib/registry-db";
 import { listReports } from "@/lib/research-db";
 import { INAUGURAL_REPORT } from "@/lib/inaugural-report";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { toSlug } from "@/app/registry/[slug]/slug";
 
 export const revalidate = 3600;
 
@@ -15,16 +19,41 @@ function fmtUSD(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-
+function fmt(n: number, fallback = "—"): string {
+  if (!n || n === 0) return fallback;
+  return fmtUSD(n);
+}
 
 export default async function ResearchPage() {
-  const [reportsResult, gdpResult] = await Promise.allSettled([
+  const [reportsResult, gdpResult, registryResult] = await Promise.allSettled([
     listReports(20),
     getAgentGDP(),
+    getRegistryAgents(),
   ]);
 
   const reports = reportsResult.status === "fulfilled" ? reportsResult.value : [];
   const gdp = gdpResult.status === "fulfilled" ? gdpResult.value : null;
+  const totalIndexed =
+    registryResult.status === "fulfilled" ? registryResult.value.agents.length : null;
+
+  // Compute ecosystem breakdown from all_attributed
+  const ecosystemMap: Record<string, { revenue: number; count: number }> = {};
+  if (gdp) {
+    for (const entry of gdp.all_attributed) {
+      const eco = entry.ecosystem || "Unknown";
+      if (!ecosystemMap[eco]) ecosystemMap[eco] = { revenue: 0, count: 0 };
+      ecosystemMap[eco].revenue += entry.revenue_usd;
+      ecosystemMap[eco].count += 1;
+    }
+  }
+  const ecosystemRows = Object.entries(ecosystemMap).sort((a, b) => b[1].revenue - a[1].revenue);
+
+  const top10 = gdp ? gdp.all_attributed.slice(0, 10) : [];
+
+  // Attribution gap
+  const withBooks = gdp?.attributed_agents ?? 0;
+  const awaitingManifest = gdp?.awaiting_manifest.length ?? 0;
+  const noData = totalIndexed != null ? Math.max(0, totalIndexed - withBooks - awaitingManifest) : null;
 
   return (
     <div className="lp-root">
@@ -58,23 +87,141 @@ export default async function ResearchPage() {
         </FadeContent>
       </section>
 
-      {/* ── Live GDP ── */}
+      {/* ── Economy Aggregate Stats ── */}
       {gdp && (
         <section className="lp-section lp-section-alt">
+          <FadeContent delay={40}>
+            <SectionLabel>Economy Overview · 30-day window · on-chain only</SectionLabel>
+            <MetricGrid cols={4} style={{ marginTop: 14 }}>
+              <MetricCard
+                label="Total Revenue"
+                value={gdp.total_revenue_usd > 0 ? fmtUSD(gdp.total_revenue_usd) : "—"}
+                sub="tracked, attributed"
+                valueColor={gdp.total_revenue_usd > 0 ? "var(--accent)" : undefined}
+              />
+              <MetricCard
+                label="Total Expenses"
+                value={gdp.total_expenses_usd > 0 ? fmtUSD(gdp.total_expenses_usd) : "—"}
+                sub="operating costs"
+              />
+              <MetricCard
+                label="Agents with Books"
+                value={gdp.attributed_agents > 0 ? String(gdp.attributed_agents) : "—"}
+                sub="manifest declared"
+              />
+              <MetricCard
+                label="Total Indexed"
+                value={totalIndexed != null && totalIndexed > 0 ? String(totalIndexed) : "—"}
+                sub="in registry"
+              />
+            </MetricGrid>
+          </FadeContent>
+        </section>
+      )}
+
+      {/* ── Top Agents by Revenue ── */}
+      {top10.length > 0 && (
+        <section className="lp-section" style={{ maxWidth: 860, margin: "0 auto", width: "100%", padding: "2rem 24px" }}>
           <FadeContent delay={60}>
-            <p className="lp-section-label">Agent GDP · Live · 30 days</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginTop: 20 }}>
-              {[
-                { label: "Operating Revenue", value: fmtUSD(gdp.total_revenue_usd), color: "#4AE8A0" },
-                { label: "Expenses", value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
-                { label: "Net Income", value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#F46060" },
-                { label: "Attributed Agents", value: String(gdp.attributed_agents), color: "var(--fg)" },
-              ].map((s) => (
-                <div key={s.label} style={{ padding: "16px 20px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
-                  <p style={{ margin: "0 0 6px", fontSize: "0.63rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600 }}>{s.label}</p>
-                  <p style={{ margin: 0, fontSize: "1.3rem", fontWeight: 700, fontFamily: "monospace", color: s.color }}>{s.value}</p>
-                </div>
+            <LedgerCard
+              eyebrow="Leaderboard · 30 days"
+              title="Top Agents by Revenue"
+            >
+              {top10.map((agent, i) => (
+                <LedgerRow
+                  key={agent.slug}
+                  first={i === 0}
+                  last={i === top10.length - 1}
+                  label={
+                    <Link
+                      href={`/registry/${toSlug(agent.name)}`}
+                      style={{ color: "var(--ink)", textDecoration: "none" }}
+                    >
+                      {agent.name}
+                    </Link>
+                  }
+                  value={fmt(agent.revenue_usd)}
+                  detail={
+                    agent.net_income_usd !== 0
+                      ? `net ${agent.net_income_usd >= 0 ? "+" : ""}${fmtUSD(agent.net_income_usd)}`
+                      : undefined
+                  }
+                  valueStyle={{ color: agent.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" }}
+                />
               ))}
+            </LedgerCard>
+          </FadeContent>
+        </section>
+      )}
+
+      {/* ── Ecosystem Breakdown + Attribution Gap ── */}
+      {(ecosystemRows.length > 0 || gdp) && (
+        <section className="lp-section lp-section-alt">
+          <FadeContent delay={80}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 }}>
+
+              {/* Ecosystem breakdown */}
+              {ecosystemRows.length > 0 && (
+                <LedgerCard
+                  eyebrow="By ecosystem"
+                  title="Revenue Breakdown"
+                >
+                  {ecosystemRows.map(([eco, data], i) => (
+                    <LedgerRow
+                      key={eco}
+                      first={i === 0}
+                      last={i === ecosystemRows.length - 1}
+                      label={eco}
+                      value={fmt(data.revenue)}
+                      detail={`${data.count} agent${data.count !== 1 ? "s" : ""}`}
+                      valueStyle={{ color: "var(--ink)" }}
+                    />
+                  ))}
+                </LedgerCard>
+              )}
+
+              {/* Attribution gap */}
+              {gdp && (
+                <LedgerCard
+                  eyebrow="Data quality signal"
+                  title="Attribution Coverage"
+                >
+                  <LedgerRow
+                    first
+                    label="Full books"
+                    value={withBooks > 0 ? String(withBooks) : "—"}
+                    detail="manifest + on-chain"
+                    valueStyle={{ color: "var(--accent)" }}
+                  />
+                  <LedgerRow
+                    label="Awaiting manifest"
+                    value={awaitingManifest > 0 ? String(awaitingManifest) : "—"}
+                    detail="indexed, undeclared"
+                    valueStyle={{ color: "var(--muted)" }}
+                  />
+                  {noData !== null && (
+                    <LedgerRow
+                      last
+                      label="No data"
+                      value={noData > 0 ? String(noData) : "—"}
+                      detail="registry only"
+                      valueStyle={{ color: "var(--muted)" }}
+                    />
+                  )}
+                  {noData === null && (
+                    <LedgerRow
+                      last
+                      label="Total indexed"
+                      value={gdp.total_agents > 0 ? String(gdp.total_agents) : "—"}
+                      detail="in registry"
+                    />
+                  )}
+                  <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
+                    Only agents with declared wallet manifests appear in economic data. Awaiting manifest agents are indexed but not yet financially attributed.
+                  </p>
+                </LedgerCard>
+              )}
+
             </div>
           </FadeContent>
         </section>
@@ -103,7 +250,7 @@ export default async function ResearchPage() {
               <p className="lp-section-label">About</p>
               <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>Luca writes.<br />The data speaks.</h2>
               <p className="lp-registry-sub">
-                The State of the Agent Economy is written by Luca, Zetta&rsquo; financial analyst. Every number is derived from on-chain data. Only agents with declared wallet manifests are included. No estimates. No synthetic data.
+                The State of the Agent Economy is written by Luca, Zetta&rsquo;s financial analyst. Every number is derived from on-chain data. Only agents with declared wallet manifests are included. No estimates. No synthetic data.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "20px 0" }}>
                 {[

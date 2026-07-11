@@ -2,6 +2,8 @@ import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge, EcoBadge } from "@/components/ui/badge";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getRegistryAgents } from "@/lib/registry-db";
@@ -24,28 +26,6 @@ function netColor(n: number): string {
   if (n > 0) return "#4AE8A0";
   if (n < 0) return "#F46060";
   return "var(--muted)";
-}
-
-const ECO_COLORS: Record<string, string> = {
-  BANKR: "#4AE8A0",
-  Virtuals: "#5B9EF4",
-  AEON: "#8B7CF6",
-  EigenCloud: "#F4B942",
-  Base: "#5B9EF4",
-};
-
-function EcoBadge({ eco }: { eco: string }) {
-  const c = ECO_COLORS[eco] ?? "var(--muted)";
-  return (
-    <span style={{
-      fontSize: "0.67rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-      border: `1px solid color-mix(in srgb, ${c} 28%, transparent)`,
-      background: `color-mix(in srgb, ${c} 10%, transparent)`,
-      color: c,
-    }}>
-      {eco}
-    </span>
-  );
 }
 
 // ── GDP Trend Chart (server-rendered SVG) ────────────────────────────────────
@@ -190,9 +170,22 @@ function HealthBadge({ grade, score }: { grade: string; score: number }) {
   );
 }
 
-function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank: number; healthMap: Map<string, { grade: string; total: number }> }) {
+function LeaderboardRow({
+  agent,
+  rank,
+  healthMap,
+  first,
+  last,
+}: {
+  agent: AgentGDPEntry;
+  rank: number;
+  healthMap: Map<string, { grade: string; total: number }>;
+  first?: boolean;
+  last?: boolean;
+}) {
   const net = agent.net_income_usd;
   const health = healthMap.get(agent.slug);
+  const borderRadius = first && last ? 0 : first ? "0 0 0 0" : last ? "0 0 0 0" : 0;
   return (
     <Link
       href={`/registry/${agent.slug}`}
@@ -202,10 +195,11 @@ function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank
         alignItems: "center",
         gap: 12,
         padding: "14px 16px",
-        borderBottom: "1px solid var(--line)",
+        borderBottom: last ? "none" : "1px solid var(--line)",
         textDecoration: "none",
         color: "inherit",
         transition: "background 0.1s",
+        borderRadius,
       }}
       className="ldb-row"
     >
@@ -218,7 +212,7 @@ function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank
       <div>
         <span style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--fg)" }}>{agent.name}</span>
         <div style={{ marginTop: 2 }}>
-          <EcoBadge eco={agent.ecosystem} />
+          <EcoBadge ecosystem={agent.ecosystem} />
         </div>
       </div>
 
@@ -230,22 +224,22 @@ function LeaderboardRow({ agent, rank, healthMap }: { agent: AgentGDPEntry; rank
       </div>
 
       {/* Revenue */}
-      <div style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 600, color: "#4AE8A0", textAlign: "right" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 600, color: "#4AE8A0", textAlign: "right" }}>
         {fmtUSD(agent.revenue_usd)}
       </div>
 
       {/* Expenses */}
-      <div style={{ fontFamily: "monospace", fontSize: "0.85rem", color: "var(--muted)", textAlign: "right" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "var(--muted)", textAlign: "right" }}>
         {fmtUSD(agent.expenses_usd)}
       </div>
 
       {/* Net Income */}
-      <div style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 700, color: netColor(net), textAlign: "right" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 700, color: netColor(net), textAlign: "right" }}>
         {net >= 0 ? "+" : ""}{fmtUSD(net)}
       </div>
 
       {/* Txs */}
-      <div style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)", textAlign: "right" }}>
+      <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--muted)", textAlign: "right" }}>
         {agent.tx_count.toLocaleString()}
       </div>
 
@@ -312,9 +306,7 @@ export default async function LeaderboardPage() {
 
         {/* Header */}
         <div style={{ marginBottom: 36 }}>
-          <p style={{ margin: "0 0 8px", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
-            Agent Economy · 30 days
-          </p>
+          <SectionLabel style={{ marginBottom: 8 }}>Agent Economy · 30 days</SectionLabel>
           <h1 style={{ margin: "0 0 10px", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 800, lineHeight: 1.15 }}>
             Economic Leaderboard
           </h1>
@@ -399,45 +391,57 @@ export default async function LeaderboardPage() {
 
         {/* Table */}
         {hasData ? (
-          <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+          <LedgerCard
+            eyebrow="Top Agents by Revenue · 30 Days"
+            style={{ marginBottom: 0 }}
+          >
+            <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
 
-            {/* Table header */}
-            <div className="ldb-header" style={{
-              display: "grid",
-              gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
-              gap: 12,
-              padding: "10px 16px",
-              background: "var(--surface-soft)",
-              borderBottom: "1px solid var(--line)",
-            }}>
-              {[
-                { label: "#",          align: "center" },
-                { label: "Agent",      align: "left"   },
-                { label: "Health",     align: "right"  },
-                { label: "Revenue",    align: "right"  },
-                { label: "Expenses",   align: "right"  },
-                { label: "Net Income", align: "right"  },
-                { label: "Txs",        align: "right"  },
-                { label: "",           align: "right"  },
-              ].map((h, i) => (
-                <div key={i} style={{
-                  fontSize: "0.62rem",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.07em",
-                  color: "var(--muted)",
-                  textAlign: h.align as React.CSSProperties["textAlign"],
-                }}>
-                  {h.label}
-                </div>
+              {/* Table header */}
+              <div className="ldb-header" style={{
+                display: "grid",
+                gridTemplateColumns: "40px 1fr 80px 100px 110px 110px 90px 44px",
+                gap: 12,
+                padding: "10px 16px",
+                background: "var(--surface-soft)",
+                borderBottom: "1px solid var(--line)",
+              }}>
+                {[
+                  { label: "#",          align: "center" },
+                  { label: "Agent",      align: "left"   },
+                  { label: "Health",     align: "right"  },
+                  { label: "Revenue",    align: "right"  },
+                  { label: "Expenses",   align: "right"  },
+                  { label: "Net Income", align: "right"  },
+                  { label: "Txs",        align: "right"  },
+                  { label: "",           align: "right"  },
+                ].map((h, i) => (
+                  <div key={i} style={{
+                    fontSize: "0.62rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    color: "var(--muted)",
+                    textAlign: h.align as React.CSSProperties["textAlign"],
+                  }}>
+                    {h.label}
+                  </div>
+                ))}
+              </div>
+
+              {/* Rows */}
+              {agents.map((agent, i) => (
+                <LeaderboardRow
+                  key={agent.slug}
+                  agent={agent}
+                  rank={i + 1}
+                  healthMap={healthMap}
+                  first={i === 0}
+                  last={i === agents.length - 1}
+                />
               ))}
             </div>
-
-            {/* Rows */}
-            {agents.map((agent, i) => (
-              <LeaderboardRow key={agent.slug} agent={agent} rank={i + 1} healthMap={healthMap} />
-            ))}
-          </div>
+          </LedgerCard>
         ) : (
           <div style={{
             padding: "48px 28px",
@@ -458,92 +462,67 @@ export default async function LeaderboardPage() {
         {/* Indexed agents awaiting manifest declaration */}
         {awaitingManifest.length > 0 && (
           <div style={{ marginTop: 40 }}>
-            <div style={{ marginBottom: 14, display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
-              <div>
-                <p style={{ margin: "0 0 4px", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
-                  Indexed — Revenue Locked
-                </p>
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
-                  {awaitingManifest.length} agent{awaitingManifest.length !== 1 ? "s" : ""} indexed
-                  {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via ERC-8004</>}.
-                  {" "}Revenue attribution unlocks when they declare a wallet manifest.
-                </p>
-              </div>
-              <Link href="/api#manifest" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap", marginTop: 2 }}>
-                Submit manifest →
-              </Link>
-            </div>
-            <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
-              <div style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 100px 130px 120px 100px",
-                gap: 12,
-                padding: "9px 16px",
-                background: "var(--surface-soft)",
-                borderBottom: "1px solid var(--line)",
-              }}>
-                {["Agent", "Ecosystem", "Status", "30d Revenue", ""].map((h, i) => (
-                  <div key={i} style={{ fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)" }}>
-                    {h}
-                  </div>
-                ))}
-              </div>
-              {awaitingManifest.map((a: AwaitingManifestEntry) => (
-                <div key={a.slug} style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 100px 130px 120px 100px",
-                  gap: 12,
-                  padding: "11px 16px",
-                  borderBottom: "1px solid var(--line)",
-                  alignItems: "center",
-                  fontSize: "0.83rem",
-                }}>
-                  <div style={{ fontWeight: 600, color: "var(--fg)" }}>
-                    {a.isErc8004 && (
-                      <span style={{
-                        display: "inline-block", marginRight: 7,
-                        fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
-                        background: "color-mix(in srgb, #8B7CF6 12%, transparent)",
-                        border: "1px solid color-mix(in srgb, #8B7CF6 30%, transparent)",
-                        color: "#8B7CF6", verticalAlign: "middle",
-                      }}>ERC-8004</span>
-                    )}
-                    <Link href={`/registry/${a.slug}`} style={{ color: "var(--fg)", textDecoration: "none" }}>
-                      {a.name}
-                    </Link>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{a.ecosystem}</div>
-                  <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                    {(() => {
-                      const vs = vscoreMap.get(a.slug);
-                      if (!vs) return <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontStyle: "italic" }}>—</span>;
-                      const scoreColor = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)";
-                      return (
-                        <>
+            <LedgerCard
+              eyebrow="Indexed — Revenue Locked"
+              action={
+                <Link href="/api#manifest" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>
+                  Submit manifest →
+                </Link>
+              }
+            >
+              <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                {awaitingManifest.length} agent{awaitingManifest.length !== 1 ? "s" : ""} indexed
+                {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via ERC-8004</>}.
+                {" "}Revenue attribution unlocks when they declare a wallet manifest.
+              </p>
+              {awaitingManifest.map((a: AwaitingManifestEntry, i: number) => {
+                const vs = vscoreMap.get(a.slug);
+                const scoreColor = vs
+                  ? vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)"
+                  : "var(--muted)";
+                return (
+                  <LedgerRow
+                    key={a.slug}
+                    first={i === 0}
+                    last={i === awaitingManifest.length - 1}
+                    label={
+                      <Link href={`/registry/${a.slug}`} style={{ color: "var(--ink)", textDecoration: "none", fontWeight: 700 }}>
+                        {a.name}
+                      </Link>
+                    }
+                    badge={
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                        {a.isErc8004 && <StatusBadge variant="erc8004">ERC-8004</StatusBadge>}
+                        <EcoBadge ecosystem={a.ecosystem} />
+                        <StatusBadge variant="neutral">{a.verificationStatus}</StatusBadge>
+                      </span>
+                    }
+                    value={
+                      <Link href={`/registry/${a.slug}#claim`} style={{
+                        fontSize: "0.72rem", fontWeight: 600,
+                        color: "var(--accent)", textDecoration: "none",
+                        padding: "4px 10px", borderRadius: 6,
+                        border: "1px solid rgba(74,232,160,0.3)",
+                        background: "var(--accent-soft)",
+                      }}>Declare →</Link>
+                    }
+                    detail={
+                      vs ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                           <span style={{
                             fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
                             background: `color-mix(in srgb, ${scoreColor} 12%, transparent)`,
                             border: `1px solid color-mix(in srgb, ${scoreColor} 28%, transparent)`,
-                            color: scoreColor, fontFamily: "monospace",
+                            color: scoreColor, fontFamily: "var(--font-mono)",
                           }}>{vs.total}</span>
                           <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{vs.tier}</span>
-                        </>
-                      );
-                    })()}
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <Link href={`/registry/${a.slug}#claim`} style={{
-                      fontSize: "0.72rem", fontWeight: 600,
-                      color: "var(--accent)", textDecoration: "none",
-                      padding: "4px 10px", borderRadius: 6,
-                      border: "1px solid rgba(74,232,160,0.3)",
-                      background: "var(--accent-soft)",
-                    }}>Declare →</Link>
-                  </div>
-                </div>
-              ))}
-            </div>
+                        </span>
+                      ) : <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>
+                    }
+                  />
+                );
+              })}
+            </LedgerCard>
           </div>
         )}
 
