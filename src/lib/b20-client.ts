@@ -351,18 +351,23 @@ type FactoryLog = {
   transactionHash: string;
 };
 
+// Base mainnet block ~Jan 2025 — B20 is a new standard, no tokens existed before this.
+// Scanning from genesis (0x0) times out; this default keeps scans fast.
+const B20_MAINNET_DEFAULT_FROM_BLOCK = "0x1400000"; // ~20M, safely before any B20 deployment
+
 export async function fetchB20FactoryLogs(
   factoryAddress: string,
   apiKey: string,
   chain: B20Chain = "base-sepolia",
-  fromBlock = "0x0",
+  fromBlock?: string,
 ): Promise<{ logsScanned: number; candidates: string[] }> {
+  const resolvedFromBlock = fromBlock ?? (chain === "base" ? B20_MAINNET_DEFAULT_FROM_BLOCK : "0x0");
   const B20_PREFIX = "0xb200";
   let logs: FactoryLog[] = [];
 
   try {
     const result = await rpc(apiKey, "eth_getLogs", [{
-      fromBlock,
+      fromBlock: resolvedFromBlock,
       toBlock: "latest",
       address: factoryAddress.toLowerCase(),
     }], chain);
