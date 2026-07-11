@@ -213,7 +213,7 @@ export default function SurplusPilotPage() {
         <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginBottom: 16 }}>
           Inference active · Wallet attributed · Last 30 days
         </p>
-        <Link href="/surplus/sleuth-ai" style={{
+        <Link href="/registry/sleuth-ai" style={{
           display: "inline-flex", alignItems: "center", gap: 6,
           background: "var(--accent)", color: "#fff", fontWeight: 700,
           fontSize: "0.82rem", padding: "9px 18px", borderRadius: 7, textDecoration: "none",
