@@ -5,7 +5,7 @@ import {
   summarizeInferenceEvents,
   generateMonthlyStatement,
 } from "@/lib/inference-events";
-import type { InferenceEvent, InferenceSummary, MonthlyStatement, ProviderStat } from "@/lib/inference-events";
+import type { InferenceEvent, InferenceSummary, MonthlyStatement, ProviderStat, CostSource } from "@/lib/inference-events";
 
 export const dynamic = "force-dynamic";
 
@@ -40,16 +40,62 @@ function StatusDot({ status }: { status: string }) {
   );
 }
 
+function CostStatusBanner({ costStatus, requestCount }: { costStatus: CostSource; requestCount: number }) {
+  if (requestCount === 0) return null;
+
+  const config = {
+    actual: {
+      bg: "var(--accent)12",
+      border: "var(--accent)40",
+      dot: "var(--accent)",
+      label: "Cost data: actual",
+      note: "Cost figures are sourced from provider billing.",
+    },
+    estimated: {
+      bg: "#f59e0b12",
+      border: "#f59e0b40",
+      dot: "#f59e0b",
+      label: "Cost data: estimated",
+      note: "Spend is estimated from model pricing and token usage. Actual provider billing may differ.",
+    },
+    missing: {
+      bg: "#f8717112",
+      border: "#f8717140",
+      dot: "#f87171",
+      label: "Cost data: missing",
+      note: "Requests are being tracked, but cost data is missing. Financial reporting is incomplete until provider cost metadata is active.",
+    },
+  }[costStatus];
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "flex-start", gap: 10,
+      padding: "10px 14px", borderRadius: 8,
+      background: config.bg, border: `1px solid ${config.border}`,
+      marginBottom: 20,
+    }}>
+      <span style={{ width: 7, height: 7, borderRadius: "50%", background: config.dot, flexShrink: 0, marginTop: 5 }} />
+      <div>
+        <p style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink)", marginBottom: 2 }}>{config.label}</p>
+        <p style={{ fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{config.note}</p>
+      </div>
+    </div>
+  );
+}
+
 function SummaryStats({ summary }: { summary: InferenceSummary }) {
+  const costDisplay = summary.hasCostData ? usd(summary.totalCostUsd) : "—";
+  const avgDisplay  = summary.hasCostData ? usd(summary.avgCostPerRequest) : "—";
+
   const stats = [
-    { label: "Total Spend",       value: usd(summary.totalCostUsd),      sub: `Last ${summary.periodDays}d` },
-    { label: "Requests",          value: summary.requestCount.toString(), sub: "inference calls" },
-    { label: "Providers",         value: summary.providersUsed.length.toString(), sub: summary.primaryProvider ?? "none" },
-    { label: "Avg Cost / Request", value: usd(summary.avgCostPerRequest), sub: "per call" },
+    { label: "Total Spend",        value: costDisplay,                          sub: `Last ${summary.periodDays}d` },
+    { label: "Requests",           value: summary.requestCount.toString(),       sub: "inference calls" },
+    { label: "Providers",          value: summary.providersUsed.length.toString(), sub: summary.primaryProvider ?? "none" },
+    { label: "Avg Cost / Request", value: avgDisplay,                           sub: "per call" },
   ];
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 28 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 20 }}>
       {stats.map((s) => (
         <div key={s.label} style={{
           background: "var(--surface)", border: "1px solid var(--line)",
@@ -64,7 +110,7 @@ function SummaryStats({ summary }: { summary: InferenceSummary }) {
   );
 }
 
-function ProviderBreakdown({ breakdown, total }: { breakdown: ProviderStat[]; total: number }) {
+function ProviderBreakdown({ breakdown, total, hasCostData }: { breakdown: ProviderStat[]; total: number; hasCostData: boolean }) {
   if (breakdown.length === 0) return null;
 
   return (
@@ -82,11 +128,15 @@ function ProviderBreakdown({ breakdown, total }: { breakdown: ProviderStat[]; to
                   <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--ink)", textTransform: "capitalize" }}>{p.provider}</span>
                   <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>{p.requestCount} req</span>
                 </div>
-                <span style={{ fontSize: "0.85rem", fontFamily: "monospace", fontWeight: 600, color: "var(--ink)" }}>{usd(p.totalCost)}</span>
+                <span style={{ fontSize: "0.85rem", fontFamily: "monospace", fontWeight: 600, color: "var(--ink)" }}>
+                  {hasCostData ? usd(p.totalCost) : "—"}
+                </span>
               </div>
-              <div style={{ height: 3, background: "var(--surface-soft)", borderRadius: 2, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.3s" }} />
-              </div>
+              {hasCostData && (
+                <div style={{ height: 3, background: "var(--surface-soft)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: "var(--accent)", borderRadius: 2 }} />
+                </div>
+              )}
             </div>
           );
         })}
@@ -97,6 +147,7 @@ function ProviderBreakdown({ breakdown, total }: { breakdown: ProviderStat[]; to
 
 function StatementBlock({ statement }: { statement: MonthlyStatement }) {
   const netColor = statement.netPosition > 0 ? "var(--accent)" : statement.netPosition < 0 ? "#f87171" : "var(--ink)";
+  const spendDisplay = statement.inferenceSpend > 0 ? `-${usd(statement.inferenceSpend)}` : "—";
 
   return (
     <section style={{ marginBottom: 28 }}>
@@ -109,8 +160,8 @@ function StatementBlock({ statement }: { statement: MonthlyStatement }) {
       }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {[
-            ["Inference Spend", `-${usd(statement.inferenceSpend)}`, "#f87171"],
-            ["Revenue",         "+$0.00",                            "var(--muted)"],
+            ["Inference Spend", spendDisplay, statement.inferenceSpend > 0 ? "#f87171" : "var(--muted)"],
+            ["Revenue",         "+$0.00",     "var(--muted)"],
           ].map(([label, value, color]) => (
             <div key={label as string} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
               <span style={{ color: "var(--muted)" }}>{label}</span>
@@ -120,7 +171,7 @@ function StatementBlock({ statement }: { statement: MonthlyStatement }) {
           <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>
             <span>Net Position</span>
             <span style={{ fontFamily: "monospace", color: netColor }}>
-              {statement.netPosition >= 0 ? "+" : ""}{usd(Math.abs(statement.netPosition))}
+              {statement.netPosition === 0 ? "—" : `${statement.netPosition >= 0 ? "+" : ""}${usd(Math.abs(statement.netPosition))}`}
             </span>
           </div>
         </div>
@@ -157,7 +208,7 @@ function EventFeed({ events }: { events: InferenceEvent[] }) {
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "24px 18px", textAlign: "center" }}>
           <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>No inference events recorded yet.</p>
           <p style={{ color: "var(--muted)", fontSize: "0.78rem", marginTop: 6 }}>
-            Events are logged when Luca processes requests via Surplus.
+            Events are logged when Luca processes requests.
           </p>
         </div>
       </section>
@@ -185,13 +236,22 @@ function EventFeed({ events }: { events: InferenceEvent[] }) {
             {e.model && (
               <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "monospace", flex: 1 }}>{e.model}</span>
             )}
+            {e.totalTokens && (
+              <span style={{ fontSize: "0.7rem", color: "var(--muted)" }}>
+                {e.totalTokens.toLocaleString()}t
+              </span>
+            )}
             {e.requestType && (
               <span style={{ fontSize: "0.72rem", color: "var(--muted)", background: "var(--surface-soft)", padding: "2px 7px", borderRadius: 4 }}>
                 {e.requestType}
               </span>
             )}
-            <span style={{ fontSize: "0.78rem", fontFamily: "monospace", color: e.costUsd ? "var(--ink)" : "var(--muted)", marginLeft: "auto" }}>
-              {e.costUsd ? usd(e.costUsd) : "—"}
+            <span style={{
+              fontSize: "0.78rem", fontFamily: "monospace",
+              color: e.costSource === "missing" ? "var(--muted)" : "var(--ink)",
+              marginLeft: "auto",
+            }}>
+              {e.costSource === "missing" || e.costUsd == null ? "—" : usd(e.costUsd)}
             </span>
             <span style={{ fontSize: "0.7rem", color: "var(--muted)", minWidth: 60, textAlign: "right" }}>
               {e.createdAt ? relativeTime(e.createdAt) : "—"}
@@ -291,8 +351,9 @@ export default async function LucaLedgerPage({
         </div>
 
         <PeriodTabs period={period} />
+        <CostStatusBanner costStatus={summary.costStatus} requestCount={summary.requestCount} />
         <SummaryStats summary={summary} />
-        <ProviderBreakdown breakdown={summary.providerBreakdown} total={summary.totalCostUsd} />
+        <ProviderBreakdown breakdown={summary.providerBreakdown} total={summary.totalCostUsd} hasCostData={summary.hasCostData} />
         <StatementBlock statement={statement} />
         <EventFeed events={events} />
 
@@ -308,7 +369,7 @@ export default async function LucaLedgerPage({
               POST /api/inference/log
             </code>{" "}
             — the public endpoint for Surplus and other providers to report agent inference activity.{" "}
-            <Link href="/docs#api" style={{ color: "var(--accent)" }}>API docs →</Link>
+            <Link href="/docs/surplus-integration" style={{ color: "var(--accent)" }}>Integration guide →</Link>
           </p>
         </div>
       </main>

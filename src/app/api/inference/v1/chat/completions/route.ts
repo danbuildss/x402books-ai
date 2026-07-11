@@ -70,7 +70,11 @@ async function logInference(opts: {
     provider:    "surplus",
     model:       opts.model,
     requestType: "chat_completion",
+    inputTokens:  opts.usage?.prompt_tokens     ?? null,
+    outputTokens: opts.usage?.completion_tokens ?? null,
+    totalTokens:  opts.usage ? ((opts.usage.prompt_tokens ?? 0) + (opts.usage.completion_tokens ?? 0)) || null : null,
     costUsd:     cost,
+    costSource:  cost != null ? "estimated" : "missing",
     latencyMs:   opts.latencyMs ?? null,
     status:      "success",
   }).catch(() => {});

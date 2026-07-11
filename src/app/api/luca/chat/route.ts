@@ -273,7 +273,11 @@ export async function POST(req: NextRequest) {
           provider:    "bankr",
           model:       modelConfig.model,
           requestType: "chat_completion",
+          inputTokens:  totalPromptTokens     || null,
+          outputTokens: totalCompletionTokens || null,
+          totalTokens:  (totalPromptTokens + totalCompletionTokens) || null,
           costUsd:     null,
+          costSource:  "missing",
           latencyMs:   Date.now() - t0,
           status:      "success",
         }).catch(() => {});
