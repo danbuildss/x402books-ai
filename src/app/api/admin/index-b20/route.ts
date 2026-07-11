@@ -18,7 +18,7 @@ import {
 } from "@/lib/b20-db";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // B20 prefix: all B20 tokens deployed by the factory start with 0xB200
 const B20_PREFIX = "0xb200";
@@ -38,6 +38,7 @@ type IndexB20Body = {
   chain?: B20Chain;
   includeActivity?: boolean;
   dryRun?: boolean;
+  fromBlock?: string;
 };
 
 type TokenResult = {
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { mode, address, includeActivity = false, dryRun = false } = body;
+  const { mode, address, includeActivity = false, dryRun = false, fromBlock = "0x0" } = body;
   const chain: B20Chain = body.chain && VALID_CHAINS.includes(body.chain) ? body.chain : "base";
   const isTestnet = chain !== "base";
 
@@ -226,7 +227,7 @@ export async function POST(req: NextRequest) {
 
   // ── detect_factory: scan factory logs on any chain (mainnet or testnet) ──────
   if (mode === "detect_factory") {
-    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain);
+    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain, fromBlock);
 
     type FactoryCandidate = {
       address: string;

@@ -106,6 +106,7 @@ export default function B20IntelligencePage() {
   const [mode, setMode] = useState<Mode>("detect_factory");
   const [chain, setChain] = useState<"base" | "base-sepolia">("base");
   const [address, setAddress] = useState("");
+  const [fromBlock, setFromBlock] = useState("");
   const [includeActivity, setIncludeActivity] = useState(false);
   const [dryRun, setDryRun] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -123,6 +124,7 @@ export default function B20IntelligencePage() {
 
     const body: Record<string, unknown> = { mode, chain, includeActivity, dryRun };
     if (mode === "single" || mode === "activity_only") body.address = address.trim().toLowerCase();
+    if (fromBlock.trim()) body.fromBlock = fromBlock.trim();
 
     try {
       const res = await fetch("/api/admin/index-b20", {
@@ -307,6 +309,20 @@ export default function B20IntelligencePage() {
               <input value={address} onChange={(e) => setAddress(e.target.value)}
                 placeholder={chain === "base-sepolia" ? "0xB200… (Base Sepolia)" : "0xB200… (Base mainnet)"}
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 340, fontFamily: "var(--font-mono)" }} />
+            </div>
+          )}
+
+          {isDetectMode && (
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                From Block <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — leave blank to scan all blocks, or enter a hex block number to limit range)</span>
+              </div>
+              <input value={fromBlock} onChange={(e) => setFromBlock(e.target.value)}
+                placeholder="e.g. 0x1312D00  (leave blank for full scan — may be slow)"
+                style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 380, fontFamily: "var(--font-mono)" }} />
+              <div style={{ marginTop: 4, fontSize: 11, color: "var(--muted)" }}>
+                Tip: find the B20 factory deployment block on Basescan and use that as fromBlock to make the scan fast.
+              </div>
             </div>
           )}
 
