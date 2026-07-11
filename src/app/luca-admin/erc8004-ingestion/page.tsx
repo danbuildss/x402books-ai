@@ -304,7 +304,7 @@ export default function Erc8004IngestionPage() {
               {([
                 { label: "Metadata",    pct: report.summary.metadata_coverage_pct,    count: report.summary.metadata_fetched,     color: "#22c55e",  note: "metadata fetched" },
                 { label: "DID",         pct: report.summary.did_coverage_pct,         count: report.summary.agents_with_did,      color: "#a855f7",  note: "with DID" },
-                { label: "Reputation",  pct: report.summary.reputation_coverage_pct,  count: null,                                color: "#5B8FA8",  note: "Phase 2" },
+                { label: "Reputation",  pct: report.summary.reputation_coverage_pct,  count: null,                                color: "#5B9EF4",  note: "Phase 2" },
                 { label: "Validation",  pct: report.summary.validation_coverage_pct,  count: null,                                color: "#f59e0b",  note: "Phase 2" },
                 { label: "Manifest",    pct: report.summary.manifest_coverage_pct,    count: report.summary.manifest_uris_found,  color: "#4AE8A0",  note: "manifest URIs" },
                 { label: "Books",       pct: report.summary.books_coverage_pct,       count: report.summary.books_eligible_wallets, color: "#6b7280", note: "books-eligible" },

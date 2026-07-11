@@ -21,9 +21,9 @@ function fmtDate(iso: string): string {
 
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#4AE8A0",
-  Virtuals: "#5B8FA8",
+  Virtuals: "#5B9EF4",
   AEON: "#8B7CF6",
-  EigenCloud: "#F97316",
+  EigenCloud: "#F4B942",
   Base: "#5B9EF4",
 };
 
@@ -239,8 +239,8 @@ export function DashboardShell({ gdp, reports, history }: DashboardShellProps) {
                   { name: "BASE", color: "#5B9EF4" },
                   { name: "AEON", color: "#8B7CF6" },
                   { name: "BANKR", color: "#4AE8A0" },
-                  { name: "EigenCloud", color: "#F97316" },
-                  { name: "VIRTUALS", color: "#5B8FA8" },
+                  { name: "EigenCloud", color: "#F4B942" },
+                  { name: "VIRTUALS", color: "#5B9EF4" },
                 ].map((e) => (
                   <span key={e.name} className="zetta-trusted-item">
                     <span className="zetta-trusted-dot" style={{ background: e.color }} />

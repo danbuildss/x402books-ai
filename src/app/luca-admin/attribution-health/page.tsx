@@ -241,7 +241,7 @@ export default function AttributionHealthAdminPage() {
                               <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#22c55e18", color: "#22c55e" }}>rev</span>
                             )}
                             {agent.has_treasury_wallet && (
-                              <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#5B8FA818", color: "#5B8FA8" }}>treasury</span>
+                              <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#5B9EF418", color: "#5B9EF4" }}>treasury</span>
                             )}
                           </div>
                         </td>

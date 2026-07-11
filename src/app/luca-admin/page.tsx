@@ -2560,7 +2560,7 @@ const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
   token_contract:    { label: "Token Contract",    color: "#ef4444" },
   proxy_contract:    { label: "Proxy Contract",    color: "#8B7CF6" },
   treasury_contract: { label: "Treasury Contract", color: "#4AE8A0" },
-  vault:             { label: "Vault",             color: "#5B8FA8" },
+  vault:             { label: "Vault",             color: "#5B9EF4" },
   smart_contract:    { label: "Smart Contract",    color: "#f59e0b" },
   smart_account:     { label: "Smart Account",     color: "#3b82f6" },
   unknown:           { label: "Unknown",           color: "#6b7280" },
@@ -3319,7 +3319,7 @@ function B20Section({ secret }: { secret: string }) {
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["base", "base-sepolia"] as const).map((c) => (
-            <button key={c} onClick={() => setChain(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: chain === c ? "#5B8FA8" : "var(--line)", background: chain === c ? "#5B8FA818" : "transparent", color: chain === c ? "#5B8FA8" : "var(--muted)", fontSize: 12, cursor: "pointer" }}>
+            <button key={c} onClick={() => setChain(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: chain === c ? "#5B9EF4" : "var(--line)", background: chain === c ? "#5B9EF418" : "transparent", color: chain === c ? "#5B9EF4" : "var(--muted)", fontSize: 12, cursor: "pointer" }}>
               {c}
             </button>
           ))}

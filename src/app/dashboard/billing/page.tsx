@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type LucaTier } from "@/lib/luca-token";
 
 const TIER_COLORS: Record<LucaTier, string> = {
-  free: "var(--muted)", holder: "#5B8FA8", whale: "var(--accent)", luca: "#8B7CF6",
+  free: "var(--muted)", holder: "#5B9EF4", whale: "var(--accent)", luca: "#8B7CF6",
 };
 
 const TIER_FEATURES: Record<LucaTier, string[]> = {

@@ -29,8 +29,8 @@ function toSlug(name: string) {
 const STATUS_COLORS: Record<string, string> = {
   Verified: "#4AE8A0",
   "Luca Managed": "#4AE8A0",
-  "Wallets Declared": "#5B8FA8",
-  Claimed: "#F97316",
+  "Wallets Declared": "#5B9EF4",
+  Claimed: "#F4B942",
   Candidate: "var(--muted)",
 };
 

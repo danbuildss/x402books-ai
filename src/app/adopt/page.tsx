@@ -7,9 +7,9 @@ export const revalidate = 300;
 
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#4AE8A0",
-  Virtuals: "#5B8FA8",
+  Virtuals: "#5B9EF4",
   AEON: "#8B7CF6",
-  EigenCloud: "#F97316",
+  EigenCloud: "#F4B942",
   Base: "#5B9EF4",
 };
 
@@ -119,7 +119,7 @@ export default async function AdoptPage() {
             { label: "Manifest Adopters", value: manifestAdopters, color: "#22c55e", sub: "of 25 target" },
             { label: "Wallets Declared", value: walletsDeclared, color: "#4AE8A0", sub: "of 100 target" },
             { label: "Ecosystems", value: 5, color: "var(--ink)", sub: "active" },
-            { label: "Coverage", value: coveragePct + "%", color: "#5B8FA8", sub: "of registry" },
+            { label: "Coverage", value: coveragePct + "%", color: "#5B9EF4", sub: "of registry" },
           ].map((stat) => (
             <div key={stat.label} style={{
               background: "var(--surface)",

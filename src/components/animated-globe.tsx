@@ -71,7 +71,7 @@ export function AnimatedGlobe() {
           <animate attributeName="strokeDashoffset" from="175" to="0" dur="1.6s" fill="freeze" begin="0.6s" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
         </path>
         {/* AEON (183,112) → VIRTUALS (297,165) */}
-        <path d="M183,112 C228,122 268,142 297,165" fill="none" stroke="#5B8FA8" strokeWidth="1.0" opacity="0.50" strokeDasharray="160" strokeDashoffset="160">
+        <path d="M183,112 C228,122 268,142 297,165" fill="none" stroke="#5B9EF4" strokeWidth="1.0" opacity="0.50" strokeDasharray="160" strokeDashoffset="160">
           <animate attributeName="strokeDashoffset" from="160" to="0" dur="1.8s" fill="freeze" begin="0.9s" calcMode="spline" keySplines="0.4 0 0.2 1" keyTimes="0;1" />
         </path>
         {/* Faint secondary arcs */}
@@ -100,11 +100,11 @@ export function AnimatedGlobe() {
         </circle>
 
         {/* VIRTUALS node — South Asia / India */}
-        <circle cx="297" cy="165" r="14" fill="#5B8FA8" opacity="0">
+        <circle cx="297" cy="165" r="14" fill="#5B9EF4" opacity="0">
           <animate attributeName="r" values="6;18;6" dur="2.6s" repeatCount="indefinite" begin="1.2s" />
           <animate attributeName="opacity" values="0.3;0;0.3" dur="2.6s" repeatCount="indefinite" begin="1.2s" />
         </circle>
-        <circle cx="297" cy="165" r="5.5" fill="#5B8FA8">
+        <circle cx="297" cy="165" r="5.5" fill="#5B9EF4">
           <animate attributeName="r" values="5.5;6.5;5.5" dur="2.6s" repeatCount="indefinite" begin="0.6s" />
           <animate attributeName="opacity" values="0.9;1;0.9" dur="2.6s" repeatCount="indefinite" begin="0.6s" />
         </circle>
@@ -126,10 +126,10 @@ export function AnimatedGlobe() {
         </div>
       </div>
       <div className="zg-chip zg-chip-3">
-        <span className="zg-chip-dot" style={{ background: "#5B8FA8" }} />
+        <span className="zg-chip-dot" style={{ background: "#5B9EF4" }} />
         <div className="zg-chip-body">
           <span className="zg-chip-name">VIRTUALS</span>
-          <span className="zg-chip-rev" style={{ color: "#5B8FA8" }}>Attributed</span>
+          <span className="zg-chip-rev" style={{ color: "#5B9EF4" }}>Attributed</span>
         </div>
       </div>
     </div>

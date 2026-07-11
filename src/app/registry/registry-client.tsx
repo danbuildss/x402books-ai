@@ -151,7 +151,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
         <StatusBadge status={agent.verificationStatus} />
         {(() => {
           const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
-          const color = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+          const color = vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)";
           return (
             <span style={{
               fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,

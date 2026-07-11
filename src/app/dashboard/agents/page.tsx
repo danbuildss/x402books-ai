@@ -19,16 +19,16 @@ function toSlug(name: string) {
 }
 
 const ECO_COLORS: Record<string, string> = {
-  BANKR: "#4AE8A0", Virtuals: "#5B8FA8", AEON: "#8B7CF6", EigenCloud: "#F97316", Base: "#5B9EF4",
+  BANKR: "#4AE8A0", Virtuals: "#5B9EF4", AEON: "#8B7CF6", EigenCloud: "#F4B942", Base: "#5B9EF4",
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  Verified: "#4AE8A0", "Luca Managed": "#4AE8A0", "Wallets Declared": "#5B8FA8",
-  Claimed: "#F97316", Candidate: "var(--muted)",
+  Verified: "#4AE8A0", "Luca Managed": "#4AE8A0", "Wallets Declared": "#5B9EF4",
+  Claimed: "#F4B942", Candidate: "var(--muted)",
 };
 
 const HEALTH_COLORS: Record<string, string> = {
-  Active: "#4AE8A0", Stable: "#5B8FA8", Unverified: "#F97316", Inactive: "var(--muted)", Pending: "var(--muted)",
+  Active: "#4AE8A0", Stable: "#5B9EF4", Unverified: "#F4B942", Inactive: "var(--muted)", Pending: "var(--muted)",
 };
 
 export default function MyAgentsPage() {

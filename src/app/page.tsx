@@ -30,9 +30,9 @@ function fmtDate(iso: string): string {
 
 const ECO_COLORS: Record<string, string> = {
   BANKR: "#4AE8A0",
-  Virtuals: "#5B8FA8",
+  Virtuals: "#5B9EF4",
   AEON: "#8B7CF6",
-  EigenCloud: "#F97316",
+  EigenCloud: "#F4B942",
   Base: "#5B9EF4",
 };
 
@@ -119,8 +119,8 @@ export default async function HomePage() {
                   { name: "BASE", color: "#5B9EF4" },
                   { name: "AEON", color: "#8B7CF6" },
                   { name: "BANKR", color: "#4AE8A0" },
-                  { name: "EigenCloud", color: "#F97316" },
-                  { name: "VIRTUALS", color: "#5B8FA8" },
+                  { name: "EigenCloud", color: "#F4B942" },
+                  { name: "VIRTUALS", color: "#5B9EF4" },
                 ].map((e) => (
                   <span key={e.name} className="zetta-trusted-item">
                     <span className="zetta-trusted-dot" style={{ background: e.color }} />
@@ -160,9 +160,9 @@ export default async function HomePage() {
           <div className="zetta-stack-flow">
             {[
               { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#4AE8A0" },
-              { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B8FA8" },
+              { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B9EF4" },
               { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B7CF6" },
-              { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F97316" },
+              { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F4B942" },
               { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#4AE8A0" },
             ].map((item, i, arr) => (
               <div key={item.step} className="zetta-stack-item">

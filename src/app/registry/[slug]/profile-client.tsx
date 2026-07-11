@@ -731,7 +731,7 @@ function cardStatusLabel(agent: Agent): string {
 function cardStatusColor(agent: Agent): string {
   const s = agent.verificationStatus;
   if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#4AE8A0";
-  if (s === "Wallets Declared") return "#5B8FA8";
+  if (s === "Wallets Declared") return "#5B9EF4";
   return "#7d828d";
 }
 
@@ -1975,7 +1975,7 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
   const cols: Array<{ label: string; field: BooksTrendField; color: string; value: number | null }> = [
     { label: "Revenue",    field: "revenue_usd",    color: "#4AE8A0", value: latest.revenue_usd },
     { label: "Expenses",   field: "expenses_usd",   color: "#F46060", value: latest.expenses_usd },
-    { label: "Net Income", field: "net_income_usd", color: "#5B8FA8", value: latest.net_income_usd },
+    { label: "Net Income", field: "net_income_usd", color: "#5B9EF4", value: latest.net_income_usd },
   ];
 
   if (hasTreasury) {
