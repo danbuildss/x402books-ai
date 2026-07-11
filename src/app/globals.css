@@ -14,21 +14,21 @@
   --line:         rgba(15, 15, 17, 0.10);
   --line-strong:  rgba(15, 15, 17, 0.18);
 
-  /* Brand accent — botanical green kept, accent overload addressed via semantic layer */
-  --accent:       #5A9E60;
-  --accent-dark:  #4A8A50;
-  --accent-soft:  rgba(74, 158, 80, 0.10);
+  /* Brand accent — TL-A electric green, toned for light backgrounds */
+  --accent:       #1CB870;
+  --accent-dark:  #18A362;
+  --accent-soft:  rgba(28, 184, 112, 0.10);
 
   /* Semantic — separate from accent */
-  --positive:     #22A55A;
-  --positive-soft: rgba(34, 165, 90, 0.10);
-  --negative:     #DC3545;
-  --negative-soft: rgba(220, 53, 69, 0.09);
-  --warning:      #E8930A;
-  --warning-soft: rgba(232, 147, 10, 0.10);
+  --positive:     #1CB870;
+  --positive-soft: rgba(28, 184, 112, 0.10);
+  --negative:     #D43F3F;
+  --negative-soft: rgba(212, 63, 63, 0.09);
+  --warning:      #C9920A;
+  --warning-soft: rgba(201, 146, 10, 0.10);
 
   /* Legacy aliases */
-  --money: #5A9E60;
+  --money: #1CB870;
   --blue:  #3B6EA8;
   --rose:  #8A3A38;
   --glow-a: #4AE8A0;
@@ -2360,10 +2360,10 @@ iframe[src*="privy"] { display: none !important; }
   --ledger-border: rgba(15, 15, 17, 0.10);
   --ledger-text: #0F0F11;
   --ledger-muted: #5E5D62;
-  --ledger-primary: #5A9E60;
-  --ledger-primary-strong: #4A8A50;
-  --ledger-primary-soft: rgba(74, 158, 80, 0.10);
-  --ledger-danger: #DC3545;
+  --ledger-primary: #1CB870;
+  --ledger-primary-strong: #18A362;
+  --ledger-primary-soft: rgba(28, 184, 112, 0.10);
+  --ledger-danger: #D43F3F;
 }
 
 /* Removed: .product-shell * { letter-spacing: 0 }
