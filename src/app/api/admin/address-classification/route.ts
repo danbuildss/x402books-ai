@@ -146,11 +146,6 @@ export async function GET(req: NextRequest) {
 
       const isTokenAddress =
         !!agent.tokenAddress && addr === agent.tokenAddress.toLowerCase();
-      const isContractType =
-        addrType === "token_contract" ||
-        addrType === "smart_contract" ||
-        addrType === "proxy_contract" ||
-        addrType === "vault";
 
       const isValidForBooks =
         attribution === "manifest" &&

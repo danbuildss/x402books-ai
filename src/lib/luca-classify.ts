@@ -1,4 +1,4 @@
-import type { LedgerCategory, CategorySummary, DailyFlow } from "./ledger";
+import type { CategorySummary, DailyFlow } from "./ledger";
 
 // ── Settlement pattern classification ─────────────────────────────────────────
 // Takes on-chain summary data and returns cold, operational Luca phrases.

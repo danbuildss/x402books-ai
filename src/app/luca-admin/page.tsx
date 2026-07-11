@@ -2404,13 +2404,6 @@ function PendingUpdatesSection({ secret }: { secret: string }) {
 
 // ── Attribution Health section ─────────────────────────────────────────────────
 
-const ATTR_STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
-  manifest: { label: "Manifest",     color: "#22c55e" },
-  admin:    { label: "Admin",        color: "#6DB874" },
-  inferred: { label: "Inferred",     color: "#f59e0b" },
-  none:     { label: "Unattributed", color: "#6b7280" },
-};
-
 const ATTR_CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
   high:         { label: "High",         color: "#22c55e" },
   medium:       { label: "Medium",       color: "#f59e0b" },
@@ -2554,17 +2547,6 @@ function AttributionHealthSection() {
 }
 
 // ── Address Classification section ────────────────────────────────────────────
-
-const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
-  eoa:               { label: "EOA",               color: "#22c55e" },
-  token_contract:    { label: "Token Contract",    color: "#ef4444" },
-  proxy_contract:    { label: "Proxy Contract",    color: "#8b5cf6" },
-  treasury_contract: { label: "Treasury Contract", color: "#6DB874" },
-  vault:             { label: "Vault",             color: "#5B8FA8" },
-  smart_contract:    { label: "Smart Contract",    color: "#f59e0b" },
-  smart_account:     { label: "Smart Account",     color: "#3b82f6" },
-  unknown:           { label: "Unknown",           color: "#6b7280" },
-};
 
 type AddrClassificationReport = {
   ok: boolean;

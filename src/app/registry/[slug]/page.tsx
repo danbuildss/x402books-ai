@@ -1,18 +1,14 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import type { Metadata } from "next";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
-import { toPublicAgent } from "@/app/registry/types";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import type { AgentEconomicSummary } from "@/lib/agent-events";
 import { getInferenceEvents, summarizeInferenceEvents } from "@/lib/inference-events";
 import type { InferenceSummary } from "@/lib/inference-events";
 import { getToolDecisions } from "@/lib/tool-decisions";
-import type { ToolDecisionEvent } from "@/lib/tool-decisions";
 import { classifySettlementPattern } from "@/lib/luca-classify";
-import type { SettlementClassification } from "@/lib/luca-classify";
 import { buildAgentBooks } from "@/lib/agent-books";
 import type { AgentBooks, AgentBooksUnattributed } from "@/lib/agent-books";
 import { getAgentBooksHistory } from "@/lib/agent-books-history";

@@ -40,7 +40,6 @@ function reportSlug(type: string): string {
 
 async function researchWithGrok(
   topAgents: AgentGDPEntry[],
-  gdp: AgentGDP,
 ): Promise<string> {
   const apiKey = process.env.GROK_API_KEY;
   if (!apiKey) return "";
@@ -135,7 +134,7 @@ export async function generateEconomyReport(
     : "No agents with declared wallet manifests yet.";
 
   // Phase 1: research
-  const researchContext = await researchWithGrok(gdp.top_agents, gdp);
+  const researchContext = await researchWithGrok(gdp.top_agents);
 
   // Phase 2: write
   // LLM_API_KEY + LLM_BASE_URL allows routing through BANKR's LLM gateway
