@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Logo } from "@/components/logo";
+import { SectionLabel } from "@/components/ui/ledger";
 
 function AccessForm() {
   const searchParams = useSearchParams();
@@ -61,6 +62,7 @@ function AccessForm() {
         {showSpinner && (
           <>
             <div className="access-copy">
+              <SectionLabel style={{ marginBottom: 8 }}>Authenticating</SectionLabel>
               <h1>Signing you in…</h1>
               <p>Just a moment while we set up your account.</p>
             </div>
@@ -73,6 +75,7 @@ function AccessForm() {
         {!showSpinner && !authenticated && (
           <>
             <div className="access-copy">
+              <SectionLabel style={{ marginBottom: 8 }}>Financial Identity for Agents</SectionLabel>
               <h1>Sign in to Zetta</h1>
               <p>Track your Base USDC activity, categorize transactions, and generate financial reports.</p>
             </div>
@@ -92,6 +95,7 @@ function AccessForm() {
         {!showSpinner && authenticated && !isLoading && error && (
           <>
             <div className="access-copy">
+              <SectionLabel style={{ marginBottom: 8 }}>Error</SectionLabel>
               <h1>Something went wrong</h1>
               <p>{error}</p>
             </div>
