@@ -313,16 +313,8 @@ export default function B20IntelligencePage() {
           )}
 
           {isDetectMode && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                From Block <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — leave blank to scan all blocks, or enter a hex block number to limit range)</span>
-              </div>
-              <input value={fromBlock} onChange={(e) => setFromBlock(e.target.value)}
-                placeholder="e.g. 0x1312D00  (leave blank for full scan — may be slow)"
-                style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 380, fontFamily: "var(--font-mono)" }} />
-              <div style={{ marginTop: 4, fontSize: 11, color: "var(--muted)" }}>
-                Tip: find the B20 factory deployment block on Basescan and use that as fromBlock to make the scan fast.
-              </div>
+            <div style={{ marginBottom: 14, fontSize: 11, color: "var(--muted)" }}>
+              Scan starts from Base block ~20M (Jan 2025) by default — B20 tokens only exist after this point so the scan is fast.
             </div>
           )}
 
