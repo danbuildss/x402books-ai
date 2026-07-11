@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 export const metadata = {
   title: "Manifest Migration Guide · Zetta",
@@ -27,9 +29,7 @@ export default function ManifestMigrationPage() {
         </nav>
 
         <div style={{ marginBottom: 40 }}>
-          <p style={{ margin: "0 0 10px", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", ...muted }}>
-            Migration Guide
-          </p>
+          <SectionLabel style={{ marginBottom: 10 }}>Migration Guide</SectionLabel>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.8rem, 4vw, 2.4rem)", fontWeight: 700, lineHeight: 1.15, margin: "0 0 16px" }}>
             Migrating to .agent/wallets.json
           </h1>
@@ -50,37 +50,37 @@ export default function ManifestMigrationPage() {
         <hr style={{ border: "none", borderTop: "1px solid var(--line)", margin: "0 0 48px" }} />
 
         {/* What changed */}
-        <section style={{ marginBottom: 48 }}>
+        <section style={{ marginBottom: 40 }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 16px" }}>
             What changed
           </h2>
-          <p style={{ lineHeight: 1.7, ...muted, margin: "0 0 16px" }}>
+          <p style={{ lineHeight: 1.7, ...muted, margin: "0 0 20px" }}>
             The manifest is now part of an open, ecosystem-neutral standard — not a Zetta-specific format.
-            The canonical path has moved from <code style={code}>.x402books/wallets.json</code> to
+            The canonical path has moved from <code style={code}>.x402books/wallets.json</code> to{" "}
             <code style={code}>.agent/wallets.json</code> to reflect this.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 24 }}>
-            <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8 }}>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#F46060", marginBottom: 10 }}>Before</div>
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.83rem", ...muted }}>
-                .x402books/wallets.json
-              </code>
-            </div>
-            <div style={{ padding: "16px 18px", background: "var(--surface)", border: "1px solid color-mix(in srgb, #4AE8A0 40%, var(--line))", borderRadius: 8 }}>
-              <div style={{ fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#4AE8A0", marginBottom: 10 }}>After</div>
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.83rem", color: "var(--ink)" }}>
-                .agent/wallets.json
-              </code>
-            </div>
-          </div>
+          <LedgerCard>
+            <LedgerRow
+              first
+              label={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--muted)", textDecoration: "line-through" }}>.x402books/wallets.json</code>}
+              value=""
+              badge={<StatusBadge variant="red">Before</StatusBadge>}
+            />
+            <LedgerRow
+              last
+              label={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--ink)" }}>.agent/wallets.json</code>}
+              value=""
+              badge={<StatusBadge variant="green">After</StatusBadge>}
+            />
+          </LedgerCard>
         </section>
 
         {/* Step by step */}
-        <section style={{ marginBottom: 48 }}>
+        <section style={{ marginBottom: 40 }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 20px" }}>
             Migration steps
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+          <LedgerCard>
             {[
               {
                 step: "01",
@@ -121,26 +121,26 @@ cp .x402books/wallets.json .agent/wallets.json`,
                 code: null,
               },
             ].map((s, i, arr) => (
-              <div key={s.step} style={{ padding: "24px 0", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none" }}>
-                <div style={{ display: "flex", gap: 16, marginBottom: s.code ? 16 : 0 }}>
+              <div key={s.step} style={{ padding: "20px 14px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: i === 0 ? "8px 8px 0 0" : i === arr.length - 1 ? "0 0 8px 8px" : 0, borderBottomWidth: i < arr.length - 1 ? 0 : 1, marginBottom: 0 }}>
+                <div style={{ display: "flex", gap: 14, marginBottom: s.code ? 14 : 0 }}>
                   <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.68rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.06em", paddingTop: 2, flexShrink: 0 }}>{s.step}</div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: "0.88rem", marginBottom: 6 }}>{s.title}</div>
+                    <div style={{ fontWeight: 700, fontSize: "0.88rem", marginBottom: 5 }}>{s.title}</div>
                     <div style={{ fontSize: "0.82rem", lineHeight: 1.6, ...muted }}>{s.body}</div>
                   </div>
                 </div>
                 {s.code && (
-                  <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 7, padding: "14px 18px", overflowX: "auto", margin: 0, lineHeight: 1.65, ...muted }}>
+                  <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7, padding: "14px 18px", overflowX: "auto", margin: 0, lineHeight: 1.65, ...muted }}>
                     {s.code}
                   </pre>
                 )}
               </div>
             ))}
-          </div>
+          </LedgerCard>
         </section>
 
         {/* Backward compat guarantee */}
-        <section style={{ marginBottom: 48 }}>
+        <section style={{ marginBottom: 40 }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 16px" }}>
             Backward compatibility
           </h2>
@@ -149,56 +149,51 @@ cp .x402books/wallets.json .agent/wallets.json`,
             tried first; <code style={code}>.x402books/wallets.json</code> is tried as a fallback.
             The legacy path will continue to work indefinitely.
           </p>
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
-            <div style={{ padding: "10px 18px", borderBottom: "1px solid var(--line)", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", ...muted }}>Fetch order</div>
+          <LedgerCard title="Fetch order">
             {[
-              { path: ".agent/wallets.json (main)", label: "Primary", color: "var(--accent)" },
-              { path: ".agent/wallets.json (master)", label: "Primary fallback", color: "var(--accent)" },
-              { path: ".x402books/wallets.json (main)", label: "Legacy fallback", color: "var(--muted)" },
-              { path: ".x402books/wallets.json (master)", label: "Legacy fallback", color: "var(--muted)" },
-            ].map((row, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 18px", borderBottom: i < 3 ? "1px solid var(--line)" : "none" }}>
-                <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", ...muted }}>{row.path}</code>
-                <span style={{ fontSize: "0.72rem", color: row.color }}>{row.label}</span>
-              </div>
+              { path: ".agent/wallets.json (main)",        label: "Primary",         variant: "green" as const },
+              { path: ".agent/wallets.json (master)",      label: "Primary fallback", variant: "green" as const },
+              { path: ".x402books/wallets.json (main)",    label: "Legacy fallback",  variant: "neutral" as const },
+              { path: ".x402books/wallets.json (master)",  label: "Legacy fallback",  variant: "neutral" as const },
+            ].map((row, i, arr) => (
+              <LedgerRow
+                key={i}
+                first={i === 0}
+                last={i === arr.length - 1}
+                label={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--muted)" }}>{row.path}</code>}
+                value=""
+                badge={<StatusBadge variant={row.variant}>{row.label}</StatusBadge>}
+              />
             ))}
-          </div>
+          </LedgerCard>
         </section>
 
         {/* Role migrations */}
-        <section style={{ marginBottom: 48 }}>
+        <section style={{ marginBottom: 40 }}>
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", fontWeight: 700, margin: "0 0 16px" }}>
             Role changes in v1.0
           </h2>
           <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
             The role vocabulary expanded in v1.0. Old roles continue to work — they are normalized to their v1.0 equivalents:
           </p>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                  {["Old role", "Maps to", "Action required"].map((h) => (
-                    <th key={h} style={{ textAlign: "left", padding: "8px 12px", fontWeight: 600, fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.06em", ...muted }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { old: "fee",      to: "fee_recipient",    action: "Optional update — same classification" },
-                  { old: "treasury", to: "treasury",         action: "No change" },
-                  { old: "deployer", to: "deployer",         action: "No change" },
-                  { old: "operator", to: "operator",         action: "No change" },
-                  { old: "unknown",  to: "unknown",          action: "No change" },
-                ].map((r, i) => (
-                  <tr key={r.old} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--surface)" }}>
-                    <td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontSize: "0.78rem", ...muted, textDecoration: "line-through" }}>{r.old}</td>
-                    <td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>{r.to}</td>
-                    <td style={{ padding: "10px 12px", ...muted, fontSize: "0.79rem" }}>{r.action}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LedgerCard>
+            {[
+              { old: "fee",      to: "fee_recipient",    action: "Optional update — same classification" },
+              { old: "treasury", to: "treasury",         action: "No change" },
+              { old: "deployer", to: "deployer",         action: "No change" },
+              { old: "operator", to: "operator",         action: "No change" },
+              { old: "unknown",  to: "unknown",          action: "No change" },
+            ].map((r, i, arr) => (
+              <LedgerRow
+                key={r.old}
+                first={i === 0}
+                last={i === arr.length - 1}
+                label={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--muted)", textDecoration: "line-through" }}>{r.old}</code>}
+                value={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>{r.to}</code>}
+                detail={r.action}
+              />
+            ))}
+          </LedgerCard>
           <p style={{ fontSize: "0.78rem", ...muted, marginTop: 12 }}>
             New roles available in v1.0: <code style={code}>revenue</code>, <code style={code}>expense</code>,{" "}
             <code style={code}>payment_receiver</code>, <code style={code}>token_contract</code>,{" "}
@@ -208,20 +203,19 @@ cp .x402books/wallets.json .agent/wallets.json`,
         </section>
 
         {/* Questions */}
-        <section style={{ padding: "24px 24px", background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, marginBottom: 48 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.1rem", fontWeight: 700, margin: "0 0 8px" }}>
-            Questions?
-          </h2>
-          <p style={{ fontSize: "0.84rem", lineHeight: 1.6, ...muted, margin: "0 0 14px" }}>
-            If your manifest is not being picked up after migration, verify the file exists at{" "}
-            <code style={code}>.agent/wallets.json</code> on the <code style={code}>main</code> or{" "}
-            <code style={code}>master</code> branch of a public GitHub or Gitlawb repo.
-            Use the validator to confirm the format is correct.
-          </p>
-          <Link href="/validate" style={{ fontSize: "0.82rem", color: "var(--accent)", textDecoration: "none" }}>
-            Validate your manifest →
-          </Link>
-        </section>
+        <LedgerCard title="Questions?" style={{ marginBottom: 40 }}>
+          <div style={{ padding: "4px 0" }}>
+            <p style={{ fontSize: "0.84rem", lineHeight: 1.6, ...muted, margin: "0 0 14px" }}>
+              If your manifest is not being picked up after migration, verify the file exists at{" "}
+              <code style={code}>.agent/wallets.json</code> on the <code style={code}>main</code> or{" "}
+              <code style={code}>master</code> branch of a public GitHub or Gitlawb repo.
+              Use the validator to confirm the format is correct.
+            </p>
+            <Link href="/validate" style={{ fontSize: "0.82rem", color: "var(--accent)", textDecoration: "none" }}>
+              Validate your manifest →
+            </Link>
+          </div>
+        </LedgerCard>
 
         {/* Nav footer */}
         <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 12, fontSize: "0.82rem" }}>

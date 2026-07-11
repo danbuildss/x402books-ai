@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 const ENDPOINTS = [
   {
@@ -77,9 +79,7 @@ export default function DeveloperPage() {
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "48px 24px 80px" }}>
       {/* Header */}
       <div style={{ marginBottom: 48 }}>
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.08em", color: "var(--accent)", textTransform: "uppercase", marginBottom: 10 }}>
-          Developer Portal
-        </p>
+        <SectionLabel>Developer Portal</SectionLabel>
         <h1 style={{ fontSize: "clamp(1.6rem, 3vw, 2.2rem)", fontWeight: 800, lineHeight: 1.2, marginBottom: 14 }}>
           Build on Zetta
         </h1>
@@ -114,9 +114,7 @@ export default function DeveloperPage() {
 
       {/* Quick start */}
       <section style={{ marginBottom: 56 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.01em" }}>
-          Quick start
-        </h2>
+        <SectionLabel style={{ marginBottom: 16 }}>Quick start</SectionLabel>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
           {STEPS.map(s => (
             <div key={s.n} style={{
@@ -135,9 +133,7 @@ export default function DeveloperPage() {
 
       {/* API endpoints */}
       <section style={{ marginBottom: 56 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.01em" }}>
-          Key endpoints
-        </h2>
+        <SectionLabel style={{ marginBottom: 16 }}>Key endpoints</SectionLabel>
         <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           {ENDPOINTS.map((ep, i) => (
             <div key={i} style={{
@@ -145,14 +141,7 @@ export default function DeveloperPage() {
               border: "1px solid var(--line)", background: "var(--surface)",
             }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6, flexWrap: "wrap" }}>
-                <span style={{
-                  fontSize: "0.7rem", fontWeight: 800, padding: "2px 7px", borderRadius: 5,
-                  background: ep.method === "GET" ? "rgba(74,232,160,0.12)" : "rgba(99,102,241,0.12)",
-                  color: ep.method === "GET" ? "#4AE8A0" : "#818cf8",
-                  letterSpacing: "0.04em",
-                }}>
-                  {ep.method}
-                </span>
+                <StatusBadge variant={ep.method === "GET" ? "green" : "purple"}>{ep.method}</StatusBadge>
                 <code style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--ink)" }}>{ep.path}</code>
               </div>
               <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5, marginBottom: 10 }}>{ep.desc}</p>
@@ -185,30 +174,20 @@ export default function DeveloperPage() {
 
       {/* Rate limit tiers */}
       <section style={{ marginBottom: 56 }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: 20, letterSpacing: "-0.01em" }}>
-          Rate limits
-        </h2>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--line)" }}>
-                {["Tier", "Req / min", "Req / day", "Features"].map(h => (
-                  <th key={h} style={{ padding: "8px 14px", textAlign: "left", fontWeight: 700, color: "var(--muted)", fontSize: "0.72rem", letterSpacing: "0.05em", textTransform: "uppercase" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {TIERS.map((t, i) => (
-                <tr key={t.name} style={{ borderBottom: i < TIERS.length - 1 ? "1px solid var(--line)" : "none" }}>
-                  <td style={{ padding: "12px 14px", fontWeight: 700 }}>{t.name}</td>
-                  <td style={{ padding: "12px 14px", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>{t.rpm}</td>
-                  <td style={{ padding: "12px 14px", color: "var(--muted)", fontVariantNumeric: "tabular-nums" }}>{t.daily}</td>
-                  <td style={{ padding: "12px 14px", color: "var(--muted)" }}>{t.features.join(" · ")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <SectionLabel style={{ marginBottom: 16 }}>Rate limits</SectionLabel>
+        <LedgerCard>
+          {TIERS.map((t, i) => (
+            <LedgerRow
+              key={t.name}
+              first={i === 0}
+              last={i === TIERS.length - 1}
+              label={t.name}
+              detail={`${t.rpm} req/min · ${t.daily} req/day`}
+              value={t.features.join(" · ")}
+              valueStyle={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "inherit", fontWeight: 400 }}
+            />
+          ))}
+        </LedgerCard>
         <p style={{ fontSize: "0.75rem", color: "var(--muted)", marginTop: 10 }}>
           Rate limits are per API key. Enterprise plans available — contact us on{" "}
           <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>X</a>.

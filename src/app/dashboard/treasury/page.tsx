@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type Agent = {
   name: string;
@@ -55,11 +57,11 @@ function runwayLabel(days: number | null, netDaily: number | null) {
   return `${Math.round(days)}d`;
 }
 
-function statusColor(status: TreasuryEntry["status"]) {
-  if (status === "healthy")  return "#4AE8A0";
-  if (status === "watch")    return "#F4B942";
-  if (status === "critical") return "#F46060";
-  return "var(--muted)";
+function statusVariant(status: TreasuryEntry["status"]): "green" | "amber" | "red" | "neutral" {
+  if (status === "healthy")  return "green";
+  if (status === "watch")    return "amber";
+  if (status === "critical") return "red";
+  return "neutral";
 }
 
 function computeStatus(entry: Omit<TreasuryEntry, "status" | "loading" | "agent" | "slug">): TreasuryEntry["status"] {
@@ -187,50 +189,48 @@ export default function TreasuryPage() {
             />
           </MetricGrid>
 
-          {/* Per-agent table */}
-          <div className="op-card">
-            <table className="op-table">
-              <thead>
-                <tr>
-                  <th>Agent</th>
-                  <th>Treasury</th>
-                  <th>Daily Burn</th>
-                  <th>Daily Revenue</th>
-                  <th>Net/Day</th>
-                  <th>Runway</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((e) => {
-                  const color = statusColor(e.status);
-                  return (
-                    <tr key={e.slug}>
-                      <td style={{ fontWeight: 600 }}>{e.agent.name}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.treasuryUsd)}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.burnRateUsd)}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}</td>
-                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#F46060") : "var(--muted)", fontWeight: 600 }}>
-                        {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : (e.netDaily !== null ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) : "—")}
-                      </td>
-                      <td style={{ fontWeight: 600, color }}>
-                        {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : runwayLabel(e.runwayDays, e.netDaily)}
-                      </td>
-                      <td>
-                        <span className="op-badge" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
-                          {e.loading ? "…" : e.status}
-                        </span>
-                      </td>
-                      <td>
-                        <Link href={`/registry/${e.slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Profile →</Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {/* Per-agent ledger */}
+          <LedgerCard eyebrow="Agents" title="Treasury by Agent">
+            {entries.map((e, i) => (
+              <LedgerRow
+                key={e.slug}
+                first={i === 0}
+                last={i === entries.length - 1}
+                label={e.agent.name}
+                badge={
+                  <StatusBadge variant={statusVariant(e.status)}>
+                    {e.loading ? "…" : e.status}
+                  </StatusBadge>
+                }
+                detail={
+                  e.loading ? "…" : [
+                    `Treasury: ${fmtUsd(e.treasuryUsd)}`,
+                    `Burn: ${fmtUsd(e.burnRateUsd)}/day`,
+                    `Rev: ${fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}/day`,
+                  ].join(" · ")
+                }
+                value={
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem",
+                      color: e.loading ? "var(--muted)"
+                        : e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#F46060")
+                        : "var(--muted)",
+                    }}>
+                      {e.loading ? "…"
+                        : e.netDaily !== null
+                          ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) + "/day"
+                          : "—"}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "var(--ink)" }}>
+                      {e.loading ? "…" : runwayLabel(e.runwayDays, e.netDaily)}
+                    </span>
+                    <Link href={`/registry/${e.slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Profile →</Link>
+                  </div>
+                }
+              />
+            ))}
+          </LedgerCard>
 
           <p style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: 12 }}>
             Runway = treasury ÷ daily burn (30d avg). Profitable agents show ∞. Requires attributed wallets.

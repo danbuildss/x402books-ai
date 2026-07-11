@@ -2,9 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { TIER_LABELS, TIER_LIMITS, TIER_THRESHOLDS, type LucaTier } from "@/lib/luca-token";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 const TIER_COLORS: Record<LucaTier, string> = {
   free: "var(--muted)", holder: "#5B9EF4", whale: "var(--accent)", luca: "#8B7CF6",
+};
+
+const TIER_BADGE_VARIANT: Record<LucaTier, "neutral" | "blue" | "green" | "purple"> = {
+  free: "neutral", holder: "blue", whale: "green", luca: "purple",
 };
 
 const TIER_FEATURES: Record<LucaTier, string[]> = {
@@ -38,38 +45,58 @@ export default function BillingPage() {
         <p className="op-page-sub">Your current plan, usage limits, and upgrade path.</p>
       </div>
 
+      {/* Current plan stats */}
+      <MetricGrid cols={3} style={{ marginBottom: 24 }}>
+        <MetricCard
+          label="Daily Limit"
+          value={TIER_LIMITS[tier].toLocaleString()}
+          sub="requests / day"
+          valueColor={TIER_COLORS[tier]}
+        />
+        <MetricCard
+          label="Access Model"
+          value="Token-gated"
+          sub="hold $LUCA to unlock"
+        />
+        <MetricCard
+          label="Linked Wallet"
+          value={loading ? "…" : wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "—"}
+          sub={wallet ? "verified" : "not linked"}
+          valueColor={wallet ? "var(--accent)" : undefined}
+        />
+      </MetricGrid>
+
       {/* Current plan */}
-      <div className="op-card">
-        <div className="op-card-head">
-          <h2 className="op-card-title">Current Plan</h2>
-          <span className="op-badge" style={{ background: `color-mix(in srgb, ${TIER_COLORS[tier]} 14%, transparent)`, color: TIER_COLORS[tier], fontSize: "0.75rem", padding: "3px 10px" }}>
-            {TIER_LABELS[tier]}
-          </span>
-        </div>
-        <div className="op-stat-grid">
-          <div className="op-stat">
-            <p className="op-stat-label">Daily Limit</p>
-            <p className="op-stat-value" style={{ color: TIER_COLORS[tier] }}>{TIER_LIMITS[tier].toLocaleString()}</p>
-            <p className="op-stat-sub">requests / day</p>
-          </div>
-          <div className="op-stat">
-            <p className="op-stat-label">Access Model</p>
-            <p className="op-stat-value" style={{ fontSize: "0.9rem" }}>Token-gated</p>
-            <p className="op-stat-sub">hold $LUCA to unlock</p>
-          </div>
-          <div className="op-stat">
-            <p className="op-stat-label">Linked Wallet</p>
-            <p className="op-stat-value" style={{ fontSize: "0.82rem" }}>
-              {loading ? "…" : wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "—"}
-            </p>
-            <p className="op-stat-sub">{wallet ? "verified" : "not linked"}</p>
-          </div>
-        </div>
-      </div>
+      <LedgerCard
+        eyebrow="Subscription"
+        title="Current Plan"
+        action={<StatusBadge variant={TIER_BADGE_VARIANT[tier]}>{TIER_LABELS[tier]}</StatusBadge>}
+      >
+        <LedgerRow
+          first
+          label="Plan"
+          value={TIER_LABELS[tier]}
+          valueStyle={{ color: TIER_COLORS[tier] }}
+        />
+        <LedgerRow
+          label="Daily request limit"
+          value={TIER_LIMITS[tier].toLocaleString()}
+        />
+        <LedgerRow
+          label="Access model"
+          value="Token-gated ($LUCA balance)"
+          valueStyle={{ color: "var(--muted)", fontFamily: "inherit" }}
+        />
+        <LedgerRow
+          last
+          label="Wallet"
+          value={loading ? "…" : wallet ? `${wallet.slice(0, 6)}…${wallet.slice(-4)}` : "Not linked"}
+          valueStyle={{ color: wallet ? "var(--ink)" : "var(--muted)" }}
+        />
+      </LedgerCard>
 
       {/* Tier comparison */}
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 16 }}>Plans</h2>
+      <LedgerCard eyebrow="Plans" title="Available Tiers">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
           {(["free", "holder", "whale"] as LucaTier[]).map((t) => (
             <div key={t} style={{
@@ -78,10 +105,10 @@ export default function BillingPage() {
               background: t === tier ? `color-mix(in srgb, ${TIER_COLORS[t]} 6%, var(--surface))` : "var(--surface-soft)",
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <span style={{ fontWeight: 700, fontSize: "0.84rem", color: TIER_COLORS[t] }}>{TIER_LABELS[t]}</span>
+                <StatusBadge variant={TIER_BADGE_VARIANT[t]}>{TIER_LABELS[t]}</StatusBadge>
                 {t === tier && <span style={{ fontSize: "0.6rem", fontWeight: 700, color: TIER_COLORS[t], textTransform: "uppercase" }}>Current</span>}
               </div>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "1.1rem", fontWeight: 700, color: "var(--ink)", marginBottom: 10 }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "1.1rem", fontWeight: 700, color: "var(--ink)", marginBottom: 6 }}>
                 {TIER_LIMITS[t].toLocaleString()} <span style={{ fontSize: "0.65rem", fontWeight: 400, color: "var(--muted)" }}>req/day</span>
               </div>
               <div style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 12 }}>
@@ -104,7 +131,7 @@ export default function BillingPage() {
           <a href="/dashboard/keys" style={{ color: "var(--accent)" }}>API Keys</a> to verify your balance and unlock your tier.
           $LUCA contract: <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem" }}>0xb2b335f832fd3f43461ebd1cd9831d93d9ca4ba3</code>
         </div>
-      </div>
+      </LedgerCard>
     </div>
   );
 }

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
-import { EmptyState } from "@/components/ui/empty-state";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type Agent = {
   name: string;
@@ -28,13 +29,13 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  Verified: "#4AE8A0",
-  "Luca Managed": "#4AE8A0",
-  "Wallets Declared": "#5B9EF4",
-  Claimed: "#F4B942",
-  Candidate: "var(--muted)",
-};
+function verificationVariant(status: string): "verified" | "luca-managed" | "wallets-declared" | "claimed" | "neutral" {
+  if (status === "Verified") return "verified";
+  if (status === "Luca Managed") return "luca-managed";
+  if (status === "Wallets Declared") return "wallets-declared";
+  if (status === "Claimed") return "claimed";
+  return "neutral";
+}
 
 export default function OverviewPage() {
   const [wallet, setWallet] = useState<string | null>(null);
@@ -175,80 +176,66 @@ export default function OverviewPage() {
 
       {/* My Agents summary */}
       {myAgents.length > 0 && (
-        <div className="op-card">
-          <div className="op-card-head">
-            <h2 className="op-card-title">My Agents</h2>
+        <LedgerCard
+          eyebrow="Workspace"
+          title="My Agents"
+          action={
             <Link href="/dashboard/agents" className="op-btn" style={{ fontSize: "0.75rem", padding: "5px 10px" }}>View all →</Link>
-          </div>
-          <table className="op-table">
-            <thead>
-              <tr>
-                <th>Agent</th>
-                <th>Ecosystem</th>
-                <th>Status</th>
-                <th>Signals</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {myAgents.slice(0, 5).map((agent) => {
-                const slug = toSlug(agent.name);
-                const color = STATUS_COLORS[agent.verificationStatus] ?? "var(--muted)";
-                const agentAnomalies = (anomalyMap[slug] ?? []).filter(
-                  (a) => a.severity === "high" || a.severity === "medium"
-                );
-                return (
-                  <tr key={agent.name}>
-                    <td style={{ fontWeight: 600 }}>{agent.name}</td>
-                    <td style={{ color: "var(--muted)", fontSize: "0.76rem" }}>{agent.ecosystem}</td>
-                    <td>
-                      <span className="op-badge" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
-                        {agent.verificationStatus}
-                      </span>
-                    </td>
-                    <td>
-                      {agentAnomalies.length > 0 ? (
-                        <span className="op-badge" style={{
-                          background: "color-mix(in srgb, #F4B942 14%, transparent)",
-                          color: "#F4B942",
-                          fontSize: "0.7rem",
-                        }}>
-                          ⚠ {agentAnomalies.length}
-                        </span>
-                      ) : (
-                        <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>
-                      )}
-                    </td>
-                    <td>
-                      <Link href={`/dashboard/luca?agent=${slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Ask Luca</Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+          }
+        >
+          {myAgents.slice(0, 5).map((agent, i) => {
+            const slug = toSlug(agent.name);
+            const agentAnomalies = (anomalyMap[slug] ?? []).filter(
+              (a) => a.severity === "high" || a.severity === "medium"
+            );
+            const isFirst = i === 0;
+            const isLast = i === Math.min(myAgents.length, 5) - 1;
+            return (
+              <LedgerRow
+                key={agent.name}
+                first={isFirst}
+                last={isLast}
+                label={agent.name}
+                badge={<StatusBadge variant={verificationVariant(agent.verificationStatus)}>{agent.verificationStatus}</StatusBadge>}
+                detail={agent.ecosystem}
+                value={
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {agentAnomalies.length > 0 && (
+                      <StatusBadge variant="amber">⚠ {agentAnomalies.length}</StatusBadge>
+                    )}
+                    <Link href={`/dashboard/luca?agent=${slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Ask Luca</Link>
+                  </div>
+                }
+              />
+            );
+          })}
+        </LedgerCard>
       )}
 
       {/* Getting started */}
       {myAgents.length === 0 && (
-        <div className="op-card">
-          <h2 className="op-card-title" style={{ marginBottom: 16 }}>Get started</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-            {[
-              { step: "01", title: "Link your wallet", desc: "Connect your wallet to identify which registry agents belong to your workspace.", href: "/dashboard/settings", cta: "Go to Settings" },
-              { step: "02", title: "Declare your agent", desc: "Submit a wallets.json manifest to attribute on-chain activity to your agent.", href: "/dashboard/attribution", cta: "Open Attribution" },
-              { step: "03", title: "Get your API key", desc: "Generate an API key to query your agent's financial data programmatically.", href: "/dashboard/keys", cta: "Open API Keys" },
-            ].map((s) => (
-              <div key={s.step} style={{ padding: 16, background: "var(--surface-soft)", borderRadius: 8 }}>
-                <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>Step {s.step}</div>
-                <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--ink)", marginBottom: 6 }}>{s.title}</div>
-                <div style={{ fontSize: "0.77rem", color: "var(--muted)", lineHeight: 1.55, marginBottom: 12 }}>{s.desc}</div>
-                <Link href={s.href} className="op-btn" style={{ fontSize: "0.75rem", padding: "5px 10px" }}>{s.cta} →</Link>
-              </div>
-            ))}
-          </div>
-        </div>
+        <LedgerCard eyebrow="Onboarding" title="Get started">
+          {[
+            { step: "01", title: "Link your wallet", desc: "Connect your wallet to identify which registry agents belong to your workspace.", href: "/dashboard/settings", cta: "Go to Settings" },
+            { step: "02", title: "Declare your agent", desc: "Submit a wallets.json manifest to attribute on-chain activity to your agent.", href: "/dashboard/attribution", cta: "Open Attribution" },
+            { step: "03", title: "Get your API key", desc: "Generate an API key to query your agent's financial data programmatically.", href: "/dashboard/keys", cta: "Open API Keys" },
+          ].map((s, i) => (
+            <LedgerRow
+              key={s.step}
+              first={i === 0}
+              last={i === 2}
+              label={
+                <div>
+                  <div style={{ fontSize: "0.6rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 2 }}>Step {s.step}</div>
+                  <div style={{ fontWeight: 700, fontSize: "0.85rem" }}>{s.title}</div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5, marginTop: 2 }}>{s.desc}</div>
+                </div>
+              }
+              value={<Link href={s.href} className="op-btn" style={{ fontSize: "0.75rem", padding: "5px 10px", whiteSpace: "nowrap" }}>{s.cta} →</Link>}
+              style={{ alignItems: "flex-start", padding: "14px" }}
+            />
+          ))}
+        </LedgerCard>
       )}
     </div>
   );
