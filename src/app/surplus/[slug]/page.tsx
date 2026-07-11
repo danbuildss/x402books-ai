@@ -146,8 +146,8 @@ export default async function SurplusAgentReportPage({ params }: { params: Promi
             <Row label="Agent"     value={agent.name} />
             <Row label="Ecosystem" value={agent.ecosystem ?? "—"} />
             <Row label="Registry"  value={`/registry/${slug}`} />
-            {agent.x_handle && <Row label="X" value={agent.x_handle} />}
-            <Row label="Verification" value={agent.verification_status ?? "Candidate"} />
+            {agent.xHandle && <Row label="X" value={agent.xHandle} />}
+            <Row label="Verification" value={agent.verificationStatus ?? "Candidate"} />
           </div>
         </Section>
 
