@@ -9,7 +9,7 @@ export const revalidate = 60;
 const STATUS_META: Record<string, { label: string; color: string }> = {
   attributed: { label: "Attributed",        color: "#4AE8A0" },
   candidate:  { label: "Candidate",         color: "#F4B942" },
-  none:       { label: "Awaiting Manifest", color: "#6b7280" },
+  none:       { label: "Awaiting Manifest", color: "var(--muted)" },
 };
 
 const LINK_META: Record<string, { label: string }> = {
@@ -157,7 +157,7 @@ export default async function B20Page(
               { label: "Linked to agent",   value: stats.linked,            color: "#4AE8A0"     },
               { label: "Attributed",        value: stats.attributed,        color: "#4AE8A0"     },
               { label: "Awaiting manifest", value: stats.awaiting_manifest, color: "#F4B942"     },
-              { label: "Unlinked",          value: stats.unlinked,          color: "#6b7280"     },
+              { label: "Unlinked",          value: stats.unlinked,          color: "var(--muted)"     },
             ].map((s) => (
               <div key={s.label} style={{
                 background: "var(--surface)", border: "1px solid var(--line)",

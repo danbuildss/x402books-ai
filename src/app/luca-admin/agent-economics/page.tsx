@@ -40,7 +40,7 @@ function Row({ label, value, sub, highlight }: { label: string; value: string; s
       <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>{label}</span>
       <div style={{ textAlign: "right" }}>
         <span style={{ color, fontFamily: "monospace", fontSize: "0.9rem", fontWeight: 600 }}>{value}</span>
-        {sub && <div style={{ color: "#6b7280", fontSize: "0.75rem", marginTop: 2 }}>{sub}</div>}
+        {sub && <div style={{ color: "var(--muted)", fontSize: "0.75rem", marginTop: 2 }}>{sub}</div>}
       </div>
     </div>
   );
@@ -83,7 +83,7 @@ export default function AgentEconomicsPage() {
         {/* Header */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
           <div>
-            <Link href="/luca-admin" style={{ color: "#6b7280", fontSize: "0.8rem", textDecoration: "none" }}>
+            <Link href="/luca-admin" style={{ color: "var(--muted)", fontSize: "0.8rem", textDecoration: "none" }}>
               ← Luca Admin
             </Link>
             <h1 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "4px 0 0", color: "#f9fafb" }}>
@@ -133,13 +133,13 @@ export default function AgentEconomicsPage() {
         )}
 
         {loading && !data && (
-          <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>Loading…</div>
+          <div style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading…</div>
         )}
 
         {s && (
           <>
             {/* Period label */}
-            <div style={{ color: "#6b7280", fontSize: "0.75rem", marginBottom: "1.5rem" }}>
+            <div style={{ color: "var(--muted)", fontSize: "0.75rem", marginBottom: "1.5rem" }}>
               Luca · Last {s.periodDays} days · {s.eventCount} event{s.eventCount === 1 ? "" : "s"}
               {lastRefresh && ` · refreshed ${lastRefresh.toLocaleTimeString()}`}
             </div>
@@ -185,7 +185,7 @@ export default function AgentEconomicsPage() {
               borderRadius: 6,
               padding: "1rem 1.25rem",
             }}>
-              <div style={{ color: "#6b7280", fontSize: "0.72rem", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>LUCA VERDICT</div>
+              <div style={{ color: "var(--muted)", fontSize: "0.72rem", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>LUCA VERDICT</div>
               <p style={{ color: "#d1d5db", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>
                 {s.lucaVerdict}
               </p>
@@ -193,7 +193,7 @@ export default function AgentEconomicsPage() {
 
             {/* Plain English */}
             {data?.report.summary && (
-              <p style={{ color: "#6b7280", fontSize: "0.8rem", marginTop: "1.25rem", lineHeight: 1.6 }}>
+              <p style={{ color: "var(--muted)", fontSize: "0.8rem", marginTop: "1.25rem", lineHeight: 1.6 }}>
                 {data.report.summary}
               </p>
             )}

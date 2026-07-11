@@ -49,7 +49,7 @@ export const CONFIDENCE_META: Record<ConfidenceLevel, { label: string; color: st
   },
   under_review: {
     label:       "Attribution Under Review",
-    color:       "#6b7280",
+    color:       "var(--muted)",
     description: "Revenue attribution is being verified. Figure may change once wallet data and classification are confirmed.",
   },
 };

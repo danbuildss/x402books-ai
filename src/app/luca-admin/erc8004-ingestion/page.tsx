@@ -307,7 +307,7 @@ export default function Erc8004IngestionPage() {
                 { label: "Reputation",  pct: report.summary.reputation_coverage_pct,  count: null,                                color: "#5B9EF4",  note: "Phase 2" },
                 { label: "Validation",  pct: report.summary.validation_coverage_pct,  count: null,                                color: "#F4B942",  note: "Phase 2" },
                 { label: "Manifest",    pct: report.summary.manifest_coverage_pct,    count: report.summary.manifest_uris_found,  color: "#4AE8A0",  note: "manifest URIs" },
-                { label: "Books",       pct: report.summary.books_coverage_pct,       count: report.summary.books_eligible_wallets, color: "#6b7280", note: "books-eligible" },
+                { label: "Books",       pct: report.summary.books_coverage_pct,       count: report.summary.books_eligible_wallets, color: "var(--muted)", note: "books-eligible" },
               ] as const).map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
                   <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label} Coverage</div>

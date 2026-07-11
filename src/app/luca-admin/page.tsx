@@ -128,7 +128,7 @@ const LAYERS = [
     label: "L3",
     title: "Registry + Agent Relations",
     purpose: "Growth + verification",
-    color: "#a78bfa",
+    color: "#8B7CF6",
     agents: [
       { name: "Registry Agent",     role: "Tracks agent wallets and confidence labels", cadence: "Weekly", status: "active" },
       { name: "Verification Agent", role: "Prepares wallet verification requests", cadence: "On demand", status: "planned" },
@@ -1041,7 +1041,7 @@ function RegistrySection({ secret }: { secret: string }) {
               { label: "New Agent",     color: "var(--accent)" },
               { label: "Score Update",  color: "var(--blue)" },
               { label: "Wallet Update", color: "#F4B942" },
-              { label: "Status Change", color: "#a78bfa" },
+              { label: "Status Change", color: "#8B7CF6" },
             ].map((t) => (
               <span key={t.label} style={{ padding: "3px 10px", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, background: `color-mix(in srgb, ${t.color} 12%, transparent)`, color: t.color, border: `1px solid color-mix(in srgb, ${t.color} 25%, transparent)` }}>
                 {t.label}
@@ -1625,7 +1625,7 @@ function GrowthSection({ secret }: { secret: string }) {
             const sumField = (arr: DailyMetric[], f: keyof DailyMetric) =>
               arr.reduce((t, r) => t + ((r[f] as number) ?? 0), 0);
             const trend = (a: number, b: number): { label: string; color: string } => {
-              if (b === 0) return a > 0 ? { label: "Growing", color: "#4AE8A0" } : { label: "No data", color: "#6b7280" };
+              if (b === 0) return a > 0 ? { label: "Growing", color: "#4AE8A0" } : { label: "No data", color: "var(--muted)" };
               const pct = ((a - b) / b) * 100;
               if (pct >= 10)  return { label: `▲ ${pct.toFixed(0)}%`, color: "#4AE8A0" };
               if (pct <= -10) return { label: `▼ ${Math.abs(pct).toFixed(0)}%`, color: "#F46060" };
@@ -1677,9 +1677,9 @@ const PLATFORM_COLORS: Record<string, string> = {
   wiretap:   "#F4B942",
   telegram:  "var(--blue)",
   x:         "var(--ink)",
-  email:     "#a78bfa",
-  discord:   "#6366f1",
-  farcaster: "#a78bfa",
+  email:     "#8B7CF6",
+  discord:   "#5B9EF4",
+  farcaster: "#8B7CF6",
   other:     "var(--muted)",
 };
 
@@ -1687,7 +1687,7 @@ const LABEL_COLOR: Record<string, string> = {
   "payment request observed":  "#F4B942",
   "settlement not confirmed":  "#F46060",
   "needs wallet confirmation": "var(--blue)",
-  "reconciliation candidate":  "#a78bfa",
+  "reconciliation candidate":  "#8B7CF6",
 };
 
 type CommEntry = {
@@ -2033,10 +2033,10 @@ type IndexAllResult = {
 
 const CLS_COLOR: Record<string, string> = {
   settlement_revenue:  "var(--accent)",
-  fee_received:        "#6366f1",
+  fee_received:        "#5B9EF4",
   inference_spend:     "var(--blue)",
   treasury_movement:   "#F4B942",
-  token_distribution:  "#a78bfa",
+  token_distribution:  "#8B7CF6",
   external_expense:    "var(--muted)",
   unknown:             "var(--muted)",
 };
@@ -2408,14 +2408,14 @@ const ATTR_STATUS_META: Record<ManifestStatus, { label: string; color: string }>
   manifest: { label: "Manifest",     color: "#4AE8A0" },
   admin:    { label: "Admin",        color: "#4AE8A0" },
   inferred: { label: "Inferred",     color: "#F4B942" },
-  none:     { label: "Unattributed", color: "#6b7280" },
+  none:     { label: "Unattributed", color: "var(--muted)" },
 };
 
 const ATTR_CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
   high:         { label: "High",         color: "#4AE8A0" },
   medium:       { label: "Medium",       color: "#F4B942" },
   low:          { label: "Low",          color: "#F46060" },
-  unattributed: { label: "–",            color: "#6b7280" },
+  unattributed: { label: "–",            color: "var(--muted)" },
 };
 
 type AttrSortKey = "name" | "status" | "wallets" | "confidence";
@@ -2437,7 +2437,7 @@ function getAttrBadge(agent: AgentAttributionHealth) {
   if (agent.attribution_tier === "manifest_attributed") return { label: "Books Eligible", color: "#4AE8A0" };
   if (agent.manifest_status === "manifest") return { label: "Manifest Invalid", color: "#F46060" };
   if (agent.attribution_tier === "discovered") return { label: "Discovered", color: "#F4B942" };
-  return { label: "Unattributed", color: "#6b7280" };
+  return { label: "Unattributed", color: "var(--muted)" };
 }
 
 function AttributionHealthSection() {
@@ -2489,7 +2489,7 @@ function AttributionHealthSection() {
               { label: "Indexed",         value: metrics.total_agents,               color: "var(--ink)" },
               { label: "Attributed",      value: metrics.manifest_attributed_agents, color: "#4AE8A0" },
               { label: "Discovered",      value: metrics.discovered_agents,          color: "#F4B942" },
-              { label: "Unattributed",    value: metrics.unattributed_agents,        color: "#6b7280" },
+              { label: "Unattributed",    value: metrics.unattributed_agents,        color: "var(--muted)" },
               { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#4AE8A0" },
               { label: "Books-eligible",  value: metrics.books_eligible_wallets,     color: "#4AE8A0" },
               { label: "Contract wallets",value: metrics.contract_wallets,           color: "#F46060" },
@@ -2563,7 +2563,7 @@ const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
   vault:             { label: "Vault",             color: "#5B9EF4" },
   smart_contract:    { label: "Smart Contract",    color: "#F4B942" },
   smart_account:     { label: "Smart Account",     color: "#5B9EF4" },
-  unknown:           { label: "Unknown",           color: "#6b7280" },
+  unknown:           { label: "Unknown",           color: "var(--muted)" },
 };
 
 type AddrClassificationReport = {
@@ -2675,8 +2675,8 @@ function AddressClassificationSection({ secret }: { secret: string }) {
                     </td>
                     <td>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4,
-                        background: a.attribution_status === "attributed" ? "#4AE8A018" : a.attribution_status === "discovered_only" ? "#F4B94218" : "#6b728018",
-                        color: a.attribution_status === "attributed" ? "#4AE8A0" : a.attribution_status === "discovered_only" ? "#F4B942" : "#6b7280" }}>
+                        background: a.attribution_status === "attributed" ? "#4AE8A018" : a.attribution_status === "discovered_only" ? "#F4B94218" : "var(--muted)18",
+                        color: a.attribution_status === "attributed" ? "#4AE8A0" : a.attribution_status === "discovered_only" ? "#F4B942" : "var(--muted)" }}>
                         {a.attribution_status}
                       </span>
                     </td>
@@ -2833,7 +2833,7 @@ const RA_TABS: { key: RATabKey; label: string; color: string }[] = [
   { key: "quarantined", label: "Quarantined",        color: "#F4B942" },
   { key: "dex",         label: "DEX Excluded",       color: "#5B9EF4" },
   { key: "bridge",      label: "Bridge Excluded",    color: "#8B7CF6" },
-  { key: "internal",    label: "Internal Transfers", color: "#6b7280" },
+  { key: "internal",    label: "Internal Transfers", color: "var(--muted)" },
 ];
 const QUARANTINE_LABELS: Record<string, string> = {
   capital_injection: "Capital Injection", grant_program: "Grant Program",
@@ -2842,7 +2842,7 @@ const QUARANTINE_LABELS: Record<string, string> = {
 };
 const QUARANTINE_COLORS: Record<string, string> = {
   capital_injection: "#F46060", grant_program: "#8B7CF6", bridge_receipt: "#5B9EF4",
-  token_distribution: "#F4B942", unknown_large_inflow: "#6b7280",
+  token_distribution: "#F4B942", unknown_large_inflow: "var(--muted)",
 };
 function raFmtUsd(v: number) {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
@@ -2855,7 +2855,7 @@ function raFmtHash(hash: string) { return hash?.length > 10 ? `${hash.slice(0, 8
 function RaWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const s = audit.summary;
   const rows = [
-    { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "#e2e8f0" },
+    { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "var(--ink)" },
     { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8B7CF6" },
     { label: "− DEX swaps excluded",                  value: s.dex_excluded_usd,           sign: "−",  color: "#5B9EF4" },
     { label: "− Quarantined (cap. injections/grants)", value: s.quarantined_usd,            sign: "−",  color: "#F4B942" },
@@ -2988,7 +2988,7 @@ function RevenueAuditSection({ secret }: { secret: string }) {
           <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>{audit.period} · {new Date(audit.generated_at).toLocaleString()}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
             {[
-              { label: "Gross Inflows",     value: audit.summary.gross_inflow_usd,           color: "#e2e8f0" },
+              { label: "Gross Inflows",     value: audit.summary.gross_inflow_usd,           color: "var(--ink)" },
               { label: "Operating Revenue", value: audit.summary.operating_revenue_usd,      color: "#4AE8A0" },
               { label: "Quarantined",       value: audit.summary.quarantined_usd,            color: "#F4B942" },
               { label: "DEX Excluded",      value: audit.summary.dex_excluded_usd,           color: "#5B9EF4" },
@@ -3059,7 +3059,7 @@ function AccuracyReportSection({ secret }: { secret: string }) {
     finally { setLoading(false); }
   }, [secret, period, targetAll]);
 
-  function sevColor(s: AuditFlag["severity"]) { return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "#6b7280"; }
+  function sevColor(s: AuditFlag["severity"]) { return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "var(--muted)"; }
 
   return (
     <div>
@@ -3095,7 +3095,7 @@ function AccuracyReportSection({ secret }: { secret: string }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
             {[
               { label: "Agents Audited",          value: report.agent_count.toString(),                    color: "var(--ink)" },
-              { label: "Total Gross Inflows",     value: accFmtUsd(report.summary.total_gross_inflows),    color: "#e2e8f0" },
+              { label: "Total Gross Inflows",     value: accFmtUsd(report.summary.total_gross_inflows),    color: "var(--ink)" },
               { label: "Total Operating Revenue", value: accFmtUsd(report.summary.total_operating_revenue),color: "#4AE8A0" },
               { label: "Total Quarantined",       value: accFmtUsd(report.summary.total_quarantined),      color: "#F4B942" },
               { label: "High-Risk Agents",        value: report.summary.high_risk_agents.length.toString(),color: "#F46060" },
@@ -3168,7 +3168,7 @@ const CONF_LEVELS: { value: ConfidenceLevel; label: string; color: string }[] = 
   { value: "high",         label: "High Confidence",          color: "#4AE8A0" },
   { value: "medium",       label: "Medium Confidence",        color: "#F4B942" },
   { value: "low",          label: "Low Confidence",           color: "#F46060" },
-  { value: "under_review", label: "Attribution Under Review", color: "#6b7280" },
+  { value: "under_review", label: "Attribution Under Review", color: "var(--muted)" },
 ];
 
 function ConfAgentCard({ row, secret, onSaved }: { row: ConfAgentRow; secret: string; onSaved: () => void }) {
@@ -3875,7 +3875,7 @@ function OutreachSection({ secret }: { secret: string }) {
   }
 
   const statusColor: Record<string, string> = {
-    "Not started": "#6b7280",
+    "Not started": "var(--muted)",
     "In progress": "#F4B942",
     "Connected": "#4AE8A0",
   };
@@ -3911,7 +3911,7 @@ function OutreachSection({ secret }: { secret: string }) {
                     <a href={`/registry/${a.slug}`} target="_blank" rel="noreferrer" style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--ink)", textDecoration: "none" }}>{a.name}</a>
                     <span style={{ fontSize: "0.7rem", color: "var(--muted)", background: "var(--line)", padding: "1px 7px", borderRadius: 99 }}>{a.ecosystem}</span>
                     {a.xHandle && (
-                      <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#1d9bf0", textDecoration: "none" }}>{a.xHandle}</a>
+                      <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#5B9EF4", textDecoration: "none" }}>{a.xHandle}</a>
                     )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>

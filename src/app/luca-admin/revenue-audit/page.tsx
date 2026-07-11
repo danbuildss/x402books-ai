@@ -13,7 +13,7 @@ const TABS: { key: TabKey; label: string; color: string }[] = [
   { key: "quarantined",label: "Quarantined",        color: "#F4B942" },
   { key: "dex",        label: "DEX Excluded",       color: "#5B9EF4" },
   { key: "bridge",     label: "Bridge Excluded",    color: "#8B7CF6" },
-  { key: "internal",   label: "Internal Transfers", color: "#6b7280" },
+  { key: "internal",   label: "Internal Transfers", color: "var(--muted)" },
 ];
 
 const QUARANTINE_LABELS: Record<string, string> = {
@@ -29,7 +29,7 @@ const QUARANTINE_COLORS: Record<string, string> = {
   grant_program:        "#8B7CF6",
   bridge_receipt:       "#5B9EF4",
   token_distribution:   "#F4B942",
-  unknown_large_inflow: "#6b7280",
+  unknown_large_inflow: "var(--muted)",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -63,7 +63,7 @@ function fmtDate(iso: string) {
 function SummaryWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const { summary } = audit;
   const rows = [
-    { label: "Gross inflows (all income transfers)",    value: summary.gross_inflow_usd,           sign: null,  color: "#e2e8f0" },
+    { label: "Gross inflows (all income transfers)",    value: summary.gross_inflow_usd,           sign: null,  color: "var(--ink)" },
     { label: "− Bridge receipts excluded",              value: summary.bridge_excluded_inflow_usd,  sign: "−",   color: "#8B7CF6" },
     { label: "− DEX swaps excluded",                   value: summary.dex_excluded_usd,            sign: "−",   color: "#5B9EF4" },
     { label: "− Quarantined (cap. injections / grants)",value: summary.quarantined_usd,             sign: "−",   color: "#F4B942" },
@@ -359,12 +359,12 @@ export default function RevenueAuditPage() {
             {/* Summary cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 10, marginBottom: 20 }}>
               {[
-                { label: "Gross Inflows",       value: audit.summary.gross_inflow_usd,           color: "#e2e8f0" },
+                { label: "Gross Inflows",       value: audit.summary.gross_inflow_usd,           color: "var(--ink)" },
                 { label: "Operating Revenue",    value: audit.summary.operating_revenue_usd,      color: "#4AE8A0" },
                 { label: "Quarantined",          value: audit.summary.quarantined_usd,            color: "#F4B942" },
                 { label: "DEX Excluded",         value: audit.summary.dex_excluded_usd,           color: "#5B9EF4" },
                 { label: "Bridge Excluded",      value: audit.summary.bridge_excluded_inflow_usd, color: "#8B7CF6" },
-                { label: "Internal Transfers",   value: audit.summary.internal_transfer_usd,      color: "#6b7280" },
+                { label: "Internal Transfers",   value: audit.summary.internal_transfer_usd,      color: "var(--muted)" },
               ].map((card) => (
                 <div key={card.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>
                   <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>{card.label}</div>

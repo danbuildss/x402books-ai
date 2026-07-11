@@ -10,14 +10,14 @@ const STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
   manifest: { label: "Manifest",     color: "#4AE8A0" },
   admin:    { label: "Admin",        color: "#4AE8A0" },
   inferred: { label: "Inferred",     color: "#F4B942" },
-  none:     { label: "Unattributed", color: "#6b7280" },
+  none:     { label: "Unattributed", color: "var(--muted)" },
 };
 
 const CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
   high:         { label: "High",         color: "#4AE8A0" },
   medium:       { label: "Medium",       color: "#F4B942" },
   low:          { label: "Low",          color: "#F46060" },
-  unattributed: { label: "–",            color: "#6b7280" },
+  unattributed: { label: "–",            color: "var(--muted)" },
 };
 
 type SortKey = "name" | "status" | "wallets" | "roles" | "confidence";
@@ -32,7 +32,7 @@ function getAttributionBadge(agent: AgentAttributionHealth) {
   if (agent.attribution_tier === "discovered") {
     return { label: "Discovered", color: "#F4B942" };
   }
-  return { label: "Unattributed", color: "#6b7280" };
+  return { label: "Unattributed", color: "var(--muted)" };
 }
 
 function sortAgents(agents: AgentAttributionHealth[], key: SortKey, dir: 1 | -1) {
@@ -122,7 +122,7 @@ export default function AttributionHealthAdminPage() {
                 { label: "Indexed",            value: metrics.total_agents,                        color: "var(--ink)" },
                 { label: "Attributed",          value: metrics.manifest_attributed_agents,          color: "#4AE8A0" },
                 { label: "Discovered",          value: metrics.discovered_agents,                   color: "#F4B942" },
-                { label: "Unattributed",        value: metrics.unattributed_agents,                 color: "#6b7280" },
+                { label: "Unattributed",        value: metrics.unattributed_agents,                 color: "var(--muted)" },
                 { label: "Coverage",            value: `${metrics.attribution_coverage_pct}%`,      color: "#4AE8A0" },
                 { label: "Books-eligible",      value: metrics.books_eligible_wallets,              color: "#4AE8A0" },
                 { label: "Contract wallets",    value: metrics.contract_wallets,                    color: "#F46060" },
@@ -139,13 +139,13 @@ export default function AttributionHealthAdminPage() {
               <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", display: "flex", marginBottom: 12 }}>
                 <div style={{ width: `${(metrics.tier_breakdown.manifest_attributed / metrics.total_agents) * 100}%`, background: "#4AE8A0" }} />
                 <div style={{ width: `${(metrics.tier_breakdown.discovered / metrics.total_agents) * 100}%`, background: "#F4B942" }} />
-                <div style={{ width: `${(metrics.tier_breakdown.unattributed / metrics.total_agents) * 100}%`, background: "#6b7280" }} />
+                <div style={{ width: `${(metrics.tier_breakdown.unattributed / metrics.total_agents) * 100}%`, background: "var(--muted)" }} />
               </div>
               <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
                 {([
                   { label: "Books-eligible agents", count: metrics.tier_breakdown.manifest_attributed, color: "#4AE8A0" },
                   { label: "Discovered",            count: metrics.tier_breakdown.discovered,            color: "#F4B942" },
-                  { label: "Unattributed",          count: metrics.tier_breakdown.unattributed,          color: "#6b7280" },
+                  { label: "Unattributed",          count: metrics.tier_breakdown.unattributed,          color: "var(--muted)" },
                 ] as const).map(({ label, count, color }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: color }} />

@@ -10,11 +10,11 @@ function toSlug(name: string): string {
 const STATUS_COLOR: Record<VerificationStatus, string> = {
   "Verified":           "#4AE8A0",
   "Luca Managed":       "#4AE8A0",
-  "Claimed":            "#a78bfa",
+  "Claimed":            "#8B7CF6",
   "Wallets Declared":   "#5B9EF4",
   "Needs Verification": "#F4B942",
-  "Candidate":          "#6b7280",
-  "ERC-8004 Indexed":   "#6b7280",
+  "Candidate":          "var(--muted)",
+  "ERC-8004 Indexed":   "var(--muted)",
   "Awaiting Manifest":  "#F4B942",
 };
 
@@ -81,7 +81,7 @@ function unknownSvg(slug: string): string {
   <clipPath id="r"><rect width="${totalW}" height="${h}" rx="4" fill="#fff"/></clipPath>
   <g clip-path="url(#r)">
     <rect width="${leftW}" height="${h}" fill="#555"/>
-    <rect x="${leftW}" width="${rightW}" height="${h}" fill="#6b7280"/>
+    <rect x="${leftW}" width="${rightW}" height="${h}" fill="var(--muted)"/>
   </g>
   <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
     <text x="${leftCx + 1}" y="15" fill="#010101" fill-opacity=".3">${leftText}</text>

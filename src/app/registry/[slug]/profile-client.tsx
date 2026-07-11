@@ -257,10 +257,10 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
     }
     if (books.reason === "financials_under_review") {
       return (
-        <section className="prof-section" style={{ borderLeft: "3px solid #6b7280", paddingLeft: 14 }}>
+        <section className="prof-section" style={{ borderLeft: "3px solid var(--muted)", paddingLeft: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "#6b728018", border: "1px solid #6b728040", color: "#6b7280", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--muted)18", border: "1px solid var(--muted)40", color: "var(--muted)", letterSpacing: "0.02em" }}>
               Under Review
             </span>
           </div>

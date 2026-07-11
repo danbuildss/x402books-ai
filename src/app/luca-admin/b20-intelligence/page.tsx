@@ -61,7 +61,7 @@ type IndexReport = {
 const STATUS_COLOR: Record<string, string> = {
   attributed: "#4AE8A0",
   candidate:  "#F4B942",
-  none:       "#6b7280",
+  none:       "var(--muted)",
 };
 
 function shortAddr(addr: string) {
@@ -426,7 +426,7 @@ export default function B20IntelligencePage() {
                     <tbody>
                       {report.tokens.map((t, i) => {
                         const statusColor = t.status === "indexed" ? "#4AE8A0" : t.status === "error" ? "#F46060" : "#F4B942";
-                        const mColor = STATUS_COLOR[t.manifest_status] ?? "#6b7280";
+                        const mColor = STATUS_COLOR[t.manifest_status] ?? "var(--muted)";
                         return (
                           <tr key={t.address} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
                             <td style={{ padding: "8px 10px", fontWeight: 600 }}>

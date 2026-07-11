@@ -79,19 +79,19 @@ const TYPE_META: Record<AddressType, { label: string; color: string }> = {
   vault:             { label: "Vault",           color: "#8B7CF6" },
   smart_contract:    { label: "Smart Contract",  color: "#F4B942" },
   smart_account:     { label: "Smart Account",   color: "#5B9EF4" },
-  unknown:           { label: "Unknown",         color: "#6b7280" },
+  unknown:           { label: "Unknown",         color: "var(--muted)" },
 };
 
 const ATTR_META: Record<WalletReport["attribution"], { label: string; color: string }> = {
   manifest:   { label: "Manifest",   color: "#4AE8A0" },
   discovered: { label: "Discovered", color: "#F4B942" },
-  unknown:    { label: "Unknown",    color: "#6b7280" },
+  unknown:    { label: "Unknown",    color: "var(--muted)" },
 };
 
 const STATUS_META: Record<AgentReport["attribution_status"], { label: string; color: string }> = {
   attributed:      { label: "Attributed",      color: "#4AE8A0" },
   discovered_only: { label: "Discovered Only", color: "#F4B942" },
-  unattributed:    { label: "Unattributed",    color: "#6b7280" },
+  unattributed:    { label: "Unattributed",    color: "var(--muted)" },
 };
 
 function shortAddr(addr: string) {
@@ -229,7 +229,7 @@ export default function AddressClassificationPage() {
                 { label: "Total Agents",        value: report.summary.total_agents,              color: "var(--ink)" },
                 { label: "Attributed",           value: report.summary.attributed_agents,         color: "#4AE8A0" },
                 { label: "Discovered Only",      value: report.summary.discovered_only_agents,    color: "#F4B942" },
-                { label: "Unattributed",         value: report.summary.unattributed_agents,       color: "#6b7280" },
+                { label: "Unattributed",         value: report.summary.unattributed_agents,       color: "var(--muted)" },
                 { label: "Coverage",             value: `${report.summary.attribution_coverage_pct}%`, color: "#4AE8A0" },
                 { label: "Total Addresses",      value: report.summary.total_addresses,           color: "var(--ink)" },
                 { label: "EOA",                  value: report.summary.eoa_count,                 color: "#4AE8A0" },

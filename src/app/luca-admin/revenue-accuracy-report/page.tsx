@@ -66,7 +66,7 @@ function confidenceBadge(flags: AuditFlag[]) {
 }
 
 function severityColor(s: AuditFlag["severity"]) {
-  return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "#6b7280";
+  return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "var(--muted)";
 }
 
 const KNOWN_NAMES: Record<string, string> = {
@@ -83,7 +83,7 @@ function SummaryBanner({ data }: { data: BatchResponse }) {
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 24 }}>
       {[
         { label: "Agents Audited",         value: data.agent_count.toString(),            color: "var(--ink)" },
-        { label: "Total Gross Inflows",    value: fmtUsd(summary.total_gross_inflows),    color: "#e2e8f0" },
+        { label: "Total Gross Inflows",    value: fmtUsd(summary.total_gross_inflows),    color: "var(--ink)" },
         { label: "Total Operating Revenue",value: fmtUsd(summary.total_operating_revenue),color: "#4AE8A0" },
         { label: "Total Quarantined",      value: fmtUsd(summary.total_quarantined),       color: "#F4B942" },
         { label: "High-Risk Agents",       value: summary.high_risk_agents.length.toString(), color: "#F46060" },

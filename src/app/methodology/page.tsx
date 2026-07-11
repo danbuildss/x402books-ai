@@ -307,11 +307,11 @@ function Callout({
 }) {
   const bg =
     variant === "accent" ? "color-mix(in srgb, var(--accent) 6%, transparent)"
-    : variant === "update" ? "color-mix(in srgb, #F59E0B 8%, transparent)"
+    : variant === "update" ? "color-mix(in srgb, #F4B942 8%, transparent)"
     : "var(--surface-soft)";
   const border =
     variant === "accent" ? "color-mix(in srgb, var(--accent) 20%, transparent)"
-    : variant === "update" ? "color-mix(in srgb, #F59E0B 30%, transparent)"
+    : variant === "update" ? "color-mix(in srgb, #F4B942 30%, transparent)"
     : "var(--line)";
   return (
     <div style={{ padding: "12px 16px", borderRadius: 8, border: `1px solid ${border}`, background: bg, fontSize: "0.83rem", color: "var(--muted)", lineHeight: 1.65, ...style }}>

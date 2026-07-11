@@ -75,7 +75,7 @@ export default async function B20TokenProfilePage(
 
   const manifestColor =
     token.manifest_status === "attributed" ? "#4AE8A0" :
-    token.manifest_status === "candidate"  ? "#F4B942" : "#6b7280";
+    token.manifest_status === "candidate"  ? "#F4B942" : "var(--muted)";
 
   const manifestLabel =
     token.manifest_status === "attributed" ? "Attributed" :
@@ -189,10 +189,10 @@ export default async function B20TokenProfilePage(
           <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>Financial Readiness</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             {[
-              { label: "Books Eligible",    value: "No",                                         note: "Token contracts are never books-eligible",              color: "#6b7280" },
-              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#4AE8A0" : "#6b7280" },
-              { label: "In Agent GDP",      value: "No",                                         note: "B20 activity excluded from GDP",                        color: "#6b7280" },
-              { label: "Token Transfers = Revenue", value: "No",                                  note: "Token transfers are not operating revenue",            color: "#6b7280" },
+              { label: "Books Eligible",    value: "No",                                         note: "Token contracts are never books-eligible",              color: "var(--muted)" },
+              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#4AE8A0" : "var(--muted)" },
+              { label: "In Agent GDP",      value: "No",                                         note: "B20 activity excluded from GDP",                        color: "var(--muted)" },
+              { label: "Token Transfers = Revenue", value: "No",                                  note: "Token transfers are not operating revenue",            color: "var(--muted)" },
             ].map((r) => (
               <div key={r.label} style={{ background: "var(--bg)", borderRadius: 6, padding: "10px 12px" }}>
                 <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4 }}>{r.label}</div>
