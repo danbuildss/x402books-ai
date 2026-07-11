@@ -8,14 +8,14 @@ function toSlug(name: string): string {
 }
 
 const STATUS_COLOR: Record<VerificationStatus, string> = {
-  "Verified":           "#22c55e",
-  "Luca Managed":       "#22c55e",
+  "Verified":           "#4AE8A0",
+  "Luca Managed":       "#4AE8A0",
   "Claimed":            "#a78bfa",
-  "Wallets Declared":   "#3b82f6",
-  "Needs Verification": "#f59e0b",
+  "Wallets Declared":   "#5B9EF4",
+  "Needs Verification": "#F4B942",
   "Candidate":          "#6b7280",
   "ERC-8004 Indexed":   "#6b7280",
-  "Awaiting Manifest":  "#f59e0b",
+  "Awaiting Manifest":  "#F4B942",
 };
 
 const STATUS_LABEL: Record<VerificationStatus, string> = {

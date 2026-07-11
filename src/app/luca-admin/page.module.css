@@ -90,7 +90,7 @@
   min-width: 18px;
   height: 18px;
   border-radius: 9px;
-  background: #ef4444;
+  background: #F46060;
   color: #fff;
   font-size: 0.63rem;
   font-weight: 700;
@@ -280,8 +280,8 @@
 
 .healthChip[data-ok="true"]  { border-color: rgba(74, 232, 160, 0.3); color: var(--accent); }
 .healthChip[data-ok="true"] span { background: var(--accent); box-shadow: 0 0 5px rgba(74, 232, 160, 0.7); }
-.healthChip[data-ok="false"] { border-color: rgba(239, 68, 68, 0.3); color: #ef4444; }
-.healthChip[data-ok="false"] span { background: #ef4444; }
+.healthChip[data-ok="false"] { border-color: rgba(239, 68, 68, 0.3); color: #F46060; }
+.healthChip[data-ok="false"] span { background: #F46060; }
 
 /* ── Luca master card ────────────────────────────────────────────────────────── */
 
@@ -421,7 +421,7 @@
   border-radius: 10px;
   padding: 12px 16px;
   font-size: 0.83rem;
-  color: #ef4444;
+  color: #F46060;
   margin-bottom: 16px;
 }
 
@@ -575,7 +575,7 @@
 
 .authError {
   font-size: 0.8rem;
-  color: #ef4444;
+  color: #F46060;
   margin: 0 0 8px;
 }
 
@@ -759,7 +759,7 @@
   border-radius: 8px;
   border: 1px solid rgba(239, 68, 68, 0.28);
   background: rgba(239, 68, 68, 0.07);
-  color: #ef4444;
+  color: #F46060;
   font-size: 0.83rem;
   font-weight: 600;
   cursor: pointer;

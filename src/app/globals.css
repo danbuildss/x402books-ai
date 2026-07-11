@@ -10179,7 +10179,7 @@ html, body {
 .reg-wallet-addr:hover { opacity: 0.75; }
 .reg-wallet-note { font-size: 11px; color: var(--muted); }
 .reg-wallet-chain { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); background: var(--surface-hover); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; }
-.reg-wallet-confidence { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #22c55e; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 4px; padding: 1px 6px; }
+.reg-wallet-confidence { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #4AE8A0; background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 4px; padding: 1px 6px; }
 
 .reg-card-no-wallet {
   font-size: 12px;

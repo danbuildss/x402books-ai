@@ -56,8 +56,8 @@ function runwayLabel(days: number | null, netDaily: number | null) {
 
 function statusColor(status: TreasuryEntry["status"]) {
   if (status === "healthy")  return "#4AE8A0";
-  if (status === "watch")    return "#f59e0b";
-  if (status === "critical") return "#e74c3c";
+  if (status === "watch")    return "#F4B942";
+  if (status === "critical") return "#F46060";
   return "var(--muted)";
 }
 
@@ -180,7 +180,7 @@ export default function TreasuryPage() {
             </div>
             <div className="op-stat">
               <p className="op-stat-label">Critical Agents</p>
-              <p className="op-stat-value" style={{ color: entries.filter((e) => e.status === "critical").length > 0 ? "#e74c3c" : "var(--ink)" }}>
+              <p className="op-stat-value" style={{ color: entries.filter((e) => e.status === "critical").length > 0 ? "#F46060" : "var(--ink)" }}>
                 {entries.filter((e) => e.status === "critical").length}
               </p>
               <p className="op-stat-sub">runway &lt; 14 days</p>
@@ -211,7 +211,7 @@ export default function TreasuryPage() {
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.treasuryUsd)}</td>
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.burnRateUsd)}</td>
                       <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}</td>
-                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#e74c3c") : "var(--muted)", fontWeight: 600 }}>
+                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#F46060") : "var(--muted)", fontWeight: 600 }}>
                         {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : (e.netDaily !== null ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) : "—")}
                       </td>
                       <td style={{ fontWeight: 600, color }}>

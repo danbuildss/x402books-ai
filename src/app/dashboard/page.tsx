@@ -121,12 +121,12 @@ export default function OverviewPage() {
       {/* Anomaly alert banner */}
       {totalAnomalies > 0 && (
         <div className="op-alert" style={{
-          background: "color-mix(in srgb, #f59e0b 8%, var(--surface))",
-          border: "1px solid color-mix(in srgb, #f59e0b 30%, transparent)",
-          borderLeft: "3px solid #f59e0b",
+          background: "color-mix(in srgb, #F4B942 8%, var(--surface))",
+          border: "1px solid color-mix(in srgb, #F4B942 30%, transparent)",
+          borderLeft: "3px solid #F4B942",
           color: "var(--ink)",
         }}>
-          <span style={{ fontSize: "1rem", color: "#f59e0b" }}>⚠</span>
+          <span style={{ fontSize: "1rem", color: "#F4B942" }}>⚠</span>
           <div>
             <strong>{totalAnomalies} active signal{totalAnomalies > 1 ? "s" : ""} detected</strong> across your agents.{" "}
             {Object.entries(anomalyMap)
@@ -157,7 +157,7 @@ export default function OverviewPage() {
         </div>
         <div className="op-stat">
           <p className="op-stat-label">Active Signals</p>
-          <p className="op-stat-value" style={{ color: totalAnomalies > 0 ? "#f59e0b" : "var(--ink)" }}>
+          <p className="op-stat-value" style={{ color: totalAnomalies > 0 ? "#F4B942" : "var(--ink)" }}>
             {totalAnomalies}
           </p>
           <p className="op-stat-sub">{totalAnomalies > 0 ? "require attention" : "all clear"}</p>
@@ -207,8 +207,8 @@ export default function OverviewPage() {
                     <td>
                       {agentAnomalies.length > 0 ? (
                         <span className="op-badge" style={{
-                          background: "color-mix(in srgb, #f59e0b 14%, transparent)",
-                          color: "#f59e0b",
+                          background: "color-mix(in srgb, #F4B942 14%, transparent)",
+                          color: "#F4B942",
                           fontSize: "0.7rem",
                         }}>
                           ⚠ {agentAnomalies.length}

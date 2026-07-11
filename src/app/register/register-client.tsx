@@ -344,7 +344,7 @@ export function RegisterClient() {
                   </p>
                 </div>
                 {repoState === "error" && (
-                  <p style={{ color: "#ef4444", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
+                  <p style={{ color: "#F46060", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
                 )}
                 <button
                   type="submit"
@@ -418,7 +418,7 @@ export function RegisterClient() {
                 ].map(({ key, label, placeholder, required, type }) => (
                   <div key={key}>
                     <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "var(--fg)", marginBottom: 5 }}>
-                      {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
+                      {label}{required && <span style={{ color: "#F46060", marginLeft: 2 }}>*</span>}
                     </label>
                     <input
                       type={type}
@@ -452,7 +452,7 @@ export function RegisterClient() {
                 </label>
 
                 {manualState === "error" && (
-                  <p style={{ color: "#ef4444", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
+                  <p style={{ color: "#F46060", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
                 )}
                 <button
                   type="submit"

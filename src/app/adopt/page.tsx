@@ -116,7 +116,7 @@ export default async function AdoptPage() {
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           {[
-            { label: "Manifest Adopters", value: manifestAdopters, color: "#22c55e", sub: "of 25 target" },
+            { label: "Manifest Adopters", value: manifestAdopters, color: "#4AE8A0", sub: "of 25 target" },
             { label: "Wallets Declared", value: walletsDeclared, color: "#4AE8A0", sub: "of 100 target" },
             { label: "Ecosystems", value: 5, color: "var(--ink)", sub: "active" },
             { label: "Coverage", value: coveragePct + "%", color: "#5B9EF4", sub: "of registry" },
@@ -169,7 +169,7 @@ export default async function AdoptPage() {
                 </span>
               </div>
               <div style={{ height: 6, borderRadius: 3, background: "var(--line)", overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${agentBarPct}%`, borderRadius: 3, background: "#22c55e", transition: "width 0.4s" }} />
+                <div style={{ height: "100%", width: `${agentBarPct}%`, borderRadius: 3, background: "#4AE8A0", transition: "width 0.4s" }} />
               </div>
             </div>
 
@@ -212,7 +212,7 @@ export default async function AdoptPage() {
                       fontWeight: 700,
                       textTransform: "uppercase",
                       letterSpacing: "0.07em",
-                      color: "#22c55e",
+                      color: "#4AE8A0",
                       background: "rgba(34,197,94,0.1)",
                       border: "1px solid rgba(34,197,94,0.25)",
                       borderRadius: 4,

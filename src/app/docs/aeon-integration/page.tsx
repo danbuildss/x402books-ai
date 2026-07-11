@@ -42,7 +42,7 @@ export default function AeonIntegrationPage() {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {[
             { name: "AEON",  role: "Execution + settlement layer",        color: "#4AE8A0" },
-            { name: "Zetta", role: "Financial visibility layer",           color: "#3b82f6" },
+            { name: "Zetta", role: "Financial visibility layer",           color: "#5B9EF4" },
             { name: "Luca",  role: "Operational intelligence layer",       color: "#a78bfa" },
           ].map(n => (
             <div key={n.name} style={{ textAlign: "center" }}>

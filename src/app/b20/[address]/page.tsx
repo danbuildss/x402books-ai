@@ -74,8 +74,8 @@ export default async function B20TokenProfilePage(
     : null;
 
   const manifestColor =
-    token.manifest_status === "attributed" ? "#22c55e" :
-    token.manifest_status === "candidate"  ? "#f59e0b" : "#6b7280";
+    token.manifest_status === "attributed" ? "#4AE8A0" :
+    token.manifest_status === "candidate"  ? "#F4B942" : "#6b7280";
 
   const manifestLabel =
     token.manifest_status === "attributed" ? "Attributed" :
@@ -190,7 +190,7 @@ export default async function B20TokenProfilePage(
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
             {[
               { label: "Books Eligible",    value: "No",                                         note: "Token contracts are never books-eligible",              color: "#6b7280" },
-              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#22c55e" : "#6b7280" },
+              { label: "Issuer Attributed", value: token.manifest_status === "attributed" ? "Yes" : "No", note: token.manifest_status === "attributed" ? "Manifest confirmed" : "Declare in .agent/wallets.json", color: token.manifest_status === "attributed" ? "#4AE8A0" : "#6b7280" },
               { label: "In Agent GDP",      value: "No",                                         note: "B20 activity excluded from GDP",                        color: "#6b7280" },
               { label: "Token Transfers = Revenue", value: "No",                                  note: "Token transfers are not operating revenue",            color: "#6b7280" },
             ].map((r) => (

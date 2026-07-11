@@ -216,7 +216,7 @@ function ErrorResult({ errors }: { errors: ValidationError[] }) {
   return (
     <div className="val-result val-result-err">
       <div className="val-result-header">
-        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#ef4444" }}>cancel</span>
+        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#F46060" }}>cancel</span>
         <div>
           <p className="val-result-title">Validation Failed</p>
           <p className="val-result-sub">{errors.length} error{errors.length !== 1 ? "s" : ""} found</p>

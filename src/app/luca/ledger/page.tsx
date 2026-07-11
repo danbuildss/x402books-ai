@@ -31,7 +31,7 @@ function relativeTime(iso: string) {
 }
 
 function StatusDot({ status }: { status: string }) {
-  const color = status === "success" ? "var(--accent)" : status === "error" ? "#f87171" : "var(--muted)";
+  const color = status === "success" ? "var(--accent)" : status === "error" ? "#F46060" : "var(--muted)";
   return (
     <span style={{
       display: "inline-block", width: 6, height: 6,
@@ -52,16 +52,16 @@ function CostStatusBanner({ costStatus, requestCount }: { costStatus: CostSource
       note: "Cost figures are sourced from provider billing.",
     },
     estimated: {
-      bg: "#f59e0b12",
-      border: "#f59e0b40",
-      dot: "#f59e0b",
+      bg: "#F4B94212",
+      border: "#F4B94240",
+      dot: "#F4B942",
       label: "Cost data: estimated",
       note: "Spend is estimated from model pricing and token usage. Actual provider billing may differ.",
     },
     missing: {
-      bg: "#f8717112",
-      border: "#f8717140",
-      dot: "#f87171",
+      bg: "#F4606012",
+      border: "#F4606040",
+      dot: "#F46060",
       label: "Cost data: missing",
       note: "Requests are being tracked, but cost data is missing. Financial reporting is incomplete until provider cost metadata is active.",
     },
@@ -146,7 +146,7 @@ function ProviderBreakdown({ breakdown, total, hasCostData }: { breakdown: Provi
 }
 
 function StatementBlock({ statement }: { statement: MonthlyStatement }) {
-  const netColor = statement.netPosition > 0 ? "var(--accent)" : statement.netPosition < 0 ? "#f87171" : "var(--ink)";
+  const netColor = statement.netPosition > 0 ? "var(--accent)" : statement.netPosition < 0 ? "#F46060" : "var(--ink)";
   const spendDisplay = statement.inferenceSpend > 0 ? `-${usd(statement.inferenceSpend)}` : "—";
 
   return (
@@ -160,7 +160,7 @@ function StatementBlock({ statement }: { statement: MonthlyStatement }) {
       }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {[
-            ["Inference Spend", spendDisplay, statement.inferenceSpend > 0 ? "#f87171" : "var(--muted)"],
+            ["Inference Spend", spendDisplay, statement.inferenceSpend > 0 ? "#F46060" : "var(--muted)"],
             ["Revenue",         "+$0.00",     "var(--muted)"],
           ].map(([label, value, color]) => (
             <div key={label as string} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>

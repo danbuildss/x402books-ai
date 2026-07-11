@@ -1660,7 +1660,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
               style={{
                 padding: "7px 14px", borderRadius: 8,
                 border: "1px solid rgba(59,130,246,0.4)",
-                background: "rgba(59,130,246,0.08)", color: "#3b82f6",
+                background: "rgba(59,130,246,0.08)", color: "#5B9EF4",
                 fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
                 whiteSpace: "nowrap",
               }}
@@ -1813,7 +1813,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
               disabled={mfState === "loading"}
               style={{
                 padding: "8px 18px", borderRadius: 8, border: "none",
-                background: "#3b82f6", color: "#fff",
+                background: "#5B9EF4", color: "#fff",
                 fontSize: "0.82rem", fontWeight: 700,
                 cursor: mfState === "loading" ? "not-allowed" : "pointer",
                 opacity: mfState === "loading" ? 0.7 : 1,
@@ -2430,7 +2430,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                       {/* Manifest wallets */}
                       {manifestWallets.length > 0 && (
                         <>
-                          <p style={{ margin: "0 0 6px", fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#22c55e", fontWeight: 700 }}>
+                          <p style={{ margin: "0 0 6px", fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#4AE8A0", fontWeight: 700 }}>
                             Manifest wallets — books eligible
                           </p>
                           {manifestWallets.map((w) => (

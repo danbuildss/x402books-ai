@@ -52,21 +52,21 @@ function fmtUsd(n: number) {
 function pct(n: number) { return `${(n * 100).toFixed(0)}%`; }
 
 function coverageBadge(cov: number) {
-  if (cov >= 0.9) return { label: `${pct(cov)}`, color: "#22c55e" };
-  if (cov >= 0.5) return { label: `${pct(cov)}`, color: "#f59e0b" };
-  return { label: `${pct(cov)}`, color: "#ef4444" };
+  if (cov >= 0.9) return { label: `${pct(cov)}`, color: "#4AE8A0" };
+  if (cov >= 0.5) return { label: `${pct(cov)}`, color: "#F4B942" };
+  return { label: `${pct(cov)}`, color: "#F46060" };
 }
 
 function confidenceBadge(flags: AuditFlag[]) {
   const hasHigh   = flags.some((f) => f.severity === "high");
   const hasMedium = flags.some((f) => f.severity === "medium");
-  if (hasHigh)   return { label: "Low",    color: "#ef4444" };
-  if (hasMedium) return { label: "Medium", color: "#f59e0b" };
-  return { label: "High", color: "#22c55e" };
+  if (hasHigh)   return { label: "Low",    color: "#F46060" };
+  if (hasMedium) return { label: "Medium", color: "#F4B942" };
+  return { label: "High", color: "#4AE8A0" };
 }
 
 function severityColor(s: AuditFlag["severity"]) {
-  return s === "high" ? "#ef4444" : s === "medium" ? "#f59e0b" : "#6b7280";
+  return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "#6b7280";
 }
 
 const KNOWN_NAMES: Record<string, string> = {
@@ -84,9 +84,9 @@ function SummaryBanner({ data }: { data: BatchResponse }) {
       {[
         { label: "Agents Audited",         value: data.agent_count.toString(),            color: "var(--ink)" },
         { label: "Total Gross Inflows",    value: fmtUsd(summary.total_gross_inflows),    color: "#e2e8f0" },
-        { label: "Total Operating Revenue",value: fmtUsd(summary.total_operating_revenue),color: "#22c55e" },
-        { label: "Total Quarantined",      value: fmtUsd(summary.total_quarantined),       color: "#f59e0b" },
-        { label: "High-Risk Agents",       value: summary.high_risk_agents.length.toString(), color: "#ef4444" },
+        { label: "Total Operating Revenue",value: fmtUsd(summary.total_operating_revenue),color: "#4AE8A0" },
+        { label: "Total Quarantined",      value: fmtUsd(summary.total_quarantined),       color: "#F4B942" },
+        { label: "High-Risk Agents",       value: summary.high_risk_agents.length.toString(), color: "#F46060" },
       ].map((card) => (
         <div key={card.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>
           <div style={{ fontSize: 11, color: "var(--muted)", fontWeight: 600, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>{card.label}</div>
@@ -171,8 +171,8 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
               if (!r.ok) {
                 return (
                   <tr key={r.slug} style={{ borderBottom: "1px solid var(--line)", background: "rgba(239,68,68,0.04)" }}>
-                    <td style={{ padding: "8px 12px", color: "#ef4444" }}>{r.slug}</td>
-                    <td colSpan={10} style={{ padding: "8px 12px", color: "#ef4444", fontSize: 12 }}>Error: {r.error}</td>
+                    <td style={{ padding: "8px 12px", color: "#F46060" }}>{r.slug}</td>
+                    <td colSpan={10} style={{ padding: "8px 12px", color: "#F46060", fontSize: 12 }}>Error: {r.error}</td>
                   </tr>
                 );
               }
@@ -190,16 +190,16 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
                       {KNOWN_NAMES[r.audit.agent.slug] ?? r.audit.agent.name}
                     </Link>
                   </td>
-                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "#22c55e" }}>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", fontWeight: 700, color: "#4AE8A0" }}>
                     {fmtUsd(s.operating_revenue_usd)}
                   </td>
                   <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
                     {fmtUsd(s.gross_inflow_usd)}
                   </td>
-                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "#f59e0b" }}>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "#F4B942" }}>
                     {fmtUsd(s.quarantined_usd)}
                   </td>
-                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: m.quarantine_rate > 0.4 ? "#f59e0b" : "var(--muted)" }}>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: m.quarantine_rate > 0.4 ? "#F4B942" : "var(--muted)" }}>
                     {pct(m.quarantine_rate)}
                   </td>
                   <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
@@ -224,8 +224,8 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
                   <td style={{ padding: "8px 12px", textAlign: "center" }}>
                     {(highCount + medCount > 0) && (
                       <span style={{ display: "flex", gap: 4, justifyContent: "center" }}>
-                        {highCount > 0 && <span style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", borderRadius: 4, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>H:{highCount}</span>}
-                        {medCount > 0  && <span style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderRadius: 4, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>M:{medCount}</span>}
+                        {highCount > 0 && <span style={{ background: "rgba(239,68,68,0.15)", color: "#F46060", borderRadius: 4, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>H:{highCount}</span>}
+                        {medCount > 0  && <span style={{ background: "rgba(245,158,11,0.15)", color: "#F4B942", borderRadius: 4, fontSize: 10, fontWeight: 700, padding: "1px 6px" }}>M:{medCount}</span>}
                       </span>
                     )}
                   </td>
@@ -245,7 +245,7 @@ function ResultsTable({ results }: { results: AgentResult[] }) {
                         {r.audit.wallets.declared} wallet(s) declared · {r.audit.wallets.analyzed} scanned · roles: {r.audit.wallets.roles.join(", ") || "unknown"} · {s.total_txs_scanned} raw txs
                       </div>
                       {r.flags.length === 0 ? (
-                        <div style={{ fontSize: 12, color: "#22c55e" }}>No classification flags.</div>
+                        <div style={{ fontSize: 12, color: "#4AE8A0" }}>No classification flags.</div>
                       ) : (
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {r.flags.map((f, fi) => (
@@ -378,7 +378,7 @@ export default function RevenueAccuracyReportPage() {
         </div>
 
         {error && (
-          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#F46060", fontSize: 13 }}>
             {error}
           </div>
         )}

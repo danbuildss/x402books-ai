@@ -136,7 +136,7 @@ export default async function OgImage({
           style={{
             background: "#111",
             border: "1px solid #222",
-            borderLeft: "3px solid #3b82f6",
+            borderLeft: "3px solid #5B9EF4",
             borderRadius: 10,
             padding: "18px 22px",
             flex: 1,

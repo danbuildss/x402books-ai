@@ -67,7 +67,7 @@ export default async function ResearchPage() {
               {[
                 { label: "Operating Revenue", value: fmtUSD(gdp.total_revenue_usd), color: "#4AE8A0" },
                 { label: "Expenses", value: fmtUSD(gdp.total_expenses_usd), color: "var(--fg)" },
-                { label: "Net Income", value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#ef4444" },
+                { label: "Net Income", value: fmtUSD(gdp.total_net_income_usd), color: gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#F46060" },
                 { label: "Attributed Agents", value: String(gdp.attributed_agents), color: "var(--fg)" },
               ].map((s) => (
                 <div key={s.label} style={{ padding: "16px 20px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>

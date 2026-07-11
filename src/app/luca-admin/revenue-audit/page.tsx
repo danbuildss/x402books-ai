@@ -9,9 +9,9 @@ import type { AgentRevenueAudit, AuditTx } from "@/lib/agent-books";
 type TabKey = "revenue" | "quarantined" | "dex" | "bridge" | "internal";
 
 const TABS: { key: TabKey; label: string; color: string }[] = [
-  { key: "revenue",    label: "Operating Revenue", color: "#22c55e" },
-  { key: "quarantined",label: "Quarantined",        color: "#f59e0b" },
-  { key: "dex",        label: "DEX Excluded",       color: "#3b82f6" },
+  { key: "revenue",    label: "Operating Revenue", color: "#4AE8A0" },
+  { key: "quarantined",label: "Quarantined",        color: "#F4B942" },
+  { key: "dex",        label: "DEX Excluded",       color: "#5B9EF4" },
   { key: "bridge",     label: "Bridge Excluded",    color: "#8B7CF6" },
   { key: "internal",   label: "Internal Transfers", color: "#6b7280" },
 ];
@@ -25,10 +25,10 @@ const QUARANTINE_LABELS: Record<string, string> = {
 };
 
 const QUARANTINE_COLORS: Record<string, string> = {
-  capital_injection:    "#ef4444",
+  capital_injection:    "#F46060",
   grant_program:        "#8B7CF6",
-  bridge_receipt:       "#3b82f6",
-  token_distribution:   "#f59e0b",
+  bridge_receipt:       "#5B9EF4",
+  token_distribution:   "#F4B942",
   unknown_large_inflow: "#6b7280",
 };
 
@@ -65,9 +65,9 @@ function SummaryWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const rows = [
     { label: "Gross inflows (all income transfers)",    value: summary.gross_inflow_usd,           sign: null,  color: "#e2e8f0" },
     { label: "− Bridge receipts excluded",              value: summary.bridge_excluded_inflow_usd,  sign: "−",   color: "#8B7CF6" },
-    { label: "− DEX swaps excluded",                   value: summary.dex_excluded_usd,            sign: "−",   color: "#3b82f6" },
-    { label: "− Quarantined (cap. injections / grants)",value: summary.quarantined_usd,             sign: "−",   color: "#f59e0b" },
-    { label: "= Operating revenue (what we report)",   value: summary.operating_revenue_usd,        sign: "=",   color: "#22c55e" },
+    { label: "− DEX swaps excluded",                   value: summary.dex_excluded_usd,            sign: "−",   color: "#5B9EF4" },
+    { label: "− Quarantined (cap. injections / grants)",value: summary.quarantined_usd,             sign: "−",   color: "#F4B942" },
+    { label: "= Operating revenue (what we report)",   value: summary.operating_revenue_usd,        sign: "=",   color: "#4AE8A0" },
   ];
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 20 }}>
@@ -81,7 +81,7 @@ function SummaryWaterfall({ audit }: { audit: AgentRevenueAudit }) {
           borderBottom: i < rows.length - 1 ? "1px solid var(--line)" : "none",
           background: row.sign === "=" ? "rgba(34,197,94,0.06)" : "transparent",
         }}>
-          <span style={{ fontSize: 13, color: row.sign === "=" ? "#22c55e" : "var(--ink)" }}>
+          <span style={{ fontSize: 13, color: row.sign === "=" ? "#4AE8A0" : "var(--ink)" }}>
             {row.label}
           </span>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: row.sign === "=" ? 700 : 400, color: row.color }}>
@@ -99,13 +99,13 @@ function SummaryWaterfall({ audit }: { audit: AgentRevenueAudit }) {
 function AeonDiffNotes({ notes }: { notes: string[] }) {
   return (
     <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
-      <div style={{ fontWeight: 700, fontSize: 12, color: "#ef4444", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+      <div style={{ fontWeight: 700, fontSize: 12, color: "#F46060", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.1em" }}>
         AEON Diff Analysis
       </div>
       <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
         {notes.map((note, i) => (
           <li key={i} style={{ fontSize: 13, color: "var(--ink)", display: "flex", gap: 8 }}>
-            <span style={{ color: "#ef4444", flexShrink: 0 }}>›</span>
+            <span style={{ color: "#F46060", flexShrink: 0 }}>›</span>
             <span>{note}</span>
           </li>
         ))}
@@ -147,7 +147,7 @@ function TxTable({ txs, tab }: { txs: AuditTx[]; tab: TabKey }) {
                   href={`https://basescan.org/tx/${tx.txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: "#3b82f6", textDecoration: "none" }}
+                  style={{ color: "#5B9EF4", textDecoration: "none" }}
                 >
                   {fmtHash(tx.txHash)}
                 </a>
@@ -155,7 +155,7 @@ function TxTable({ txs, tab }: { txs: AuditTx[]; tab: TabKey }) {
               <td style={{ padding: "8px 12px", color: "var(--muted)", whiteSpace: "nowrap" }}>
                 {fmtDate(tx.timestamp)}
               </td>
-              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: tx.direction === "income" ? "#22c55e" : tx.direction === "expense" ? "#ef4444" : "var(--muted)" }}>
+              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: tx.direction === "income" ? "#4AE8A0" : tx.direction === "expense" ? "#F46060" : "var(--muted)" }}>
                 {tx.direction === "expense" ? "−" : "+"}{fmtUsd(tx.amount_usd)}
               </td>
               <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
@@ -335,7 +335,7 @@ export default function RevenueAuditPage() {
         </div>
 
         {error && (
-          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#F46060", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -360,9 +360,9 @@ export default function RevenueAuditPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))", gap: 10, marginBottom: 20 }}>
               {[
                 { label: "Gross Inflows",       value: audit.summary.gross_inflow_usd,           color: "#e2e8f0" },
-                { label: "Operating Revenue",    value: audit.summary.operating_revenue_usd,      color: "#22c55e" },
-                { label: "Quarantined",          value: audit.summary.quarantined_usd,            color: "#f59e0b" },
-                { label: "DEX Excluded",         value: audit.summary.dex_excluded_usd,           color: "#3b82f6" },
+                { label: "Operating Revenue",    value: audit.summary.operating_revenue_usd,      color: "#4AE8A0" },
+                { label: "Quarantined",          value: audit.summary.quarantined_usd,            color: "#F4B942" },
+                { label: "DEX Excluded",         value: audit.summary.dex_excluded_usd,           color: "#5B9EF4" },
                 { label: "Bridge Excluded",      value: audit.summary.bridge_excluded_inflow_usd, color: "#8B7CF6" },
                 { label: "Internal Transfers",   value: audit.summary.internal_transfer_usd,      color: "#6b7280" },
               ].map((card) => (
@@ -408,12 +408,12 @@ export default function RevenueAuditPage() {
                   {TABS.find((t) => t.key === tab)?.label} — {tabCount(tab)} transaction(s)
                 </span>
                 {tab === "revenue" && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#22c55e", fontWeight: 700 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#4AE8A0", fontWeight: 700 }}>
                     {fmtUsd(audit.summary.operating_revenue_usd)}
                   </span>
                 )}
                 {tab === "quarantined" && (
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "#F4B942", fontWeight: 700 }}>
                     {fmtUsd(audit.summary.quarantined_usd)} withheld
                   </span>
                 )}

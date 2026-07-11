@@ -23,7 +23,7 @@ async function getAgent(slug: string): Promise<Agent | null> {
 function statusColor(s: string): string {
   if (s === "Verified" || s === "Luca Managed") return "#16a34a";
   if (s === "ERC-8004 Indexed" || s === "Claimed") return "#4AE8A0";
-  if (s === "Wallets Declared") return "#3b82f6";
+  if (s === "Wallets Declared") return "#5B9EF4";
   return "#94a3b8";
 }
 

@@ -14,10 +14,10 @@ const UPDATE_TYPE_LABELS: Record<string, string> = {
 };
 
 const UPDATE_TYPE_COLORS: Record<string, string> = {
-  new_agent: "#22c55e",
-  score_update: "#3b82f6",
-  wallet_update: "#f59e0b",
-  status_change: "#a855f7",
+  new_agent: "#4AE8A0",
+  score_update: "#5B9EF4",
+  wallet_update: "#F4B942",
+  status_change: "#8B7CF6",
 };
 
 const GROUP_ORDER = ["new_agent", "score_update", "wallet_update", "status_change"];
@@ -198,7 +198,7 @@ function UpdateCard({
             padding: "6px 16px",
             borderRadius: 6,
             border: "none",
-            background: "#22c55e",
+            background: "#4AE8A0",
             color: "#000",
             fontWeight: 600,
             fontSize: 13,
@@ -216,7 +216,7 @@ function UpdateCard({
             padding: "6px 16px",
             borderRadius: 6,
             border: "none",
-            background: "#ef4444",
+            background: "#F46060",
             color: "#fff",
             fontWeight: 600,
             fontSize: 13,
@@ -229,7 +229,7 @@ function UpdateCard({
       </div>
 
       {state === "error" && (
-        <p style={{ color: "#ef4444", fontSize: 12, marginTop: 6 }}>{errorMsg}</p>
+        <p style={{ color: "#F46060", fontSize: 12, marginTop: 6 }}>{errorMsg}</p>
       )}
     </article>
   );
@@ -323,7 +323,7 @@ export default function RegistryUpdatesPage() {
               }}
             />
             {authError && (
-              <p style={{ color: "#ef4444", fontSize: 13, marginBottom: 8 }}>{authError}</p>
+              <p style={{ color: "#F46060", fontSize: 13, marginBottom: 8 }}>{authError}</p>
             )}
             <button
               type="submit"
@@ -363,8 +363,8 @@ export default function RegistryUpdatesPage() {
           fontSize: 13,
           padding: "3px 10px",
           borderRadius: 99,
-          background: updates.length > 0 ? "#f59e0b22" : "#22222222",
-          color: updates.length > 0 ? "#f59e0b" : "#888",
+          background: updates.length > 0 ? "#F4B94222" : "#22222222",
+          color: updates.length > 0 ? "#F4B942" : "#888",
         }}>
           {updates.length} pending
         </span>

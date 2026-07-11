@@ -24,7 +24,7 @@ const STATIC: Record<TabKey, Signal[]> = {
     { eco: "AEON", color: "#8B7CF6", text: "Attributed operating revenue available. Submit wallet manifest to view.", ago: "—" },
     { eco: "BANKR", color: "#4AE8A0", text: "Revenue tracked across declared wallets. Attribution coverage active.", ago: "—" },
     { eco: "VIRTUALS", color: "#5B9EF4", text: "Revenue indexed since attribution expanded to additional wallets.", ago: "—" },
-    { eco: "SYNTH", color: "#EF4444", text: "Small attribution base. Revenue classification in progress.", ago: "—" },
+    { eco: "SYNTH", color: "#F46060", text: "Small attribution base. Revenue classification in progress.", ago: "—" },
   ],
   treasury: [
     { eco: "BANKR", color: "#4AE8A0", text: "Multi-sig treasury inflow detected and classified. Quarantined from revenue.", ago: "—" },
@@ -33,7 +33,7 @@ const STATIC: Record<TabKey, Signal[]> = {
     { eco: "EIGENCLOUD", color: "#F4B942", text: "Capital injection flagged — quarantined from revenue classification.", ago: "—" },
   ],
   new: [
-    { eco: "SYNTH", color: "#EF4444", text: "New wallet manifest submitted — attribution pending review.", ago: "—" },
+    { eco: "SYNTH", color: "#F46060", text: "New wallet manifest submitted — attribution pending review.", ago: "—" },
     { eco: "GAME", color: "#F4B942", text: "New wallets attributed to GAME ecosystem.", ago: "—" },
     { eco: "BANKR", color: "#4AE8A0", text: "Secondary fee wallet confirmed and indexed.", ago: "—" },
     { eco: "BASE", color: "#5B9EF4", text: "New agent submitted via registry — awaiting verification.", ago: "—" },

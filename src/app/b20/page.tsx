@@ -7,8 +7,8 @@ import { SiteFooter } from "@/components/site-footer";
 export const revalidate = 60;
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
-  attributed: { label: "Attributed",        color: "#22c55e" },
-  candidate:  { label: "Candidate",         color: "#f59e0b" },
+  attributed: { label: "Attributed",        color: "#4AE8A0" },
+  candidate:  { label: "Candidate",         color: "#F4B942" },
   none:       { label: "Awaiting Manifest", color: "#6b7280" },
 };
 
@@ -154,9 +154,9 @@ export default async function B20Page(
           <div style={{ display: "flex", gap: 10, marginBottom: 24, flexWrap: "wrap" }}>
             {[
               { label: "Tokens indexed",    value: stats.total,             color: "var(--ink)"  },
-              { label: "Linked to agent",   value: stats.linked,            color: "#22c55e"     },
-              { label: "Attributed",        value: stats.attributed,        color: "#22c55e"     },
-              { label: "Awaiting manifest", value: stats.awaiting_manifest, color: "#f59e0b"     },
+              { label: "Linked to agent",   value: stats.linked,            color: "#4AE8A0"     },
+              { label: "Attributed",        value: stats.attributed,        color: "#4AE8A0"     },
+              { label: "Awaiting manifest", value: stats.awaiting_manifest, color: "#F4B942"     },
               { label: "Unlinked",          value: stats.unlinked,          color: "#6b7280"     },
             ].map((s) => (
               <div key={s.label} style={{

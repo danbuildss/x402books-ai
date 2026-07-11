@@ -274,7 +274,7 @@ export default function Erc8004Client() {
       <section style={{
         marginBottom: 48, padding: "18px 20px", borderRadius: 10,
         border: "1px solid rgba(245,158,11,0.3)", background: "rgba(245,158,11,0.05)",
-        borderLeft: "3px solid #f59e0b",
+        borderLeft: "3px solid #F4B942",
       }}>
         <p style={{ fontSize: "0.82rem", fontWeight: 700, marginBottom: 6 }}>Identity ≠ Attribution</p>
         <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.7 }}>

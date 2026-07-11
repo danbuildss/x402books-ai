@@ -294,9 +294,9 @@ export default async function HomePage() {
             const iPct  = (attr.status_breakdown.inferred        / total) * 100;
             return (
               <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", marginBottom: 14, display: "flex" }}>
-                <div style={{ width: `${mPct}%`, background: "#22c55e", transition: "width 0.4s" }} />
+                <div style={{ width: `${mPct}%`, background: "#4AE8A0", transition: "width 0.4s" }} />
                 <div style={{ width: `${aPct}%`, background: "#4AE8A0", opacity: 0.7, transition: "width 0.4s" }} />
-                <div style={{ width: `${iPct}%`, background: "#f59e0b", opacity: 0.5, transition: "width 0.4s" }} />
+                <div style={{ width: `${iPct}%`, background: "#F4B942", opacity: 0.5, transition: "width 0.4s" }} />
               </div>
             );
           })()}
@@ -304,9 +304,9 @@ export default async function HomePage() {
           {/* Breakdown */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", marginBottom: 16 }}>
             {[
-              { label: "Manifest",    value: attr?.status_breakdown.manifest ?? 0,        color: "#22c55e" },
+              { label: "Manifest",    value: attr?.status_breakdown.manifest ?? 0,        color: "#4AE8A0" },
               { label: "Admin",       value: attr?.status_breakdown.admin_attributed ?? 0, color: "#4AE8A0" },
-              { label: "Inferred",    value: attr?.status_breakdown.inferred ?? 0,         color: "#f59e0b" },
+              { label: "Inferred",    value: attr?.status_breakdown.inferred ?? 0,         color: "#F4B942" },
               { label: "Unattributed",value: attr?.status_breakdown.none ?? 0,             color: "var(--muted)" },
             ].map((row) => (
               <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -369,8 +369,8 @@ export default async function HomePage() {
               <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
                 {[
                   { label: "Tokens Indexed",    value: b20Stats.total,            color: "var(--ink)" },
-                  { label: "Attributed",         value: b20Stats.attributed,       color: "#22c55e"    },
-                  { label: "Awaiting Manifest",  value: b20Stats.awaiting_manifest, color: "#f59e0b"   },
+                  { label: "Attributed",         value: b20Stats.attributed,       color: "#4AE8A0"    },
+                  { label: "Awaiting Manifest",  value: b20Stats.awaiting_manifest, color: "#F4B942"   },
                 ].map((s) => (
                   <div key={s.label} style={{ textAlign: "center", minWidth: 72 }}>
                     <div style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: s.color }}>{s.value}</div>

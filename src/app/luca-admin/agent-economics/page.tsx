@@ -34,7 +34,7 @@ const usd = (n: number) => `$${Math.abs(n).toFixed(2)}`;
 const sign = (n: number) => (n >= 0 ? "+" : "-");
 
 function Row({ label, value, sub, highlight }: { label: string; value: string; sub?: string; highlight?: "green" | "red" | "blue" }) {
-  const color = highlight === "green" ? "#16a34a" : highlight === "red" ? "#dc2626" : highlight === "blue" ? "#3b82f6" : "#e5e7eb";
+  const color = highlight === "green" ? "#16a34a" : highlight === "red" ? "#dc2626" : highlight === "blue" ? "#5B9EF4" : "#e5e7eb";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "10px 0", borderBottom: "1px solid #1f2937" }}>
       <span style={{ color: "#9ca3af", fontSize: "0.85rem" }}>{label}</span>
@@ -98,7 +98,7 @@ export default function AgentEconomicsPage() {
                 style={{
                   padding: "4px 12px",
                   borderRadius: 4,
-                  border: `1px solid ${period === p ? "#3b82f6" : "#374151"}`,
+                  border: `1px solid ${period === p ? "#5B9EF4" : "#374151"}`,
                   background: period === p ? "#1d4ed8" : "transparent",
                   color: period === p ? "#fff" : "#9ca3af",
                   cursor: "pointer",
@@ -159,7 +159,7 @@ export default function AgentEconomicsPage() {
               <span style={{
                 fontSize: "1.4rem",
                 fontWeight: 700,
-                color: s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#f87171" : "#e5e7eb",
+                color: s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#F46060" : "#e5e7eb",
               }}>
                 {sign(s.netAgentPosition)}{usd(s.netAgentPosition)}
               </span>
@@ -181,7 +181,7 @@ export default function AgentEconomicsPage() {
             <div style={{
               background: "#111827",
               border: "1px solid #1f2937",
-              borderLeft: "3px solid #3b82f6",
+              borderLeft: "3px solid #5B9EF4",
               borderRadius: 6,
               padding: "1rem 1.25rem",
             }}>

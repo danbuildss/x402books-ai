@@ -121,7 +121,7 @@ function fmtUSD(n: number): string {
 function MomentumBadge({ m }: { m: AgentMomentum }) {
   const rev   = m.revenue;
   const icon  = rev.direction === "growing" ? "↑" : rev.direction === "declining" ? "↓" : "→";
-  const color = rev.direction === "growing" ? "#4AE8A0" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
+  const color = rev.direction === "growing" ? "#4AE8A0" : rev.direction === "declining" ? "#F46060" : "var(--muted)";
   const label = rev.direction === "stable" ? "stable" : `${Math.abs(rev.pct).toFixed(0)}%`;
   return (
     <span title={`Revenue momentum (30d): ${rev.direction}`} style={{
@@ -182,7 +182,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
             <span style={{
               fontSize: "0.7rem",
               fontFamily: "monospace",
-              color: economics.net_income_usd >= 0 ? "#4AE8A0" : "#ef4444",
+              color: economics.net_income_usd >= 0 ? "#4AE8A0" : "#F46060",
             }}>
               {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
             </span>

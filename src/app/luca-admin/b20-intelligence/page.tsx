@@ -59,8 +59,8 @@ type IndexReport = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  attributed: "#22c55e",
-  candidate:  "#f59e0b",
+  attributed: "#4AE8A0",
+  candidate:  "#F4B942",
   none:       "#6b7280",
 };
 
@@ -132,7 +132,7 @@ export default function B20IntelligencePage() {
         </div>
 
         {/* Indexing gate rule */}
-        <div style={{ background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+        <div style={{ background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
           <strong>Indexing gate:</strong> Detect mode suggests candidates — it never indexes.
           To activate indexing, set <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>isB20Token: true</code> in <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>src/app/registry/data.ts</code> only for confirmed <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>0xB200…</code> tokens.
           Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
@@ -159,7 +159,7 @@ export default function B20IntelligencePage() {
               {
                 step: "2",
                 label: "Verify",
-                color: "#f59e0b",
+                color: "#F4B942",
                 items: [
                   "Confirm address starts with 0xB200 (not 0xb2 or anything else)",
                   "Open on Basescan — contract must exist on Base mainnet",
@@ -240,8 +240,8 @@ export default function B20IntelligencePage() {
                 ["base-sepolia", "Base Sepolia (Testnet)"],
               ] as const).map(([c, label]) => (
                 <button key={c} onClick={() => setChain(c)} style={{
-                  padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#f59e0b60" : "var(--line)"}`,
-                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#4AE8A0") : "var(--bg)",
+                  padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#F4B94260" : "var(--line)"}`,
+                  background: chain === c ? (c === "base-sepolia" ? "#F4B942" : "#4AE8A0") : "var(--bg)",
                   color: chain === c ? "#fff" : "var(--ink)",
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}>
@@ -250,7 +250,7 @@ export default function B20IntelligencePage() {
               ))}
             </div>
             {chain === "base-sepolia" && (
-              <div style={{ marginTop: 8, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 6, fontSize: 11, color: "#F4B942", fontWeight: 600 }}>
                 ⚠ Testnet mode — data is for proof/demo only. Will not appear on public /b20 page. Does not enter production stats, Agent Books, or Agent GDP.
               </div>
             )}
@@ -301,7 +301,7 @@ export default function B20IntelligencePage() {
         </div>
 
         {error && (
-          <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+          <div style={{ background: "#F4606018", border: "1px solid #F46060", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#F46060", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -316,7 +316,7 @@ export default function B20IntelligencePage() {
               {[
                 { label: "With token address", value: detectReport.total_with_token_address, color: "var(--ink)"  },
                 { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#4AE8A0"    },
-                { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#22c55e"    },
+                { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#4AE8A0"    },
               ].map((s) => (
                 <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
@@ -352,7 +352,7 @@ export default function B20IntelligencePage() {
                             {r.symbol ?? "—"}{r.name ? ` · ${r.name}` : ""}
                           </td>
                           <td style={{ padding: "8px 10px" }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#22c55e" : "#f59e0b" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#4AE8A0" : "#F4B942" }}>
                               {r.confirmed_on_chain ? "Yes" : "Unconfirmed"}
                             </span>
                           </td>
@@ -381,8 +381,8 @@ export default function B20IntelligencePage() {
         {report && (
           <>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
-              {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
-              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
+              {report.dry_run && <span style={{ fontWeight: 700, color: "#F4B942", marginRight: 8 }}>[DRY RUN]</span>}
+              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#F4B942", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
               Generated {new Date(report.generated_at).toLocaleString()}
             </div>
 
@@ -390,11 +390,11 @@ export default function B20IntelligencePage() {
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               {[
                 { label: "Discovered",       value: report.summary.tokens_discovered, color: "var(--ink)"  },
-                { label: "Indexed",          value: report.summary.tokens_indexed,    color: "#22c55e"     },
-                { label: "Attributed",       value: report.summary.attributed,        color: "#22c55e"     },
-                { label: "Candidate",        value: report.summary.candidates,        color: "#f59e0b"     },
-                { label: "Awaiting Manifest",value: report.summary.awaiting_manifest, color: "#f59e0b"     },
-                { label: "Errors",           value: report.summary.errors,            color: "#ef4444"     },
+                { label: "Indexed",          value: report.summary.tokens_indexed,    color: "#4AE8A0"     },
+                { label: "Attributed",       value: report.summary.attributed,        color: "#4AE8A0"     },
+                { label: "Candidate",        value: report.summary.candidates,        color: "#F4B942"     },
+                { label: "Awaiting Manifest",value: report.summary.awaiting_manifest, color: "#F4B942"     },
+                { label: "Errors",           value: report.summary.errors,            color: "#F46060"     },
               ].map((s) => (
                 <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
@@ -425,7 +425,7 @@ export default function B20IntelligencePage() {
                     </thead>
                     <tbody>
                       {report.tokens.map((t, i) => {
-                        const statusColor = t.status === "indexed" ? "#22c55e" : t.status === "error" ? "#ef4444" : "#f59e0b";
+                        const statusColor = t.status === "indexed" ? "#4AE8A0" : t.status === "error" ? "#F46060" : "#F4B942";
                         const mColor = STATUS_COLOR[t.manifest_status] ?? "#6b7280";
                         return (
                           <tr key={t.address} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
@@ -455,7 +455,7 @@ export default function B20IntelligencePage() {
                               <span style={{ fontSize: 11, fontWeight: 600, color: statusColor }}>
                                 {t.status}
                               </span>
-                              {t.error && <div style={{ fontSize: 10, color: "#ef4444", marginTop: 2 }}>{t.error}</div>}
+                              {t.error && <div style={{ fontSize: 10, color: "#F46060", marginTop: 2 }}>{t.error}</div>}
                             </td>
                           </tr>
                         );

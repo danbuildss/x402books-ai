@@ -7,16 +7,16 @@ import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, Attrib
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
-  manifest: { label: "Manifest",     color: "#22c55e" },
+  manifest: { label: "Manifest",     color: "#4AE8A0" },
   admin:    { label: "Admin",        color: "#4AE8A0" },
-  inferred: { label: "Inferred",     color: "#f59e0b" },
+  inferred: { label: "Inferred",     color: "#F4B942" },
   none:     { label: "Unattributed", color: "#6b7280" },
 };
 
 const CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
-  high:         { label: "High",         color: "#22c55e" },
-  medium:       { label: "Medium",       color: "#f59e0b" },
-  low:          { label: "Low",          color: "#ef4444" },
+  high:         { label: "High",         color: "#4AE8A0" },
+  medium:       { label: "Medium",       color: "#F4B942" },
+  low:          { label: "Low",          color: "#F46060" },
   unattributed: { label: "–",            color: "#6b7280" },
 };
 
@@ -24,13 +24,13 @@ type SortKey = "name" | "status" | "wallets" | "roles" | "confidence";
 
 function getAttributionBadge(agent: AgentAttributionHealth) {
   if (agent.attribution_tier === "manifest_attributed") {
-    return { label: "Books Eligible", color: "#22c55e" };
+    return { label: "Books Eligible", color: "#4AE8A0" };
   }
   if (agent.manifest_status === "manifest") {
-    return { label: "Manifest Invalid", color: "#ef4444" };
+    return { label: "Manifest Invalid", color: "#F46060" };
   }
   if (agent.attribution_tier === "discovered") {
-    return { label: "Discovered", color: "#f59e0b" };
+    return { label: "Discovered", color: "#F4B942" };
   }
   return { label: "Unattributed", color: "#6b7280" };
 }
@@ -112,7 +112,7 @@ export default function AttributionHealthAdminPage() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: 24 }}>
 
         {loading && <div style={{ color: "var(--muted)", fontSize: 13 }}>Loading attribution metrics…</div>}
-        {error   && <div style={{ color: "#ef4444", fontSize: 13 }}>{error}</div>}
+        {error   && <div style={{ color: "#F46060", fontSize: 13 }}>{error}</div>}
 
         {metrics && (
           <>
@@ -120,12 +120,12 @@ export default function AttributionHealthAdminPage() {
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 24 }}>
               {[
                 { label: "Indexed",            value: metrics.total_agents,                        color: "var(--ink)" },
-                { label: "Attributed",          value: metrics.manifest_attributed_agents,          color: "#22c55e" },
-                { label: "Discovered",          value: metrics.discovered_agents,                   color: "#f59e0b" },
+                { label: "Attributed",          value: metrics.manifest_attributed_agents,          color: "#4AE8A0" },
+                { label: "Discovered",          value: metrics.discovered_agents,                   color: "#F4B942" },
                 { label: "Unattributed",        value: metrics.unattributed_agents,                 color: "#6b7280" },
                 { label: "Coverage",            value: `${metrics.attribution_coverage_pct}%`,      color: "#4AE8A0" },
-                { label: "Books-eligible",      value: metrics.books_eligible_wallets,              color: "#22c55e" },
-                { label: "Contract wallets",    value: metrics.contract_wallets,                    color: "#ef4444" },
+                { label: "Books-eligible",      value: metrics.books_eligible_wallets,              color: "#4AE8A0" },
+                { label: "Contract wallets",    value: metrics.contract_wallets,                    color: "#F46060" },
               ].map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px", minWidth: 100 }}>
                   <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
@@ -137,14 +137,14 @@ export default function AttributionHealthAdminPage() {
             {/* Attribution breakdown */}
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
               <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", display: "flex", marginBottom: 12 }}>
-                <div style={{ width: `${(metrics.tier_breakdown.manifest_attributed / metrics.total_agents) * 100}%`, background: "#22c55e" }} />
-                <div style={{ width: `${(metrics.tier_breakdown.discovered / metrics.total_agents) * 100}%`, background: "#f59e0b" }} />
+                <div style={{ width: `${(metrics.tier_breakdown.manifest_attributed / metrics.total_agents) * 100}%`, background: "#4AE8A0" }} />
+                <div style={{ width: `${(metrics.tier_breakdown.discovered / metrics.total_agents) * 100}%`, background: "#F4B942" }} />
                 <div style={{ width: `${(metrics.tier_breakdown.unattributed / metrics.total_agents) * 100}%`, background: "#6b7280" }} />
               </div>
               <div style={{ display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
                 {([
-                  { label: "Books-eligible agents", count: metrics.tier_breakdown.manifest_attributed, color: "#22c55e" },
-                  { label: "Discovered",            count: metrics.tier_breakdown.discovered,            color: "#f59e0b" },
+                  { label: "Books-eligible agents", count: metrics.tier_breakdown.manifest_attributed, color: "#4AE8A0" },
+                  { label: "Discovered",            count: metrics.tier_breakdown.discovered,            color: "#F4B942" },
                   { label: "Unattributed",          count: metrics.tier_breakdown.unattributed,          color: "#6b7280" },
                 ] as const).map(({ label, count, color }) => (
                   <div key={label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -215,12 +215,12 @@ export default function AttributionHealthAdminPage() {
                             <>
                               {agent.wallet_count}
                               {agent.books_eligible_wallet_count > 0 && (
-                                <span style={{ fontSize: 10, color: "#22c55e", marginLeft: 4 }}>
+                                <span style={{ fontSize: 10, color: "#4AE8A0", marginLeft: 4 }}>
                                   ({agent.books_eligible_wallet_count} eligible)
                                 </span>
                               )}
                               {agent.books_eligible_wallet_count === 0 && agent.wallet_count > 0 && (
-                                <span style={{ fontSize: 10, color: "#ef4444", marginLeft: 4 }}>
+                                <span style={{ fontSize: 10, color: "#F46060", marginLeft: 4 }}>
                                   (0 eligible)
                                 </span>
                               )}
@@ -238,7 +238,7 @@ export default function AttributionHealthAdminPage() {
                         <td style={{ padding: "10px 12px" }}>
                           <div style={{ display: "flex", gap: 4 }}>
                             {agent.has_revenue_wallet && (
-                              <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#22c55e18", color: "#22c55e" }}>rev</span>
+                              <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#4AE8A018", color: "#4AE8A0" }}>rev</span>
                             )}
                             {agent.has_treasury_wallet && (
                               <span style={{ fontSize: 10, fontWeight: 600, padding: "1px 5px", borderRadius: 3, background: "#5B9EF418", color: "#5B9EF4" }}>treasury</span>
