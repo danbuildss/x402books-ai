@@ -351,9 +351,21 @@ type FactoryLog = {
   transactionHash: string;
 };
 
-// B20 launched ~3 days before this was written (July 8, 2026).
-// Base block ~46.8M at launch. Use 0x2C00000 (~46.1M) as the safe default start.
-const B20_MAINNET_DEFAULT_FROM_BLOCK = "0x2C00000";
+// Base: ~2s/block → 43200 blocks/day. Sepolia: ~2s/block too but small chain so 0x0 is fine.
+const BASE_BLOCKS_PER_DAY = 43200;
+
+async function getDefaultFromBlock(apiKey: string, chain: B20Chain): Promise<string> {
+  if (chain !== "base") return "0x0";
+  try {
+    const blockHex = await rpc(apiKey, "eth_blockNumber", [], chain) as string;
+    const current = parseInt(blockHex, 16);
+    const start = Math.max(0, current - BASE_BLOCKS_PER_DAY);
+    return "0x" + start.toString(16);
+  } catch {
+    // fallback: B20 launch block
+    return "0x2C9E740";
+  }
+}
 
 export async function fetchB20FactoryLogs(
   factoryAddress: string,
@@ -361,7 +373,7 @@ export async function fetchB20FactoryLogs(
   chain: B20Chain = "base-sepolia",
   fromBlock?: string,
 ): Promise<{ logsScanned: number; candidates: string[] }> {
-  const resolvedFromBlock = fromBlock ?? (chain === "base" ? B20_MAINNET_DEFAULT_FROM_BLOCK : "0x0");
+  const resolvedFromBlock = fromBlock ?? await getDefaultFromBlock(apiKey, chain);
   const B20_PREFIX = "0xb200";
   let logs: FactoryLog[] = [];
 
