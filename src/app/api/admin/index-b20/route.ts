@@ -33,7 +33,7 @@ const VALID_CHAINS: B20Chain[] = ["base", "base-sepolia"];
 const B20_FACTORY = "0xB20f000000000000000000000000000000000000";
 
 type IndexB20Body = {
-  mode: "from_registry" | "single" | "activity_only" | "detect_from_registry" | "detect_testnet_factory";
+  mode: "from_registry" | "single" | "activity_only" | "detect_from_registry" | "detect_testnet_factory" | "detect_factory";
   address?: string;
   chain?: B20Chain;
   includeActivity?: boolean;
@@ -75,8 +75,8 @@ export async function POST(req: NextRequest) {
   const chain: B20Chain = body.chain && VALID_CHAINS.includes(body.chain) ? body.chain : "base";
   const isTestnet = chain !== "base";
 
-  if (!["from_registry", "single", "activity_only", "detect_from_registry", "detect_testnet_factory"].includes(mode)) {
-    return NextResponse.json({ ok: false, error: "mode must be from_registry | single | activity_only | detect_from_registry | detect_testnet_factory" }, { status: 400 });
+  if (!["from_registry", "single", "activity_only", "detect_from_registry", "detect_testnet_factory", "detect_factory"].includes(mode)) {
+    return NextResponse.json({ ok: false, error: "mode must be from_registry | single | activity_only | detect_from_registry | detect_testnet_factory | detect_factory" }, { status: 400 });
   }
 
   if ((mode === "single" || mode === "activity_only") && !address) {
@@ -220,6 +220,65 @@ export async function POST(req: NextRequest) {
       results,
       note: "Read-only. No data was written. Use mode=single with chain=base-sepolia to index confirmed candidates.",
       testnet_warning: "All data here is Base Sepolia testnet. It is for demo/proof only. Testnet tokens never enter Agent Books, Agent GDP, or production B20 intelligence.",
+      generated_at: new Date().toISOString(),
+    });
+  }
+
+  // ── detect_factory: scan factory logs on any chain (mainnet or testnet) ──────
+  if (mode === "detect_factory") {
+    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain);
+
+    type FactoryCandidate = {
+      address: string;
+      confirmed_on_chain: boolean;
+      name: string | null;
+      symbol: string | null;
+      issuer_wallet: string | null;
+      recommendation: string;
+    };
+    const results: FactoryCandidate[] = [];
+
+    for (const addr of candidates) {
+      let confirmed = false;
+      let name: string | null = null;
+      let symbol: string | null = null;
+      let issuerWallet: string | null = null;
+      try {
+        const identity = await fetchB20TokenIdentity(addr, apiKey, chain);
+        confirmed = !!(identity.name ?? identity.symbol ?? identity.totalSupply);
+        name = identity.name;
+        symbol = identity.symbol;
+        issuerWallet = identity.issuerWallet;
+      } catch { /* not confirmed */ }
+
+      results.push({
+        address: addr,
+        confirmed_on_chain: confirmed,
+        name,
+        symbol,
+        issuer_wallet: issuerWallet,
+        recommendation: confirmed
+          ? isTestnet
+            ? `Confirmed B20 on ${chain} — use mode=single with chain=${chain} to index`
+            : "Confirmed B20 on Base mainnet — use mode=single to index, then set isB20Token: true in registry data.ts"
+          : "Address extracted from factory logs but not confirmed — verify manually before indexing",
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mode: "detect_factory",
+      chain,
+      is_testnet: isTestnet,
+      factory: B20_FACTORY,
+      logs_scanned: logsScanned,
+      b20_candidates_found: candidates.length,
+      confirmed: results.filter((r) => r.confirmed_on_chain).length,
+      results,
+      note: "Read-only. No data was written. Use mode=single to index confirmed candidates.",
+      ...(isTestnet && {
+        testnet_warning: "All data here is testnet. It is for demo/proof only. Testnet tokens never enter Agent Books, Agent GDP, or production B20 intelligence.",
+      }),
       generated_at: new Date().toISOString(),
     });
   }
