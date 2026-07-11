@@ -732,7 +732,7 @@ function cardStatusColor(agent: Agent): string {
   const s = agent.verificationStatus;
   if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#4AE8A0";
   if (s === "Wallets Declared") return "#5B9EF4";
-  return "#7d828d";
+  return "var(--muted)";
 }
 
 // ── Share card modal ──────────────────────────────────────────────────────────
@@ -753,8 +753,8 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
 
   const verifyColor =
     agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
-      ? "#2d6e35"
-      : agent.verificationStatus === "Wallets Declared" ? "#376e8a" : "#888";
+      ? "#4AE8A0"
+      : agent.verificationStatus === "Wallets Declared" ? "#5B9EF4" : "var(--muted)";
 
   const visiblePatterns = (classification?.patterns ?? [])
     .filter((p) => p !== "active_operational" && p !== "dormant" && CARD_PATTERN_LABEL[p])
@@ -804,7 +804,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
           style={{
             position: "relative",
             width: "100%", maxWidth: 620,
-            background: "#f0ece0",
+            background: "var(--surface-soft)",
             borderRadius: 20,
             overflow: "hidden",
             padding: "32px 36px 26px",
@@ -827,7 +827,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
           {/* Brand row */}
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
             <div style={{ width: 18, height: 18, borderRadius: 4, background: "#3b7a45", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <div style={{ width: 7, height: 7, borderRadius: 2, background: "#f0ece0" }} />
+              <div style={{ width: 7, height: 7, borderRadius: 2, background: "var(--surface-soft)" }} />
             </div>
             <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#3b5e43", letterSpacing: "0.01em" }}>Zetta</span>
           </div>

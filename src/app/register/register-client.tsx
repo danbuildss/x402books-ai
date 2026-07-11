@@ -174,7 +174,7 @@ export function RegisterClient() {
           fontSize: "0.75rem", color: "var(--muted)",
         }}>
           {[
-            { label: "Candidate", color: "#94a3b8" },
+            { label: "Candidate", color: "var(--muted)" },
             { arrow: true },
             { label: "Wallets Declared", color: "#4AE8A0" },
             { arrow: true },

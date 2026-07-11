@@ -186,7 +186,7 @@ export default function AgentEconomicsPage() {
               padding: "1rem 1.25rem",
             }}>
               <div style={{ color: "var(--muted)", fontSize: "0.72rem", marginBottom: "0.4rem", letterSpacing: "0.05em" }}>LUCA VERDICT</div>
-              <p style={{ color: "#d1d5db", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>
+              <p style={{ color: "var(--muted)", fontSize: "0.85rem", lineHeight: 1.6, margin: 0 }}>
                 {s.lucaVerdict}
               </p>
             </div>
