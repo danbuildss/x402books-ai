@@ -351,9 +351,9 @@ type FactoryLog = {
   transactionHash: string;
 };
 
-// Base mainnet block ~Jan 2025 — B20 is a new standard, no tokens existed before this.
-// Scanning from genesis (0x0) times out; this default keeps scans fast.
-const B20_MAINNET_DEFAULT_FROM_BLOCK = "0x1400000"; // ~20M, safely before any B20 deployment
+// B20 launched ~3 days before this was written (July 8, 2026).
+// Base block ~46.8M at launch. Use 0x2C00000 (~46.1M) as the safe default start.
+const B20_MAINNET_DEFAULT_FROM_BLOCK = "0x2C00000";
 
 export async function fetchB20FactoryLogs(
   factoryAddress: string,
