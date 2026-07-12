@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
 
   // ── detect_factory: scan factory logs on any chain (mainnet or testnet) ──────
   if (mode === "detect_factory") {
-    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain, fromBlock);
+    const { logsScanned, candidates, logsError } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain, fromBlock);
 
     type FactoryCandidate = {
       address: string;
@@ -277,6 +277,7 @@ export async function POST(req: NextRequest) {
       confirmed: results.filter((r) => r.confirmed_on_chain).length,
       results,
       note: "Read-only. No data was written. Use mode=single to index confirmed candidates.",
+      ...(logsError && { logs_error: logsError }),
       ...(isTestnet && {
         testnet_warning: "All data here is testnet. It is for demo/proof only. Testnet tokens never enter Agent Books, Agent GDP, or production B20 intelligence.",
       }),
