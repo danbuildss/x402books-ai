@@ -351,6 +351,10 @@ type FactoryLog = {
   transactionHash: string;
 };
 
+// keccak256("B20Created(address,uint8,string,string,uint8,bytes)")
+// Computed via viem: keccak256(toBytes(sig))
+const B20_CREATED_TOPIC = "0xfd9bf2730513a1709722ff379a0844dfd8f997d600693c2bcc659e188bbdba0d";
+
 // Base: ~2s/block → 43200 blocks/day.
 // Chunk size kept at 2000 blocks — Alchemy's safe limit per eth_getLogs call.
 const CHUNK_SIZE = 2000;
@@ -428,6 +432,7 @@ export async function fetchB20FactoryLogs(
         fromBlock: "0x" + chunkStart.toString(16),
         toBlock:   "0x" + chunkEnd.toString(16),
         address:   factory,
+        topics:    [B20_CREATED_TOPIC],
       }], chain);
       const logs = (result as FactoryLog[]) ?? [];
       totalLogs += logs.length;
