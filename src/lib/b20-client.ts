@@ -368,11 +368,12 @@ export async function fetchB20FactoryLogs(
   apiKey: string,
   chain: B20Chain = "base-sepolia",
   fromBlock?: string,
-): Promise<{ logsScanned: number; candidates: string[] }> {
+): Promise<{ logsScanned: number; candidates: string[]; logsError: string | null }> {
   const resolvedFromBlock = fromBlock ?? await getDefaultFromBlock(apiKey, chain);
   const B20_PREFIX = "0xb200";
   let logs: FactoryLog[] = [];
 
+  let logsError: string | null = null;
   try {
     const result = await rpc(apiKey, "eth_getLogs", [{
       fromBlock: resolvedFromBlock,
@@ -380,8 +381,8 @@ export async function fetchB20FactoryLogs(
       address: factoryAddress.toLowerCase(),
     }], chain);
     logs = (result as FactoryLog[]) ?? [];
-  } catch {
-    // Factory not yet deployed or no logs on this chain
+  } catch (e) {
+    logsError = e instanceof Error ? e.message : String(e);
   }
 
   const seen = new Set<string>();
@@ -404,7 +405,7 @@ export async function fetchB20FactoryLogs(
     }
   }
 
-  return { logsScanned: logs.length, candidates: [...seen] };
+  return { logsScanned: logs.length, candidates: [...seen], logsError };
 }
 
 // ── issuer → agent linker ─────────────────────────────────────────────────────
