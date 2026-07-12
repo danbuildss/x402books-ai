@@ -314,7 +314,7 @@ export default function B20IntelligencePage() {
 
           {isDetectMode && (
             <div style={{ marginBottom: 14, fontSize: 11, color: "var(--muted)" }}>
-              Scan starts from Base block ~20M (Jan 2025) by default — B20 tokens only exist after this point so the scan is fast.
+              Scans the last 24 hours of Base blocks by default — current block is fetched automatically, no manual input needed.
             </div>
           )}
 
