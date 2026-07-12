@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 type TokenResult = {
@@ -56,11 +56,20 @@ type FactoryReport = {
   chain: string;
   is_testnet: boolean;
   factory: string;
+  rpc_url?: string;
+  scan_debug?: {
+    from_block: number;
+    to_block: number;
+    blocks_scanned: number;
+    chunks_run: number;
+    logs_found: number;
+  };
   logs_scanned: number;
   b20_candidates_found: number;
   confirmed: number;
   results: FactoryCandidate[];
   note: string;
+  logs_error?: string;
   testnet_warning?: string;
   generated_at: string;
   error?: string;
@@ -114,8 +123,11 @@ export default function B20IntelligencePage() {
   const [report, setReport] = useState<IndexReport | null>(null);
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null);
   const [factoryReport, setFactoryReport] = useState<FactoryReport | null>(null);
+  const runningRef = useRef(false);
 
   async function runIndexer() {
+    if (runningRef.current) return; // prevent duplicate submissions
+    runningRef.current = true;
     setLoading(true);
     setError("");
     setReport(null);
@@ -145,6 +157,7 @@ export default function B20IntelligencePage() {
       setError(e instanceof Error ? e.message : "Network error");
     } finally {
       setLoading(false);
+      runningRef.current = false;
     }
   }
 
@@ -314,7 +327,7 @@ export default function B20IntelligencePage() {
 
           {isDetectMode && (
             <div style={{ marginBottom: 14, fontSize: 11, color: "var(--muted)" }}>
-              Scan starts from Base block ~20M (Jan 2025) by default — B20 tokens only exist after this point so the scan is fast.
+              Scans the last 24 hours of Base blocks by default — current block is fetched automatically, no manual input needed.
             </div>
           )}
 
@@ -374,6 +387,25 @@ export default function B20IntelligencePage() {
             {factoryReport.testnet_warning && (
               <div style={{ background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#F4B942", fontWeight: 600 }}>
                 ⚠ {factoryReport.testnet_warning}
+              </div>
+            )}
+
+            {/* Scan debug */}
+            {factoryReport.scan_debug && (
+              <div style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)", lineHeight: 1.8 }}>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>Scan debug</span>
+                {" · "}blocks {factoryReport.scan_debug.from_block.toLocaleString()}–{factoryReport.scan_debug.to_block.toLocaleString()}
+                {" · "}{factoryReport.scan_debug.blocks_scanned.toLocaleString()} blocks scanned
+                {" · "}{factoryReport.scan_debug.chunks_run} chunk{factoryReport.scan_debug.chunks_run !== 1 ? "s" : ""}
+                {" · "}{factoryReport.scan_debug.logs_found} raw logs
+                {factoryReport.rpc_url && <>{" · "}RPC: {factoryReport.rpc_url}</>}
+              </div>
+            )}
+
+            {/* Logs error */}
+            {factoryReport.logs_error && (
+              <div style={{ background: "#F4606018", border: "1px solid #F46060", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontSize: 12, color: "#F46060" }}>
+                <strong>Alchemy error:</strong> {factoryReport.logs_error}
               </div>
             )}
 
