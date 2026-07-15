@@ -9176,6 +9176,12 @@ html, body {
   margin: 0 auto;
 }
 
+/* The terminal table needs 1220px of columns — let the agents section
+   breathe on desktop; below that the table wrap scrolls horizontally. */
+#agents.reg-section {
+  max-width: 1280px;
+}
+
 .reg-section-head {
   text-align: center;
   margin-bottom: 32px;
@@ -10738,36 +10744,63 @@ html, body {
 }
 
 /* ── Registry row layout (replaces expandable cards at scale) ── */
-.reg-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* ── Registry terminal table (P2) ────────────────────────────────────────── */
+
+.reg-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
   margin-top: 4px;
+  background: var(--surface);
 }
 
-.reg-row {
-  display: flex;
+.reg-table-inner {
+  min-width: 1220px;
+}
+
+.reg-grid {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.5fr) 80px 130px 95px 100px 100px 105px 85px 90px 55px 85px;
+  gap: 12px;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
+}
+
+.reg-grid-header {
+  padding: 10px 16px;
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.reg-grid-th {
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.reg-grid-row {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--line);
   text-decoration: none;
   color: var(--ink);
-  transition: border-color 0.12s, background 0.12s;
+  transition: background 0.1s;
 }
-.reg-row:hover {
-  border-color: rgba(109,184,116,0.25);
-  background: var(--surface-soft);
-}
+.reg-grid-row:last-child { border-bottom: 0; }
+.reg-grid-row:hover { background: var(--surface-soft); }
 
-.reg-row-name {
+.reg-cell-agent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.reg-cell-agent-text {
   display: flex;
   align-items: baseline;
   gap: 5px;
   min-width: 0;
-  flex: 0 0 150px;
 }
 
 .reg-row-agent-name {
@@ -10786,52 +10819,35 @@ html, body {
   flex-shrink: 0;
 }
 
-.reg-row-badges {
-  display: flex;
-  gap: 4px;
-  flex: 1;
-  align-items: center;
-  overflow: hidden;
+.reg-cell-num {
+  text-align: right;
+  white-space: nowrap;
 }
 
-.reg-row-score-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  min-width: 64px;
-  flex-shrink: 0;
-}
-
-.reg-row-score {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--ink);
-  line-height: 1;
+.reg-cell-money {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
 }
 
-.reg-row-score-label {
-  font-size: 0.58rem;
+.reg-cell-empty {
   color: var(--muted);
-  line-height: 1.2;
-  margin-top: 1px;
+  font-size: 0.76rem;
 }
 
-.reg-row-score-empty {
-  font-size: 0.82rem;
-  color: var(--muted);
-  font-weight: 400;
+.reg-cell-updated {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.7rem;
 }
 
-.reg-row-arrow {
-  font-size: 16px;
-  color: var(--muted);
-  flex-shrink: 0;
-  opacity: 0.5;
-}
-.reg-row:hover .reg-row-arrow {
-  opacity: 1;
-  color: var(--accent);
+.reg-status-pill {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  border: 1px solid;
+  white-space: nowrap;
 }
 
 /* Filter + sort selects */
@@ -10879,13 +10895,8 @@ html, body {
   cursor: not-allowed;
 }
 
-@media (max-width: 640px) {
-  .reg-row { flex-wrap: wrap; gap: 8px; padding: 10px 10px; }
-  .reg-row-name { flex: 1; min-width: 0; }
-  .reg-row-badges { flex: 100%; order: 3; }
-  .reg-row-score-wrap { display: none; }
-  .reg-row-arrow { order: 2; }
-}
+/* Mobile: the terminal table scrolls horizontally inside .reg-table-wrap —
+   no columns are hidden, matching the financial-terminal read. */
 
 /* ── Leaderboard ─────────────────────────────────────────────────────────── */
 .ldb-row:hover { background: var(--surface-soft); }

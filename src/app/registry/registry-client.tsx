@@ -14,6 +14,18 @@ import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
 import { scoreAgent } from "@/lib/verification-scorer";
+import { relativeTime } from "@/lib/ledger";
+import {
+  BOOKS_STATUS_META,
+  DATA_STATUS_COLOR,
+  PROFILE_STATUS_META,
+  REGISTRY_VIEWS,
+  WALLET_STATUS_META,
+  isRegistryView,
+  matchesView,
+  type RegistryView,
+  type StatusMeta,
+} from "./filters";
 
 // ── Sort constants ────────────────────────────────────────────────────────────
 
@@ -119,82 +131,118 @@ function fmtUSD(n: number): string {
 }
 
 // ── Agent Row ─────────────────────────────────────────────────────────────────
+// (Momentum renders as a glyph inside the 30d Revenue cell — the old
+// standalone MomentumBadge pill was removed with the badge-pile layout.)
 
-function MomentumBadge({ m }: { m: AgentMomentum }) {
-  const rev   = m.revenue;
-  const icon  = rev.direction === "growing" ? "↑" : rev.direction === "declining" ? "↓" : "→";
-  const color = rev.direction === "growing" ? "#6DB874" : rev.direction === "declining" ? "#ef4444" : "var(--muted)";
-  const label = rev.direction === "stable" ? "stable" : `${Math.abs(rev.pct).toFixed(0)}%`;
+function StatusPill({ meta }: { meta: StatusMeta }) {
   return (
-    <span title={`Revenue momentum (30d): ${rev.direction}`} style={{
-      fontSize: "0.67rem", fontWeight: 600, padding: "2px 7px", borderRadius: 99,
-      border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
-      background: `color-mix(in srgb, ${color} 10%, transparent)`,
-      color, fontFamily: "monospace",
-    }}>
-      {icon} {label}
+    <span
+      className="reg-status-pill"
+      title={meta.tip}
+      style={{
+        color: meta.color,
+        borderColor: `color-mix(in srgb, ${meta.color} 30%, transparent)`,
+        background: `color-mix(in srgb, ${meta.color} 9%, transparent)`,
+      }}
+    >
+      {meta.label}
     </span>
   );
 }
 
-function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economics?: AgentGDPEntry; momentum?: AgentMomentum }) {
-  const slug = toSlug(agent.name);
+// Money cell: right-aligned mono, "—" when no data.
+function MoneyCell({ value, signed, color }: { value: number | null | undefined; signed?: boolean; color?: string }) {
+  if (value == null) return <span className="reg-cell-empty">—</span>;
+  const resolved = color ?? (signed ? (value >= 0 ? "#6DB874" : "#ef4444") : "var(--ink)");
   return (
-    <Link href={`/registry/${slug}`} className="reg-row">
-      <AgentAvatar agent={agent} size={32} />
-      <div className="reg-row-name">
-        <span className="reg-row-agent-name">{agent.name}</span>
-        {agent.symbol && agent.symbol !== "—" && (
-          <span className="reg-row-sym">{agent.symbol}</span>
-        )}
-      </div>
-      <div className="reg-row-badges">
-        <EcoBadge eco={agent.ecosystem} />
-        <StatusBadge status={agent.verificationStatus} />
-        {(() => {
-          const vs = scoreAgent(agent as Parameters<typeof scoreAgent>[0], !!economics);
-          const color = vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
-          return (
-            <span style={{
-              fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
-              background: `color-mix(in srgb, ${color} 10%, transparent)`,
-              border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-              color, fontFamily: "monospace",
-            }}>{vs.total}</span>
-          );
-        })()}
-        {economics && (
-          <span style={{
-            fontSize: "0.67rem", fontWeight: 700, padding: "1px 7px",
-            borderRadius: 99, background: "rgba(109,184,116,0.12)",
-            border: "1px solid rgba(109,184,116,0.3)", color: "#6DB874",
-            letterSpacing: "0.02em",
-          }}>
-            Books
+    <span className="reg-cell-money" style={{ color: resolved }}>
+      {signed && value >= 0 ? "+" : ""}
+      {fmtUSD(value)}
+    </span>
+  );
+}
+
+const GRID_COLUMNS = [
+  "Agent", "Ecosystem", "Status", "Treasury", "30d Revenue", "30d Expenses",
+  "Net Position", "Books", "Wallets", "Score", "Last Updated",
+] as const;
+
+// Columns 4-7, 10-11 are numeric — right-aligned in both header and rows.
+const RIGHT_ALIGNED = new Set(["Treasury", "30d Revenue", "30d Expenses", "Net Position", "Score", "Last Updated"]);
+
+function RegistryHeader() {
+  return (
+    <div className="reg-grid reg-grid-header">
+      {GRID_COLUMNS.map((c) => (
+        <span key={c} className="reg-grid-th" style={RIGHT_ALIGNED.has(c) ? { textAlign: "right" } : undefined}>
+          {c}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economics?: AgentGDPEntry; momentum?: AgentMomentum }) {
+  const vs = scoreAgent(agent, !!economics);
+  const scoreColor =
+    vs.total >= 75 ? "#6DB874" : vs.total >= 50 ? "#5B8FA8" : vs.total >= 25 ? "#F97316" : "var(--muted)";
+  const rev = momentum?.revenue;
+  const momentumGlyph =
+    rev && rev.direction !== "stable"
+      ? { icon: rev.direction === "growing" ? "↑" : "↓", color: rev.direction === "growing" ? "#6DB874" : "#ef4444", tip: `Revenue momentum (30d): ${rev.direction} ${Math.abs(rev.pct).toFixed(0)}%` }
+      : null;
+
+  return (
+    <Link href={`/registry/${agent.slug}`} className="reg-grid reg-grid-row">
+      {/* Agent */}
+      <span className="reg-cell-agent">
+        <AgentAvatar agent={agent} size={28} />
+        <span className="reg-cell-agent-text">
+          <span className="reg-row-agent-name">{agent.name}</span>
+          {agent.symbol && agent.symbol !== "—" && <span className="reg-row-sym">{agent.symbol}</span>}
+        </span>
+      </span>
+      {/* Ecosystem */}
+      <span><EcoBadge eco={agent.ecosystem} /></span>
+      {/* Status (3-label copy rules) */}
+      <span><StatusPill meta={PROFILE_STATUS_META[agent.profileStatus]} /></span>
+      {/* Treasury */}
+      <span className="reg-cell-num"><MoneyCell value={economics?.treasury_balance_usd} /></span>
+      {/* 30d Revenue (+ momentum glyph) */}
+      <span className="reg-cell-num">
+        <MoneyCell value={economics?.revenue_usd} color="#6DB874" />
+        {economics && momentumGlyph && (
+          <span title={momentumGlyph.tip} style={{ color: momentumGlyph.color, fontFamily: "var(--font-mono)", fontSize: "0.7rem", marginLeft: 3 }}>
+            {momentumGlyph.icon}
           </span>
         )}
-        {momentum && <MomentumBadge m={momentum} />}
-      </div>
-      <div className="reg-row-score-wrap">
-        {economics ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
-            <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: "var(--fg)" }}>
-              {fmtUSD(economics.revenue_usd)}
-            </span>
-            <span style={{
-              fontSize: "0.7rem",
-              fontFamily: "monospace",
-              color: economics.net_income_usd >= 0 ? "#6DB874" : "#ef4444",
-            }}>
-              {economics.net_income_usd >= 0 ? "+" : ""}{fmtUSD(economics.net_income_usd)}
-            </span>
-            <span className="reg-row-score-label">30d op. rev / net</span>
-          </div>
-        ) : (
-          <span className="reg-row-score-empty">—</span>
-        )}
-      </div>
-      <span className="material-symbols-outlined reg-row-arrow">chevron_right</span>
+      </span>
+      {/* 30d Expenses */}
+      <span className="reg-cell-num"><MoneyCell value={economics?.expenses_usd} color="var(--muted)" /></span>
+      {/* Net Position */}
+      <span className="reg-cell-num"><MoneyCell value={economics?.net_income_usd} signed /></span>
+      {/* Books Status */}
+      <span><StatusPill meta={BOOKS_STATUS_META[agent.booksStatus]} /></span>
+      {/* Wallet Status */}
+      <span><StatusPill meta={WALLET_STATUS_META[agent.walletStatus]} /></span>
+      {/* Score */}
+      <span className="reg-cell-num">
+        <span
+          title={`Verification score ${vs.total}/100`}
+          style={{
+            fontSize: "0.66rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+            background: `color-mix(in srgb, ${scoreColor} 10%, transparent)`,
+            border: `1px solid color-mix(in srgb, ${scoreColor} 25%, transparent)`,
+            color: scoreColor, fontFamily: "var(--font-mono)",
+          }}
+        >
+          {vs.total}
+        </span>
+      </span>
+      {/* Last Updated */}
+      <span className="reg-cell-num reg-cell-updated" style={{ color: agent.lastChecked ? DATA_STATUS_COLOR[agent.dataStatus] : "var(--muted)" }}>
+        {agent.lastChecked ? relativeTime(agent.lastChecked) : "—"}
+      </span>
     </Link>
   );
 }
@@ -641,26 +689,27 @@ export function RegistryClient({
   // Under the scope lock the data is already Bankr-only server-side; clamp the
   // URL param so a stray ?eco=Virtuals link doesn't render an empty list.
   const ecoFilter    = BANKR_ONLY ? "All" : ((searchParams.get("eco") ?? "All") as "All" | Ecosystem);
-  const statusFilter = (searchParams.get("status") ?? "All") as "All" | VerificationStatus;
+  const rawView      = searchParams.get("view") ?? "all";
+  const view: RegistryView = isRegistryView(rawView) ? rawView : "all";
   const sortBy       = (searchParams.get("sort") ?? "activity") as SortKey;
   const page         = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
 
   const updateParams = useCallback((updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
     for (const [k, v] of Object.entries(updates)) {
-      const isDefault = !v || v === "All" || (k === "sort" && v === "activity") || (k === "page" && v === "1") || (k === "q" && !v);
+      const isDefault = !v || v === "All" || (k === "view" && v === "all") || (k === "sort" && v === "activity") || (k === "page" && v === "1") || (k === "q" && !v);
       if (isDefault) { params.delete(k); } else { params.set(k, v); }
     }
     const qs = params.toString();
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [searchParams, router, pathname]);
 
-  function setSearch(v: string)                          { updateParams({ q: v, page: "1" }); }
-  function setEcoFilter(v: "All" | Ecosystem)            { updateParams({ eco: v, page: "1" }); }
-  function setStatusFilter(v: "All" | VerificationStatus){ updateParams({ status: v, page: "1" }); }
-  function setSortBy(v: SortKey)                         { updateParams({ sort: v, page: "1" }); }
-  function prevPage()                                    { updateParams({ page: String(page - 1) }); }
-  function nextPage()                                    { updateParams({ page: String(page + 1) }); }
+  function setSearch(v: string)               { updateParams({ q: v, page: "1" }); }
+  function setEcoFilter(v: "All" | Ecosystem) { updateParams({ eco: v, page: "1" }); }
+  function setView(v: RegistryView)           { updateParams({ view: v, page: "1" }); }
+  function setSortBy(v: SortKey)              { updateParams({ sort: v, page: "1" }); }
+  function prevPage()                         { updateParams({ page: String(page - 1) }); }
+  function nextPage()                         { updateParams({ page: String(page + 1) }); }
 
   useEffect(() => {
     fetch("/api/registry/momentum")
@@ -676,13 +725,12 @@ export function RegistryClient({
   // Filter
   const filtered = agents.filter((a) => {
     const matchEco    = ecoFilter === "All" || a.ecosystem === ecoFilter;
-    const matchStatus = statusFilter === "All" || a.verificationStatus === statusFilter;
     const q           = search.toLowerCase();
     const matchSearch = !q ||
       a.name.toLowerCase().includes(q) ||
       a.symbol.toLowerCase().includes(q) ||
       (a.xHandle && a.xHandle.toLowerCase().includes(q));
-    return matchEco && matchStatus && matchSearch;
+    return matchEco && matchesView(a, view) && matchSearch;
   });
 
   // Sort
@@ -793,21 +841,8 @@ export function RegistryClient({
             </div>
           )}
 
-          {/* Status + Sort selects */}
+          {/* Sort select (status filtering moved to the view chips below) */}
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-            <select
-              className="reg-filter-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as "All" | VerificationStatus)}
-            >
-              <option value="All">All Statuses</option>
-              <option value="Candidate">Candidate</option>
-              <option value="Needs Verification">Needs Verification</option>
-              <option value="Wallets Declared">Wallets Declared</option>
-              <option value="Claimed">Claimed</option>
-              <option value="Verified">Verified</option>
-              <option value="Luca Managed">Luca Managed</option>
-            </select>
             <select
               className="reg-filter-select"
               value={sortBy}
@@ -820,6 +855,20 @@ export function RegistryClient({
           </div>
         </div>
 
+        {/* View chips — the terminal's quick filters */}
+        <div className="reg-eco-filter" style={{ marginBottom: 12 }}>
+          {REGISTRY_VIEWS.map((v) => (
+            <button
+              key={v.value}
+              type="button"
+              className={`reg-eco-btn${view === v.value ? " active" : ""}`}
+              onClick={() => setView(v.value)}
+            >
+              {v.value === "all" ? (BANKR_ONLY ? "All Bankr Agents" : "All Agents") : v.label}
+            </button>
+          ))}
+        </div>
+
         {/* Count + live dot */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.78rem", color: "var(--muted)" }}>
@@ -830,13 +879,16 @@ export function RegistryClient({
           </span>
         </div>
 
-        {/* List */}
-        <div className="reg-list">
-          {paginated.length === 0 ? (
-            <div className="reg-empty-cards">No agents match your filters.</div>
-          ) : (
-            paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} momentum={momentum[toSlug(a.name)]} />)
-          )}
+        {/* Terminal table */}
+        <div className="reg-table-wrap">
+          <div className="reg-table-inner">
+            <RegistryHeader />
+            {paginated.length === 0 ? (
+              <div className="reg-empty-cards">No agents match your filters.</div>
+            ) : (
+              paginated.map((a) => <AgentRow key={a.name} agent={a} economics={economics[toSlug(a.name)]} momentum={momentum[toSlug(a.name)]} />)
+            )}
+          </div>
         </div>
 
         {/* Pagination */}

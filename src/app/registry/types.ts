@@ -163,6 +163,13 @@ export type PublicAgent = {
   verificationStatus: VerificationStatus;
   evidenceSources: string[];
   treasuryHealth: Health; // descriptive activity status only — not a rating
+  // Derived, non-CRM status tags — safe to expose (P2 terminal columns).
+  // CRM fields (outreach/focus/bankrPriority/metadataStatus) must never appear here.
+  walletStatus: WalletStatus;
+  profileStatus: ProfileStatus;
+  booksStatus: BooksStatus;
+  dataStatus: DataStatus;
+  lastChecked: string | null;
   pfp?: string;
   gitlawbRepo?: string;
   lucaVerdict?: string | null; // product-level analysis, safe to display publicly
@@ -182,6 +189,11 @@ export function toPublicAgent(a: Agent): PublicAgent {
     verificationStatus: a.verificationStatus,
     evidenceSources: a.evidenceSources,
     treasuryHealth: a.treasuryHealth,
+    walletStatus: a.walletStatus,
+    profileStatus: a.profileStatus,
+    booksStatus: a.booksStatus,
+    dataStatus: a.dataStatus,
+    lastChecked: a.lastChecked,
     pfp: a.pfp,
     gitlawbRepo: a.gitlawbRepo,
     lucaVerdict: a.adminNotes ?? null,

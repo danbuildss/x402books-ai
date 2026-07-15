@@ -11,6 +11,13 @@
 import type { Agent } from "@/app/registry/types";
 import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
 
+// Everything the scorer reads is public data — accept the structural subset
+// so both Agent and PublicAgent (registry list rows) can be scored.
+export type ScorableAgent = Pick<
+  Agent,
+  "name" | "ecosystem" | "xHandle" | "website" | "tokenAddress" | "wallets" | "verificationStatus"
+>;
+
 export interface VerificationScore {
   total: number;           // 0–100
   breakdown: {
@@ -31,7 +38,7 @@ export type VerificationTier =
   | "fully_verified"; // 75–100
 
 export function scoreAgent(
-  agent: Agent,
+  agent: ScorableAgent,
   hasBooks: boolean,
   txCount?: number,
 ): VerificationScore {
@@ -57,10 +64,17 @@ export function scoreAgent(
     signals.push(`${booksEligible.length} books-eligible wallet(s).`);
   }
 
-  // Wallet role diversity: treasury + revenue or expense declared
-  const roles = new Set((agent.wallets ?? []).map((w) => w.role ?? ""));
+  // Wallet role diversity: treasury plus a flow role declared.
+  // Canonical role vocabulary is treasury | fee | deployer | operator
+  // (types.ts AgentWallet); legacy names kept so no existing score drops.
+  const roles = new Set((agent.wallets ?? []).map((w) => (w.role ?? "").toLowerCase()));
   const hasTreasury = roles.has("treasury") || roles.has("payment_receiver");
-  const hasFlowRole = roles.has("revenue") || roles.has("expense") || roles.has("fee_recipient");
+  const hasFlowRole =
+    roles.has("fee") ||
+    roles.has("operator") ||
+    roles.has("revenue") ||
+    roles.has("expense") ||
+    roles.has("fee_recipient");
   if (hasTreasury && hasFlowRole) {
     manifest += 5;
     signals.push("Multiple wallet roles declared.");
