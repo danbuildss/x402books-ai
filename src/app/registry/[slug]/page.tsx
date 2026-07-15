@@ -19,16 +19,21 @@ import { scoreAgent } from "@/lib/verification-scorer";
 import type { VerificationScore } from "@/lib/verification-scorer";
 import { ProfileClient } from "./profile-client";
 import { toSlug } from "./slug";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 
 export const revalidate = 300;
 
 async function getAgent(slug: string): Promise<Agent | null> {
+  let agent: Agent | null;
   try {
     const { agents } = await getRegistryAgents();
-    return agents.find((a) => toSlug(a.name) === slug) ?? null;
+    agent = agents.find((a) => toSlug(a.name) === slug) ?? null;
   } catch {
-    return AGENTS.find((a) => toSlug(a.name) === slug) ?? null;
+    agent = AGENTS.find((a) => toSlug(a.name) === slug) ?? null;
   }
+  // Bankr scope lock: non-Bankr profiles 404 publicly (still visible in admin).
+  if (agent && BANKR_ONLY && agent.ecosystem !== FOCUS_ECOSYSTEM) return null;
+  return agent;
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -113,9 +118,21 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
     books.attributed ? books.financials.tx_count : 0,
   );
 
+  // ProfileClient serializes this object into public page HTML — blank the
+  // internal CRM fields (adminNotes stays: the profile renders it as the
+  // public Luca verdict, same as PublicAgent.lucaVerdict).
+  const safeAgent: Agent = {
+    ...agent,
+    outreachStatus: null,
+    focusStatus: null,
+    bankrPriority: null,
+    metadataStatus: null,
+    communicationIdentities: [],
+  };
+
   return (
     <ProfileClient
-      agent={agent}
+      agent={safeAgent}
       slug={slug}
       economics={economics}
       inferenceActivity={inferenceActivity}

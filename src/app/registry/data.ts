@@ -1,6 +1,26 @@
 import type { Agent } from "./types";
+import { toSlug } from "./[slug]/slug";
+import {
+  deriveDataStatus,
+  deriveProfileStatus,
+  deriveWalletStatus,
+} from "@/lib/status-tags";
 
-export const AGENTS: Agent[] = [
+// Seed entries predate the P0 status tags; the mapper at the bottom of this
+// file fills slug + tags so the static fallback path satisfies Agent.
+type SeedAgent = Omit<
+  Agent,
+  | "slug"
+  | "focusStatus"
+  | "bankrPriority"
+  | "metadataStatus"
+  | "walletStatus"
+  | "profileStatus"
+  | "booksStatus"
+  | "dataStatus"
+>;
+
+const SEED_AGENTS: SeedAgent[] = [
   // ── Registry operator self-profile ──────────────────────────────────────────
   {
     name: "Luca",
@@ -98,7 +118,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Needs Verification",
     evidenceSources: ["X/Twitter public posts", "Basescan explorer"],
     treasuryHealth: "Stable",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 86,
     gitlawbRepo: "https://github.com/gitlawb",
@@ -186,7 +206,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Needs Verification",
     evidenceSources: ["X/Twitter public posts", "Basescan explorer"],
     treasuryHealth: "Unverified",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 78,
     adminNotes: "$NOOK token contract — strong public attribution on X (High). Spot-check: +$0.24 net flow, 27 tx (30d). Not a treasury wallet. Public narrative references settlement, staking, and guild treasury mechanics. Missing: guild treasury addresses, reward distribution wallets, staking contract mapping, protocol treasury wallet. Next step: inspect Nookplot docs/app flows for guild treasury, staking contracts, reward distribution.",
@@ -290,7 +310,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 75,
     adminNotes: "Agent identity / reputation via Cred Bureau. No treasury wallet found. Onchain cred flows and signed proof needed. Financial relevance score: 8/10. Strong case for Luca integration: reputation-as-finance angle.",
@@ -588,7 +608,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Verified",
     evidenceSources: ["Bankr agent registry", "AEON framework GitHub", "Direct team declaration"],
     treasuryHealth: "Stable",
-    outreachStatus: "Manifest submitted",
+    outreachStatus: "manifest_submitted",
     lastChecked: "2026-06",
     priority: 97,
     adminNotes: "Execution and settlement layer — configure once, no approval loops. Weekly revenue confirmed at 17.16 WETH on Base. Token contract verified via official Bankr profile. Settlement role: AEON handles autonomous payment execution; Zetta provides financial readability. Treasury (0xf1e9…) and deployer (0x6797…) wallets confirmed directly by AEON team 2026-06-23. Both are EOA wallets on Base. Books-eligible. Next: seed-registry → truth-engine/index-wallet for both addresses → books refresh.",
@@ -622,7 +642,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 85,
     adminNotes: "Universal Swarm Intelligence Engine — simulate anything for $1 and under 10 minutes. Token from official Bankr profile. Weekly revenue: 3.19 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
@@ -656,7 +676,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 83,
     adminNotes: "AI agent with a wallet, building onchain apps and improving the tools to build them. Token from official Bankr profile. Weekly revenue: 1.87 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
@@ -673,7 +693,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry", "X / public announcement"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-06",
     priority: 95,
     adminNotes: "Autonomous agent on Bankr with agent-controlled Base wallets. Public claims include skill royalties and x402 service purchases — strongest on-chain transaction signal in the current registry. Wallet roles pending declaration. High-priority verification target.",
@@ -690,7 +710,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 82,
     adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 2.99 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
@@ -775,7 +795,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 77,
     adminNotes: "AI CEO of 0xWork. Built an entire onchain marketplace — 115 tokens launched, 123 tasks settled, $38K+ in self-generated value. Agents find work, humans post bounties, everyone gets paid in USDC. Token from Bankr profile. Weekly revenue: 1.63 WETH.",
@@ -792,7 +812,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 76,
     adminNotes: "AI execution terminal interfacing with Bankr's Partner Deploy API to launch ERC-20 tokens and liquidity on Base. Automates token deployment and routes transactions through Bankr infrastructure. Token from Bankr profile. Weekly revenue: 2.18 WETH.",
@@ -843,7 +863,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 72,
     adminNotes: "AI-native founder console for Base builders. A full economic actor on Base — holds a wallet, executes onchain transactions. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 1.36 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
@@ -1098,7 +1118,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 57,
     adminNotes: "A marketplace where agents hire agents. Token from official Bankr profile. Weekly revenue: 0.25 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
@@ -1285,7 +1305,7 @@ export const AGENTS: Agent[] = [
     verificationStatus: "Candidate",
     evidenceSources: ["Bankr agent registry"],
     treasuryHealth: "Pending",
-    outreachStatus: "Not started",
+    outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 46,
     adminNotes: "Lightweight financial agent — gasless USDC transfers across Base, Celo, Gnosis, Arbitrum. Built for the unbanked (272KB, no app store). Includes GeoChat, Aave savings, XP rewards. MaxFlow social trust graph replaces KYC. 30K+ users. Token from Bankr profile. Weekly revenue: 0.08 WETH.",
@@ -1529,3 +1549,17 @@ export const AGENTS: Agent[] = [
     adminNotes: null,
   },
 ];
+
+// booksStatus is "no_books" here because the static path has no
+// agent_books_cache to consult — this fallback only runs without Supabase.
+export const AGENTS: Agent[] = SEED_AGENTS.map((a) => ({
+  ...a,
+  slug: toSlug(a.name),
+  focusStatus: a.ecosystem === "BANKR" ? ("active_focus" as const) : null,
+  bankrPriority: null,
+  metadataStatus: null,
+  walletStatus: deriveWalletStatus(a.wallets),
+  profileStatus: deriveProfileStatus(a.verificationStatus),
+  booksStatus: "no_books" as const,
+  dataStatus: deriveDataStatus(a.lastChecked),
+}));

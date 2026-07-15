@@ -50,7 +50,46 @@ export type WalletLabel =
   | "likely fee recipient"
   | "likely expense wallet"
   | "unknown role";
-export type OutreachStatus = "Not started" | "In progress" | "Connected" | "Manifest submitted";
+// ── P0 status-tag vocabulary ──────────────────────────────────────────────────
+// Const arrays are the single source of truth: API whitelists and admin
+// dropdowns import these so the vocabulary can't drift from the types.
+// Every stored tag is CHECK-enforced in the DB (20260715000001/2 migrations).
+
+export const OUTREACH_STATUSES = [
+  "not_contacted",
+  "dm_sent",
+  "replied",
+  "interested",
+  "manifest_requested",
+  "manifest_submitted",
+  "books_live",
+  "shared_profile",
+] as const;
+export type OutreachStatus = (typeof OUTREACH_STATUSES)[number];
+
+export const FOCUS_STATUSES = ["active_focus"] as const;
+export type FocusStatus = (typeof FOCUS_STATUSES)[number];
+
+export const BANKR_PRIORITIES = ["high", "medium", "low"] as const;
+export type BankrPriority = (typeof BANKR_PRIORITIES)[number];
+
+export const METADATA_STATUSES = ["complete", "incomplete", "needs_review"] as const;
+export type MetadataStatus = (typeof METADATA_STATUSES)[number];
+
+// Trigger-owned in the DB (never written by app code):
+export const WALLET_STATUSES = ["none", "candidate", "declared", "verified", "rejected"] as const;
+export type WalletStatus = (typeof WALLET_STATUSES)[number];
+
+export const PROFILE_STATUSES = ["candidate", "needs_verification", "verified"] as const;
+export type ProfileStatus = (typeof PROFILE_STATUSES)[number];
+
+// Computed at read time (time-dependent — see src/lib/status-tags.ts):
+// "error" and "failed" are reserved; nothing produces them yet.
+export const BOOKS_STATUSES = ["no_books", "pending", "live", "stale", "error"] as const;
+export type BooksStatus = (typeof BOOKS_STATUSES)[number];
+
+export const DATA_STATUSES = ["fresh", "stale", "partial", "failed"] as const;
+export type DataStatus = (typeof DATA_STATUSES)[number];
 
 export type AddressType =
   | "eoa"               // externally owned account — valid operator wallet
@@ -70,10 +109,12 @@ export type AgentWallet = {
   evidenceSource?: string; // manifest | luca | admin
   notes?: string;
   address_type?: AddressType; // set after classification audit
+  booksEligible?: boolean;    // trigger-computed in DB (books_eligible)
 };
 
 export type Agent = {
   name: string;
+  slug: string;
   symbol: string;
   ecosystem: Ecosystem;
   xHandle: string;
@@ -86,6 +127,14 @@ export type Agent = {
   evidenceSources: string[];
   treasuryHealth: Health;                // descriptive activity status — not a rating
   outreachStatus: OutreachStatus | null; // internal CRM, not exposed publicly
+  // P0 status tags — internal CRM, never exposed in PublicAgent.
+  focusStatus: FocusStatus | null;
+  bankrPriority: BankrPriority | null;
+  metadataStatus: MetadataStatus | null;
+  walletStatus: WalletStatus;   // trigger-owned, read-only for app code
+  profileStatus: ProfileStatus; // trigger-owned, read-only for app code
+  booksStatus: BooksStatus;     // derived at read time
+  dataStatus: DataStatus;       // derived at read time
   lastChecked: string | null;
   adminNotes: string | null;             // internal — use lucaVerdict in PublicAgent
   priority: number;                      // internal ranking, not exposed publicly
@@ -103,6 +152,7 @@ export type Agent = {
 // Internal CRM fields (scores, outreach, admin notes, priority) are stripped here.
 export type PublicAgent = {
   name: string;
+  slug: string;
   symbol: string;
   ecosystem: Ecosystem;
   xHandle: string;
@@ -112,6 +162,7 @@ export type PublicAgent = {
   wallets: AgentWallet[];
   verificationStatus: VerificationStatus;
   evidenceSources: string[];
+  treasuryHealth: Health; // descriptive activity status only — not a rating
   pfp?: string;
   gitlawbRepo?: string;
   lucaVerdict?: string | null; // product-level analysis, safe to display publicly
@@ -120,6 +171,7 @@ export type PublicAgent = {
 export function toPublicAgent(a: Agent): PublicAgent {
   return {
     name: a.name,
+    slug: a.slug,
     symbol: a.symbol,
     ecosystem: a.ecosystem,
     xHandle: a.xHandle,
@@ -129,6 +181,7 @@ export function toPublicAgent(a: Agent): PublicAgent {
     wallets: a.wallets,
     verificationStatus: a.verificationStatus,
     evidenceSources: a.evidenceSources,
+    treasuryHealth: a.treasuryHealth,
     pfp: a.pfp,
     gitlawbRepo: a.gitlawbRepo,
     lucaVerdict: a.adminNotes ?? null,

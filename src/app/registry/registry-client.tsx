@@ -9,6 +9,7 @@ import { toSlug } from "./[slug]/slug";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
@@ -40,9 +41,10 @@ function computeStats(agents: PublicAgent[], economics: Record<string, AgentGDPE
     (a) => DECLARED_STATUSES.includes(a.verificationStatus)
   ).length;
   const booksCount = Object.keys(economics).length;
+  const ecosystemCount = new Set(agents.map((a) => a.ecosystem)).size;
   return [
     { label: "Agents Tracked",    value: String(agents.length) },
-    { label: "Ecosystems",        value: "5"                   },
+    { label: "Ecosystems",        value: String(ecosystemCount) },
     { label: "Manifests Indexed", value: String(manifestCount) },
     { label: "With Books",        value: String(booksCount)    },
   ];
@@ -636,7 +638,9 @@ export function RegistryClient({
 
   // All filter state lives in the URL so back-navigation restores scroll + position
   const search       = searchParams.get("q") ?? "";
-  const ecoFilter    = (searchParams.get("eco") ?? "All") as "All" | Ecosystem;
+  // Under the scope lock the data is already Bankr-only server-side; clamp the
+  // URL param so a stray ?eco=Virtuals link doesn't render an empty list.
+  const ecoFilter    = BANKR_ONLY ? "All" : ((searchParams.get("eco") ?? "All") as "All" | Ecosystem);
   const statusFilter = (searchParams.get("status") ?? "All") as "All" | VerificationStatus;
   const sortBy       = (searchParams.get("sort") ?? "activity") as SortKey;
   const page         = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -737,8 +741,9 @@ export function RegistryClient({
         <p className="reg-label">Agent Financial Registry</p>
         <h1 className="reg-h1">Agent Books for the agent economy.</h1>
         <p className="reg-hero-sub">
-          Revenue, expenses, net income, and treasury activity for {STATS[0]?.value ?? "84+"} indexed agents across BANKR, Virtuals, AEON, and Base.
-          Attribution requires a declared wallet manifest.
+          {BANKR_ONLY
+            ? <>Revenue, expenses, net income, and treasury activity for {STATS[0]?.value ?? ""} indexed agents in the {FOCUS_ECOSYSTEM} ecosystem. Attribution requires a declared wallet manifest.</>
+            : <>Revenue, expenses, net income, and treasury activity for {STATS[0]?.value ?? "84+"} indexed agents across BANKR, Virtuals, AEON, and Base. Attribution requires a declared wallet manifest.</>}
         </p>
         <div className="reg-hero-stats">
           {STATS.map((s) => (
@@ -771,19 +776,22 @@ export function RegistryClient({
             />
           </div>
 
-          {/* Ecosystem filter buttons */}
-          <div className="reg-eco-filter">
-            {(["All", "BANKR", "Virtuals", "Base", "AEON", "EigenCloud"] as const).map((opt) => (
-              <button
-                key={opt}
-                type="button"
-                className={`reg-eco-btn${ecoFilter === opt ? " active" : ""}`}
-                onClick={() => setEcoFilter(opt)}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
+          {/* Ecosystem filter buttons — hidden under the Bankr scope lock
+              (data is already Bankr-only; flag off restores all buttons) */}
+          {!BANKR_ONLY && (
+            <div className="reg-eco-filter">
+              {(["All", "BANKR", "Virtuals", "Base", "AEON", "EigenCloud"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  className={`reg-eco-btn${ecoFilter === opt ? " active" : ""}`}
+                  onClick={() => setEcoFilter(opt)}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Status + Sort selects */}
           <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>

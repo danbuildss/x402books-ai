@@ -1,7 +1,10 @@
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
 import { AGENTS } from "@/app/registry/data";
+import { deriveBooksStatus, deriveDataStatus } from "./status-tags";
+import { toSlug } from "@/app/registry/[slug]/slug";
 import type {
   Agent, AgentWallet, WalletLabel, Ecosystem, Health, VerificationStatus, OutreachStatus,
+  FocusStatus, BankrPriority, MetadataStatus, WalletStatus, ProfileStatus,
   CommunicationIdentity, CommPlatform, CommConfidence, CommLabel,
 } from "@/app/registry/types";
 
@@ -28,6 +31,11 @@ interface RegistryAgentRow {
   pfp: string | null;
   gitlawb_repo: string | null;
   evidence_sources: string[] | null;
+  focus_status: string | null;
+  bankr_priority: string | null;
+  metadata_status: string | null;
+  wallet_status: string | null;  // trigger-owned (20260715000001)
+  profile_status: string | null; // trigger-owned (20260715000001)
 }
 
 interface RegistryAgentWalletRow {
@@ -41,6 +49,7 @@ interface RegistryAgentWalletRow {
   confidence: string | null;
   evidence_source: string | null;
   address_type: string | null; // populated after classification audit
+  books_eligible: boolean | null; // trigger-computed (20260706000002)
 }
 
 interface CommIdentityRow {
@@ -97,9 +106,12 @@ function rowToAgent(
   row: RegistryAgentRow,
   wallets: AgentWallet[],
   commIdentities?: CommunicationIdentity[],
+  booksComputedAt?: string | null,
 ): Agent {
+  const eligibleWalletCount = (wallets ?? []).filter((w) => w.booksEligible).length;
   return {
     name: row.name,
+    slug: row.slug ?? toSlug(row.name),
     symbol: row.symbol ?? "—",
     ecosystem: (row.ecosystem as Ecosystem) ?? "Base",
     xHandle: row.x_handle ?? "",
@@ -111,6 +123,13 @@ function rowToAgent(
     evidenceSources: row.evidence_sources ?? [],
     treasuryHealth: (row.treasury_health as Health) ?? "Pending",
     outreachStatus: row.outreach_status as OutreachStatus | null,
+    focusStatus: row.focus_status as FocusStatus | null,
+    bankrPriority: row.bankr_priority as BankrPriority | null,
+    metadataStatus: row.metadata_status as MetadataStatus | null,
+    walletStatus: (row.wallet_status as WalletStatus) ?? "none",
+    profileStatus: (row.profile_status as ProfileStatus) ?? "candidate",
+    booksStatus: deriveBooksStatus(eligibleWalletCount, booksComputedAt ?? null),
+    dataStatus: deriveDataStatus(row.last_checked),
     lastChecked: row.last_checked,
     adminNotes: row.admin_notes,
     priority: row.priority ?? 50,
@@ -122,9 +141,15 @@ function rowToAgent(
 
 // ── Agent → DB row mapper ─────────────────────────────────────────────────────
 
-function agentToRow(agent: Agent): Omit<RegistryAgentRow, "id"> {
+// wallet_status and profile_status are intentionally absent: they are
+// trigger-owned in the DB, so writes from app code would be overwritten
+// (and seeds must not fight the triggers).
+function agentToRow(
+  agent: Agent,
+): Omit<RegistryAgentRow, "id" | "wallet_status" | "profile_status"> {
   return {
     name: agent.name,
+    slug: agent.slug,
     symbol: agent.symbol,
     ecosystem: agent.ecosystem,
     x_handle: agent.xHandle,
@@ -142,6 +167,9 @@ function agentToRow(agent: Agent): Omit<RegistryAgentRow, "id"> {
     pfp: agent.pfp ?? null,
     gitlawb_repo: agent.gitlawbRepo ?? null,
     evidence_sources: agent.evidenceSources,
+    focus_status: agent.focusStatus,
+    bankr_priority: agent.bankrPriority,
+    metadata_status: agent.metadataStatus,
   };
 }
 
@@ -159,13 +187,14 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
   try {
     const sb = getSupabaseAdminClient();
 
-    const [agentsResult, walletsResult, commResult] = await Promise.all([
+    const [agentsResult, walletsResult, commResult, booksCacheResult] = await Promise.all([
       sb
         .from("registry_agents")
         .select("*")
         .order("priority", { ascending: false }),
       sb.from("registry_agent_wallets").select("*"),
       sb.from("registry_agent_comm_identities").select("*"),
+      sb.from("agent_books_cache").select("agent_slug, computed_at").eq("period", "30d"),
     ]);
 
     if (agentsResult.error) throw agentsResult.error;
@@ -192,7 +221,15 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
         evidenceSource: w.evidence_source ?? undefined,
         notes: w.notes ?? undefined,
         address_type: (w.address_type ?? undefined) as import("@/app/registry/types").AddressType | undefined,
+        booksEligible: w.books_eligible ?? false,
       });
+    }
+
+    // books cache freshness by slug (for the derived booksStatus tag);
+    // cache errors are non-fatal — agents just derive as "pending".
+    const booksComputedAtBySlug: Record<string, string> = {};
+    for (const b of (booksCacheResult.data ?? []) as { agent_slug: string; computed_at: string }[]) {
+      booksComputedAtBySlug[b.agent_slug] = b.computed_at;
     }
 
     // Group comm identities by agent_name
@@ -203,7 +240,12 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
     }
 
     const agents = agentRows.map((row) =>
-      rowToAgent(row, walletsByAgent[row.name] ?? [], commByAgent[row.name] ?? [])
+      rowToAgent(
+        row,
+        walletsByAgent[row.name] ?? [],
+        commByAgent[row.name] ?? [],
+        booksComputedAtBySlug[row.slug ?? toSlug(row.name)] ?? null,
+      )
     );
 
     return { agents, fromSupabase: true };
@@ -290,6 +332,9 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
     // Only update ecosystem if the manifest explicitly provides one — never clobber with "Base" default
     if (proposed.ecosystem) agentFields.ecosystem = proposed.ecosystem;
 
+    // P0 tags (focus_status, bankr_priority, metadata_status, wallet_status,
+    // profile_status) are deliberately NOT in this map: manifests must never
+    // set internal CRM tags, and the trigger-owned columns belong to the DB.
     const fieldMap: Record<string, string> = {
       symbol: "symbol",
       xHandle: "x_handle",

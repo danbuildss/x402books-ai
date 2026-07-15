@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LogoMark } from "@/components/logo";
+import { BANKR_ONLY } from "@/lib/focus";
 
 export function SiteFooter() {
   return (
@@ -19,7 +20,8 @@ export function SiteFooter() {
             <h4>Products</h4>
             <Link href="/registry">Registry</Link>
             <Link href="/leaderboard">Leaderboard</Link>
-            <Link href="/b20">B20 Intelligence</Link>
+            {/* Non-Bankr surface — unlinked (still routable) under the scope lock */}
+            {!BANKR_ONLY && <Link href="/b20">B20 Intelligence</Link>}
             <Link href="/adopt">Adopt</Link>
             <Link href="/research">Research</Link>
             <Link href="/luca">Luca</Link>
