@@ -918,6 +918,319 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
 
 // ── Inference Activity block (any agent with data) ───────────────────────────
 
+// ── Full Inference Tab ────────────────────────────────────────────────────────
+
+interface RawInferenceEvent {
+  id: string;
+  provider: string;
+  model: string | null;
+  request_type: string | null;
+  cost_usd: number | null;
+  cost_source: string;
+  total_tokens: number | null;
+  latency_ms: number | null;
+  status: string;
+  created_at: string;
+}
+
+function CostStatusBanner({ status }: { status: import("@/lib/inference-events").CostSource }) {
+  const cfg = {
+    actual:    { color: "#6DB874", bg: "#6DB87410", border: "#6DB87430", label: "Actual cost data", detail: "Provider billing metadata confirmed. Spend figures are accurate." },
+    estimated: { color: "#f59e0b", bg: "#f59e0b10", border: "#f59e0b30", label: "Estimated cost",   detail: "Spend calculated from model price × token counts. Actual billing may differ slightly." },
+    missing:   { color: "#ef4444", bg: "#ef444410", border: "#ef444430", label: "Cost data missing", detail: "Provider does not return billing metadata. Token counts and spend cannot be calculated until cost metadata is active." },
+  }[status];
+
+  return (
+    <div style={{ padding: "10px 14px", borderRadius: 8, border: `1px solid ${cfg.border}`, background: cfg.bg, marginBottom: 14, display: "flex", gap: 10, alignItems: "flex-start" }}>
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.color, flexShrink: 0, marginTop: 3 }} />
+      <div>
+        <p style={{ margin: "0 0 2px", fontSize: "0.75rem", fontWeight: 700, color: cfg.color }}>{cfg.label}</p>
+        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.5 }}>{cfg.detail}</p>
+      </div>
+    </div>
+  );
+}
+
+function InferenceEventFeed({ slug }: { slug: string }) {
+  const [events, setEvents] = useState<RawInferenceEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/inference/events?agent_id=${encodeURIComponent(slug)}&limit=20`)
+      .then((r) => r.json())
+      .then((d: { events?: RawInferenceEvent[] }) => {
+        setEvents(d.events ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) return <p style={{ fontSize: "0.78rem", color: "var(--muted)" }}>Loading events…</p>;
+  if (events.length === 0) return <p style={{ fontSize: "0.78rem", color: "var(--muted)" }}>No inference events in this period.</p>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+      {events.slice(0, 15).map((e, i, arr) => {
+        const hasActual    = e.cost_source === "actual";
+        const hasEstimated = e.cost_source === "estimated";
+        const costColor    = hasActual ? "var(--ink)" : hasEstimated ? "#f59e0b" : "var(--muted)";
+        const costStr      = e.cost_usd != null ? `$${e.cost_usd.toFixed(5)}` : "—";
+        const radius       = i === 0 ? "8px 8px 0 0" : i === arr.length - 1 ? "0 0 8px 8px" : "0";
+        const ago          = (() => {
+          const ms = Date.now() - new Date(e.created_at).getTime();
+          const h  = Math.floor(ms / 3_600_000);
+          const m  = Math.floor((ms % 3_600_000) / 60_000);
+          return h > 0 ? `${h}h ago` : `${m}m ago`;
+        })();
+
+        return (
+          <div key={e.id} style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto auto auto",
+            gap: 10, alignItems: "center",
+            padding: "7px 10px",
+            background: "var(--surface-soft)",
+            border: "1px solid var(--line)",
+            borderBottomWidth: i < arr.length - 1 ? 0 : 1,
+            borderRadius: radius,
+            fontSize: "0.76rem",
+          }}>
+            <span style={{ color: "var(--ink)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {e.provider}{e.model ? ` · ${e.model}` : ""}
+            </span>
+            <span style={{ color: "var(--muted)", whiteSpace: "nowrap" }}>
+              {e.total_tokens != null ? `${e.total_tokens.toLocaleString()} tok` : "—"}
+            </span>
+            <span style={{ fontFamily: "monospace", color: costColor, whiteSpace: "nowrap" }}>{costStr}</span>
+            <span style={{ color: "var(--muted)", fontSize: "0.68rem", whiteSpace: "nowrap" }}>{ago}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function InferenceTab({
+  ia,
+  slug,
+  books,
+}: {
+  ia?: InferenceSummary;
+  slug: string;
+  books?: AgentBooks | AgentBooksUnattributed;
+}) {
+  const usd = (n: number) => n < 0.01 && n > 0 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`;
+
+  if (!ia) {
+    return (
+      <section className="prof-section">
+        <p className="prof-section-title">Inference</p>
+        <p style={{ fontSize: "0.84rem", color: "var(--muted)", lineHeight: 1.65, marginBottom: 16 }}>
+          No inference activity recorded for this agent yet. To start tracking:
+        </p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { n: "1", title: "Route inference through the Zetta proxy", body: "One URL change — drop-in replacement for your Surplus calls." },
+            { n: "2", title: "Declare your wallet manifest", body: "Add .agent/wallets.json to your repo to unlock revenue vs cost tracking." },
+            { n: "3", title: "Pass cost metadata", body: "Include cost_usd and token counts in the log event for accurate spend reporting." },
+          ].map((s) => (
+            <div key={s.n} style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "10px 12px", borderRadius: 8, background: "var(--surface-soft)", border: "1px solid var(--line)" }}>
+              <span style={{ width: 22, height: 22, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, background: "var(--accent)", fontSize: "0.68rem", fontWeight: 700, color: "#fff" }}>{s.n}</span>
+              <div>
+                <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 600 }}>{s.title}</p>
+                <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{s.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link href="/surplus" style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--accent)", textDecoration: "none" }}>Surplus × Zetta pilot →</Link>
+          <Link href="/docs/surplus-integration" style={{ fontSize: "0.82rem", color: "var(--muted)", textDecoration: "none" }}>Integration guide →</Link>
+        </div>
+      </section>
+    );
+  }
+
+  // ── Data quality checklist ──
+  const hasWallets  = books?.attributed === true || (books && !books.attributed && (books as AgentBooksUnattributed).reason !== "no_manifest");
+  const hasCostData = ia.hasCostData;
+  const hasRevenue  = books?.attributed && (books as AgentBooks).financials.revenue_usd > 0;
+  const hasTreasury = books?.attributed && (books as AgentBooks).financials.treasury_balance_usd != null;
+
+  const checklist = [
+    { label: "Inference events logged",     ok: true },
+    { label: "Wallet manifest declared",    ok: !!hasWallets },
+    { label: "Cost data available",         ok: hasCostData },
+    { label: "Revenue tracked",             ok: !!hasRevenue },
+    { label: "Treasury balance detected",   ok: !!hasTreasury },
+  ];
+
+  // ── Revenue vs cost (if books exist) ──
+  const revenue = books?.attributed ? (books as AgentBooks).financials.revenue_usd : null;
+  const spend   = ia.totalCostUsd;
+  const net     = revenue != null ? revenue - spend : null;
+
+  // ── Month string ──
+  const now   = new Date();
+  const month = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  // ── Luca verdict ──
+  const verdict = (() => {
+    if (!ia.hasCostData) {
+      return `${ia.requestCount} inference request${ia.requestCount === 1 ? "" : "s"} tracked. Cost data is missing — provider does not return billing metadata. Financial reporting is incomplete until cost metadata is active.`;
+    }
+    if (ia.costStatus === "estimated") {
+      return `Spend is estimated from model pricing × token counts. Actual provider billing may differ. ${ia.requestCount} request${ia.requestCount === 1 ? "" : "s"} processed.`;
+    }
+    if (spend < 1) return `Operating normally. ${ia.requestCount} request${ia.requestCount === 1 ? "" : "s"} processed. Inference spend is minimal.`;
+    if (spend < 10) return `Operating normally. Inference spend within expected range for an active agent.`;
+    if (spend < 50) return `Active agent. Inference spend is significant — monitor provider concentration.`;
+    return `High inference activity. Operational costs are elevated. Review provider mix and request volume.`;
+  })();
+
+  // ── Recommended actions ──
+  const actions: string[] = [];
+  if (!hasCostData)  actions.push("Enable cost metadata on your Surplus integration to unlock spend tracking.");
+  if (!hasWallets)   actions.push("Declare a wallet manifest to enable revenue vs inference cost comparison.");
+  if (!hasRevenue && hasWallets) actions.push("No operating revenue detected in the last 30 days. Verify wallet attribution.");
+  if (ia.providerBreakdown.length === 1 && ia.requestCount > 10) actions.push("Single provider dependency detected. Consider adding a fallback provider.");
+  if (actions.length === 0) actions.push("No immediate actions required. Continue monitoring spend vs revenue.");
+
+  return (
+    <>
+      {/* Cost status banner */}
+      <section className="prof-section">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <p className="prof-section-title" style={{ margin: 0 }}>Inference · Last {ia.periodDays}d</p>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "var(--accent)10", border: "1px solid var(--accent)30", color: "var(--accent)" }}>
+            Surplus Pilot
+          </span>
+        </div>
+        <CostStatusBanner status={ia.costStatus} />
+
+        {/* Stat cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 14 }}>
+          {([
+            { label: "Total Spend",       value: ia.hasCostData ? usd(ia.totalCostUsd) : "—", mono: true, color: ia.hasCostData && ia.totalCostUsd > 0 ? "#f87171" : "var(--muted)" },
+            { label: "Requests",          value: ia.requestCount.toLocaleString(), mono: true, color: "var(--ink)" },
+            { label: "Primary Provider",  value: ia.primaryProvider ? ia.primaryProvider.charAt(0).toUpperCase() + ia.primaryProvider.slice(1) : "—", mono: false, color: "var(--ink)" },
+            { label: "Avg Cost / Request",value: ia.hasCostData ? usd(ia.avgCostPerRequest) : "—", mono: true, color: "var(--muted)" },
+          ] as const).map(({ label, value, mono, color }) => (
+            <div key={label} style={{ padding: "10px 12px", borderRadius: 8, background: "var(--surface-soft)", border: "1px solid var(--line)" }}>
+              <p style={{ margin: "0 0 4px", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted)", fontWeight: 600 }}>{label}</p>
+              <p style={{ margin: 0, fontSize: "0.98rem", fontWeight: 700, color, fontFamily: mono ? "var(--font-mono)" : undefined }}>{value}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Provider concentration */}
+      {ia.providerBreakdown.length > 0 && (
+        <section className="prof-section">
+          <p className="prof-section-title">Provider Concentration</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {ia.providerBreakdown.map((p) => {
+              const pct = ia.requestCount > 0 ? Math.round((p.requestCount / ia.requestCount) * 100) : 0;
+              return (
+                <div key={p.provider}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", marginBottom: 4 }}>
+                    <span style={{ textTransform: "capitalize" }}>{p.provider}</span>
+                    <span style={{ color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{p.requestCount} req · {pct}%</span>
+                  </div>
+                  <div style={{ height: 5, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: "var(--accent)", borderRadius: 99 }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Revenue vs inference cost */}
+      {net !== null && (
+        <section className="prof-section">
+          <p className="prof-section-title">Revenue vs Inference Cost</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {([
+              { label: "Operating Revenue",  value: revenue != null ? `+${usd(revenue)}` : "—",  color: revenue && revenue > 0 ? "var(--accent)" : "var(--muted)" },
+              { label: "Inference Spend",    value: ia.hasCostData ? `−${usd(spend)}` : "—",       color: ia.hasCostData && spend > 0 ? "#f87171" : "var(--muted)" },
+              { label: "Net Position",       value: net >= 0 ? `+${usd(net)}` : `−${usd(Math.abs(net))}`, color: net >= 0 ? "var(--accent)" : "#f87171" },
+            ] as const).map(({ label, value, color }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", paddingBottom: label === "Inference Spend" ? 8 : 0, borderBottom: label === "Inference Spend" ? "1px solid var(--line)" : undefined }}>
+                <span style={{ color: "var(--muted)" }}>{label}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: label === "Net Position" ? 700 : 400, color }}>{value}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Monthly statement */}
+      <section className="prof-section">
+        <p className="prof-section-title">Monthly Statement · {month}</p>
+        <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 12px" }}>{verdict}</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+            {ia.costStatus === "actual" ? "Actual billing" : ia.costStatus === "estimated" ? "Estimated spend" : "Cost data missing"}
+          </span>
+          {ia.primaryProvider && (
+            <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)", textTransform: "capitalize" }}>
+              via {ia.primaryProvider}
+            </span>
+          )}
+        </div>
+      </section>
+
+      {/* Event feed */}
+      <section className="prof-section">
+        <p className="prof-section-title">Recent Events</p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 10, padding: "4px 10px", marginBottom: 4 }}>
+          {["Provider · Model", "Tokens", "Cost", "When"].map((h) => (
+            <span key={h} style={{ fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 600 }}>{h}</span>
+          ))}
+        </div>
+        <InferenceEventFeed slug={slug} />
+      </section>
+
+      {/* Data quality */}
+      <section className="prof-section">
+        <p className="prof-section-title">Data Quality</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {checklist.map(({ label, ok }) => (
+            <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.8rem" }}>
+              <span style={{ color: ok ? "#6DB874" : "#ef4444", fontSize: "0.8rem" }}>{ok ? "✓" : "✗"}</span>
+              <span style={{ color: ok ? "var(--ink)" : "var(--muted)" }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Recommended actions */}
+      <section className="prof-section">
+        <p className="prof-section-title">Recommended Actions</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {actions.map((a, i) => (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: "0.8rem" }}>
+              <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0 }}>→</span>
+              <span style={{ color: "var(--muted)", lineHeight: 1.55 }}>{a}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <Link href="/surplus" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}>Surplus × Zetta pilot →</Link>
+          <Link href="/docs/surplus-integration" style={{ fontSize: "0.78rem", color: "var(--muted)", textDecoration: "none" }}>Integration guide →</Link>
+          {slug === "luca" && (
+            <Link href="/luca/ledger" style={{ fontSize: "0.78rem", color: "var(--muted)", textDecoration: "none" }}>Full ledger →</Link>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
+
+// ── Inference activity summary (Overview tab) ─────────────────────────────────
+
 function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
   const usd = (n: number) => n === 0 ? "$0.00" : n < 0.01 ? `$${n.toFixed(5)}` : `$${n.toFixed(2)}`;
 
@@ -1643,11 +1956,12 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-type ProfileTab = "overview" | "books" | "history" | "attribution" | "research";
+type ProfileTab = "overview" | "books" | "inference" | "history" | "attribution" | "research";
 
-const PROF_TABS: { key: ProfileTab; label: string }[] = [
+const PROF_TABS: { key: ProfileTab; label: string; badge?: string }[] = [
   { key: "overview",     label: "Overview"     },
   { key: "books",        label: "Books"        },
+  { key: "inference",    label: "Inference"    },
   { key: "history",      label: "History"      },
   { key: "attribution",  label: "Attribution"  },
   { key: "research",     label: "Research"     },
@@ -1930,16 +2244,32 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
         {/* Tab navigation */}
         <div className="prof-tabs">
-          {PROF_TABS.map((t) => (
-            <button
-              key={t.key}
-              type="button"
-              className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
-              onClick={() => setTab(t.key)}
-            >
-              {t.label}
-            </button>
-          ))}
+          {PROF_TABS.map((t) => {
+            const showBadge = t.key === "inference" && !!inferenceActivity;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
+                onClick={() => setTab(t.key)}
+              >
+                {t.label}
+                {showBadge && (
+                  <span style={{
+                    marginLeft: 5,
+                    fontSize: "0.6rem", fontWeight: 700,
+                    padding: "1px 5px", borderRadius: 99,
+                    background: "var(--accent)18",
+                    border: "1px solid var(--accent)40",
+                    color: "var(--accent)",
+                    verticalAlign: "middle",
+                  }}>
+                    Live
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         <div className="prof-body">
@@ -1975,6 +2305,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               {books && <AgentBooksBlock books={books} />}
               {books?.attributed && <TreasurySignals books={books} />}
             </>
+          )}
+
+          {/* ── INFERENCE — Surplus pilot full report */}
+          {tab === "inference" && (
+            <InferenceTab ia={inferenceActivity} slug={slug} books={books} />
           )}
 
           {/* ── HISTORY — snapshots + momentum */}

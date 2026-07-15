@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 type TokenResult = {
@@ -28,6 +28,15 @@ type DetectResult = {
   recommendation: string;
 };
 
+type FactoryCandidate = {
+  address: string;
+  confirmed_on_chain: boolean;
+  name: string | null;
+  symbol: string | null;
+  issuer_wallet: string | null;
+  recommendation: string;
+};
+
 type DetectReport = {
   ok: boolean;
   mode: "detect_from_registry";
@@ -37,6 +46,31 @@ type DetectReport = {
   results: DetectResult[];
   non_b20_addresses: { agent_name: string; address: string }[];
   note: string;
+  generated_at: string;
+  error?: string;
+};
+
+type FactoryReport = {
+  ok: boolean;
+  mode: "detect_factory" | "detect_testnet_factory";
+  chain: string;
+  is_testnet: boolean;
+  factory: string;
+  rpc_url?: string;
+  scan_debug?: {
+    from_block: number;
+    to_block: number;
+    blocks_scanned: number;
+    chunks_run: number;
+    logs_found: number;
+  };
+  logs_scanned: number;
+  b20_candidates_found: number;
+  confirmed: number;
+  results: FactoryCandidate[];
+  note: string;
+  logs_error?: string;
+  testnet_warning?: string;
   generated_at: string;
   error?: string;
 };
@@ -59,14 +93,16 @@ type IndexReport = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  attributed: "#22c55e",
-  candidate:  "#f59e0b",
-  none:       "#6b7280",
+  attributed: "#4AE8A0",
+  candidate:  "#F4B942",
+  none:       "var(--muted)",
 };
 
 function shortAddr(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
+
+type Mode = "detect_factory" | "detect_from_registry" | "from_registry" | "single" | "activity_only";
 
 export default function B20IntelligencePage() {
   const [secret, setSecret] = useState(() =>
@@ -76,24 +112,31 @@ export default function B20IntelligencePage() {
     if (secret) sessionStorage.setItem("luca_admin_secret", secret);
   }, [secret]);
 
-  const [mode, setMode] = useState<"detect_from_registry" | "from_registry" | "single" | "activity_only">("detect_from_registry");
+  const [mode, setMode] = useState<Mode>("detect_factory");
   const [chain, setChain] = useState<"base" | "base-sepolia">("base");
   const [address, setAddress] = useState("");
+  const [fromBlock, setFromBlock] = useState("");
   const [includeActivity, setIncludeActivity] = useState(false);
   const [dryRun, setDryRun] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<IndexReport | null>(null);
   const [detectReport, setDetectReport] = useState<DetectReport | null>(null);
+  const [factoryReport, setFactoryReport] = useState<FactoryReport | null>(null);
+  const runningRef = useRef(false);
 
   async function runIndexer() {
+    if (runningRef.current) return; // prevent duplicate submissions
+    runningRef.current = true;
     setLoading(true);
     setError("");
     setReport(null);
     setDetectReport(null);
+    setFactoryReport(null);
 
     const body: Record<string, unknown> = { mode, chain, includeActivity, dryRun };
     if (mode === "single" || mode === "activity_only") body.address = address.trim().toLowerCase();
+    if (fromBlock.trim()) body.fromBlock = fromBlock.trim();
 
     try {
       const res = await fetch("/api/admin/index-b20", {
@@ -105,6 +148,8 @@ export default function B20IntelligencePage() {
       if (!json.ok) { setError((json.error as string | undefined) ?? "Indexing failed"); return; }
       if (json.mode === "detect_from_registry") {
         setDetectReport(json as unknown as DetectReport);
+      } else if (json.mode === "detect_factory" || json.mode === "detect_testnet_factory") {
+        setFactoryReport(json as unknown as FactoryReport);
       } else {
         setReport(json as unknown as IndexReport);
       }
@@ -112,8 +157,11 @@ export default function B20IntelligencePage() {
       setError(e instanceof Error ? e.message : "Network error");
     } finally {
       setLoading(false);
+      runningRef.current = false;
     }
   }
+
+  const isDetectMode = mode === "detect_factory" || mode === "detect_from_registry";
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
@@ -121,60 +169,63 @@ export default function B20IntelligencePage() {
         <Link href="/luca-admin" style={{ color: "var(--muted)", textDecoration: "none", fontSize: 13 }}>← Admin</Link>
         <span style={{ color: "var(--line)" }}>|</span>
         <span style={{ fontWeight: 700, fontSize: 15 }}>B20 Intelligence</span>
+        <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 4, background: "#4AE8A020", color: "#4AE8A0", border: "1px solid #4AE8A040" }}>
+          BASE MAINNET LIVE
+        </span>
       </div>
 
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: 24 }}>
 
         {/* Data integrity reminder */}
-        <div style={{ background: "#6DB87410", border: "1px solid #6DB87440", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
+        <div style={{ background: "#4AE8A010", border: "1px solid #4AE8A040", borderRadius: 8, padding: "10px 14px", marginBottom: 12, fontSize: 12, color: "var(--ink)" }}>
           <strong>Data integrity:</strong> Token contracts are never books-eligible · Token transfers are not operating revenue ·
           Issuer wallets are not attributed unless manifest-confirmed · B20 activity is excluded from Agent GDP
         </div>
 
         {/* Indexing gate rule */}
-        <div style={{ background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
-          <strong>Indexing gate:</strong> Detect mode suggests candidates — it never indexes.
-          To activate indexing, set <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>isB20Token: true</code> in <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>src/app/registry/data.ts</code> only for confirmed <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>0xB200…</code> tokens.
-          Normal registry tokens ($LUCA, $BNKR, $VIRTUAL, etc.) must never be flagged — they are standard ERC-20s, not B20 tokens.
+        <div style={{ background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 12, color: "var(--ink)" }}>
+          <strong>Indexing gate:</strong> Detect modes are read-only — they never write to DB.
+          Use <strong>Detect Factory</strong> first to discover mainnet B20 tokens from factory logs, then index with <strong>Single Token</strong> or set{" "}
+          <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>isB20Token: true</code> in{" "}
+          <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg)", padding: "1px 4px", borderRadius: 3 }}>src/app/registry/data.ts</code> and run <strong>Index from Registry</strong>.
         </div>
 
         {/* Sourcing checklist */}
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "16px 20px", marginBottom: 20 }}>
-          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>B20 Token Sourcing Guide</div>
+          <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>B20 Token Flow — Mainnet</div>
           <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 14 }}>
-            Guide only — no automatic activation at any step. Admin must complete all three steps before indexing.
+            The chain is live. Use factory detection to find tokens, then index them.
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             {[
               {
                 step: "1",
-                label: "Source",
-                color: "#6DB874",
+                label: "Detect",
+                color: "#4AE8A0",
                 items: [
-                  "Collect address from B20 launch announcement",
-                  "Or from partner team / agent builder directly",
-                  "Or from registry submission (b20_token_address field)",
+                  "Run Detect Factory (mainnet) — scans Base factory logs",
+                  "Or run Detect B20 (registry scan) for known token addresses",
+                  "Both modes are read-only — no DB writes",
                 ],
               },
               {
                 step: "2",
                 label: "Verify",
-                color: "#f59e0b",
+                color: "#F4B942",
                 items: [
-                  "Confirm address starts with 0xB200 (not 0xb2 or anything else)",
-                  "Open on Basescan — contract must exist on Base mainnet",
-                  "Run detect_from_registry — must show confirmed_on_chain: true",
+                  "Confirm address starts with 0xB200",
+                  "Check confirmed_on_chain: true in results",
+                  "Verify on Basescan — contract must exist on Base mainnet",
                 ],
               },
               {
                 step: "3",
-                label: "Activate",
-                color: "#6DB874",
+                label: "Index",
+                color: "#4AE8A0",
                 items: [
-                  "Set isB20Token: true in src/app/registry/data.ts for that agent only",
-                  "Deploy the change to production",
-                  "Run from_registry dry run — confirm token appears",
-                  "Run from_registry live — indexed, no DB writes until this step",
+                  "Use Single Token mode (immediate, any address)",
+                  "Or set isB20Token: true in data.ts + run Index from Registry",
+                  "Run dry run first, then live to write to DB",
                 ],
               },
             ].map((s) => (
@@ -208,30 +259,38 @@ export default function B20IntelligencePage() {
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Mode</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {([
-                ["detect_from_registry", "Detect B20 (safe scan)"],
-                ["from_registry",        "Index from Registry"],
-                ["single",               "Single Token"],
-                ["activity_only",        "Activity Only"],
-              ] as const).map(([m, label]) => (
+                ["detect_factory",        "Detect Factory (mainnet/testnet)", "#4AE8A0"],
+                ["detect_from_registry",  "Detect B20 (registry scan)",       "#4AE8A0"],
+                ["from_registry",         "Index from Registry",              "#5B9EF4"],
+                ["single",                "Single Token",                     "#5B9EF4"],
+                ["activity_only",         "Activity Only",                    "#8B7CF6"],
+              ] as const).map(([m, label, activeColor]) => (
                 <button key={m} onClick={() => setMode(m)} style={{
-                  padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)",
-                  background: mode === m ? "#6DB874" : "var(--bg)",
-                  color: mode === m ? "#fff" : "var(--ink)",
+                  padding: "6px 14px", borderRadius: 6,
+                  border: `1px solid ${mode === m ? activeColor : "var(--line)"}`,
+                  background: mode === m ? `${activeColor}20` : "var(--bg)",
+                  color: mode === m ? activeColor : "var(--muted)",
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}>
                   {label}
                 </button>
               ))}
             </div>
+            {mode === "detect_factory" && (
+              <div style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}>
+                Scans the B20 factory contract logs on the selected chain to discover all deployed B20 token addresses.
+                Read-only — does not write to DB. Works on both Base mainnet and Base Sepolia.
+              </div>
+            )}
             {mode === "detect_from_registry" && (
               <div style={{ marginTop: 8, fontSize: 11, color: "var(--muted)" }}>
                 Scans all registry tokenAddresses for the 0xB200 prefix, confirms on-chain via Alchemy.
-                Read-only — does not write to DB. Review results before running "Index from Registry".
+                Read-only — does not write to DB. Use after a token address is added to data.ts.
               </div>
             )}
           </div>
 
-          {/* Chain selector — always visible */}
+          {/* Chain selector */}
           <div style={{ marginBottom: 14 }}>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Chain</div>
             <div style={{ display: "flex", gap: 8 }}>
@@ -240,8 +299,9 @@ export default function B20IntelligencePage() {
                 ["base-sepolia", "Base Sepolia (Testnet)"],
               ] as const).map(([c, label]) => (
                 <button key={c} onClick={() => setChain(c)} style={{
-                  padding: "6px 14px", borderRadius: 6, border: `1px solid ${c === "base-sepolia" ? "#f59e0b60" : "var(--line)"}`,
-                  background: chain === c ? (c === "base-sepolia" ? "#f59e0b" : "#6DB874") : "var(--bg)",
+                  padding: "6px 14px", borderRadius: 6,
+                  border: `1px solid ${c === "base-sepolia" ? "#F4B94260" : "var(--line)"}`,
+                  background: chain === c ? (c === "base-sepolia" ? "#F4B942" : "#4AE8A0") : "var(--bg)",
                   color: chain === c ? "#fff" : "var(--ink)",
                   fontSize: 12, fontWeight: 600, cursor: "pointer",
                 }}>
@@ -250,8 +310,8 @@ export default function B20IntelligencePage() {
               ))}
             </div>
             {chain === "base-sepolia" && (
-              <div style={{ marginTop: 8, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, fontSize: 11, color: "#f59e0b", fontWeight: 600 }}>
-                ⚠ Testnet mode — data is for proof/demo only. Will not appear on public /b20 page. Does not enter production stats, Agent Books, or Agent GDP.
+              <div style={{ marginTop: 8, padding: "8px 12px", background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 6, fontSize: 11, color: "#F4B942", fontWeight: 600 }}>
+                ⚠ Testnet mode — data is for proof/demo only. Does not enter production stats, Agent Books, or Agent GDP.
               </div>
             )}
           </div>
@@ -260,16 +320,22 @@ export default function B20IntelligencePage() {
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>Token Address</div>
               <input value={address} onChange={(e) => setAddress(e.target.value)}
-                placeholder={chain === "base-sepolia" ? "0xB200… (Base Sepolia testnet address)" : "0x..."}
+                placeholder={chain === "base-sepolia" ? "0xB200… (Base Sepolia)" : "0xB200… (Base mainnet)"}
                 style={{ padding: "6px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, width: 340, fontFamily: "var(--font-mono)" }} />
             </div>
           )}
 
-          {mode !== "activity_only" && mode !== "detect_from_registry" && (
+          {isDetectMode && (
+            <div style={{ marginBottom: 14, fontSize: 11, color: "var(--muted)" }}>
+              Scans the last 24 hours of Base blocks by default — current block is fetched automatically, no manual input needed.
+            </div>
+          )}
+
+          {!isDetectMode && mode !== "activity_only" && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
               <button onClick={() => setIncludeActivity((v) => !v)} style={{
                 width: 36, height: 20, borderRadius: 10,
-                background: includeActivity ? "#6DB874" : "var(--line)",
+                background: includeActivity ? "#4AE8A0" : "var(--line)",
                 border: "none", cursor: "pointer", position: "relative",
               }}>
                 <span style={{ position: "absolute", top: 3, left: includeActivity ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
@@ -279,44 +345,153 @@ export default function B20IntelligencePage() {
             </div>
           )}
 
-          {mode !== "detect_from_registry" && <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <button onClick={() => setDryRun((v) => !v)} style={{
-              width: 36, height: 20, borderRadius: 10,
-              background: dryRun ? "#6DB874" : "var(--line)",
-              border: "none", cursor: "pointer", position: "relative",
-            }}>
-              <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
-            </button>
-            <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Dry Run</span>
-            <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "Preview only — no DB writes" : "Will write to DB"}</span>
-          </div>}
+          {!isDetectMode && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <button onClick={() => setDryRun((v) => !v)} style={{
+                width: 36, height: 20, borderRadius: 10,
+                background: dryRun ? "#4AE8A0" : "var(--line)",
+                border: "none", cursor: "pointer", position: "relative",
+              }}>
+                <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
+              </button>
+              <span style={{ fontSize: 12, color: "var(--ink)", fontWeight: 600 }}>Dry Run</span>
+              <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "Preview only — no DB writes" : "Will write to DB"}</span>
+            </div>
+          )}
 
           <button onClick={runIndexer} disabled={loading} style={{
-            padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff",
+            padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff",
             border: "none", cursor: loading ? "not-allowed" : "pointer",
             fontWeight: 600, fontSize: 13, opacity: loading ? 0.6 : 1,
           }}>
-            {loading ? "Running…" : mode === "detect_from_registry" ? "Detect B20 Tokens" : "Run B20 Indexer"}
+            {loading ? "Running…" : isDetectMode ? "Detect B20 Tokens" : "Run B20 Indexer"}
           </button>
         </div>
 
         {error && (
-          <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+          <div style={{ background: "#F4606018", border: "1px solid #F46060", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#F46060", fontSize: 13 }}>
             {error}
           </div>
         )}
 
+        {/* Factory detect report */}
+        {factoryReport && (
+          <>
+            <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12, display: "flex", alignItems: "center", gap: 12 }}>
+              <span>Factory scan completed — {new Date(factoryReport.generated_at).toLocaleString()}</span>
+              <span style={{ fontWeight: 700, color: factoryReport.is_testnet ? "#F4B942" : "#4AE8A0" }}>
+                {factoryReport.is_testnet ? "TESTNET · BASE SEPOLIA" : "MAINNET · BASE"}
+              </span>
+            </div>
+
+            {factoryReport.testnet_warning && (
+              <div style={{ background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 12, color: "#F4B942", fontWeight: 600 }}>
+                ⚠ {factoryReport.testnet_warning}
+              </div>
+            )}
+
+            {/* Scan debug */}
+            {factoryReport.scan_debug && (
+              <div style={{ background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)", lineHeight: 1.8 }}>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>Scan debug</span>
+                {" · "}blocks {factoryReport.scan_debug.from_block.toLocaleString()}–{factoryReport.scan_debug.to_block.toLocaleString()}
+                {" · "}{factoryReport.scan_debug.blocks_scanned.toLocaleString()} blocks scanned
+                {" · "}{factoryReport.scan_debug.chunks_run} chunk{factoryReport.scan_debug.chunks_run !== 1 ? "s" : ""}
+                {" · "}{factoryReport.scan_debug.logs_found} raw logs
+                {factoryReport.rpc_url && <>{" · "}RPC: {factoryReport.rpc_url}</>}
+              </div>
+            )}
+
+            {/* Logs error */}
+            {factoryReport.logs_error && (
+              <div style={{ background: "#F4606018", border: "1px solid #F46060", borderRadius: 6, padding: "8px 12px", marginBottom: 12, fontSize: 12, color: "#F46060" }}>
+                <strong>Alchemy error:</strong> {factoryReport.logs_error}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+              {[
+                { label: "Logs scanned",      value: factoryReport.logs_scanned,        color: "var(--muted)" },
+                { label: "B20 candidates",    value: factoryReport.b20_candidates_found, color: "#4AE8A0"    },
+                { label: "Confirmed on-chain",value: factoryReport.confirmed,            color: "#4AE8A0"    },
+              ].map((s) => (
+                <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: s.color, fontFamily: "var(--font-mono)" }}>{s.value}</span>
+                </div>
+              ))}
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "var(--muted)" }}>Factory</span>
+                <a href={`https://${factoryReport.is_testnet ? "sepolia." : ""}basescan.org/address/${factoryReport.factory}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "var(--accent)", fontFamily: "var(--font-mono)", textDecoration: "none" }}>
+                  {shortAddr(factoryReport.factory)}
+                </a>
+              </div>
+            </div>
+
+            {factoryReport.results.length > 0 ? (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
+                <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600 }}>
+                  Factory B20 Tokens ({factoryReport.results.length})
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid var(--line)" }}>
+                        {["Token Address", "Symbol/Name", "Confirmed", "Issuer", "Recommendation"].map((h) => (
+                          <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontSize: 10, color: "var(--muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {factoryReport.results.map((r, i) => (
+                        <tr key={r.address} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
+                          <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
+                            <a href={`https://${factoryReport.is_testnet ? "sepolia." : ""}basescan.org/address/${r.address}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
+                              {r.address}
+                            </a>
+                          </td>
+                          <td style={{ padding: "8px 10px", fontSize: 11 }}>
+                            {r.symbol ?? "—"}{r.name ? ` · ${r.name}` : ""}
+                          </td>
+                          <td style={{ padding: "8px 10px" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#4AE8A0" : "#F4B942" }}>
+                              {r.confirmed_on_chain ? "Yes" : "Unconfirmed"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "8px 10px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>
+                            {r.issuer_wallet ? shortAddr(r.issuer_wallet) : "—"}
+                          </td>
+                          <td style={{ padding: "8px 10px", fontSize: 11, color: "var(--muted)", maxWidth: 300 }}>{r.recommendation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "20px", marginBottom: 16, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
+                No B20 tokens found in factory logs on {factoryReport.chain}. The factory may not have deployed any tokens yet, or the factory address may need updating.
+              </div>
+            )}
+
+            <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "10px 14px", fontSize: 11, color: "var(--muted)" }}>
+              {factoryReport.note}
+            </div>
+          </>
+        )}
+
+        {/* Registry detect report */}
         {detectReport && (
           <>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
-              Detect scan completed — {new Date(detectReport.generated_at).toLocaleString()}
+              Registry detect scan completed — {new Date(detectReport.generated_at).toLocaleString()}
             </div>
 
             <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
               {[
                 { label: "With token address", value: detectReport.total_with_token_address, color: "var(--ink)"  },
-                { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#6DB874"    },
-                { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#22c55e"    },
+                { label: "0xB200 prefix",      value: detectReport.b20_prefix_matches,       color: "#4AE8A0"    },
+                { label: "Confirmed on-chain", value: detectReport.confirmed_b20,            color: "#4AE8A0"    },
               ].map((s) => (
                 <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
@@ -328,7 +503,7 @@ export default function B20IntelligencePage() {
             {detectReport.results.length > 0 ? (
               <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
                 <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600 }}>
-                  B20 Candidates ({detectReport.results.length})
+                  B20 Candidates in Registry ({detectReport.results.length})
                 </div>
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -352,7 +527,7 @@ export default function B20IntelligencePage() {
                             {r.symbol ?? "—"}{r.name ? ` · ${r.name}` : ""}
                           </td>
                           <td style={{ padding: "8px 10px" }}>
-                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#22c55e" : "#f59e0b" }}>
+                            <span style={{ fontSize: 11, fontWeight: 600, color: r.confirmed_on_chain ? "#4AE8A0" : "#F4B942" }}>
                               {r.confirmed_on_chain ? "Yes" : "Unconfirmed"}
                             </span>
                           </td>
@@ -368,7 +543,8 @@ export default function B20IntelligencePage() {
               </div>
             ) : (
               <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "20px", marginBottom: 16, textAlign: "center", color: "var(--muted)", fontSize: 13 }}>
-                No registry agents have a tokenAddress starting with 0xB200. B20 mainnet may not have launched yet, or tokens are not yet in the registry.
+                No registry agents have a tokenAddress starting with 0xB200.
+                Use <strong>Detect Factory</strong> to find tokens from factory logs, or add the token address to data.ts first.
               </div>
             )}
 
@@ -381,20 +557,20 @@ export default function B20IntelligencePage() {
         {report && (
           <>
             <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
-              {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
-              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
+              {report.dry_run && <span style={{ fontWeight: 700, color: "#F4B942", marginRight: 8 }}>[DRY RUN]</span>}
+              {Boolean((report as unknown as Record<string, unknown>).is_testnet) && <span style={{ fontWeight: 700, color: "#F4B942", marginRight: 8 }}>[TESTNET · BASE SEPOLIA]</span>}
               Generated {new Date(report.generated_at).toLocaleString()}
             </div>
 
             {/* Summary */}
             <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
               {[
-                { label: "Discovered",       value: report.summary.tokens_discovered, color: "var(--ink)"  },
-                { label: "Indexed",          value: report.summary.tokens_indexed,    color: "#22c55e"     },
-                { label: "Attributed",       value: report.summary.attributed,        color: "#22c55e"     },
-                { label: "Candidate",        value: report.summary.candidates,        color: "#f59e0b"     },
-                { label: "Awaiting Manifest",value: report.summary.awaiting_manifest, color: "#f59e0b"     },
-                { label: "Errors",           value: report.summary.errors,            color: "#ef4444"     },
+                { label: "Discovered",        value: report.summary.tokens_discovered, color: "var(--ink)"  },
+                { label: "Indexed",           value: report.summary.tokens_indexed,    color: "#4AE8A0"     },
+                { label: "Attributed",        value: report.summary.attributed,        color: "#4AE8A0"     },
+                { label: "Candidate",         value: report.summary.candidates,        color: "#F4B942"     },
+                { label: "Awaiting Manifest", value: report.summary.awaiting_manifest, color: "#F4B942"     },
+                { label: "Errors",            value: report.summary.errors,            color: "#F46060"     },
               ].map((s) => (
                 <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "6px 12px", display: "flex", gap: 6, alignItems: "center" }}>
                   <span style={{ fontSize: 11, color: "var(--muted)" }}>{s.label}</span>
@@ -403,12 +579,10 @@ export default function B20IntelligencePage() {
               ))}
             </div>
 
-            {/* Note */}
             <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 6, padding: "8px 12px", marginBottom: 20, fontSize: 11, color: "var(--muted)" }}>
               {report.summary.data_integrity_note}
             </div>
 
-            {/* Token results */}
             {report.tokens.length > 0 && (
               <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
                 <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--line)", fontSize: 12, fontWeight: 600 }}>
@@ -425,8 +599,8 @@ export default function B20IntelligencePage() {
                     </thead>
                     <tbody>
                       {report.tokens.map((t, i) => {
-                        const statusColor = t.status === "indexed" ? "#22c55e" : t.status === "error" ? "#ef4444" : "#f59e0b";
-                        const mColor = STATUS_COLOR[t.manifest_status] ?? "#6b7280";
+                        const statusColor = t.status === "indexed" ? "#4AE8A0" : t.status === "error" ? "#F46060" : "#F4B942";
+                        const mColor = STATUS_COLOR[t.manifest_status] ?? "var(--muted)";
                         return (
                           <tr key={t.address} style={{ borderBottom: "1px solid var(--line)", background: i % 2 === 0 ? "transparent" : "var(--bg)" }}>
                             <td style={{ padding: "8px 10px", fontWeight: 600 }}>
@@ -455,7 +629,7 @@ export default function B20IntelligencePage() {
                               <span style={{ fontSize: 11, fontWeight: 600, color: statusColor }}>
                                 {t.status}
                               </span>
-                              {t.error && <div style={{ fontSize: 10, color: "#ef4444", marginTop: 2 }}>{t.error}</div>}
+                              {t.error && <div style={{ fontSize: 10, color: "#F46060", marginTop: 2 }}>{t.error}</div>}
                             </td>
                           </tr>
                         );

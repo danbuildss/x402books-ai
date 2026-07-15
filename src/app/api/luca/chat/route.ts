@@ -15,6 +15,7 @@ import { ACCESS_COOKIE_NAME, verifyAccessToken } from "@/lib/access-auth";
 import { executeTool, type ToolName } from "@/lib/luca-tools";
 import { readMemory, writeMemory, formatMemoryContext } from "@/lib/luca-memory";
 import { routeModel } from "@/lib/model-router";
+import { logInferenceEvent } from "@/lib/inference-events";
 
 export const dynamic = "force-dynamic";
 
@@ -189,6 +190,9 @@ export async function POST(req: NextRequest) {
         let iterCount = 0;
         const MAX_ITER = 5;
         let usedToolCall = false;
+        let totalPromptTokens = 0;
+        let totalCompletionTokens = 0;
+        const t0 = Date.now();
 
         // Prepend system message
         const msgsWithSystem: OpenAI.Chat.ChatCompletionMessageParam[] = [
@@ -210,6 +214,9 @@ export async function POST(req: NextRequest) {
             tools:      OPENAI_TOOLS,
             messages:   msgsWithSystem,
           });
+
+          totalPromptTokens     += response.usage?.prompt_tokens     ?? 0;
+          totalCompletionTokens += response.usage?.completion_tokens ?? 0;
 
           const choice = response.choices[0];
           if (!choice) {
@@ -260,6 +267,20 @@ export async function POST(req: NextRequest) {
         }
 
         sendDone();
+
+        logInferenceEvent({
+          agentId:     agentSlug ?? "luca",
+          provider:    "bankr",
+          model:       modelConfig.model,
+          requestType: "chat_completion",
+          inputTokens:  totalPromptTokens     || null,
+          outputTokens: totalCompletionTokens || null,
+          totalTokens:  (totalPromptTokens + totalCompletionTokens) || null,
+          costUsd:     null,
+          costSource:  "missing",
+          latencyMs:   Date.now() - t0,
+          status:      "success",
+        }).catch(() => {});
       } catch (err) {
         const errMsg = err instanceof Error ? err.message : "Analysis failed";
         send(`Unable to complete analysis: ${errMsg}`);

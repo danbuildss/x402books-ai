@@ -187,6 +187,76 @@ export async function getB20Stats(chain = "base"): Promise<B20Stats> {
   return { total, linked, attributed, awaiting_manifest, unlinked };
 }
 
+export type B20ActivityCounts = Record<string, { mints: number; burns: number }>;
+
+export async function getB20ActivityCounts(tokenAddresses: string[]): Promise<B20ActivityCounts> {
+  if (noSupabase() || tokenAddresses.length === 0) return {};
+  const sb = getSupabaseAdminClient();
+
+  const { data, error } = await sb
+    .from("b20_activity")
+    .select("token_address, event_type")
+    .in("token_address", tokenAddresses.map((a) => a.toLowerCase()));
+
+  if (error || !data) return {};
+
+  const counts: B20ActivityCounts = {};
+  for (const row of data as Array<{ token_address: string; event_type: string }>) {
+    if (!counts[row.token_address]) counts[row.token_address] = { mints: 0, burns: 0 };
+    if (row.event_type === "mint") counts[row.token_address].mints++;
+    else if (row.event_type === "burn") counts[row.token_address].burns++;
+  }
+  return counts;
+}
+
+export type B20RecentEvent = {
+  token_address: string;
+  token_symbol: string | null;
+  event_type: "mint" | "burn";
+  tx_hash: string;
+  amount_raw: string;
+  block_timestamp: string | null;
+};
+
+export async function getB20RecentActivity(chain = "base", limit = 20): Promise<B20RecentEvent[]> {
+  if (noSupabase()) return [];
+  const sb = getSupabaseAdminClient();
+
+  // Get token addresses for this chain
+  const { data: tokenRows } = await sb
+    .from("b20_tokens")
+    .select("address, symbol")
+    .eq("chain", chain);
+
+  if (!tokenRows || tokenRows.length === 0) return [];
+
+  const addrMap: Record<string, string | null> = {};
+  for (const t of tokenRows as Array<{ address: string; symbol: string | null }>) {
+    addrMap[t.address.toLowerCase()] = t.symbol;
+  }
+
+  const { data, error } = await sb
+    .from("b20_activity")
+    .select("token_address, event_type, tx_hash, amount_raw, block_timestamp")
+    .in("token_address", Object.keys(addrMap))
+    .order("block_timestamp", { ascending: false })
+    .limit(limit);
+
+  if (error || !data) return [];
+
+  return (data as Array<{
+    token_address: string; event_type: string; tx_hash: string;
+    amount_raw: string; block_timestamp: string | null;
+  }>).map((r) => ({
+    token_address: r.token_address,
+    token_symbol: addrMap[r.token_address] ?? null,
+    event_type: r.event_type as "mint" | "burn",
+    tx_hash: r.tx_hash,
+    amount_raw: r.amount_raw,
+    block_timestamp: r.block_timestamp,
+  }));
+}
+
 export function buildActivitySummaryFromDb(
   tokenAddress: string,
   events: B20ActivityEvent[],

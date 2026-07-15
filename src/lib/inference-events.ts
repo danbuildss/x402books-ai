@@ -2,16 +2,23 @@ import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+export type CostSource = "actual" | "estimated" | "missing";
+
 export interface InferenceEvent {
-  id?:          string;
-  agentId:      string;
-  provider:     string;
-  model?:       string | null;
-  requestType?: string | null;
-  costUsd?:     number | null;
-  latencyMs?:   number | null;
-  status:       string;
-  createdAt?:   string;
+  id?:                string;
+  agentId:            string;
+  provider:           string;
+  model?:             string | null;
+  requestType?:       string | null;
+  inputTokens?:       number | null;
+  outputTokens?:      number | null;
+  totalTokens?:       number | null;
+  costUsd?:           number | null;
+  costSource?:        CostSource;
+  latencyMs?:         number | null;
+  status:             string;
+  externalRequestId?: string | null;
+  createdAt?:         string;
 }
 
 export interface ProviderStat {
@@ -29,6 +36,8 @@ export interface InferenceSummary {
   primaryProvider:   string | null;
   avgCostPerRequest: number;
   providerBreakdown: ProviderStat[];
+  costStatus:        CostSource;  // "actual" | "estimated" | "missing"
+  hasCostData:       boolean;
 }
 
 export interface MonthlyStatement {
@@ -39,33 +48,44 @@ export interface MonthlyStatement {
   netPosition:    number;
   topProvider:    string | null;
   verdict:        string;
+  costStatus:     CostSource;
 }
 
 // ── DB row ────────────────────────────────────────────────────────────────────
 
 interface InferenceEventRow {
-  id:           string;
-  agent_id:     string;
-  provider:     string;
-  model:        string | null;
-  request_type: string | null;
-  cost_usd:     number | null;
-  latency_ms:   number | null;
-  status:       string;
-  created_at:   string;
+  id:                  string;
+  agent_id:            string;
+  provider:            string;
+  model:               string | null;
+  request_type:        string | null;
+  input_tokens:        number | null;
+  output_tokens:       number | null;
+  total_tokens:        number | null;
+  cost_usd:            number | null;
+  cost_source:         string;
+  latency_ms:          number | null;
+  status:              string;
+  external_request_id: string | null;
+  created_at:          string;
 }
 
 function rowToEvent(r: InferenceEventRow): InferenceEvent {
   return {
-    id:          r.id,
-    agentId:     r.agent_id,
-    provider:    r.provider,
-    model:       r.model,
-    requestType: r.request_type,
-    costUsd:     r.cost_usd,
-    latencyMs:   r.latency_ms,
-    status:      r.status,
-    createdAt:   r.created_at,
+    id:                r.id,
+    agentId:           r.agent_id,
+    provider:          r.provider,
+    model:             r.model,
+    requestType:       r.request_type,
+    inputTokens:       r.input_tokens,
+    outputTokens:      r.output_tokens,
+    totalTokens:       r.total_tokens,
+    costUsd:           r.cost_usd,
+    costSource:        (r.cost_source ?? "missing") as CostSource,
+    latencyMs:         r.latency_ms,
+    status:            r.status,
+    externalRequestId: r.external_request_id,
+    createdAt:         r.created_at,
   };
 }
 
@@ -80,13 +100,18 @@ export async function logInferenceEvent(
   const { data, error } = await sb
     .from("inference_events")
     .insert({
-      agent_id:     event.agentId,
-      provider:     event.provider,
-      model:        event.model ?? null,
-      request_type: event.requestType ?? null,
-      cost_usd:     event.costUsd ?? null,
-      latency_ms:   event.latencyMs ?? null,
-      status:       event.status ?? "success",
+      agent_id:            event.agentId,
+      provider:            event.provider,
+      model:               event.model ?? null,
+      request_type:        event.requestType ?? null,
+      input_tokens:        event.inputTokens ?? null,
+      output_tokens:       event.outputTokens ?? null,
+      total_tokens:        event.totalTokens ?? null,
+      cost_usd:            event.costUsd ?? null,
+      cost_source:         event.costSource ?? "missing",
+      latency_ms:          event.latencyMs ?? null,
+      status:              event.status ?? "success",
+      external_request_id: event.externalRequestId ?? null,
     })
     .select("id")
     .single();
@@ -127,11 +152,16 @@ export function summarizeInferenceEvents(
   periodDays: number,
 ): InferenceSummary {
   let totalCost = 0;
+  let actualCount    = 0;
+  let estimatedCount = 0;
   const providerMap: Record<string, { cost: number; count: number }> = {};
 
   for (const e of events) {
     const cost = e.costUsd ?? 0;
     totalCost += cost;
+
+    if (e.costSource === "actual")    actualCount++;
+    if (e.costSource === "estimated") estimatedCount++;
 
     if (!providerMap[e.provider]) providerMap[e.provider] = { cost: 0, count: 0 };
     providerMap[e.provider].cost  += cost;
@@ -146,6 +176,11 @@ export function summarizeInferenceEvents(
   const providersUsed   = providerBreakdown.map((p) => p.provider);
   const avgCost         = events.length > 0 ? r(totalCost / events.length) : 0;
 
+  const hasCostData = actualCount > 0 || estimatedCount > 0;
+  let costStatus: CostSource = "missing";
+  if (actualCount > 0 && estimatedCount === 0) costStatus = "actual";
+  else if (actualCount > 0 || estimatedCount > 0) costStatus = "estimated";
+
   return {
     agentId,
     periodDays,
@@ -155,6 +190,8 @@ export function summarizeInferenceEvents(
     primaryProvider,
     avgCostPerRequest: avgCost,
     providerBreakdown,
+    costStatus,
+    hasCostData,
   };
 }
 
@@ -170,8 +207,10 @@ export function generateMonthlyStatement(
   let verdict: string;
   if (summary.requestCount === 0) {
     verdict = "No inference activity recorded this period.";
-  } else if (spend === 0) {
-    verdict = `${summary.requestCount} request${summary.requestCount === 1 ? "" : "s"} processed. No cost data recorded — cost tracking may not be active.`;
+  } else if (!summary.hasCostData) {
+    verdict = `${summary.requestCount} request${summary.requestCount === 1 ? "" : "s"} tracked. Cost data is missing. Financial reporting is incomplete until provider cost metadata is active.`;
+  } else if (summary.costStatus === "estimated") {
+    verdict = `Spend is estimated from model and token usage. Actual provider billing may differ. ${summary.requestCount} request${summary.requestCount === 1 ? "" : "s"} processed.`;
   } else if (spend < 1) {
     verdict = `Operating normally. ${summary.requestCount} request${summary.requestCount === 1 ? "" : "s"} processed. Inference spend minimal.`;
   } else if (spend < 10) {
@@ -190,6 +229,7 @@ export function generateMonthlyStatement(
     netPosition:    r(0 - spend),
     topProvider:    summary.primaryProvider,
     verdict,
+    costStatus:     summary.costStatus,
   };
 }
 
