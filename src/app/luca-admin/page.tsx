@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import styles from "./page.module.css";
+import { SectionErrorBoundary } from "./SectionErrorBoundary";
 import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, AttributionConfidence } from "@/lib/attribution-health";
 import type { AgentRevenueAudit, AuditTx } from "@/lib/agent-books";
 import type { AuditFlag } from "@/app/api/admin/revenue-audit/route";
@@ -613,7 +614,59 @@ function RegistrySection({ secret }: { secret: string }) {
   const [overrideSaving, setOverrideSaving] = useState(false);
   const [overrideMsg, setOverrideMsg]       = useState("");
 
+  const [runBooksSlug, setRunBooksSlug]   = useState("");
+  const [runBooksRunning, setRunBooksRunning] = useState(false);
+  const [runBooksMsg, setRunBooksMsg]     = useState("");
+  const [fixEligRunning, setFixEligRunning] = useState(false);
+  const [fixEligMsg, setFixEligMsg]       = useState("");
+
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  async function runBooks(e: React.FormEvent) {
+    e.preventDefault();
+    if (!runBooksSlug.trim()) return;
+    setRunBooksRunning(true);
+    setRunBooksMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/run-books", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ slug: runBooksSlug.trim().toLowerCase() }),
+      });
+      const d = await res.json() as {
+        ok: boolean; error?: string;
+        eligibility_fixed?: number; wallets_synced?: number;
+        txs_indexed?: number; snapshot_saved?: boolean;
+      };
+      if (d.ok) {
+        setRunBooksMsg(`✓ Fixed ${d.eligibility_fixed ?? 0} eligibility · ${d.wallets_synced ?? 0} wallets synced · ${d.txs_indexed ?? 0} txs indexed · snapshot ${d.snapshot_saved ? "saved" : "skipped"}`);
+      } else {
+        setRunBooksMsg(`✗ ${d.error ?? "Failed"}`);
+      }
+    } catch {
+      setRunBooksMsg("✗ Network error");
+    } finally {
+      setRunBooksRunning(false);
+    }
+  }
+
+  async function fixEligibility() {
+    setFixEligRunning(true);
+    setFixEligMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/fix-eligibility", { method: "POST", headers });
+      const d = await res.json() as { ok: boolean; fixed?: number; error?: string };
+      if (d.ok) {
+        setFixEligMsg(`✓ Fixed ${d.fixed ?? 0} wallets`);
+      } else {
+        setFixEligMsg(`✗ ${d.error ?? "Failed"}`);
+      }
+    } catch {
+      setFixEligMsg("✗ Network error");
+    } finally {
+      setFixEligRunning(false);
+    }
+  }
 
   async function loadStats() {
     setStatsLoading(true);
@@ -904,6 +957,44 @@ function RegistrySection({ secret }: { secret: string }) {
         {overrideMsg && (
           <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: overrideMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>{overrideMsg}</p>
         )}
+      </div>
+
+      {/* Run Books — one-click pipeline */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <p className={styles.cardTitle} style={{ margin: "0 0 4px" }}>Run Books Pipeline</p>
+        <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)" }}>
+          Fix eligibility → sync wallets → index on-chain → save snapshot. One click per agent.
+        </p>
+        <form onSubmit={runBooks} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
+            <label style={{ fontSize: "0.72rem", color: "var(--muted)", fontWeight: 600 }}>Agent Slug</label>
+            <input
+              value={runBooksSlug}
+              onChange={(e) => setRunBooksSlug(e.target.value)}
+              placeholder="e.g. sleuth-ai"
+              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", fontSize: "0.82rem" }}
+            />
+          </div>
+          <button type="submit" disabled={runBooksRunning || !runBooksSlug.trim()}
+            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: runBooksRunning || !runBooksSlug.trim() ? "not-allowed" : "pointer", opacity: runBooksRunning || !runBooksSlug.trim() ? 0.5 : 1 }}>
+            {runBooksRunning ? "Running…" : "Run Books →"}
+          </button>
+        </form>
+        {runBooksMsg && (
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: runBooksMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{runBooksMsg}</p>
+        )}
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--muted)" }}>
+            Fix all manifest wallets missing address_type across all agents at once:
+          </p>
+          <button type="button" onClick={fixEligibility} disabled={fixEligRunning}
+            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface)", color: "var(--fg)", fontSize: "0.8rem", cursor: fixEligRunning ? "not-allowed" : "pointer", opacity: fixEligRunning ? 0.5 : 1 }}>
+            {fixEligRunning ? "Fixing…" : "Fix All Eligibility"}
+          </button>
+          {fixEligMsg && (
+            <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: fixEligMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{fixEligMsg}</p>
+          )}
+        </div>
       </div>
 
       {/* Manifest Submissions (repo-submitted wallets.json) */}
@@ -4130,26 +4221,26 @@ export default function LucaAdminPage() {
 
         {/* Workspace */}
         <main className={styles.workspace}>
-          {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
-          {section === "registry"    && <RegistrySection secret={secret} />}
-          {section === "attribution" && <AttributionSection secret={secret} />}
-          {section === "economics"   && <EconomicsSection />}
-          {section === "truth-engine" && <TruthEngineSection secret={secret} />}
-          {section === "growth"    && <GrowthSection secret={secret} />}
-          {section === "reports"   && <ReportsSection secret={secret} />}
-          {section === "comm"      && <CommIntelSection secret={secret} />}
-          {section === "outreach"  && <OutreachSection secret={secret} />}
-          {section === "subagent-runs"   && <SubagentRunsSection secret={secret} />}
-          {section === "pending-replies" && <PendingRepliesSection secret={secret} />}
-          {section === "pending-updates"        && <PendingUpdatesSection secret={secret} />}
-          {section === "attribution-health"    && <AttributionHealthSection />}
-          {section === "address-classification"&& <AddressClassificationSection secret={secret} />}
-          {section === "erc8004"               && <Erc8004Section secret={secret} />}
-          {section === "revenue-audit"         && <RevenueAuditSection secret={secret} />}
-          {section === "accuracy-report"       && <AccuracyReportSection secret={secret} />}
-          {section === "confidence-labels"     && <ConfidenceLabelsSection secret={secret} />}
-          {section === "b20"                   && <B20Section secret={secret} />}
-          {section === "settings"              && <SettingsSection onSignOut={handleSignOut} health={health} />}
+          {section === "overview"  && <SectionErrorBoundary name="Overview"><OverviewSection health={health} today={todayMetrics} /></SectionErrorBoundary>}
+          {section === "registry"    && <SectionErrorBoundary name="Registry"><RegistrySection secret={secret} /></SectionErrorBoundary>}
+          {section === "attribution" && <SectionErrorBoundary name="Attribution"><AttributionSection secret={secret} /></SectionErrorBoundary>}
+          {section === "economics"   && <SectionErrorBoundary name="Economics"><EconomicsSection /></SectionErrorBoundary>}
+          {section === "truth-engine" && <SectionErrorBoundary name="Truth Engine"><TruthEngineSection secret={secret} /></SectionErrorBoundary>}
+          {section === "growth"    && <SectionErrorBoundary name="Growth"><GrowthSection secret={secret} /></SectionErrorBoundary>}
+          {section === "reports"   && <SectionErrorBoundary name="Reports"><ReportsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "comm"      && <SectionErrorBoundary name="Comm Intel"><CommIntelSection secret={secret} /></SectionErrorBoundary>}
+          {section === "outreach"  && <SectionErrorBoundary name="Outreach"><OutreachSection secret={secret} /></SectionErrorBoundary>}
+          {section === "subagent-runs"   && <SectionErrorBoundary name="Subagent Runs"><SubagentRunsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "pending-replies" && <SectionErrorBoundary name="Pending Replies"><PendingRepliesSection secret={secret} /></SectionErrorBoundary>}
+          {section === "pending-updates"        && <SectionErrorBoundary name="Pending Updates"><PendingUpdatesSection secret={secret} /></SectionErrorBoundary>}
+          {section === "attribution-health"     && <SectionErrorBoundary name="Attribution Health"><AttributionHealthSection /></SectionErrorBoundary>}
+          {section === "address-classification" && <SectionErrorBoundary name="Address Classification"><AddressClassificationSection secret={secret} /></SectionErrorBoundary>}
+          {section === "erc8004"                && <SectionErrorBoundary name="ERC-8004"><Erc8004Section secret={secret} /></SectionErrorBoundary>}
+          {section === "revenue-audit"          && <SectionErrorBoundary name="Revenue Audit"><RevenueAuditSection secret={secret} /></SectionErrorBoundary>}
+          {section === "accuracy-report"        && <SectionErrorBoundary name="Accuracy Report"><AccuracyReportSection secret={secret} /></SectionErrorBoundary>}
+          {section === "confidence-labels"      && <SectionErrorBoundary name="Confidence Labels"><ConfidenceLabelsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "b20"                    && <SectionErrorBoundary name="B20"><B20Section secret={secret} /></SectionErrorBoundary>}
+          {section === "settings"               && <SectionErrorBoundary name="Settings"><SettingsSection onSignOut={handleSignOut} health={health} /></SectionErrorBoundary>}
         </main>
       </div>
     </div>
