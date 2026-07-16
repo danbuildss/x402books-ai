@@ -11,6 +11,7 @@ export type AgentGDPEntry = {
   expenses_usd: number;
   net_income_usd: number;
   tx_count: number;
+  treasury_balance_usd: number | null; // stable-coin balance of declared treasury wallets (books cache, 4h)
 };
 
 export type AwaitingManifestEntry = {
@@ -76,6 +77,7 @@ export async function getAgentGDP(): Promise<AgentGDP> {
       expenses_usd: b.financials.expenses_usd,
       net_income_usd: b.financials.net_income_usd,
       tx_count: b.financials.tx_count,
+      treasury_balance_usd: b.financials.treasury_balance_usd,
     });
   }
 

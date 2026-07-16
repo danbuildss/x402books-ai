@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
@@ -584,6 +584,7 @@ function RegistrySection({ secret }: { secret: string }) {
   const [editHandle,  setEditHandle]  = useState("");
   const [editWebsite, setEditWebsite] = useState("");
   const [editSymbol,  setEditSymbol]  = useState("");
+  const [editBio,     setEditBio]     = useState("");
   const [editSaving,  setEditSaving]  = useState(false);
   const [editMsg,     setEditMsg]     = useState("");
 
@@ -1068,6 +1069,7 @@ function RegistrySection({ secret }: { secret: string }) {
               if (editHandle.trim() !== "") body.xHandle = editHandle.trim();
               if (editWebsite.trim() !== "") body.website = editWebsite.trim();
               if (editSymbol.trim() !== "") body.symbol = editSymbol.trim();
+              if (editBio.trim() !== "") body.bio = editBio.trim();
               const res = await fetch("/api/admin/registry/update-agent", {
                 method: "PATCH",
                 headers,
@@ -1076,7 +1078,7 @@ function RegistrySection({ secret }: { secret: string }) {
               const d = await res.json() as { ok: boolean; name?: string; error?: string };
               if (d.ok) {
                 setEditMsg(`✓ Updated "${d.name}"`);
-                setEditHandle(""); setEditWebsite(""); setEditSymbol("");
+                setEditHandle(""); setEditWebsite(""); setEditSymbol(""); setEditBio("");
               } else {
                 setEditMsg(`✗ ${d.error}`);
               }
@@ -1092,6 +1094,15 @@ function RegistrySection({ secret }: { secret: string }) {
             <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Exact agent name, e.g. AEON" className={styles.formInput} style={{ flex: "2 1 160px" }} required />
             <input value={editHandle} onChange={(e) => setEditHandle(e.target.value)} placeholder="X handle, e.g. @aeon_agent (leave blank to skip)" className={styles.formInput} style={{ flex: "2 1 180px" }} />
           </div>
+          <textarea
+            value={editBio}
+            onChange={(e) => setEditBio(e.target.value)}
+            placeholder="Public one-line bio shown at the top of the profile (leave blank to skip; max 500 chars)"
+            className={styles.formInput}
+            maxLength={500}
+            rows={2}
+            style={{ resize: "vertical", fontFamily: "inherit" }}
+          />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
             <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />
@@ -3786,6 +3797,8 @@ const DM_TEMPLATES: Record<string, string> = {
   "Awaiting Manifest": `Hey [name] — [agent] is indexed in Zetta's registry but hasn't declared a wallet manifest yet. A quick .agent/wallets.json in your repo unlocks full financial attribution, leaderboard placement, and your public agent card. Link: https://www.zettaai.co/manifest/spec`,
 };
 
+const OUTREACH_STAGE_STATUSES = ["Candidate", "Awaiting Manifest", "Needs Verification"];
+
 type OutreachAgent = {
   name: string;
   slug: string;
@@ -3794,6 +3807,13 @@ type OutreachAgent = {
   ecosystem: string;
   xHandle: string;
   revenue_usd: number;
+  focusStatus: string | null;
+  bankrPriority: string | null;
+  metadataStatus: string | null;
+  walletStatus: string;
+  profileStatus: string;
+  booksStatus: string;
+  dataStatus: string;
 };
 
 function OutreachSection({ secret }: { secret: string }) {
@@ -3804,19 +3824,25 @@ function OutreachSection({ secret }: { secret: string }) {
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [updatingSlug, setUpdatingSlug] = useState<string | null>(null);
 
+  // Filters — Bankr-first triage: ecosystem defaults to the focus ecosystem.
+  const [ecoFilter, setEcoFilter] = useState<string>("BANKR");
+  const [priorityFilter, setPriorityFilter] = useState<string>("All");
+  const [outreachFilter, setOutreachFilter] = useState<string>("All");
+  const [focusOnly, setFocusOnly] = useState(false);
+  const [candidatesOnly, setCandidatesOnly] = useState(false);
+
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/registry/agents", {
+        // Admin endpoint: full agents (all ecosystems, CRM fields, revenue_usd).
+        const res = await fetch("/api/admin/registry/agents", {
           headers: { "Authorization": `Bearer ${secret}` },
         });
         if (!res.ok) throw new Error(`${res.status}`);
         const d = await res.json() as { agents?: OutreachAgent[] };
-        const candidates = (d.agents ?? []).filter((a: OutreachAgent) =>
-          ["Candidate", "Awaiting Manifest", "Needs Verification"].includes(a.verificationStatus)
-        );
-        candidates.sort((a: OutreachAgent, b: OutreachAgent) => b.revenue_usd - a.revenue_usd);
-        setAgents(candidates);
+        const all = d.agents ?? [];
+        all.sort((a: OutreachAgent, b: OutreachAgent) => b.revenue_usd - a.revenue_usd);
+        setAgents(all);
       } catch {
         setError("Could not load agent list.");
       } finally {
@@ -3825,6 +3851,30 @@ function OutreachSection({ secret }: { secret: string }) {
     }
     load();
   }, [secret]);
+
+  const visibleAgents = agents.filter((a) =>
+    (ecoFilter === "All" || a.ecosystem === ecoFilter) &&
+    (priorityFilter === "All" || a.bankrPriority === priorityFilter) &&
+    (outreachFilter === "All" || (a.outreachStatus ?? "not_contacted") === outreachFilter) &&
+    (!focusOnly || a.focusStatus === "active_focus") &&
+    (!candidatesOnly || OUTREACH_STAGE_STATUSES.includes(a.verificationStatus))
+  );
+
+  async function updateTag(agent: OutreachAgent, field: "focusStatus" | "bankrPriority" | "metadataStatus", value: string | null) {
+    setUpdatingSlug(agent.slug);
+    try {
+      const res = await fetch("/api/admin/registry/update-agent", {
+        method: "PATCH",
+        headers: { "Authorization": `Bearer ${secret}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ name: agent.name, [field]: value }),
+      });
+      if (res.ok) {
+        setAgents((prev) => prev.map((x) => x.slug === agent.slug ? { ...x, [field]: value } : x));
+      }
+    } finally {
+      setUpdatingSlug(null);
+    }
+  }
 
   function generateDm(agent: OutreachAgent): string {
     const base = DM_TEMPLATES[agent.verificationStatus] ?? DM_TEMPLATES["Candidate"];
@@ -3856,10 +3906,33 @@ function OutreachSection({ secret }: { secret: string }) {
     }
   }
 
+  const OUTREACH_OPTIONS = [
+    "not_contacted", "dm_sent", "replied", "interested",
+    "manifest_requested", "manifest_submitted", "books_live", "shared_profile",
+  ];
   const statusColor: Record<string, string> = {
-    "Not started": "#6b7280",
-    "In progress": "#f59e0b",
-    "Connected": "#6DB874",
+    not_contacted:      "#6b7280",
+    dm_sent:            "#f59e0b",
+    replied:            "#38bdf8",
+    interested:         "#a78bfa",
+    manifest_requested: "#f59e0b",
+    manifest_submitted: "#6DB874",
+    books_live:         "#22c55e",
+    shared_profile:     "#22c55e",
+  };
+  const tagBadgeColor: Record<string, string> = {
+    // wallet_status
+    none: "#6b7280", candidate: "#f59e0b", declared: "#38bdf8", verified: "#22c55e", rejected: "#f87171",
+    // books_status
+    no_books: "#6b7280", pending: "#f59e0b", live: "#22c55e", stale: "#f59e0b", error: "#f87171",
+    // data_status
+    fresh: "#22c55e", partial: "#f59e0b", failed: "#f87171",
+  };
+
+  const filterSelectStyle: CSSProperties = {
+    fontSize: "0.72rem", padding: "4px 8px", borderRadius: 6,
+    border: "1px solid var(--line)", background: "var(--surface-soft)",
+    color: "var(--ink)", cursor: "pointer",
   };
 
   return (
@@ -3867,25 +3940,52 @@ function OutreachSection({ secret }: { secret: string }) {
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ margin: "0 0 6px", fontSize: "1.3rem", fontWeight: 700 }}>Outreach CRM</h1>
         <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.85rem" }}>
-          Candidate agents sorted by estimated revenue. DM templates pre-generated — copy and send.
+          Agents sorted by estimated revenue. DM templates pre-generated — copy and send.
         </p>
+      </div>
+
+      {/* Filter row — Bankr-first triage */}
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 18 }}>
+        <select value={ecoFilter} onChange={(e) => setEcoFilter(e.target.value)} style={filterSelectStyle}>
+          {["All", "BANKR", "Virtuals", "Base", "AEON", "EigenCloud"].map((o) => (
+            <option key={o} value={o}>{o === "All" ? "All ecosystems" : o}</option>
+          ))}
+        </select>
+        <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} style={filterSelectStyle}>
+          <option value="All">Any priority</option>
+          <option value="high">high</option>
+          <option value="medium">medium</option>
+          <option value="low">low</option>
+        </select>
+        <select value={outreachFilter} onChange={(e) => setOutreachFilter(e.target.value)} style={filterSelectStyle}>
+          <option value="All">Any outreach status</option>
+          {OUTREACH_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)", cursor: "pointer" }}>
+          <input type="checkbox" checked={focusOnly} onChange={(e) => setFocusOnly(e.target.checked)} />
+          active focus only
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "var(--muted)", cursor: "pointer" }}>
+          <input type="checkbox" checked={candidatesOnly} onChange={(e) => setCandidatesOnly(e.target.checked)} />
+          outreach candidates only
+        </label>
       </div>
 
       {loading && <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading agents…</p>}
       {error && <p style={{ color: "#f87171", fontSize: "0.85rem" }}>{error}</p>}
 
-      {!loading && agents.length === 0 && (
+      {!loading && visibleAgents.length === 0 && (
         <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontSize: "0.85rem" }}>
-          No unclaimed agents found. All agents may already have declared wallets.
+          No agents match the current filters.
         </div>
       )}
 
-      {!loading && agents.length > 0 && (
+      {!loading && visibleAgents.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <p style={{ margin: "0 0 8px", fontSize: "0.75rem", color: "var(--muted)" }}>
-            {agents.length} agent{agents.length !== 1 ? "s" : ""} awaiting outreach
+            {visibleAgents.length} agent{visibleAgents.length !== 1 ? "s" : ""} shown
           </p>
-          {agents.map((a) => (
+          {visibleAgents.map((a) => (
             <div key={a.slug} style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: 12, padding: "12px 16px", alignItems: "center", background: "var(--surface-soft)" }}>
                 <div>
@@ -3896,23 +3996,66 @@ function OutreachSection({ secret }: { secret: string }) {
                       <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#1d9bf0", textDecoration: "none" }}>{a.xHandle}</a>
                     )}
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{a.verificationStatus}</span>
                     <select
-                      value={a.outreachStatus ?? "Not started"}
+                      value={a.outreachStatus ?? "not_contacted"}
                       disabled={updatingSlug === a.slug}
                       onChange={(e) => updateOutreachStatus(a.slug, e.target.value)}
                       style={{
                         fontSize: "0.68rem", fontWeight: 600, padding: "2px 6px", borderRadius: 5,
                         border: "1px solid var(--line)", background: "var(--surface-soft)",
-                        color: statusColor[a.outreachStatus ?? "Not started"] ?? "var(--muted)",
+                        color: statusColor[a.outreachStatus ?? "not_contacted"] ?? "var(--muted)",
                         cursor: "pointer", opacity: updatingSlug === a.slug ? 0.5 : 1,
                       }}
                     >
-                      <option value="Not started">Not started</option>
-                      <option value="In progress">In progress</option>
-                      <option value="Connected">Connected</option>
+                      {OUTREACH_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
                     </select>
+                    <select
+                      value={a.bankrPriority ?? ""}
+                      disabled={updatingSlug === a.slug}
+                      onChange={(e) => updateTag(a, "bankrPriority", e.target.value || null)}
+                      title="bankr_priority"
+                      style={{
+                        fontSize: "0.68rem", fontWeight: 600, padding: "2px 6px", borderRadius: 5,
+                        border: "1px solid var(--line)", background: "var(--surface-soft)",
+                        color: a.bankrPriority === "high" ? "#f87171" : a.bankrPriority === "medium" ? "#f59e0b" : "var(--muted)",
+                        cursor: "pointer", opacity: updatingSlug === a.slug ? 0.5 : 1,
+                      }}
+                    >
+                      <option value="">no priority</option>
+                      <option value="high">high</option>
+                      <option value="medium">medium</option>
+                      <option value="low">low</option>
+                    </select>
+                    <button
+                      type="button"
+                      disabled={updatingSlug === a.slug}
+                      onClick={() => updateTag(a, "focusStatus", a.focusStatus === "active_focus" ? null : "active_focus")}
+                      title="focus_status toggle"
+                      style={{
+                        fontSize: "0.66rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99,
+                        border: "1px solid " + (a.focusStatus === "active_focus" ? "#6DB874" : "var(--line)"),
+                        background: a.focusStatus === "active_focus" ? "rgba(109,184,116,0.12)" : "transparent",
+                        color: a.focusStatus === "active_focus" ? "#6DB874" : "var(--muted)",
+                        cursor: "pointer", opacity: updatingSlug === a.slug ? 0.5 : 1,
+                      }}
+                    >
+                      {a.focusStatus === "active_focus" ? "★ active focus" : "☆ focus"}
+                    </button>
+                    {/* Read-only derived tags */}
+                    {[
+                      { label: "wallet", value: a.walletStatus },
+                      { label: "books",  value: a.booksStatus },
+                      { label: "data",   value: a.dataStatus },
+                    ].map((t) => (
+                      <span key={t.label} title={`${t.label}_status`} style={{
+                        fontSize: "0.64rem", fontFamily: "monospace", padding: "1px 6px", borderRadius: 4,
+                        background: "var(--line)", color: tagBadgeColor[t.value] ?? "var(--muted)",
+                      }}>
+                        {t.label}:{t.value}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div style={{ textAlign: "right", fontSize: "0.8rem", color: "var(--muted)", whiteSpace: "nowrap" }}>

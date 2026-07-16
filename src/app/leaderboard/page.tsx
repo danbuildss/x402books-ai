@@ -10,6 +10,7 @@ import { TIER_LABELS } from "@/lib/verification-scorer";
 import { AGENTS } from "@/app/registry/data";
 import type { AgentGDPEntry, AwaitingManifestEntry } from "@/lib/agent-gdp";
 import type { GDPSnapshot } from "@/lib/gdp-history";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 
 export const revalidate = 3600;
 
@@ -292,9 +293,15 @@ export default async function LeaderboardPage() {
     vscoreMap.set(slug, { total: vs.total, tier: TIER_LABELS[vs.tier] });
   }
 
-  const agents = gdp?.all_attributed ?? [];
+  // Scope lock: leaderboard rows show only focus-ecosystem agents
+  // (aggregate GDP stats above stay economy-wide this sprint).
+  const agents = (gdp?.all_attributed ?? []).filter(
+    (a) => !BANKR_ONLY || a.ecosystem === FOCUS_ECOSYSTEM,
+  );
   const hasData = agents.length > 0;
-  const awaitingManifest = gdp?.awaiting_manifest ?? [];
+  const awaitingManifest = (gdp?.awaiting_manifest ?? []).filter(
+    (a) => !BANKR_ONLY || a.ecosystem === FOCUS_ECOSYSTEM,
+  );
 
   return (
     <div className="lp-root">

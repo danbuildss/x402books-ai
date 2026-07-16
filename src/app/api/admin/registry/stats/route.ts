@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     byEcosystem[a.ecosystem ?? "Unknown"] = (byEcosystem[a.ecosystem ?? "Unknown"] ?? 0) + 1;
     const vs = a.verification_status ?? "Candidate";
     byStatus[vs] = (byStatus[vs] ?? 0) + 1;
-    const os = a.outreach_status ?? "Not started";
+    const os = a.outreach_status ?? "not_contacted";
     byOutreach[os] = (byOutreach[os] ?? 0) + 1;
     if (agentsWithWallets.has(a.name)) withWallets++;
     if (a.x_handle) withXHandle++;

@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { internalAuth as authOk } from "@/lib/internal-auth";
+import {
+  BANKR_PRIORITIES,
+  FOCUS_STATUSES,
+  METADATA_STATUSES,
+  type BankrPriority,
+  type FocusStatus,
+  type MetadataStatus,
+} from "@/app/registry/types";
 
 // PATCH /api/admin/registry/update-agent
-// Body: { name: string; xHandle?: string; website?: string; symbol?: string }
-// Updates profile metadata fields for an agent. Admin-authenticated only.
+// Body: { name: string; xHandle?: string; website?: string; symbol?: string;
+//         focusStatus?: string | null; bankrPriority?: string | null;
+//         metadataStatus?: string | null }
+// Updates profile metadata + admin-edited P0 tags for an agent.
+// wallet_status / profile_status are trigger-owned and outreach_status has
+// its own endpoint — none of them are accepted here.
+// Admin-authenticated only.
 export async function PATCH(req: NextRequest) {
   if (!authOk(req)) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -14,7 +27,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Supabase not configured" }, { status: 503 });
   }
 
-  let body: { name?: string; xHandle?: string; website?: string; symbol?: string };
+  let body: {
+    name?: string; xHandle?: string; website?: string; symbol?: string; bio?: string | null;
+    focusStatus?: string | null; bankrPriority?: string | null; metadataStatus?: string | null;
+  };
   try {
     body = await req.json();
   } catch {
@@ -33,6 +49,27 @@ export async function PATCH(req: NextRequest) {
   if ("xHandle" in body) updates.x_handle = body.xHandle?.trim() || null;
   if ("website" in body) updates.website = body.website?.trim() || null;
   if ("symbol" in body) updates.symbol = body.symbol?.trim() || null;
+  // Public one-liner (P3); soft clamp keeps it a bio, not an essay.
+  if ("bio" in body) updates.bio = body.bio?.trim().slice(0, 500) || null;
+
+  // P0 tag fields: null clears the tag; non-null values must be in-vocabulary
+  // (the DB CHECK constraints would reject them anyway — fail fast with a 400).
+  const tagFields = [
+    { key: "focusStatus" as const, column: "focus_status", allowed: FOCUS_STATUSES as readonly string[] },
+    { key: "bankrPriority" as const, column: "bankr_priority", allowed: BANKR_PRIORITIES as readonly string[] },
+    { key: "metadataStatus" as const, column: "metadata_status", allowed: METADATA_STATUSES as readonly string[] },
+  ];
+  for (const { key, column, allowed } of tagFields) {
+    if (!(key in body)) continue;
+    const value = body[key] as FocusStatus | BankrPriority | MetadataStatus | null | undefined;
+    if (value != null && !allowed.includes(value)) {
+      return NextResponse.json(
+        { ok: false, error: `${key} must be null or one of: ${allowed.join(", ")}` },
+        { status: 400 },
+      );
+    }
+    updates[column] = value ?? null;
+  }
 
   if (Object.keys(updates).length === 1) {
     return NextResponse.json({ ok: false, error: "No fields to update" }, { status: 400 });

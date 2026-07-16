@@ -4,6 +4,7 @@ import { getAgentGDP } from "@/lib/agent-gdp";
 import { AGENTS } from "./data";
 import { RegistryClient } from "./registry-client";
 import { toPublicAgent } from "./types";
+import { scopeAgents } from "@/lib/focus";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 
 export const revalidate = 300;
@@ -19,8 +20,9 @@ export default async function RegistryPage() {
       ? agentsResult.value.agents
       : AGENTS;
 
-  // Strip internal CRM fields before passing to client bundle
-  const agents = rawAgents.map(toPublicAgent);
+  // Scope-lock first (non-Bankr agents never reach the client bundle under
+  // BANKR_ONLY), then strip internal CRM fields.
+  const agents = scopeAgents(rawAgents).map(toPublicAgent);
 
   const economics: Record<string, AgentGDPEntry> = {};
   if (gdpResult.status === "fulfilled") {
