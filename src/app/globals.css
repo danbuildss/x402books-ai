@@ -10744,6 +10744,70 @@ html, body {
 }
 
 /* ── Registry row layout (replaces expandable cards at scale) ── */
+/* ── Profile terminal sections (P3/P4) ───────────────────────────────────── */
+
+.prof-metrics {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.prof-books-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.prof-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  min-width: 0;
+}
+
+.prof-metric-na {
+  color: var(--muted);
+}
+
+.prof-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--line);
+}
+.prof-breakdown-row:last-child { border-bottom: 0; }
+
+.prof-not-tracked {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  font-style: italic;
+  padding: 1px 8px;
+  border-radius: 99px;
+  border: 1px dashed var(--line-strong, var(--line));
+}
+
+.prof-dq {
+  display: flex;
+  flex-direction: column;
+}
+
+.prof-subtabs {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .prof-metrics { grid-template-columns: repeat(2, 1fr); }
+  .prof-books-metrics { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ── Registry terminal table (P2) ────────────────────────────────────────── */
 
 .reg-table-wrap {

@@ -17,6 +17,7 @@ interface RegistryAgentRow {
   symbol: string | null;
   ecosystem: string;
   x_handle: string | null;
+  bio: string | null;
   website: string | null;
   bankr_profile: string | null;
   token_address: string | null;
@@ -115,6 +116,7 @@ function rowToAgent(
     symbol: row.symbol ?? "—",
     ecosystem: (row.ecosystem as Ecosystem) ?? "Base",
     xHandle: row.x_handle ?? "",
+    bio: row.bio ?? null,
     website: row.website,
     bankrProfile: row.bankr_profile,
     tokenAddress: row.token_address,
@@ -153,6 +155,7 @@ function agentToRow(
     symbol: agent.symbol,
     ecosystem: agent.ecosystem,
     x_handle: agent.xHandle,
+    bio: agent.bio,
     website: agent.website,
     bankr_profile: agent.bankrProfile,
     token_address: agent.tokenAddress,

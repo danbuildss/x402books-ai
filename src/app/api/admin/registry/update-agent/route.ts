@@ -28,7 +28,7 @@ export async function PATCH(req: NextRequest) {
   }
 
   let body: {
-    name?: string; xHandle?: string; website?: string; symbol?: string;
+    name?: string; xHandle?: string; website?: string; symbol?: string; bio?: string | null;
     focusStatus?: string | null; bankrPriority?: string | null; metadataStatus?: string | null;
   };
   try {
@@ -49,6 +49,8 @@ export async function PATCH(req: NextRequest) {
   if ("xHandle" in body) updates.x_handle = body.xHandle?.trim() || null;
   if ("website" in body) updates.website = body.website?.trim() || null;
   if ("symbol" in body) updates.symbol = body.symbol?.trim() || null;
+  // Public one-liner (P3); soft clamp keeps it a bio, not an essay.
+  if ("bio" in body) updates.bio = body.bio?.trim().slice(0, 500) || null;
 
   // P0 tag fields: null clears the tag; non-null values must be in-vocabulary
   // (the DB CHECK constraints would reject them anyway — fail fast with a 400).

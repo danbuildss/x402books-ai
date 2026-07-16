@@ -10,6 +10,7 @@ import {
 // file fills slug + tags so the static fallback path satisfies Agent.
 type SeedAgent = Omit<
   Agent,
+  | "bio"
   | "slug"
   | "focusStatus"
   | "bankrPriority"
@@ -1555,6 +1556,7 @@ const SEED_AGENTS: SeedAgent[] = [
 export const AGENTS: Agent[] = SEED_AGENTS.map((a) => ({
   ...a,
   slug: toSlug(a.name),
+  bio: null,
   focusStatus: a.ecosystem === "BANKR" ? ("active_focus" as const) : null,
   bankrPriority: null,
   metadataStatus: null,

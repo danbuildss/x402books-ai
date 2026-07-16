@@ -584,6 +584,7 @@ function RegistrySection({ secret }: { secret: string }) {
   const [editHandle,  setEditHandle]  = useState("");
   const [editWebsite, setEditWebsite] = useState("");
   const [editSymbol,  setEditSymbol]  = useState("");
+  const [editBio,     setEditBio]     = useState("");
   const [editSaving,  setEditSaving]  = useState(false);
   const [editMsg,     setEditMsg]     = useState("");
 
@@ -1068,6 +1069,7 @@ function RegistrySection({ secret }: { secret: string }) {
               if (editHandle.trim() !== "") body.xHandle = editHandle.trim();
               if (editWebsite.trim() !== "") body.website = editWebsite.trim();
               if (editSymbol.trim() !== "") body.symbol = editSymbol.trim();
+              if (editBio.trim() !== "") body.bio = editBio.trim();
               const res = await fetch("/api/admin/registry/update-agent", {
                 method: "PATCH",
                 headers,
@@ -1076,7 +1078,7 @@ function RegistrySection({ secret }: { secret: string }) {
               const d = await res.json() as { ok: boolean; name?: string; error?: string };
               if (d.ok) {
                 setEditMsg(`✓ Updated "${d.name}"`);
-                setEditHandle(""); setEditWebsite(""); setEditSymbol("");
+                setEditHandle(""); setEditWebsite(""); setEditSymbol(""); setEditBio("");
               } else {
                 setEditMsg(`✗ ${d.error}`);
               }
@@ -1092,6 +1094,15 @@ function RegistrySection({ secret }: { secret: string }) {
             <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Exact agent name, e.g. AEON" className={styles.formInput} style={{ flex: "2 1 160px" }} required />
             <input value={editHandle} onChange={(e) => setEditHandle(e.target.value)} placeholder="X handle, e.g. @aeon_agent (leave blank to skip)" className={styles.formInput} style={{ flex: "2 1 180px" }} />
           </div>
+          <textarea
+            value={editBio}
+            onChange={(e) => setEditBio(e.target.value)}
+            placeholder="Public one-line bio shown at the top of the profile (leave blank to skip; max 500 chars)"
+            className={styles.formInput}
+            maxLength={500}
+            rows={2}
+            style={{ resize: "vertical", fontFamily: "inherit" }}
+          />
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
             <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />

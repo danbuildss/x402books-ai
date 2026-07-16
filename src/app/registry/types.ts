@@ -118,6 +118,7 @@ export type Agent = {
   symbol: string;
   ecosystem: Ecosystem;
   xHandle: string;
+  bio: string | null; // one-line public description (P3); NOT internal notes
   website: string | null;
   bankrProfile: string | null;
   tokenAddress: string | null;
@@ -156,6 +157,7 @@ export type PublicAgent = {
   symbol: string;
   ecosystem: Ecosystem;
   xHandle: string;
+  bio: string | null;
   website: string | null;
   bankrProfile: string | null;
   tokenAddress: string | null;
@@ -182,6 +184,7 @@ export function toPublicAgent(a: Agent): PublicAgent {
     symbol: a.symbol,
     ecosystem: a.ecosystem,
     xHandle: a.xHandle,
+    bio: a.bio,
     website: a.website,
     bankrProfile: a.bankrProfile,
     tokenAddress: a.tokenAddress,
