@@ -11,6 +11,7 @@ import {
   insertEvidencePacket,
 } from "@/lib/truth-engine-db";
 import { hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { toSlug } from "@/lib/slug";
 
 export async function POST(req: NextRequest) {
   if (!internalAuth(req)) {

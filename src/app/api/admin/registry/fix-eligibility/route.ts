@@ -9,15 +9,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { internalAuth } from "@/lib/internal-auth";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-const ROLE_TO_TYPE: Record<string, string> = {
-  treasury:       "treasury_contract",
-  operator:       "eoa",
-  fee:            "eoa",
-  revenue:        "eoa",
-  surplus_wallet: "eoa",
-  deployer:       "eoa",
-};
+import { addressTypeForRole } from "@/lib/wallet-eligibility";
 
 const INELIGIBLE_ROLES = new Set(["token_contract", "token", "smart_contract"]);
 
@@ -53,7 +45,7 @@ export async function POST(req: NextRequest) {
   for (const wallet of candidates) {
     const role = (wallet.role ?? "").toLowerCase();
     // Unmapped roles stay unclassified — never default to eoa.
-    const newType = ROLE_TO_TYPE[role];
+    const newType = addressTypeForRole(role);
     if (!newType) continue;
 
     const { error: updateError } = await sb

@@ -6,6 +6,27 @@ export const BOOKS_ELIGIBLE_ADDRESS_TYPES = new Set<string>(["eoa", "treasury_co
 
 export type EligibilityResult = { eligible: boolean; reason: string | null };
 
+// Canonical role → address_type mapping for manifest-declared wallets.
+// Used by manifest ingestion and the admin repair routes so both stay in
+// lockstep with the auto_address_type_from_role DB trigger.
+// Roles not listed here return null: the wallet stays unclassified and
+// therefore books-ineligible — never default to eoa.
+export const ROLE_TO_ADDRESS_TYPE: Record<string, string> = {
+  treasury:         "treasury_contract",
+  operator:         "eoa",
+  fee:              "eoa",
+  fee_recipient:    "eoa",
+  revenue:          "eoa",
+  expense:          "eoa",
+  payment_receiver: "eoa",
+  surplus_wallet:   "eoa",
+  deployer:         "eoa",
+};
+
+export function addressTypeForRole(role: string | null | undefined): string | null {
+  return ROLE_TO_ADDRESS_TYPE[(role ?? "").toLowerCase()] ?? null;
+}
+
 export function isBooksEligibleWallet(
   wallet: AgentWallet,
   agentTokenAddress?: string | null,

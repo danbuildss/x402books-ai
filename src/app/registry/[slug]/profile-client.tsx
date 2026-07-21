@@ -302,11 +302,13 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </p>
       )}
 
-      {/* Primary stats: Revenue / Expenses / Net Income */}
+      {/* Primary stats: Revenue / Expenses / Net Income.
+          Doctrine: a zero is only shown when the window was scanned and
+          measured activity (tx_count > 0). Unmeasured zeros render as "—". */}
       <MetricGrid cols={3} style={{ marginBottom: 14 }}>
-        <MetricCard label="Revenue"    value={usd(f.revenue_usd)}    valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
-        <MetricCard label="Expenses"   value={usd(f.expenses_usd)}   valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
-        <MetricCard label="Net Income" value={(netPositive ? "+" : "−") + usd(f.net_income_usd)} valueColor={netPositive ? "var(--accent)" : "#F46060"} />
+        <MetricCard label="Revenue"    value={f.tx_count > 0 ? usd(f.revenue_usd) : "—"}  valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
+        <MetricCard label="Expenses"   value={f.tx_count > 0 ? usd(f.expenses_usd) : "—"} valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
+        <MetricCard label="Net Income" value={f.tx_count > 0 ? (netPositive ? "+" : "−") + usd(f.net_income_usd) : "—"} valueColor={f.tx_count === 0 ? undefined : netPositive ? "var(--accent)" : "#F46060"} />
       </MetricGrid>
 
       {/* Secondary stats */}
@@ -1966,10 +1968,11 @@ function OverviewFinancials({ books }: { books: AgentBooks }) {
         <p className="prof-section-title" style={{ margin: 0 }}>Financial Summary</p>
         <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{books.period}</span>
       </div>
+      {/* Zeros are only shown when measured (tx_count > 0); otherwise "—". */}
       <MetricGrid cols={3} style={{ marginBottom: 10 }}>
-        <MetricCard label="Revenue"    value={usd(f.revenue_usd)}    valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
-        <MetricCard label="Expenses"   value={usd(f.expenses_usd)}   valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
-        <MetricCard label="Net Income" value={(netPos ? "+" : "−") + usd(f.net_income_usd)} valueColor={netPos ? "var(--accent)" : "#F46060"} />
+        <MetricCard label="Revenue"    value={f.tx_count > 0 ? usd(f.revenue_usd) : "—"}  valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
+        <MetricCard label="Expenses"   value={f.tx_count > 0 ? usd(f.expenses_usd) : "—"} valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
+        <MetricCard label="Net Income" value={f.tx_count > 0 ? (netPos ? "+" : "−") + usd(f.net_income_usd) : "—"} valueColor={f.tx_count === 0 ? undefined : netPos ? "var(--accent)" : "#F46060"} />
       </MetricGrid>
       {f.tx_count > 0 && (
         <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)" }}>

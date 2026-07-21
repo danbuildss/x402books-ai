@@ -26,16 +26,8 @@ import {
   getWalletClaims,
 } from "@/lib/truth-engine-db";
 import { toSlug } from "@/app/registry/[slug]/slug";
+import { addressTypeForRole } from "@/lib/wallet-eligibility";
 import type { WalletRoleGraph } from "@/lib/truth-engine/wallet-graph";
-
-const ROLE_TO_TYPE: Record<string, string> = {
-  treasury:       "treasury_contract",
-  operator:       "eoa",
-  fee:            "eoa",
-  revenue:        "eoa",
-  surplus_wallet: "eoa",
-  deployer:       "eoa",
-};
 
 const INELIGIBLE_ROLES = new Set(["token_contract", "token", "smart_contract"]);
 const VALID_CHAINS = new Set(["base", "ethereum", "arbitrum", "optimism", "polygon"]);
@@ -78,7 +70,7 @@ export async function POST(req: NextRequest) {
     if (INELIGIBLE_ROLES.has(role)) continue;
     if (!w.address_type || w.address_type === "unknown") {
       // Unmapped roles stay unclassified — never default to eoa.
-      const newType = ROLE_TO_TYPE[role];
+      const newType = addressTypeForRole(role);
       if (!newType) continue;
       await sb.from("registry_agent_wallets").update({ address_type: newType }).eq("id", w.id);
       eligibilityFixed++;
