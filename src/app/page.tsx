@@ -157,6 +157,37 @@ export default async function HomePage() {
         ))}
       </div>
 
+      {/* ── ONE LAYER FOR ALL AGENT FINANCE ── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px 16px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "space-between", alignItems: "flex-end", marginBottom: 22 }}>
+          <div>
+            <p className="lp-eyebrow">Attributed data, defensible decisions</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(1.3rem, 2.2vw, 1.8rem)", fontWeight: 700, color: "var(--ink)", maxWidth: 460 }}>
+              One layer for all agent finance
+            </h2>
+          </div>
+          <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 340 }}>
+            Index, attribute, classify, and explain agent finances with one platform built for accuracy over breadth.
+          </p>
+        </div>
+        <div className="zetta-platform-grid">
+          {[
+            { icon: "◈", title: "Identity & Registry", desc: "Every agent indexed with verified metadata, ecosystem tags, and a public financial profile." },
+            { icon: "▤", title: "Wallet Attribution", desc: "Teams declare wallets via .agent/wallets.json. Declared, discovered, and inferred wallets are never confused." },
+            { icon: "≡", title: "Agent Books", desc: "Attributed activity becomes auditable statements: revenue, expenses, treasury, and net income — with confidence levels." },
+            { icon: "◎", title: "Luca Intelligence", desc: "An AI analyst that reads the books, cites its sources, and refuses to invent missing data." },
+            { icon: "✓", title: "Verification", desc: "Signature-based claims and manifest checks separate verified operators from unverified candidates." },
+            { icon: "⌁", title: "API Access", desc: "Books, registry, and truth endpoints with scoped keys — the same numbers the UI shows, machine-readable." },
+          ].map((c) => (
+            <div key={c.title} className="zetta-platform-card">
+              <div className="zetta-platform-icon" aria-hidden="true">{c.icon}</div>
+              <p style={{ margin: "0 0 6px", fontSize: "0.88rem", fontWeight: 700, color: "var(--ink)" }}>{c.title}</p>
+              <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.6 }}>{c.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── ZETTA STACK ── */}
       <section className="zetta-stack-section">
         <div className="zetta-stack-inner">

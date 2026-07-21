@@ -29,6 +29,7 @@ const ITEMS: NavItem[] = [
   {
     label: "Company",
     links: [
+      { label: "About", href: "/about" },
       { label: "X / Twitter", href: "https://x.com/zettaaidotco" },
       { label: "Telegram", href: "https://t.me/asklucaai" },
       { label: "Contact", href: "mailto:contact@zettaai.co" },

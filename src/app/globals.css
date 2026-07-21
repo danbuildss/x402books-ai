@@ -12808,3 +12808,37 @@ html, body {
   .reg-table-wrap { display: none; }
   .reg-mcards { display: block; }
 }
+
+/* ── Header nav dropdowns ─────────────────────────────────────────────────── */
+.lp-nav-dd-item {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lp-nav-dd-item:hover { background: var(--surface-soft); color: var(--accent); }
+
+/* ── Landing "one layer" platform grid ────────────────────────────────────── */
+.zetta-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 900px) { .zetta-platform-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .zetta-platform-grid { grid-template-columns: 1fr; } }
+.zetta-platform-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.zetta-platform-card:hover { border-color: color-mix(in srgb, #4AE8A0 35%, var(--line)); }
+.zetta-platform-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, #4AE8A0 10%, transparent);
+  color: #4AE8A0; font-size: 0.95rem; margin-bottom: 12px;
+}
