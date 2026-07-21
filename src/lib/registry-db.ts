@@ -1,7 +1,7 @@
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
+import { toSlug } from "./slug";
 import { AGENTS } from "@/app/registry/data";
 import { deriveBooksStatus, deriveDataStatus } from "./status-tags";
-import { toSlug } from "@/app/registry/[slug]/slug";
 import type {
   Agent, AgentWallet, WalletLabel, Ecosystem, Health, VerificationStatus, OutreachStatus,
   FocusStatus, BankrPriority, MetadataStatus, WalletStatus, ProfileStatus,
@@ -310,7 +310,6 @@ export async function approvePendingUpdate(id: string): Promise<{ ok: boolean; e
     // The manifest may use different casing (e.g. "AEON" vs "Aeon") — we match
     // by slug so wallets land on the existing registry entry, not a new one.
     const rawName = String(proposed.name ?? update.agent_name);
-    const toSlug  = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const rawSlug = toSlug(rawName);
 
     // Query by slug pattern server-side — avoids the silent 100-row client-side scan

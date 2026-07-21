@@ -109,7 +109,7 @@ export default function ImportCandidatesPage() {
                       href={`https://basescan.org/token/${c.ca}`}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ color: "#4a9eff", textDecoration: "none" }}
+                      style={{ color: "#5B9EF4", textDecoration: "none" }}
                     >
                       {c.ca.slice(0, 6)}…{c.ca.slice(-4)}
                     </a>
@@ -131,7 +131,7 @@ export default function ImportCandidatesPage() {
                         style={{
                           marginRight: "0.4rem",
                           padding: "0.2rem 0.6rem",
-                          background: "#16a34a",
+                          background: "#4AE8A0",
                           color: "#fff",
                           border: "none",
                           borderRadius: 3,
@@ -147,7 +147,7 @@ export default function ImportCandidatesPage() {
                         onClick={() => act(c.id, "rejected")}
                         style={{
                           padding: "0.2rem 0.6rem",
-                          background: "#7f1d1d",
+                          background: "rgba(244,96,96,0.30)",
                           color: "#fff",
                           border: "none",
                           borderRadius: 3,

@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { StatusBadge } from "@/components/ui/badge";
 
 const BASE_URL = "https://www.zettaai.co";
 
@@ -287,9 +290,7 @@ export default function LucaSkillsDocsPage() {
       {/* Page header */}
       <div style={{ borderBottom: "1px solid var(--line)", padding: "32px 24px 28px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-            Luca · API Reference
-          </div>
+          <SectionLabel style={{ marginBottom: 8 }}>Luca · API Reference</SectionLabel>
           <h1 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 10px" }}>Luca Skills</h1>
           <p style={{ fontSize: 14, color: "var(--muted)", margin: "0 0 20px", maxWidth: 600, lineHeight: 1.6 }}>
             Callable financial intelligence for autonomous agents, builders, and operators.
@@ -304,7 +305,7 @@ export default function LucaSkillsDocsPage() {
               <span style={{ color: "var(--muted)" }}>Auth: </span>
               <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>Authorization: Bearer zt_live_...</code>
             </div>
-            <Link href="/api" style={{ padding: "6px 14px", background: "#6DB874", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
+            <Link href="/api" style={{ padding: "6px 14px", background: "#4AE8A0", color: "#fff", borderRadius: 6, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>
               Get API Key →
             </Link>
           </div>
@@ -316,7 +317,7 @@ export default function LucaSkillsDocsPage() {
         {/* Sidebar nav */}
         <div>
           <div style={{ position: "sticky", top: 24 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Skills</div>
+            <SectionLabel style={{ marginBottom: 10 }}>Skills</SectionLabel>
             {SKILLS.map((s) => (
               <button
                 key={s.id}
@@ -325,8 +326,8 @@ export default function LucaSkillsDocsPage() {
                   display: "block", width: "100%", textAlign: "left",
                   padding: "8px 12px", borderRadius: 6, marginBottom: 2,
                   border: "none", cursor: "pointer", fontSize: 13,
-                  background: activeSkill === s.id ? "#6DB87420" : "transparent",
-                  color: activeSkill === s.id ? "#6DB874" : "var(--ink)",
+                  background: activeSkill === s.id ? "#4AE8A020" : "transparent",
+                  color: activeSkill === s.id ? "#4AE8A0" : "var(--ink)",
                   fontWeight: activeSkill === s.id ? 700 : 400,
                 }}
               >
@@ -334,7 +335,7 @@ export default function LucaSkillsDocsPage() {
               </button>
             ))}
             <div style={{ marginTop: 20, borderTop: "1px solid var(--line)", paddingTop: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Reference</div>
+              <SectionLabel style={{ marginBottom: 10 }}>Reference</SectionLabel>
               <a href="#discovery" style={{ display: "block", padding: "6px 12px", fontSize: 12, color: "var(--muted)", textDecoration: "none" }}>Skill Discovery</a>
               <a href="#auth" style={{ display: "block", padding: "6px 12px", fontSize: 12, color: "var(--muted)", textDecoration: "none" }}>Authentication</a>
               <a href="#integrity" style={{ display: "block", padding: "6px 12px", fontSize: 12, color: "var(--muted)", textDecoration: "none" }}>Data Integrity</a>
@@ -346,71 +347,85 @@ export default function LucaSkillsDocsPage() {
         <div>
 
           {/* Skill detail */}
-          <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "24px 28px", marginBottom: 28 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                background: "#6DB87420", color: "#6DB874",
-              }}>
-                {skill.method}
-              </span>
-              <code style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--muted)" }}>
-                {BASE_URL}{skill.endpoint}
-              </code>
-            </div>
-            <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>{skill.name}</h2>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{skill.description}</p>
+          <LedgerCard style={{ marginBottom: 28 }}>
+            <div style={{ padding: "0 0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                <StatusBadge variant="green">{skill.method}</StatusBadge>
+                <code style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--muted)" }}>
+                  {BASE_URL}{skill.endpoint}
+                </code>
+              </div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 8px" }}>{skill.name}</h2>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{skill.description}</p>
 
-            {/* Inputs */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 10 }}>Input Parameters</div>
-              <div style={{ border: "1px solid var(--line)", borderRadius: 6, overflow: "hidden" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "140px 80px 70px 1fr", padding: "6px 12px", borderBottom: "1px solid var(--line)", background: "var(--bg)" }}>
-                  {["Field", "Type", "Required", "Description"].map((h) => (
-                    <div key={h} style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</div>
+              {/* Inputs */}
+              <div style={{ marginBottom: 20 }}>
+                <SectionLabel style={{ marginBottom: 10 }}>Input Parameters</SectionLabel>
+                <LedgerCard>
+                  <LedgerRow
+                    first
+                    label={
+                      <div style={{ display: "grid", gridTemplateColumns: "130px 70px 70px 1fr", gap: 8, width: "100%" }}>
+                        {["Field", "Type", "Required", "Description"].map((h) => (
+                          <span key={h} style={{ fontSize: "0.68rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{h}</span>
+                        ))}
+                      </div>
+                    }
+                    value=""
+                    style={{ background: "var(--bg)" }}
+                    last={skill.input.length === 0}
+                  />
+                  {skill.input.map((inp, i) => (
+                    <LedgerRow
+                      key={inp.field}
+                      last={i === skill.input.length - 1}
+                      label={
+                        <div style={{ display: "grid", gridTemplateColumns: "130px 70px 70px 1fr", gap: 8, width: "100%" }}>
+                          <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600, fontSize: 12 }}>{inp.field}</code>
+                          <span style={{ color: "var(--muted)", fontSize: 12 }}>{inp.type}</span>
+                          <StatusBadge variant={inp.required ? "green" : "neutral"}>
+                            {inp.required ? "Required" : "Optional"}
+                          </StatusBadge>
+                          <span style={{ color: "var(--muted)", fontSize: 12, lineHeight: 1.4 }}>{inp.desc}</span>
+                        </div>
+                      }
+                      value=""
+                    />
                   ))}
-                </div>
-                {skill.input.map((inp) => (
-                  <div key={inp.field} style={{ display: "grid", gridTemplateColumns: "140px 80px 70px 1fr", padding: "8px 12px", borderBottom: "1px solid var(--line)", fontSize: 12 }}>
-                    <code style={{ fontFamily: "var(--font-mono)", color: "var(--ink)", fontWeight: 600 }}>{inp.field}</code>
-                    <span style={{ color: "var(--muted)" }}>{inp.type}</span>
-                    <span style={{ color: inp.required ? "#6DB874" : "var(--muted)" }}>{inp.required ? "Yes" : "No"}</span>
-                    <span style={{ color: "var(--muted)", lineHeight: 1.4 }}>{inp.desc}</span>
+                </LedgerCard>
+              </div>
+
+              {/* Auth toggle + example */}
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                  <SectionLabel>Request</SectionLabel>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    {["Bearer", "X-API-Key"].map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setShowBearer(m === "Bearer")}
+                        style={{
+                          padding: "3px 10px", fontSize: 11, borderRadius: 4,
+                          border: "1px solid var(--line)", cursor: "pointer",
+                          background: (m === "Bearer") === showBearer ? "var(--ink)" : "transparent",
+                          color: (m === "Bearer") === showBearer ? "var(--bg)" : "var(--muted)",
+                        }}
+                      >
+                        {m}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Auth toggle + example */}
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em" }}>Request</div>
-                <div style={{ display: "flex", gap: 4 }}>
-                  {["Bearer", "X-API-Key"].map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setShowBearer(m === "Bearer")}
-                      style={{
-                        padding: "3px 10px", fontSize: 11, borderRadius: 4,
-                        border: "1px solid var(--line)", cursor: "pointer",
-                        background: (m === "Bearer") === showBearer ? "var(--ink)" : "transparent",
-                        color: (m === "Bearer") === showBearer ? "var(--bg)" : "var(--muted)",
-                      }}
-                    >
-                      {m}
-                    </button>
-                  ))}
                 </div>
+                <CodeBlock code={exampleWithKey} />
               </div>
-              <CodeBlock code={exampleWithKey} />
-            </div>
 
-            {/* Response */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>Example Response</div>
-              <CodeBlock code={skill.example_response} />
+              {/* Response */}
+              <div>
+                <SectionLabel style={{ marginBottom: 4 }}>Example Response</SectionLabel>
+                <CodeBlock code={skill.example_response} />
+              </div>
             </div>
-          </div>
+          </LedgerCard>
 
           {/* Skill nav pills */}
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 32 }}>
@@ -421,7 +436,7 @@ export default function LucaSkillsDocsPage() {
                 style={{
                   padding: "5px 12px", borderRadius: 16, fontSize: 12, cursor: "pointer",
                   border: "1px solid var(--line)",
-                  background: activeSkill === s.id ? "#6DB874" : "var(--surface)",
+                  background: activeSkill === s.id ? "#4AE8A0" : "var(--surface)",
                   color: activeSkill === s.id ? "#fff" : "var(--ink)",
                   fontWeight: 600,
                 }}
@@ -432,24 +447,25 @@ export default function LucaSkillsDocsPage() {
           </div>
 
           {/* Discovery */}
-          <div id="discovery" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "24px 28px", marginBottom: 28 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>Skill Discovery</h3>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px", lineHeight: 1.6 }}>
-              Call the discovery endpoint to get the full manifest of all available skills — no auth required.
-            </p>
-            <CodeBlock code={`curl https://www.zettaai.co/api/luca/skills`} />
-            <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
-              Returns version, all 7 skill definitions with inputs, and the data integrity block.
-            </p>
-          </div>
+          <LedgerCard title="Skill Discovery" style={{ marginBottom: 28 }}>
+            <div id="discovery" style={{ padding: "0 0 4px" }}>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 12px", lineHeight: 1.6 }}>
+                Call the discovery endpoint to get the full manifest of all available skills — no auth required.
+              </p>
+              <CodeBlock code={`curl https://www.zettaai.co/api/luca/skills`} />
+              <p style={{ fontSize: 12, color: "var(--muted)", margin: "10px 0 0" }}>
+                Returns version, all 7 skill definitions with inputs, and the data integrity block.
+              </p>
+            </div>
+          </LedgerCard>
 
           {/* Auth */}
-          <div id="auth" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 10, padding: "24px 28px", marginBottom: 28 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>Authentication</h3>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.6 }}>
-              All skill routes (POST) require an API key. Two formats are supported — use whichever fits your stack.
-            </p>
-            <CodeBlock code={`# Option 1 — Bearer token (recommended)
+          <LedgerCard title="Authentication" style={{ marginBottom: 28 }}>
+            <div id="auth" style={{ padding: "0 0 4px" }}>
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.6 }}>
+                All skill routes (POST) require an API key. Two formats are supported — use whichever fits your stack.
+              </p>
+              <CodeBlock code={`# Option 1 — Bearer token (recommended)
 curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
   -H "Authorization: Bearer zt_live_..." \\
   -H "Content-Type: application/json" \\
@@ -460,42 +476,46 @@ curl -X POST https://www.zettaai.co/api/luca/skills/agent-books \\
   -H "X-API-Key: zt_live_..." \\
   -H "Content-Type: application/json" \\
   -d '{"slug": "aeon"}'`} />
-            <div style={{ display: "flex", gap: 10, marginTop: 16, flexWrap: "wrap" }}>
-              {[
-                { tier: "Free", req: "Any API key", rpm: "100 req/day" },
-                { tier: "LUCA Holder", req: "≥ 1,000 $LUCA", rpm: "500 req/day" },
-                { tier: "LUCA Whale", req: "≥ 10,000 $LUCA", rpm: "2,000 req/day" },
-              ].map((t) => (
-                <div key={t.tier} style={{ padding: "10px 16px", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 6, minWidth: 160 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>{t.tier}</div>
-                  <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 2 }}>{t.req}</div>
-                  <div style={{ fontSize: 11, color: "#6DB874", fontWeight: 600 }}>{t.rpm}</div>
-                </div>
-              ))}
+              <MetricGrid cols={3} style={{ marginTop: 16 }}>
+                <MetricCard label="Free" value="100/day" sub="Any API key" />
+                <MetricCard label="LUCA Holder" value="500/day" sub="≥ 1,000 $LUCA" valueColor="var(--accent)" />
+                <MetricCard label="LUCA Whale" value="2,000/day" sub="≥ 10,000 $LUCA" valueColor="var(--accent)" />
+              </MetricGrid>
+              <div style={{ marginTop: 16 }}>
+                <Link href="/api" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+                  Get your API key →
+                </Link>
+              </div>
             </div>
-            <div style={{ marginTop: 16 }}>
-              <Link href="/api" style={{ fontSize: 13, color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
-                Get your API key →
-              </Link>
-            </div>
-          </div>
+          </LedgerCard>
 
           {/* Data Integrity */}
-          <div id="integrity" style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "3px solid #6DB874", borderRadius: 10, padding: "24px 28px" }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 8px" }}>Data Integrity Rules</h3>
-            <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.6 }}>
-              Every skill enforces these rules on every response. They cannot be overridden.
-            </p>
-            {INTEGRITY_RULES.map((r) => (
-              <div key={r.rule} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--line)" }}>
-                <span style={{ fontSize: 14, color: "#6DB874", flexShrink: 0 }}>✓</span>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{r.rule}</div>
-                  <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{r.detail}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+          <LedgerCard
+            title="Data Integrity Rules"
+            style={{ marginBottom: 28, borderLeft: "3px solid var(--accent)" }}
+          >
+            <div id="integrity">
+              <p style={{ fontSize: 13, color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.6 }}>
+                Every skill enforces these rules on every response. They cannot be overridden.
+              </p>
+              {INTEGRITY_RULES.map((r, i) => (
+                <LedgerRow
+                  key={r.rule}
+                  first={i === 0}
+                  last={i === INTEGRITY_RULES.length - 1}
+                  label={
+                    <div>
+                      <strong style={{ display: "block", marginBottom: 3, fontSize: "0.84rem" }}>{r.rule}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5 }}>{r.detail}</span>
+                    </div>
+                  }
+                  badge={<StatusBadge variant="green">Enforced</StatusBadge>}
+                  value=""
+                  style={{ alignItems: "flex-start", padding: "12px 14px" }}
+                />
+              ))}
+            </div>
+          </LedgerCard>
 
         </div>
       </div>

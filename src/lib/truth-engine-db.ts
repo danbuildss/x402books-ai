@@ -1,3 +1,5 @@
+import { toSlug } from "@/lib/slug";
+import { addressTypeForRole } from "@/lib/wallet-eligibility";
 import { getSupabaseAdminClient } from "./supabase-admin";
 import { validateManifest, parseManifest } from "./truth-engine/manifest-validator";
 import { normalizeWalletGraph } from "./truth-engine/wallet-graph";
@@ -60,6 +62,54 @@ export async function upsertWalletClaims(graph: WalletRoleGraph) {
     onConflict: "agent_slug,address,chain,role",
   });
   if (error) throw new Error(`upsertWalletClaims: ${error.message}`);
+
+  // Canonical dual-write: manifest ingestion is the single writer for wallet
+  // attribution, so the books-side table must be updated in the same call.
+  // This removes the root cause of "books without manifests" — the two tables
+  // can no longer diverge through separate write paths.
+  await syncWalletClaimsToRegistry(graph);
+}
+
+// Mirror a manifest wallet graph into registry_agent_wallets (the table the
+// books pipeline reads). Idempotent: upserts on UNIQUE (agent_name, address).
+// Skips (without failing the ingest) when the agent has no registry entry —
+// wallets must never implicitly create agents.
+async function syncWalletClaimsToRegistry(graph: WalletRoleGraph): Promise<void> {
+  const sb = getSupabaseAdminClient();
+
+  // Resolve the canonical registry agent name by slug — the manifest may use
+  // different casing or punctuation than the registry row.
+  const { data: agents, error: agentsErr } = await sb
+    .from("registry_agents")
+    .select("name");
+  if (agentsErr) throw new Error(`syncWalletClaimsToRegistry: ${agentsErr.message}`);
+  const match = (agents ?? []).find((a: { name: string }) => toSlug(a.name) === graph.agent_slug);
+  if (!match) {
+    console.warn(JSON.stringify({
+      type:  "wallet_sync_skipped",
+      slug:  graph.agent_slug,
+      note:  "No registry agent for this slug — manifest wallets not mirrored to registry_agent_wallets",
+    }));
+    return;
+  }
+
+  const rows = graph.wallets.map((w) => ({
+    agent_name:      match.name,
+    address:         w.address,
+    label:           w.label ?? w.role,
+    notes:           w.notes ?? null,
+    chain:           w.chain,
+    role:            w.role,
+    confidence:      "declared",
+    evidence_source: "manifest",
+    // Unmapped roles stay null → books-ineligible. Never default to eoa.
+    address_type:    addressTypeForRole(w.role),
+  }));
+
+  const { error } = await sb
+    .from("registry_agent_wallets")
+    .upsert(rows, { onConflict: "agent_name,address" });
+  if (error) throw new Error(`syncWalletClaimsToRegistry: ${error.message}`);
 }
 
 export async function insertEligibilitySnapshot(snapshot: BooksEligibilitySnapshot) {
@@ -150,7 +200,7 @@ export async function ingestManifestTruth(
   try {
     const validation = validateManifest(manifest);
     const parsed     = parseManifest(manifest);
-    const agentSlug  = parsed.agent.toLowerCase().replace(/\s+/g, "-");
+    const agentSlug  = toSlug(parsed.agent);
     const sourceRef  = options.sourceUrl ?? options.repoUrl ?? ".agent/wallets.json";
 
     await upsertManifestSubmission({

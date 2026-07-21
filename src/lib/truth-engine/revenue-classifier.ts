@@ -60,21 +60,15 @@ const STABLECOINS_BY_CHAIN: Record<string, Set<string>> = {
   ]),
 };
 
-// Common stablecoin ticker symbols (cross-chain catch-all)
-const STABLECOIN_SYMBOLS = new Set([
-  "USDC", "USDT", "DAI", "BUSD", "FRAX", "LUSD", "crvUSD", "USDbC",
-  "USDC.e", "USDT.e", "sUSD", "DOLA", "USDBC",
-]);
-
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-function isStablecoin(tx: NormalizedTransaction): boolean {
-  if (STABLECOIN_SYMBOLS.has(tx.assetSymbol.toUpperCase())) return true;
-  if (tx.assetAddress) {
-    const chainSet = STABLECOINS_BY_CHAIN[tx.chain];
-    if (chainSet?.has(tx.assetAddress.toLowerCase())) return true;
-  }
-  return false;
+// Stablecoin matching is by CONTRACT ADDRESS ONLY. Symbol matching was removed:
+// anyone can deploy a token named "USDC", and a symbol match would let spoofed
+// tokens classify as fee_received and inflate revenue. A transfer with no
+// assetAddress (native ETH) or an unrecognized address is never a stablecoin.
+export function isStablecoin(tx: Pick<NormalizedTransaction, "chain" | "assetAddress">): boolean {
+  if (!tx.assetAddress) return false;
+  return STABLECOINS_BY_CHAIN[tx.chain]?.has(tx.assetAddress.toLowerCase()) ?? false;
 }
 
 // ── Main classifier ───────────────────────────────────────────────────────────

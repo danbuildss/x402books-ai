@@ -24,17 +24,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const auth = await v1Auth(request);
-  if (!auth.ok) return auth.response;
-
   const { slug } = await params;
 
-  if (auth.agentScope && auth.agentScope !== slug) {
-    return NextResponse.json(
-      { error: `This API key is scoped to agent '${auth.agentScope}', not '${slug}'. Use a key scoped to this agent, or an unscoped key.` },
-      { status: 403 },
-    );
-  }
+  // Agent-scoped keys may only query their own agent's data — enforced centrally
+  const auth = await v1Auth(request, { agentSlug: slug });
+  if (!auth.ok) return auth.response;
   const { searchParams } = new URL(request.url);
   const period = searchParams.get("period") ?? "30d";
 

@@ -4,6 +4,7 @@
 // Protected by ZETTA_INTERNAL_SECRET — admin use only.
 
 import { NextRequest, NextResponse } from "next/server";
+import { internalAuth } from "@/lib/internal-auth";
 import { getAgentBySlug, buildAgentBooksAudit } from "@/lib/agent-books";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { toSlug } from "@/app/registry/[slug]/slug";
@@ -129,8 +130,7 @@ async function runConcurrent<T>(
 // ── Route handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-internal-secret") ?? req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!secret || secret !== process.env.X402BOOKS_INTERNAL_SECRET) {
+  if (!internalAuth(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

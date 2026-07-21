@@ -1,6 +1,6 @@
 import type { ParsedManifest } from "./manifest-validator";
-
-const BOOKS_ELIGIBLE_ROLES = new Set(["treasury", "revenue", "fee", "operator"]);
+import { toSlug } from "@/lib/slug";
+import { BOOKS_ELIGIBLE_ROLES } from "./books-eligibility";
 
 export interface WalletGraphEntry {
   address:         string;
@@ -25,7 +25,7 @@ export function normalizeWalletGraph(
   manifest: ParsedManifest,
   source_ref = ".agent/wallets.json",
 ): WalletRoleGraph {
-  const agent_slug = manifest.agent.toLowerCase().replace(/\s+/g, "-");
+  const agent_slug = toSlug(manifest.agent);
 
   return {
     agent_slug,

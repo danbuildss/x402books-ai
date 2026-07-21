@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerCard, SectionLabel } from "@/components/ui/ledger";
 
 export const metadata = {
   title: "Manifest Examples · Zetta",
@@ -12,7 +13,7 @@ const muted = { color: "var(--muted)" } as const;
 
 function CodeBlock({ filename, children }: { filename: string; children: string }) {
   return (
-    <div style={{ marginBottom: 32 }}>
+    <div style={{ marginBottom: 0 }}>
       <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem", fontWeight: 600, ...muted, padding: "7px 18px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderBottom: "none", borderRadius: "7px 7px 0 0", letterSpacing: "0.04em" }}>
         {filename}
       </div>
@@ -40,9 +41,7 @@ export default function ManifestExamplesPage() {
         </nav>
 
         <div style={{ marginBottom: 40 }}>
-          <p style={{ margin: "0 0 10px", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", ...muted }}>
-            Examples — v1.0
-          </p>
+          <SectionLabel style={{ marginBottom: 10 }}>Examples — v1.0</SectionLabel>
           <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(1.8rem, 4vw, 2.4rem)", fontWeight: 700, lineHeight: 1.15, margin: "0 0 16px" }}>
             Manifest Examples
           </h1>
@@ -69,15 +68,13 @@ export default function ManifestExamplesPage() {
         </div>
 
         {/* Trading agent */}
-        <section id="trading" style={{ marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 700, margin: "0 0 8px" }}>
-            Trading agent
-          </h2>
-          <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 20px", lineHeight: 1.6 }}>
-            An agent that executes on-chain trades and earns revenue from trading fees or performance.
-            Treasury holds capital, revenue wallet collects fees, expense wallet pays gas and protocol costs.
-          </p>
-          <CodeBlock filename=".agent/wallets.json">{`{
+        <section id="trading" style={{ marginBottom: 40 }}>
+          <LedgerCard title="Trading agent" eyebrow="Example 1">
+            <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
+              An agent that executes on-chain trades and earns revenue from trading fees or performance.
+              Treasury holds capital, revenue wallet collects fees, expense wallet pays gas and protocol costs.
+            </p>
+            <CodeBlock filename=".agent/wallets.json">{`{
   "version": "1.0",
   "agent": "AlphaTrader",
   "project": "AlphaTrader Protocol",
@@ -126,19 +123,18 @@ export default function ManifestExamplesPage() {
     }
   ]
 }`}</CodeBlock>
+          </LedgerCard>
         </section>
 
         {/* Inference API */}
-        <section id="inference" style={{ marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 700, margin: "0 0 8px" }}>
-            Inference API agent
-          </h2>
-          <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 20px", lineHeight: 1.6 }}>
-            An agent that sells inference (compute, AI responses) via x402 pay-per-call.
-            Revenue flows in to the payment receiver, expenses flow out for compute costs.
-            This is the simplest case — one inflow wallet, one outflow wallet.
-          </p>
-          <CodeBlock filename=".agent/wallets.json">{`{
+        <section id="inference" style={{ marginBottom: 40 }}>
+          <LedgerCard title="Inference API agent" eyebrow="Example 2">
+            <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
+              An agent that sells inference (compute, AI responses) via x402 pay-per-call.
+              Revenue flows in to the payment receiver, expenses flow out for compute costs.
+              This is the simplest case — one inflow wallet, one outflow wallet.
+            </p>
+            <CodeBlock filename=".agent/wallets.json">{`{
   "version": "1.0",
   "agent": "InferenceAgent",
   "project": "InferenceAgent",
@@ -167,19 +163,18 @@ export default function ManifestExamplesPage() {
     }
   ]
 }`}</CodeBlock>
+          </LedgerCard>
         </section>
 
         {/* DeFi protocol */}
-        <section id="defi" style={{ marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 700, margin: "0 0 8px" }}>
-            DeFi protocol agent
-          </h2>
-          <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 20px", lineHeight: 1.6 }}>
-            A protocol with a fee switch, treasury, and token contract. The deployer is inactive
-            (historical reference). Token contract is declared separately from treasury.
-            Fee revenue flows through a dedicated recipient wallet.
-          </p>
-          <CodeBlock filename=".agent/wallets.json">{`{
+        <section id="defi" style={{ marginBottom: 40 }}>
+          <LedgerCard title="DeFi protocol agent" eyebrow="Example 3">
+            <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
+              A protocol with a fee switch, treasury, and token contract. The deployer is inactive
+              (historical reference). Token contract is declared separately from treasury.
+              Fee revenue flows through a dedicated recipient wallet.
+            </p>
+            <CodeBlock filename=".agent/wallets.json">{`{
   "version": "1.0",
   "agent": "LiquidityProtocol",
   "project": "Liquidity Protocol",
@@ -228,19 +223,18 @@ export default function ManifestExamplesPage() {
     }
   ]
 }`}</CodeBlock>
+          </LedgerCard>
         </section>
 
         {/* Token agent (Bankr / Virtuals style) */}
-        <section id="token" style={{ marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 700, margin: "0 0 8px" }}>
-            Token agent (Bankr / Virtuals)
-          </h2>
-          <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 20px", lineHeight: 1.6 }}>
-            An AI agent with a meme/utility token issued via Bankr or Virtuals. Treasury holds operating capital,
-            the token contract is declared for transparency, and a token-bound account (ERC-6551)
-            is used for agent-controlled assets.
-          </p>
-          <CodeBlock filename=".agent/wallets.json">{`{
+        <section id="token" style={{ marginBottom: 40 }}>
+          <LedgerCard title="Token agent (Bankr / Virtuals)" eyebrow="Example 4">
+            <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
+              An AI agent with a meme/utility token issued via Bankr or Virtuals. Treasury holds operating capital,
+              the token contract is declared for transparency, and a token-bound account (ERC-6551)
+              is used for agent-controlled assets.
+            </p>
+            <CodeBlock filename=".agent/wallets.json">{`{
   "version": "1.0",
   "agent": "BANKR Agent",
   "project": "BANKR Agent",
@@ -290,19 +284,18 @@ export default function ManifestExamplesPage() {
     }
   ]
 }`}</CodeBlock>
+          </LedgerCard>
         </section>
 
         {/* ERC-8004 agent */}
-        <section id="erc8004" style={{ marginBottom: 56 }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", fontWeight: 700, margin: "0 0 8px" }}>
-            ERC-8004 agent
-          </h2>
-          <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 20px", lineHeight: 1.6 }}>
-            An agent registered in the ERC-8004 on-chain agent registry. The <code style={code}>did</code> field
-            anchors the manifest to the on-chain identity. All other fields follow the same pattern
-            as the examples above.
-          </p>
-          <CodeBlock filename=".agent/wallets.json">{`{
+        <section id="erc8004" style={{ marginBottom: 40 }}>
+          <LedgerCard title="ERC-8004 agent" eyebrow="Example 5">
+            <p style={{ fontSize: "0.84rem", ...muted, margin: "0 0 16px", lineHeight: 1.6 }}>
+              An agent registered in the ERC-8004 on-chain agent registry. The <code style={code}>did</code> field
+              anchors the manifest to the on-chain identity. All other fields follow the same pattern
+              as the examples above.
+            </p>
+            <CodeBlock filename=".agent/wallets.json">{`{
   "version": "1.0",
   "agent": "pawr",
   "project": "pawr.link",
@@ -333,11 +326,12 @@ export default function ManifestExamplesPage() {
     }
   ]
 }`}</CodeBlock>
-          <p style={{ fontSize: "0.82rem", ...muted, margin: 0 }}>
-            The <code style={code}>did</code> field connects the off-chain declaration to an on-chain identity anchor.
-            ERC-8004 integration is coming — agents that declare their DID now will be automatically linked
-            when ERC-8004 ingestion ships.
-          </p>
+            <p style={{ fontSize: "0.82rem", ...muted, margin: "14px 0 0" }}>
+              The <code style={code}>did</code> field connects the off-chain declaration to an on-chain identity anchor.
+              ERC-8004 integration is coming — agents that declare their DID now will be automatically linked
+              when ERC-8004 ingestion ships.
+            </p>
+          </LedgerCard>
         </section>
 
         {/* Nav footer */}

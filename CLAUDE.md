@@ -145,3 +145,19 @@ cd ~/.claude/skills/gstack && ./setup --team
 
 Skills like /qa, /ship, /review, /investigate, and /browse become available after install.
 Use /browse for all web browsing. Use ~/.claude/skills/gstack/... for gstack file paths.
+
+## Design system
+
+The canonical design system is defined in `DESIGN.md` at the project root.
+
+**Current system: Terminal Ledger A (TL-A)** — dark-first, data-dense, institutional.
+
+Key rules for all UI work:
+- Component library: `LedgerRow`/`LedgerCard`/`SectionLabel` from `@/components/ui/ledger`, `MetricCard`/`MetricGrid` from `@/components/ui/metric`, `StatusBadge` from `@/components/ui/badge`
+- Missing data: always render `—` (em-dash), never `$0.00`
+- Agent bio must appear immediately below agent name on all profile pages
+- MetricGrid always appears before Luca verdict
+- No pill buttons (`border-radius: 99px`) — use `--radius-md: 6px`
+- Dark mode is the only supported mode
+- Typography: JetBrains Mono for display/data values, DM Sans for body/UI text
+- See DESIGN.md §10 for rollout phases before implementing font changes

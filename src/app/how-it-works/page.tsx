@@ -1,6 +1,31 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
+
+const STACK_STEPS = [
+  { num: "01", title: "Agent",    desc: "Earns, spends, settles on Base.",                       highlight: false },
+  { num: "02", title: "Manifest", desc: "Declares wallet identity (.agent/wallets.json).",        highlight: true  },
+  { num: "03", title: "Registry", desc: "Indexed, verified, attribution confirmed.",              highlight: false },
+  { num: "04", title: "Books",    desc: "Classified P&L: revenue, expenses, net income.",        highlight: false },
+  { num: "05", title: "Luca",     desc: "Financial intelligence and reporting.",                  highlight: false },
+];
+
+const LAYERS = [
+  {
+    title: "Attribution Layer",
+    desc: "Wallets declare which addresses belong to each agent. This is the foundation — no attribution, no books.",
+  },
+  {
+    title: "Classification Layer",
+    desc: "Attributed transactions are classified into operating revenue, expenses, treasury movement, and net income.",
+  },
+  {
+    title: "Intelligence Layer",
+    desc: "Luca reads attributed books and produces financial verdicts: signals, summaries, confidence levels, trend analysis.",
+  },
+];
 
 export default function HowItWorksPage() {
   return (
@@ -9,16 +34,7 @@ export default function HowItWorksPage() {
 
       {/* Hero */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px 32px" }}>
-        <p style={{
-          margin: "0 0 12px",
-          fontSize: "0.68rem",
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.1em",
-          color: "var(--muted)",
-        }}>
-          Architecture
-        </p>
+        <SectionLabel>Architecture</SectionLabel>
         <h1 style={{
           margin: "0 0 16px",
           fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)",
@@ -41,77 +57,43 @@ export default function HowItWorksPage() {
 
       {/* Stack diagram */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 48px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "stretch", gap: 8 }}>
-          {[
-            {
-              num: "01",
-              title: "Agent",
-              desc: "Earns, spends, settles on Base.",
-              highlight: false,
-            },
-            {
-              num: "02",
-              title: "Manifest",
-              desc: "Declares wallet identity (.agent/wallets.json).",
-              highlight: true,
-            },
-            {
-              num: "03",
-              title: "Registry",
-              desc: "Indexed, verified, attribution confirmed.",
-              highlight: false,
-            },
-            {
-              num: "04",
-              title: "Books",
-              desc: "Classified P&L: revenue, expenses, net income.",
-              highlight: false,
-            },
-            {
-              num: "05",
-              title: "Luca",
-              desc: "Financial intelligence and reporting.",
-              highlight: false,
-            },
-          ].map((step, i, arr) => (
-            <div key={step.num} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{
-                minWidth: 150,
-                background: "var(--surface)",
-                border: step.highlight ? "1px solid #6DB874" : "1px solid var(--line)",
-                borderRadius: 8,
-                padding: "14px 16px",
-                boxShadow: step.highlight ? "0 0 0 1px rgba(109,184,116,0.15)" : "none",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+        <LedgerCard eyebrow="5-step stack" title="From agent to intelligence">
+          {STACK_STEPS.map((step, i) => (
+            <LedgerRow
+              key={step.num}
+              first={i === 0}
+              last={i === STACK_STEPS.length - 1}
+              label={
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{
-                    fontSize: "0.65rem",
-                    fontWeight: 700,
                     fontFamily: "var(--font-mono)",
-                    color: step.highlight ? "#6DB874" : "var(--muted)",
+                    fontSize: "0.65rem",
+                    color: step.highlight ? "var(--accent)" : "var(--muted)",
+                    width: 24,
+                    flexShrink: 0,
                   }}>
                     {step.num}
                   </span>
-                  <span style={{
-                    fontSize: "0.88rem",
-                    fontWeight: 700,
-                    color: step.highlight ? "#6DB874" : "var(--ink)",
-                  }}>
+                  <span style={{ color: step.highlight ? "var(--accent)" : undefined }}>
                     {step.title}
                   </span>
-                </div>
-                <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>
-                  {step.desc}
-                </p>
-              </div>
-              {i < arr.length - 1 && (
-                <span style={{ fontSize: "1rem", color: "var(--muted)", flexShrink: 0 }} aria-hidden="true">
-                  →
+                  {step.highlight && (
+                    <StatusBadge variant="green">Key Step</StatusBadge>
+                  )}
                 </span>
-              )}
-            </div>
+              }
+              value={step.desc}
+              valueStyle={{
+                fontFamily: "inherit",
+                fontWeight: 400,
+                fontSize: "0.78rem",
+                color: "var(--muted)",
+                textAlign: "right",
+              }}
+              style={step.highlight ? { borderColor: "rgba(74,232,160,0.3)", boxShadow: "0 0 0 1px rgba(74,232,160,0.1)" } : undefined}
+            />
           ))}
-        </div>
+        </LedgerCard>
       </section>
 
       {/* "Why the Manifest is Step 1" callout */}
@@ -119,15 +101,15 @@ export default function HowItWorksPage() {
         <div style={{
           background: "var(--surface)",
           border: "1px solid var(--line)",
-          borderLeft: "3px solid #6DB874",
+          borderLeft: "3px solid #4AE8A0",
           borderRadius: 8,
           padding: "20px 24px",
         }}>
-          <p style={{ margin: "0 0 8px", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#6DB874" }}>
+          <SectionLabel style={{ color: "var(--accent)", marginBottom: 8 }}>
             Why the Manifest is Step 1
-          </p>
+          </SectionLabel>
           <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted)", lineHeight: 1.7 }}>
-            Without a declared manifest, Zetta cannot attribute any transaction to your agent. No manifest = no books, no revenue, no treasury profile, no inclusion in Luca's reports or Agent GDP. The manifest is the identity declaration that makes everything downstream possible.
+            Without a declared manifest, Zetta cannot attribute any transaction to your agent. No manifest = no books, no revenue, no treasury profile, no inclusion in Luca&apos;s reports or Agent GDP. The manifest is the identity declaration that makes everything downstream possible.
           </p>
         </div>
       </div>
@@ -135,32 +117,25 @@ export default function HowItWorksPage() {
       {/* Three-column "What each layer does" grid */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 48px" }}>
         <h2 style={{ margin: "0 0 20px", fontSize: "1.1rem", fontWeight: 700, color: "var(--ink)" }}>What each layer does</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
-          {[
-            {
-              title: "Attribution Layer",
-              desc: "Wallets declare which addresses belong to each agent. This is the foundation — no attribution, no books.",
-            },
-            {
-              title: "Classification Layer",
-              desc: "Attributed transactions are classified into operating revenue, expenses, treasury movement, and net income.",
-            },
-            {
-              title: "Intelligence Layer",
-              desc: "Luca reads attributed books and produces financial verdicts: signals, summaries, confidence levels, trend analysis.",
-            },
-          ].map((layer) => (
-            <div key={layer.title} style={{
-              background: "var(--surface)",
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              padding: "20px 22px",
-            }}>
-              <p style={{ margin: "0 0 10px", fontSize: "0.88rem", fontWeight: 700, color: "var(--ink)" }}>{layer.title}</p>
-              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65 }}>{layer.desc}</p>
-            </div>
+        <LedgerCard>
+          {LAYERS.map((layer, i) => (
+            <LedgerRow
+              key={layer.title}
+              first={i === 0}
+              last={i === LAYERS.length - 1}
+              label={layer.title}
+              value={layer.desc}
+              valueStyle={{
+                fontFamily: "inherit",
+                fontWeight: 400,
+                fontSize: "0.78rem",
+                color: "var(--muted)",
+                textAlign: "right",
+                maxWidth: 480,
+              }}
+            />
           ))}
-        </div>
+        </LedgerCard>
       </div>
 
       {/* "What goes in the manifest" code block */}

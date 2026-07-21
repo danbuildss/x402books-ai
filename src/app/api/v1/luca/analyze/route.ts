@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { v1Auth } from "@/lib/v1-auth";
+import { v1Auth, agentScopeViolation } from "@/lib/v1-auth";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { getInferenceEvents, summarizeInferenceEvents } from "@/lib/inference-events";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
@@ -277,7 +277,13 @@ export async function POST(req: NextRequest) {
   let result: NextResponse;
 
   if (typeof body.agent_id === "string" && body.agent_id.trim()) {
-    result = await analyzeByAgentId(body.agent_id.trim().toLowerCase());
+    const requestedSlug = body.agent_id.trim().toLowerCase();
+    const violation = agentScopeViolation(auth.agentScope, requestedSlug);
+    if (violation) {
+      auth.finish(403, Date.now() - start, "/api/v1/luca/analyze");
+      return NextResponse.json({ error: violation }, { status: 403 });
+    }
+    result = await analyzeByAgentId(requestedSlug);
   } else if (typeof body.wallet === "string" && body.wallet.trim()) {
     try {
       result = await analyzeByWallet(body.wallet.trim());

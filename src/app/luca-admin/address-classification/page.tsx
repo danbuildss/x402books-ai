@@ -72,26 +72,26 @@ type ClassificationReport = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TYPE_META: Record<AddressType, { label: string; color: string }> = {
-  eoa:               { label: "EOA",             color: "#22c55e" },
-  token_contract:    { label: "Token Contract",  color: "#ef4444" },
-  proxy_contract:    { label: "Proxy Contract",  color: "#f59e0b" },
-  treasury_contract: { label: "Treasury (Safe)", color: "#6DB874" },
-  vault:             { label: "Vault",           color: "#a855f7" },
-  smart_contract:    { label: "Smart Contract",  color: "#f97316" },
-  smart_account:     { label: "Smart Account",   color: "#3b82f6" },
-  unknown:           { label: "Unknown",         color: "#6b7280" },
+  eoa:               { label: "EOA",             color: "#4AE8A0" },
+  token_contract:    { label: "Token Contract",  color: "#F46060" },
+  proxy_contract:    { label: "Proxy Contract",  color: "#F4B942" },
+  treasury_contract: { label: "Treasury (Safe)", color: "#4AE8A0" },
+  vault:             { label: "Vault",           color: "#8B7CF6" },
+  smart_contract:    { label: "Smart Contract",  color: "#F4B942" },
+  smart_account:     { label: "Smart Account",   color: "#5B9EF4" },
+  unknown:           { label: "Unknown",         color: "var(--muted)" },
 };
 
 const ATTR_META: Record<WalletReport["attribution"], { label: string; color: string }> = {
-  manifest:   { label: "Manifest",   color: "#22c55e" },
-  discovered: { label: "Discovered", color: "#f59e0b" },
-  unknown:    { label: "Unknown",    color: "#6b7280" },
+  manifest:   { label: "Manifest",   color: "#4AE8A0" },
+  discovered: { label: "Discovered", color: "#F4B942" },
+  unknown:    { label: "Unknown",    color: "var(--muted)" },
 };
 
 const STATUS_META: Record<AgentReport["attribution_status"], { label: string; color: string }> = {
-  attributed:      { label: "Attributed",      color: "#22c55e" },
-  discovered_only: { label: "Discovered Only", color: "#f59e0b" },
-  unattributed:    { label: "Unattributed",    color: "#6b7280" },
+  attributed:      { label: "Attributed",      color: "#4AE8A0" },
+  discovered_only: { label: "Discovered Only", color: "#F4B942" },
+  unattributed:    { label: "Unattributed",    color: "var(--muted)" },
 };
 
 function shortAddr(addr: string) {
@@ -178,7 +178,7 @@ export default function AddressClassificationPage() {
             <button
               onClick={() => runAudit(false)}
               disabled={loading || writing}
-              style={{ padding: "8px 18px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
             >
               {loading ? "Classifying…" : "Run Audit"}
             </button>
@@ -186,20 +186,20 @@ export default function AddressClassificationPage() {
               onClick={() => runAudit(true)}
               disabled={loading || writing}
               title="Classify all wallets and write address_type back to the database"
-              style={{ padding: "8px 18px", borderRadius: 6, background: "#3b82f6", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
+              style={{ padding: "8px 18px", borderRadius: 6, background: "#5B9EF4", color: "#fff", border: "none", cursor: (loading || writing) ? "not-allowed" : "pointer", fontWeight: 600, fontSize: 13, opacity: (loading || writing) ? 0.6 : 1 }}
             >
               {writing ? "Classifying & Writing…" : "Classify & Write to DB"}
             </button>
           </div>
           {writeMsg && (
-            <div style={{ marginTop: 10, fontSize: 12, color: writeMsg.startsWith("Write error") ? "#ef4444" : "#22c55e", fontWeight: 600 }}>
+            <div style={{ marginTop: 10, fontSize: 12, color: writeMsg.startsWith("Write error") ? "#F46060" : "#4AE8A0", fontWeight: 600 }}>
               {writeMsg}
             </div>
           )}
         </div>
 
         {error && (
-          <div style={{ background: "#ef444418", border: "1px solid #ef4444", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#ef4444", fontSize: 13 }}>
+          <div style={{ background: "#F4606018", border: "1px solid #F46060", borderRadius: 8, padding: "10px 14px", marginBottom: 20, color: "#F46060", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -213,12 +213,12 @@ export default function AddressClassificationPage() {
 
             {/* Critical issues */}
             {report.critical_issues.length > 0 && (
-              <div style={{ background: "#ef444410", border: "1px solid #ef444440", borderRadius: 8, padding: "14px 18px", marginBottom: 20 }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: "#ef4444", marginBottom: 8 }}>
+              <div style={{ background: "#F4606010", border: "1px solid #F4606040", borderRadius: 8, padding: "14px 18px", marginBottom: 20 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#F46060", marginBottom: 8 }}>
                   ⚠ {report.critical_issues.length} Critical Issue{report.critical_issues.length > 1 ? "s" : ""}
                 </div>
                 {report.critical_issues.map((issue, i) => (
-                  <div key={i} style={{ fontSize: 12, color: "#ef4444", marginBottom: 4 }}>• {issue}</div>
+                  <div key={i} style={{ fontSize: 12, color: "#F46060", marginBottom: 4 }}>• {issue}</div>
                 ))}
               </div>
             )}
@@ -227,17 +227,17 @@ export default function AddressClassificationPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 10, marginBottom: 24 }}>
               {[
                 { label: "Total Agents",        value: report.summary.total_agents,              color: "var(--ink)" },
-                { label: "Attributed",           value: report.summary.attributed_agents,         color: "#22c55e" },
-                { label: "Discovered Only",      value: report.summary.discovered_only_agents,    color: "#f59e0b" },
-                { label: "Unattributed",         value: report.summary.unattributed_agents,       color: "#6b7280" },
-                { label: "Coverage",             value: `${report.summary.attribution_coverage_pct}%`, color: "#6DB874" },
+                { label: "Attributed",           value: report.summary.attributed_agents,         color: "#4AE8A0" },
+                { label: "Discovered Only",      value: report.summary.discovered_only_agents,    color: "#F4B942" },
+                { label: "Unattributed",         value: report.summary.unattributed_agents,       color: "var(--muted)" },
+                { label: "Coverage",             value: `${report.summary.attribution_coverage_pct}%`, color: "#4AE8A0" },
                 { label: "Total Addresses",      value: report.summary.total_addresses,           color: "var(--ink)" },
-                { label: "EOA",                  value: report.summary.eoa_count,                 color: "#22c55e" },
-                { label: "Token Contracts",      value: report.summary.token_contract_count,      color: "#ef4444" },
-                { label: "Smart Contracts",      value: report.summary.smart_contract_count,      color: "#f97316" },
-                { label: "Proxy Contracts",      value: report.summary.proxy_contract_count,      color: "#f59e0b" },
-                { label: "Treasury (Safe)",      value: report.summary.treasury_contract_count,   color: "#6DB874" },
-                { label: "Valid for Books",      value: report.summary.valid_for_books_count,     color: "#22c55e" },
+                { label: "EOA",                  value: report.summary.eoa_count,                 color: "#4AE8A0" },
+                { label: "Token Contracts",      value: report.summary.token_contract_count,      color: "#F46060" },
+                { label: "Smart Contracts",      value: report.summary.smart_contract_count,      color: "#F4B942" },
+                { label: "Proxy Contracts",      value: report.summary.proxy_contract_count,      color: "#F4B942" },
+                { label: "Treasury (Safe)",      value: report.summary.treasury_contract_count,   color: "#4AE8A0" },
+                { label: "Valid for Books",      value: report.summary.valid_for_books_count,     color: "#4AE8A0" },
               ].map((kpi) => (
                 <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px" }}>
                   <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
@@ -364,19 +364,19 @@ export default function AddressClassificationPage() {
                           <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.wallets.length > 0 ? "var(--ink)" : "var(--muted)" }}>
                             {agent.wallets.length > 0 ? agent.wallets.length : "—"}
                           </td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.manifest_wallet_count > 0 ? "#22c55e" : "var(--muted)" }}>
+                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.manifest_wallet_count > 0 ? "#4AE8A0" : "var(--muted)" }}>
                             {agent.manifest_wallet_count > 0 ? agent.manifest_wallet_count : "—"}
                           </td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.discovered_wallet_count > 0 ? "#f59e0b" : "var(--muted)" }}>
+                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.discovered_wallet_count > 0 ? "#F4B942" : "var(--muted)" }}>
                             {agent.discovered_wallet_count > 0 ? agent.discovered_wallet_count : "—"}
                           </td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.eoa_count > 0 ? "#22c55e" : "var(--muted)" }}>
+                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.eoa_count > 0 ? "#4AE8A0" : "var(--muted)" }}>
                             {agent.eoa_count > 0 ? agent.eoa_count : "—"}
                           </td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.contract_count > 0 ? "#ef4444" : "var(--muted)" }}>
+                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: agent.contract_count > 0 ? "#F46060" : "var(--muted)" }}>
                             {agent.contract_count > 0 ? agent.contract_count : "—"}
                           </td>
-                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: validForBooks > 0 ? "#22c55e" : "var(--muted)" }}>
+                          <td style={{ padding: "10px 12px", fontSize: 13, fontFamily: "var(--font-mono)", color: validForBooks > 0 ? "#4AE8A0" : "var(--muted)" }}>
                             {validForBooks > 0 ? validForBooks : "—"}
                           </td>
                           <td style={{ padding: "10px 12px", fontSize: 13, color: "var(--muted)" }}>
@@ -400,9 +400,9 @@ export default function AddressClassificationPage() {
                                     const aMeta = ATTR_META[w.attribution];
                                     const isCritical = w.attribution === "manifest" && (w.address_type === "token_contract" || w.address_type === "smart_contract" || w.address_type === "proxy_contract");
                                     return (
-                                      <tr key={wi} style={{ borderBottom: wi < agent.wallets.length - 1 ? "1px solid var(--line)" : "none", background: isCritical ? "#ef444408" : "transparent" }}>
+                                      <tr key={wi} style={{ borderBottom: wi < agent.wallets.length - 1 ? "1px solid var(--line)" : "none", background: isCritical ? "#F4606008" : "transparent" }}>
                                         <td style={{ padding: "6px 10px", fontFamily: "var(--font-mono)", fontSize: 11 }}>
-                                          {isCritical && <span style={{ color: "#ef4444", marginRight: 4 }}>⚠</span>}
+                                          {isCritical && <span style={{ color: "#F46060", marginRight: 4 }}>⚠</span>}
                                           <a
                                             href={`https://basescan.org/address/${w.address}`}
                                             target="_blank"
@@ -424,7 +424,7 @@ export default function AddressClassificationPage() {
                                         </td>
                                         <td style={{ padding: "6px 10px", fontSize: 11, color: "var(--muted)" }}>{w.role ?? "—"}</td>
                                         <td style={{ padding: "6px 10px", fontSize: 11, color: "var(--muted)" }}>{w.chain ?? "base"}</td>
-                                        <td style={{ padding: "6px 10px", fontSize: 12, color: w.is_valid_for_books ? "#22c55e" : "var(--muted)" }}>
+                                        <td style={{ padding: "6px 10px", fontSize: 12, color: w.is_valid_for_books ? "#4AE8A0" : "var(--muted)" }}>
                                           {w.is_valid_for_books ? "✓" : "✗"}
                                         </td>
                                       </tr>

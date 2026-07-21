@@ -12,9 +12,9 @@ function fmtDate(iso: string): string {
 }
 
 function typeBadgeColor(type: string): string {
-  if (type === "weekly") return "#6DB874";
-  if (type === "monthly") return "#5B8FA8";
-  if (type === "quarterly") return "#8B5CF6";
+  if (type === "weekly") return "#4AE8A0";
+  if (type === "monthly") return "#5B9EF4";
+  if (type === "quarterly") return "#8B7CF6";
   return "var(--muted)";
 }
 

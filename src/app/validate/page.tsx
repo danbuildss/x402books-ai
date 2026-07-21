@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 import "./validate.css";
 
 // ── Schema constants (mirror wallets.schema.json) ─────────────────────────────
@@ -188,13 +190,13 @@ function ValidResult({ manifest, onSubmit }: { manifest: ParsedManifest; onSubmi
         <p className="val-wallets-label">Wallets</p>
         {manifest.wallets.map((w, i) => (
           <div key={i} className="val-wallet-row">
-            <span className="val-wallet-role">{w.role}</span>
+            <StatusBadge variant="green">{w.role}</StatusBadge>
             <span className="val-wallet-chain">{w.chain}</span>
             <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="val-wallet-addr">
               {truncate(w.address)}
             </a>
             {w.notes && <span className="val-wallet-note">{w.notes}</span>}
-            {w.active === false && <span className="val-wallet-inactive">inactive</span>}
+            {w.active === false && <StatusBadge variant="neutral">inactive</StatusBadge>}
           </div>
         ))}
       </div>
@@ -216,7 +218,7 @@ function ErrorResult({ errors }: { errors: ValidationError[] }) {
   return (
     <div className="val-result val-result-err">
       <div className="val-result-header">
-        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#ef4444" }}>cancel</span>
+        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#F46060" }}>cancel</span>
         <div>
           <p className="val-result-title">Validation Failed</p>
           <p className="val-result-sub">{errors.length} error{errors.length !== 1 ? "s" : ""} found</p>
@@ -324,7 +326,7 @@ export default function ValidatePage() {
       </header>
 
       <section className="val-hero">
-        <p className="reg-label">Agent Wallet Manifest</p>
+        <SectionLabel>Agent Wallet Manifest</SectionLabel>
         <h1 className="val-h1">Validate your manifest.</h1>
         <p className="val-hero-sub">
           Paste your <code className="val-code">.agent/wallets.json</code> below.
@@ -397,49 +399,67 @@ export default function ValidatePage() {
         </div>
       </section>
 
+      {/* How it works */}
       <section className="val-how">
-        <p className="reg-label">How it works</p>
+        <SectionLabel style={{ marginBottom: 12 }}>How it works</SectionLabel>
         <h2 className="val-h2">From manifest to registry profile.</h2>
-        <div className="val-steps">
-          {[
-            { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .agent/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
-            { icon: "verified", step: "2", title: "Validate here", body: "Paste and validate against the open schema. Zero errors means it's registry-ready." },
-            { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to Zetta. Luca indexes your wallets and builds a financial profile." },
-            { icon: "workspace_premium", step: "4", title: "Get verified", body: "Earn the Verified badge. Paste it in your README as proof of financial identity." },
-          ].map((s) => (
-            <div key={s.step} className="val-step">
-              <div className="val-step-icon">
-                <span className="material-symbols-outlined">{s.icon}</span>
-              </div>
-              <p className="val-step-num">Step {s.step}</p>
-              <p className="val-step-title">{s.title}</p>
-              <p className="val-step-body">{s.body}</p>
-            </div>
-          ))}
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <LedgerCard>
+            {[
+              { icon: "edit_document", step: "1", title: "Add wallets.json", body: "Create .agent/wallets.json in your repo. Declare wallet addresses, roles, and chain." },
+              { icon: "verified", step: "2", title: "Validate here", body: "Paste and validate against the open schema. Zero errors means it's registry-ready." },
+              { icon: "send", step: "3", title: "Submit to registry", body: "One click submits to Zetta. Luca indexes your wallets and builds a financial profile." },
+              { icon: "workspace_premium", step: "4", title: "Get verified", body: "Earn the Verified badge. Paste it in your README as proof of financial identity." },
+            ].map((s, i, arr) => (
+              <LedgerRow
+                key={s.step}
+                first={i === 0}
+                last={i === arr.length - 1}
+                label={
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)" }}>{s.icon}</span>
+                    <div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--ink)" }}>{s.title}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400, marginTop: 2 }}>{s.body}</div>
+                    </div>
+                  </div>
+                }
+                value=""
+                badge={<StatusBadge variant="neutral">Step {s.step}</StatusBadge>}
+              />
+            ))}
+          </LedgerCard>
         </div>
       </section>
 
+      {/* Wallet roles reference */}
       <section className="val-roles">
-        <p className="reg-label">Reference</p>
+        <SectionLabel style={{ marginBottom: 12 }}>Reference</SectionLabel>
         <h2 className="val-h2">Wallet roles.</h2>
-        <div className="val-roles-grid">
-          {[
-            ["treasury", "Holds protocol reserves and long-term funds"],
-            ["revenue", "Receives income from services or API usage"],
-            ["expense", "Sends payments to providers or services"],
-            ["operator", "Hot wallet for agent-initiated on-chain operations"],
-            ["deployer", "Used to deploy contracts"],
-            ["fee_recipient", "Receives protocol or platform fees"],
-            ["payment_receiver", "Receives payments from users or integrations"],
-            ["token_contract", "Address of an associated token contract"],
-            ["token_bound_account", "ERC-6551 token-bound account"],
-            ["unknown", "Role not yet classified"],
-          ].map(([role, desc]) => (
-            <div key={role} className="val-role-row">
-              <code className="val-role-code">{role}</code>
-              <span className="val-role-desc">{desc}</span>
-            </div>
-          ))}
+        <div style={{ maxWidth: 680, margin: "0 auto" }}>
+          <LedgerCard>
+            {[
+              ["treasury", "Holds protocol reserves and long-term funds"],
+              ["revenue", "Receives income from services or API usage"],
+              ["expense", "Sends payments to providers or services"],
+              ["operator", "Hot wallet for agent-initiated on-chain operations"],
+              ["deployer", "Used to deploy contracts"],
+              ["fee_recipient", "Receives protocol or platform fees"],
+              ["payment_receiver", "Receives payments from users or integrations"],
+              ["token_contract", "Address of an associated token contract"],
+              ["token_bound_account", "ERC-6551 token-bound account"],
+              ["unknown", "Role not yet classified"],
+            ].map(([role, desc], i, arr) => (
+              <LedgerRow
+                key={role}
+                first={i === 0}
+                last={i === arr.length - 1}
+                label={<code style={{ fontFamily: "var(--font-mono)", fontSize: "0.8rem", color: "var(--accent)" }}>{role}</code>}
+                value={desc}
+                valueStyle={{ fontFamily: "inherit", fontWeight: 400, color: "var(--muted)", fontSize: "0.8rem" }}
+              />
+            ))}
+          </LedgerCard>
         </div>
       </section>
 

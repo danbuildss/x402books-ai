@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type ManifestWallet = { address: string; role: string; label?: string };
 type ManifestPreview = { wallets: ManifestWallet[]; agentName?: string; ref_id?: string };
@@ -28,62 +30,72 @@ function FetchTab() {
     finally { setFetching(false); }
   }
 
+  function roleVariant(role: string): "green" | "blue" | "amber" | "purple" | "neutral" {
+    if (role === "treasury") return "green";
+    if (role === "revenue") return "green";
+    if (role === "fee") return "blue";
+    if (role === "deployer") return "purple";
+    if (role === "operator") return "amber";
+    return "neutral";
+  }
+
   return (
     <div>
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 4 }}>Fetch from GitHub</h2>
-        <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.55 }}>
-          Point to a GitHub repo containing a <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> manifest.
-        </p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <input className="op-input" placeholder="https://github.com/your-org/your-agent-repo" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && fetchManifest()} />
-          <button className="op-btn op-btn-primary" onClick={fetchManifest} disabled={fetching || !repoUrl.trim()}>{fetching ? "Fetching…" : "Fetch"}</button>
+      <LedgerCard eyebrow="Attribution" title="Fetch from GitHub">
+        <div style={{ padding: "14px" }}>
+          <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 16px", lineHeight: 1.55 }}>
+            Point to a GitHub repo containing a <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> manifest.
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="op-input" placeholder="https://github.com/your-org/your-agent-repo" value={repoUrl} onChange={(e) => setRepoUrl(e.target.value)} onKeyDown={(e) => e.key === "Enter" && fetchManifest()} />
+            <button className="op-btn op-btn-primary" onClick={fetchManifest} disabled={fetching || !repoUrl.trim()}>{fetching ? "Fetching…" : "Fetch"}</button>
+          </div>
+          {error && <p style={{ color: "#F46060", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
         </div>
-        {error && <p style={{ color: "#c0392b", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
-      </div>
+      </LedgerCard>
 
       {preview && (
-        <div className="op-card">
-          <div className="op-card-head">
-            <h2 className="op-card-title">Manifest Preview</h2>
-            {preview.ref_id && <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--muted)" }}>ref: {preview.ref_id}</span>}
-          </div>
+        <LedgerCard
+          eyebrow="Preview"
+          title="Manifest Preview"
+          action={preview.ref_id ? <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--muted)" }}>ref: {preview.ref_id}</span> : undefined}
+        >
           {preview.wallets.length === 0 ? (
-            <p style={{ color: "var(--muted)", fontSize: "0.81rem" }}>No wallets found in manifest.</p>
+            <div style={{ padding: "14px", color: "var(--muted)", fontSize: "0.81rem" }}>No wallets found in manifest.</div>
           ) : (
-            <table className="op-table">
-              <thead><tr><th>Address</th><th>Role</th><th>Label</th></tr></thead>
-              <tbody>
-                {preview.wallets.map((w) => (
-                  <tr key={w.address}>
-                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>{w.address}</td>
-                    <td><span className="op-badge" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>{w.role}</span></td>
-                    <td style={{ fontSize: "0.76rem", color: "var(--muted)" }}>{w.label ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            preview.wallets.map((w, i) => (
+              <LedgerRow
+                key={w.address}
+                first={i === 0}
+                last={i === preview.wallets.length - 1}
+                label={<span style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>{w.address}</span>}
+                badge={<StatusBadge variant={roleVariant(w.role)}>{w.role}</StatusBadge>}
+                value={w.label ?? "—"}
+                valueStyle={{ color: "var(--muted)", fontFamily: "inherit", fontWeight: 400 }}
+              />
+            ))
           )}
-          <div style={{ marginTop: 16, padding: 12, background: "var(--surface-soft)", borderRadius: 7, fontSize: "0.77rem", color: "var(--muted)" }}>
+          <div style={{ padding: "12px 14px", borderTop: "1px solid var(--line)", fontSize: "0.77rem", color: "var(--muted)" }}>
             Manifest fetched and recorded. The Zetta team will review and activate attribution.
           </div>
-        </div>
+        </LedgerCard>
       )}
 
-      <div className="op-card">
-        <h2 className="op-card-title" style={{ marginBottom: 8 }}>wallets.json format</h2>
-        <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem", color: "var(--muted)", background: "var(--surface-soft)", padding: 14, borderRadius: 7, overflowX: "auto", margin: 0 }}>{`{
+      <LedgerCard eyebrow="Format" title="wallets.json format">
+        <div style={{ padding: "14px" }}>
+          <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem", color: "var(--muted)", background: "var(--surface-soft)", padding: 14, borderRadius: 7, overflowX: "auto", margin: 0 }}>{`{
   "agent": "Your Agent Name",
   "wallets": [
     { "address": "0xYourTreasuryWallet", "role": "treasury", "label": "Primary treasury" },
     { "address": "0xYourFeeWallet",      "role": "fee",      "label": "Fee collection"    }
   ]
 }`}</pre>
-        <p style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: 10 }}>
-          Place at <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> in your repo root.
-          Valid roles: {ROLES.join(", ")}.
-        </p>
-      </div>
+          <p style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: 10 }}>
+            Place at <code style={{ fontFamily: "var(--font-mono)", background: "var(--surface-soft)", padding: "1px 5px", borderRadius: 4 }}>.agent/wallets.json</code> in your repo root.
+            Valid roles: {ROLES.join(", ")}.
+          </p>
+        </div>
+      </LedgerCard>
     </div>
   );
 }
@@ -131,68 +143,72 @@ function BuildTab() {
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "start" }}>
       {/* Left: form */}
       <div>
-        <div className="op-card">
-          <h2 className="op-card-title" style={{ marginBottom: 16 }}>Agent Details</h2>
-          <div className="op-field">
-            <label className="op-label">Agent name *</label>
-            <input className="op-input" placeholder="My Agent" value={agentName} onChange={(e) => setAgentName(e.target.value)} />
+        <LedgerCard eyebrow="Agent" title="Agent Details">
+          <div style={{ padding: "14px" }}>
+            <div className="op-field">
+              <label className="op-label">Agent name *</label>
+              <input className="op-input" placeholder="My Agent" value={agentName} onChange={(e) => setAgentName(e.target.value)} />
+            </div>
+            <div className="op-field">
+              <label className="op-label">X / Twitter handle <span style={{ color: "var(--muted)" }}>(optional)</span></label>
+              <input className="op-input" placeholder="@myagent" value={xHandle} onChange={(e) => setXHandle(e.target.value)} />
+            </div>
           </div>
-          <div className="op-field">
-            <label className="op-label">X / Twitter handle <span style={{ color: "var(--muted)" }}>(optional)</span></label>
-            <input className="op-input" placeholder="@myagent" value={xHandle} onChange={(e) => setXHandle(e.target.value)} />
-          </div>
-        </div>
+        </LedgerCard>
 
-        <div className="op-card">
-          <div className="op-card-head">
-            <h2 className="op-card-title">Wallets</h2>
-            <button className="op-btn" style={{ fontSize: "0.73rem", padding: "4px 10px" }} onClick={addWallet}>+ Add wallet</button>
-          </div>
-          {wallets.map((w, i) => (
-            <div key={i} style={{ padding: "12px 0", borderBottom: i < wallets.length - 1 ? "1px solid var(--line)" : "none" }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-                <span style={{ fontSize: "0.72rem", color: "var(--muted)", minWidth: 20 }}>#{i + 1}</span>
-                <input
-                  className="op-input"
-                  style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: "0.76rem" }}
-                  placeholder="0x…"
-                  value={w.address}
-                  onChange={(e) => updateWallet(i, "address", e.target.value)}
-                />
-                {wallets.length > 1 && (
-                  <button className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px", color: "var(--muted)" }} onClick={() => removeWallet(i)}>✕</button>
+        <LedgerCard
+          eyebrow="Wallets"
+          title="Wallet Declarations"
+          action={<button className="op-btn" style={{ fontSize: "0.73rem", padding: "4px 10px" }} onClick={addWallet}>+ Add wallet</button>}
+        >
+          <div style={{ padding: "0 14px" }}>
+            {wallets.map((w, i) => (
+              <div key={i} style={{ padding: "12px 0", borderBottom: i < wallets.length - 1 ? "1px solid var(--line)" : "none" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                  <span style={{ fontSize: "0.72rem", color: "var(--muted)", minWidth: 20 }}>#{i + 1}</span>
+                  <input
+                    className="op-input"
+                    style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: "0.76rem" }}
+                    placeholder="0x…"
+                    value={w.address}
+                    onChange={(e) => updateWallet(i, "address", e.target.value)}
+                  />
+                  {wallets.length > 1 && (
+                    <button className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px", color: "var(--muted)" }} onClick={() => removeWallet(i)}>✕</button>
+                  )}
+                </div>
+                <div style={{ display: "flex", gap: 8, paddingLeft: 28 }}>
+                  <select className="op-input" style={{ width: 140, fontSize: "0.78rem" }} value={w.role} onChange={(e) => updateWallet(i, "role", e.target.value)}>
+                    {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <input className="op-input" style={{ flex: 1, fontSize: "0.78rem" }} placeholder="Label (optional)" value={w.label ?? ""} onChange={(e) => updateWallet(i, "label", e.target.value)} />
+                </div>
+                {w.address && !/^0x[0-9a-fA-F]{40}$/.test(w.address.trim()) && (
+                  <p style={{ fontSize: "0.72rem", color: "#F46060", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
                 )}
               </div>
-              <div style={{ display: "flex", gap: 8, paddingLeft: 28 }}>
-                <select className="op-input" style={{ width: 140, fontSize: "0.78rem" }} value={w.role} onChange={(e) => updateWallet(i, "role", e.target.value)}>
-                  {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <input className="op-input" style={{ flex: 1, fontSize: "0.78rem" }} placeholder="Label (optional)" value={w.label ?? ""} onChange={(e) => updateWallet(i, "label", e.target.value)} />
+            ))}
+            <button className="op-btn op-btn-primary" style={{ marginTop: 16, width: "100%", marginBottom: 14 }} onClick={submit} disabled={submitting || !valid}>
+              {submitting ? "Submitting…" : "Submit Manifest"}
+            </button>
+            {result && (
+              <div className={`op-alert ${result.ok ? "op-alert-info" : "op-alert-warn"}`} style={{ marginBottom: 14 }}>
+                {result.message}
               </div>
-              {w.address && !/^0x[0-9a-fA-F]{40}$/.test(w.address.trim()) && (
-                <p style={{ fontSize: "0.72rem", color: "#c0392b", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
-              )}
-            </div>
-          ))}
-          <button className="op-btn op-btn-primary" style={{ marginTop: 16, width: "100%" }} onClick={submit} disabled={submitting || !valid}>
-            {submitting ? "Submitting…" : "Submit Manifest"}
-          </button>
-          {result && (
-            <div className={`op-alert ${result.ok ? "op-alert-info" : "op-alert-warn"}`} style={{ marginTop: 12, marginBottom: 0 }}>
-              {result.message}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </LedgerCard>
       </div>
 
       {/* Right: live JSON preview */}
-      <div className="op-card" style={{ position: "sticky", top: 80 }}>
-        <h2 className="op-card-title" style={{ marginBottom: 12 }}>Live Preview</h2>
-        <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--muted)", background: "var(--surface-soft)", padding: 14, borderRadius: 7, overflowX: "auto", margin: 0, whiteSpace: "pre-wrap" }}>{manifestPreview}</pre>
-        <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
-          This JSON will be submitted directly to Zetta. No GitHub repo required.
-        </p>
-      </div>
+      <LedgerCard eyebrow="Output" title="Live Preview" style={{ position: "sticky", top: 80 }}>
+        <div style={{ padding: "0 14px 14px" }}>
+          <pre style={{ fontFamily: "var(--font-mono)", fontSize: "0.73rem", color: "var(--muted)", background: "var(--surface-soft)", padding: 14, borderRadius: 7, overflowX: "auto", margin: 0, whiteSpace: "pre-wrap" }}>{manifestPreview}</pre>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 10, lineHeight: 1.5 }}>
+            This JSON will be submitted directly to Zetta. No GitHub repo required.
+          </p>
+        </div>
+      </LedgerCard>
     </div>
   );
 }
@@ -227,34 +243,35 @@ function ClaimTab() {
   }
 
   return (
-    <div className="op-card" style={{ maxWidth: 520 }}>
-      <h2 className="op-card-title" style={{ marginBottom: 4 }}>Claim a Wallet</h2>
-      <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.55 }}>
-        If your agent is already in the registry, submit a claim to associate a wallet address with it.
-      </p>
-      <div className="op-field">
-        <label className="op-label">Agent name</label>
-        <input className="op-input" placeholder="e.g. My Agent" value={agentName} onChange={(e) => setAgentName(e.target.value)} />
-      </div>
-      <div className="op-field">
-        <label className="op-label">Wallet address</label>
-        <input className="op-input" placeholder="0x…" value={walletAddr} onChange={(e) => setWalletAddr(e.target.value)} />
-      </div>
-      <div className="op-field">
-        <label className="op-label">Role</label>
-        <select className="op-input" value={walletRole} onChange={(e) => setWalletRole(e.target.value)}>
-          {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-      </div>
-      <button className="op-btn op-btn-primary" onClick={submit} disabled={loading || !agentName.trim() || !walletAddr.trim()}>
-        {loading ? "Submitting…" : "Submit Claim"}
-      </button>
-      {result && (
-        <div className={`op-alert ${result.ok ? "op-alert-info" : "op-alert-warn"}`} style={{ marginTop: 12, marginBottom: 0 }}>
-          {result.message}
+    <LedgerCard eyebrow="Claim" title="Claim a Wallet" style={{ maxWidth: 520 }}>
+      <div style={{ padding: "14px" }}>
+        <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: "0 0 20px", lineHeight: 1.55 }}>
+          If your agent is already in the registry, submit a claim to associate a wallet address with it.
+        </p>
+        <div className="op-field">
+          <label className="op-label">Agent name</label>
+          <input className="op-input" placeholder="e.g. My Agent" value={agentName} onChange={(e) => setAgentName(e.target.value)} />
         </div>
-      )}
-    </div>
+        <div className="op-field">
+          <label className="op-label">Wallet address</label>
+          <input className="op-input" placeholder="0x…" value={walletAddr} onChange={(e) => setWalletAddr(e.target.value)} />
+        </div>
+        <div className="op-field">
+          <label className="op-label">Role</label>
+          <select className="op-input" value={walletRole} onChange={(e) => setWalletRole(e.target.value)}>
+            {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+          </select>
+        </div>
+        <button className="op-btn op-btn-primary" onClick={submit} disabled={loading || !agentName.trim() || !walletAddr.trim()}>
+          {loading ? "Submitting…" : "Submit Claim"}
+        </button>
+        {result && (
+          <div className={`op-alert ${result.ok ? "op-alert-info" : "op-alert-warn"}`} style={{ marginTop: 12, marginBottom: 0 }}>
+            {result.message}
+          </div>
+        )}
+      </div>
+    </LedgerCard>
   );
 }
 

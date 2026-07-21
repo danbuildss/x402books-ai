@@ -160,7 +160,7 @@
 }
 
 .val-result-ok { border-color: var(--accent); }
-.val-result-err { border-color: #ef444440; }
+.val-result-err { border-color: #F4606040; }
 
 .val-result-header {
   display: flex;
@@ -297,7 +297,7 @@
 .val-error-path {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: #ef4444;
+  color: #F46060;
   white-space: nowrap;
   min-width: 120px;
 }
@@ -316,7 +316,7 @@
   font-size: 0.82rem;
   color: var(--muted);
 }
-.val-form-error { color: #ef4444; }
+.val-form-error { color: #F46060; }
 
 .val-submit-success {
   display: flex;

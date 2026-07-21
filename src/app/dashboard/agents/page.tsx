@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type Wallet = { address: string; label?: string; role?: string };
 type Agent = {
@@ -18,18 +20,20 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
-const ECO_COLORS: Record<string, string> = {
-  BANKR: "#6DB874", Virtuals: "#5B8FA8", AEON: "#8B5CF6", EigenCloud: "#F97316", Base: "#4F46E5",
-};
+function verificationVariant(status: string): "verified" | "luca-managed" | "wallets-declared" | "claimed" | "neutral" {
+  if (status === "Verified") return "verified";
+  if (status === "Luca Managed") return "luca-managed";
+  if (status === "Wallets Declared") return "wallets-declared";
+  if (status === "Claimed") return "claimed";
+  return "neutral";
+}
 
-const STATUS_COLORS: Record<string, string> = {
-  Verified: "#6DB874", "Luca Managed": "#6DB874", "Wallets Declared": "#5B8FA8",
-  Claimed: "#F97316", Candidate: "var(--muted)",
-};
-
-const HEALTH_COLORS: Record<string, string> = {
-  Active: "#6DB874", Stable: "#5B8FA8", Unverified: "#F97316", Inactive: "var(--muted)", Pending: "var(--muted)",
-};
+function healthVariant(health: string): "green" | "blue" | "amber" | "neutral" {
+  if (health === "Active") return "green";
+  if (health === "Stable") return "blue";
+  if (health === "Unverified") return "amber";
+  return "neutral";
+}
 
 export default function MyAgentsPage() {
   const [myAgents, setMyAgents] = useState<Agent[]>([]);
@@ -76,10 +80,10 @@ export default function MyAgentsPage() {
         </div>
       )}
 
-      <div className="op-card" style={{ padding: 0 }}>
-        {loading ? (
-          <div style={{ padding: 32, color: "var(--muted)", fontSize: "0.82rem" }}>Loading agents…</div>
-        ) : myAgents.length === 0 ? (
+      {loading ? (
+        <div style={{ color: "var(--muted)", fontSize: "0.82rem", padding: "32px 0" }}>Loading agents…</div>
+      ) : myAgents.length === 0 ? (
+        <div className="op-card">
           <div className="op-empty">
             <svg className="op-empty-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="20" cy="14" r="7" /><path d="M6 36c0-7.7 6.3-14 14-14s14 6.3 14 14" />
@@ -88,64 +92,48 @@ export default function MyAgentsPage() {
             <p className="op-empty-desc">Submit your agent or declare your wallet address in an existing agent&apos;s manifest to see it here.</p>
             <Link href="/dashboard/attribution" className="op-btn op-btn-primary">Declare Attribution →</Link>
           </div>
-        ) : (
-          <table className="op-table" style={{ padding: "0 20px" }}>
-            <thead>
-              <tr style={{ padding: "0 20px" }}>
-                <th style={{ paddingLeft: 20 }}>Agent</th>
-                <th>Ecosystem</th>
-                <th>Status</th>
-                <th>Treasury</th>
-                <th>Wallets</th>
-                <th style={{ paddingRight: 20 }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {myAgents.map((agent) => {
-                const slug = agent.slug ?? toSlug(agent.name);
-                const ecoColor = ECO_COLORS[agent.ecosystem] ?? "var(--muted)";
-                const statusColor = STATUS_COLORS[agent.verificationStatus] ?? "var(--muted)";
-                const healthColor = HEALTH_COLORS[agent.treasuryHealth ?? ""] ?? "var(--muted)";
-                return (
-                  <tr key={agent.name}>
-                    <td style={{ paddingLeft: 20 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: "50%", background: ecoColor, flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontWeight: 600, fontSize: "0.84rem" }}>{agent.name}</div>
-                          {agent.symbol && <div style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{agent.symbol}</div>}
-                        </div>
-                      </div>
-                    </td>
-                    <td style={{ color: "var(--muted)", fontSize: "0.76rem" }}>{agent.ecosystem}</td>
-                    <td>
-                      <span className="op-badge" style={{ background: `color-mix(in srgb, ${statusColor} 14%, transparent)`, color: statusColor }}>
-                        {agent.verificationStatus}
-                      </span>
-                    </td>
-                    <td>
-                      {agent.treasuryHealth ? (
-                        <span style={{ fontSize: "0.76rem", color: healthColor }}>{agent.treasuryHealth}</span>
-                      ) : (
-                        <span style={{ fontSize: "0.76rem", color: "var(--muted)" }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ fontFamily: "var(--font-mono)", fontSize: "0.76rem", color: "var(--muted)" }}>
-                      {agent.wallets?.length ?? 0}
-                    </td>
-                    <td style={{ paddingRight: 20 }}>
-                      <div style={{ display: "flex", gap: 6 }}>
-                        <Link href={`/dashboard/luca?agent=${slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Ask Luca</Link>
-                        <Link href={`/registry/${slug}`} className="op-btn op-btn-ghost" style={{ fontSize: "0.72rem", padding: "4px 8px" }} target="_blank">Profile ↗</Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </div>
+        </div>
+      ) : (
+        <LedgerCard eyebrow="Registry" title={`${myAgents.length} Agent${myAgents.length !== 1 ? "s" : ""}`}>
+          {myAgents.map((agent, i) => {
+            const slug = agent.slug ?? toSlug(agent.name);
+            return (
+              <LedgerRow
+                key={agent.name}
+                first={i === 0}
+                last={i === myAgents.length - 1}
+                label={
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: "0.84rem" }}>{agent.name}</div>
+                    {agent.symbol && (
+                      <div style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{agent.symbol}</div>
+                    )}
+                  </div>
+                }
+                badge={<StatusBadge variant={verificationVariant(agent.verificationStatus)}>{agent.verificationStatus}</StatusBadge>}
+                detail={
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{agent.ecosystem}</span>
+                    {agent.treasuryHealth && (
+                      <StatusBadge variant={healthVariant(agent.treasuryHealth)}>{agent.treasuryHealth}</StatusBadge>
+                    )}
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                      {agent.wallets?.length ?? 0} wallet{(agent.wallets?.length ?? 0) !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                }
+                value={
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <Link href={`/dashboard/luca?agent=${slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Ask Luca</Link>
+                    <Link href={`/registry/${slug}`} className="op-btn op-btn-ghost" style={{ fontSize: "0.72rem", padding: "4px 8px" }} target="_blank">Profile ↗</Link>
+                  </div>
+                }
+                style={{ alignItems: "flex-start", padding: "12px 14px" }}
+              />
+            );
+          })}
+        </LedgerCard>
+      )}
     </div>
   );
 }

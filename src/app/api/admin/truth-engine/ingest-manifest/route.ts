@@ -11,6 +11,7 @@ import {
   insertEvidencePacket,
 } from "@/lib/truth-engine-db";
 import { hasSupabaseAdminEnv } from "@/lib/supabase-admin";
+import { toSlug } from "@/lib/slug";
 
 export async function POST(req: NextRequest) {
   if (!internalAuth(req)) {
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
   // Validate
   const validation = validateManifest(manifest);
   const parsed     = parseManifest(manifest);
-  const agentSlug  = parsed.agent.toLowerCase().replace(/\s+/g, "-");
+  const agentSlug  = toSlug(parsed.agent);
   const sourceRef  = source_url ?? repo_url ?? ".agent/wallets.json";
 
   if (!hasSupabaseAdminEnv()) {

@@ -28,10 +28,10 @@ const PRIORITY_AGENTS: { slug: string; name: string }[] = [
 ];
 
 const LEVELS: { value: ConfidenceLevel; label: string; color: string }[] = [
-  { value: "high",         label: "High Confidence",        color: "#22c55e" },
-  { value: "medium",       label: "Medium Confidence",      color: "#f59e0b" },
-  { value: "low",          label: "Low Confidence",         color: "#ef4444" },
-  { value: "under_review", label: "Attribution Under Review", color: "#6b7280" },
+  { value: "high",         label: "High Confidence",        color: "#4AE8A0" },
+  { value: "medium",       label: "Medium Confidence",      color: "#F4B942" },
+  { value: "low",          label: "Low Confidence",         color: "#F46060" },
+  { value: "under_review", label: "Attribution Under Review", color: "var(--muted)" },
 ];
 
 // ── Label Card ────────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ function AgentLabelCard({ row, secret, onSaved }: { row: AgentRow; secret: strin
           />
         </div>
 
-        {error && <div style={{ fontSize: 12, color: "#ef4444" }}>{error}</div>}
+        {error && <div style={{ fontSize: 12, color: "#F46060" }}>{error}</div>}
 
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button
@@ -152,7 +152,7 @@ function AgentLabelCard({ row, secret, onSaved }: { row: AgentRow; secret: strin
           >
             {saving ? "Saving…" : "Save Label"}
           </button>
-          {saved && <span style={{ fontSize: 12, color: "#22c55e" }}>Saved</span>}
+          {saved && <span style={{ fontSize: 12, color: "#4AE8A0" }}>Saved</span>}
           {row.label?.reviewed_at && (
             <span style={{ fontSize: 11, color: "var(--muted)", marginLeft: "auto" }}>
               Last reviewed {new Date(row.label.reviewed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
@@ -245,16 +245,16 @@ export default function RevenueConfidencePage() {
         </div>
 
         {error && (
-          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, color: "#ef4444", fontSize: 13 }}>{error}</div>
+          <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, color: "#F46060", fontSize: 13 }}>{error}</div>
         )}
 
         {/* Stats */}
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
           {[
-            { label: "High",          value: stats.high,         color: "#22c55e" },
-            { label: "Medium",        value: stats.medium,       color: "#f59e0b" },
-            { label: "Low",           value: stats.low,          color: "#ef4444" },
-            { label: "Under Review",  value: stats.under_review, color: "#6b7280" },
+            { label: "High",          value: stats.high,         color: "#4AE8A0" },
+            { label: "Medium",        value: stats.medium,       color: "#F4B942" },
+            { label: "Low",           value: stats.low,          color: "#F46060" },
+            { label: "Under Review",  value: stats.under_review, color: "var(--muted)" },
             { label: "Not Labeled",   value: stats.unlabeled,    color: "var(--muted)" },
           ].map((s) => (
             <div key={s.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px", minWidth: 90 }}>
@@ -271,7 +271,7 @@ export default function RevenueConfidencePage() {
           first to get transaction evidence. Then for each flagged agent, open{" "}
           <Link href="/luca-admin/revenue-audit" style={{ color: "var(--accent)", textDecoration: "none" }}>Revenue Audit Mode</Link>{" "}
           to review individual transactions. Then set the label here. Labels appear on public agent profiles immediately.
-          Set AEON and Virtuals to <strong style={{ color: "#6b7280" }}>Attribution Under Review</strong> until the audit is complete.
+          Set AEON and Virtuals to <strong style={{ color: "var(--muted)" }}>Attribution Under Review</strong> until the audit is complete.
         </div>
 
         {/* Agent cards */}

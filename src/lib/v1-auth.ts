@@ -19,7 +19,25 @@ export type V1AuthFail = {
   response: Response;
 };
 
-export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
+// Pure scope check, exported for testing. Returns an error message when an
+// agent-scoped key is used against a different agent's data, null when allowed.
+export function agentScopeViolation(
+  agentScope: string | null,
+  requestedSlug: string | null | undefined,
+): string | null {
+  if (!agentScope || !requestedSlug) return null;
+  if (agentScope === requestedSlug) return null;
+  return `This API key is scoped to agent '${agentScope}', not '${requestedSlug}'. Use a key scoped to this agent, or an unscoped key.`;
+}
+
+// Optional per-request context. When a route serves data for a specific agent,
+// pass its slug here — scope enforcement then happens centrally instead of
+// being copy-pasted (and occasionally forgotten) route by route.
+export type V1AuthOptions = {
+  agentSlug?: string;
+};
+
+export async function v1Auth(request: Request, opts?: V1AuthOptions): Promise<V1AuthOk | V1AuthFail> {
   // BANKR x402 Cloud handlers authenticate with a shared internal secret
   // (timing-safe, fail-closed — only taken when the header is present)
   if (request.headers.get("x-internal-secret") && internalAuth(request)) {
@@ -54,6 +72,14 @@ export async function v1Auth(request: Request): Promise<V1AuthOk | V1AuthFail> {
     return {
       ok: false,
       response: NextResponse.json({ error: result.message }, { status: result.status }),
+    };
+  }
+
+  const violation = agentScopeViolation(result.key.agent_scope, opts?.agentSlug);
+  if (violation) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: violation }, { status: 403 }),
     };
   }
 

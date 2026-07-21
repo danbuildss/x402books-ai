@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 const TELEGRAM  = "https://t.me/AskLucaBot";
 const X_HANDLE  = "https://x.com/AskLucaAI";
@@ -57,6 +59,30 @@ const REPORT_TYPES = [
   { label: "Quarterly", desc: "Ecosystem breakdowns, growth observations, market analysis" },
 ];
 
+const LUCA_SKILLS = [
+  { name: "Wallet Audit",         desc: "Classify any address and check books-eligibility" },
+  { name: "Agent Books",           desc: "Full P&L: revenue, expenses, net income, margin" },
+  { name: "Treasury Monitor",      desc: "Live stablecoin balances and health signal" },
+  { name: "Revenue Analysis",      desc: "Gross inflow vs operating revenue breakdown" },
+  { name: "Registry Check",        desc: "Look up any agent by slug, name, or address" },
+  { name: "Luca Report",           desc: "Full composite: identity + books + treasury + narrative" },
+  { name: "B20 Token Analysis",    desc: "Token identity, issuer, activity, financial readiness" },
+];
+
+const DATA_SOURCES = [
+  { label: "On-chain books", desc: "Declared wallet manifests → classified transactions → P&L" },
+  { label: "Grok research", desc: "Real-time X/web context on agents and ecosystems" },
+  { label: "Attribution index", desc: "Which agents are included and what the gap represents" },
+];
+
+const TELEGRAM_FEATURES = [
+  "Submit any Base wallet address",
+  "Get revenue, expenses, net income",
+  "Treasury analysis summary",
+  "Settlement pattern detection",
+  "Ask questions about agent books",
+];
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function LucaPage() {
@@ -70,9 +96,9 @@ export default function LucaPage() {
       <section style={{ padding: "3rem 24px 2rem", maxWidth: 860, margin: "0 auto", width: "100%" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "end", flexWrap: "wrap" }}>
           <div>
-            <p style={{ fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.12em", color: "var(--accent)", margin: "0 0 12px" }}>
+            <SectionLabel style={{ color: "var(--accent)", marginBottom: 12 }}>
               Financial Analyst · Zetta Intelligence
-            </p>
+            </SectionLabel>
             <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
               Luca reads<br /><em>the books.</em>
             </h1>
@@ -93,7 +119,7 @@ export default function LucaPage() {
             padding: "16px 18px", minWidth: 220, maxWidth: 260, fontFamily: "var(--font-mono)",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#6DB874", display: "inline-block" }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", display: "inline-block" }} />
               <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>LUCA · ACTIVE</span>
             </div>
             {[
@@ -104,7 +130,7 @@ export default function LucaPage() {
             ].map(({ k, v }) => (
               <div key={k} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
                 <span style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.3)", width: 50, flexShrink: 0 }}>{k}</span>
-                <span style={{ fontSize: "0.62rem", color: "rgba(109,184,116,0.9)" }}>{v}</span>
+                <span style={{ fontSize: "0.62rem", color: "rgba(74,232,160,0.9)" }}>{v}</span>
               </div>
             ))}
           </div>
@@ -114,24 +140,34 @@ export default function LucaPage() {
       {/* ── Capabilities ── */}
       <section className="lp-section lp-section-alt">
         <div className="lp-section-head">
-          <p className="lp-section-label">Capabilities</p>
+          <SectionLabel>Capabilities</SectionLabel>
           <h2 className="lp-h2">What Luca analyzes.</h2>
         </div>
-        <div className="lt-capabilities">
+        <LedgerCard eyebrow="6 capabilities" title="Financial analysis functions">
           {CAPABILITIES.map((item, i) => (
-            <div key={item.label} className="lt-cap-card">
-              <span className="lt-cap-num">{String(i + 1).padStart(2, "0")}</span>
-              <p className="lt-cap-label">{item.label}</p>
-              <p className="lt-cap-desc">{item.desc}</p>
-            </div>
+            <LedgerRow
+              key={item.label}
+              first={i === 0}
+              last={i === CAPABILITIES.length - 1}
+              label={
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--muted)", width: 20 }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {item.label}
+                </span>
+              }
+              value={item.desc}
+              valueStyle={{ fontFamily: "inherit", fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400, textAlign: "right", maxWidth: 380 }}
+            />
           ))}
-        </div>
+        </LedgerCard>
       </section>
 
       {/* ── Analysis Terminal ── */}
       <section className="lp-section">
         <div className="lp-section-head" style={{ marginBottom: 28 }}>
-          <p className="lp-section-label">Analysis Terminal</p>
+          <SectionLabel>Analysis Terminal</SectionLabel>
           <h2 className="lp-h2">Financial intelligence, structured.</h2>
           <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
             Every Luca analysis follows the same structure: Attribution → Books → History → Signal → Verdict.
@@ -160,7 +196,7 @@ export default function LucaPage() {
               <span /><span /><span />
             </div>
             <span className="lt-terminal-label">LUCA · FINANCIAL ANALYSIS TERMINAL</span>
-            <span className="lt-terminal-badge">PREVIEW</span>
+            <StatusBadge variant="neutral">PREVIEW</StatusBadge>
           </div>
 
           <div className="lt-query-row">
@@ -184,7 +220,7 @@ export default function LucaPage() {
             </div>
             <div className="lt-confidence-block">
               <span className="lt-field-label">CONFIDENCE</span>
-              <span className="lt-confidence-val">{EXAMPLE_ANALYSES[activeExample].confidence}</span>
+              <StatusBadge variant="green">{EXAMPLE_ANALYSES[activeExample].confidence}</StatusBadge>
             </div>
           </div>
 
@@ -219,20 +255,27 @@ export default function LucaPage() {
       <section className="lp-section">
         <div className="lp-registry-inner">
           <div className="lp-registry-text">
-            <p className="lp-section-label">Publication</p>
+            <SectionLabel>Publication</SectionLabel>
             <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>State of the<br />Agent Economy.</h2>
             <p className="lp-registry-sub">
               Luca&rsquo;s flagship publication. Weekly, monthly, and quarterly reports on revenue, expenses,
               treasury health, and the attribution gap across autonomous agents on Base.
               Grounded entirely in on-chain data. No estimates. No synthetic numbers.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9, margin: "20px 0" }}>
-              {REPORT_TYPES.map((r) => (
-                <div key={r.label} style={{ display: "flex", gap: 12, fontSize: "0.83rem", alignItems: "flex-start" }}>
-                  <span style={{ fontWeight: 700, color: "var(--accent)", width: 72, flexShrink: 0 }}>{r.label}</span>
-                  <span style={{ color: "var(--muted)" }}>{r.desc}</span>
-                </div>
-              ))}
+            <div style={{ margin: "20px 0" }}>
+              <LedgerCard>
+                {REPORT_TYPES.map((r, i) => (
+                  <LedgerRow
+                    key={r.label}
+                    first={i === 0}
+                    last={i === REPORT_TYPES.length - 1}
+                    label={r.label}
+                    labelStyle={{ color: "var(--accent)" }}
+                    value={r.desc}
+                    valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.78rem", color: "var(--muted)" }}
+                  />
+                ))}
+              </LedgerCard>
             </div>
             <Link href="/research" className="lp-btn-primary" style={{ display: "inline-block" }}>
               Read All Reports →
@@ -245,27 +288,23 @@ export default function LucaPage() {
               <span className="lp-card-title">Luca · Financial Analyst</span>
             </div>
             <div style={{ padding: "14px 16px" }}>
-              <p style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600, margin: "0 0 6px" }}>
-                Style
-              </p>
+              <SectionLabel style={{ marginBottom: 6 }}>Style</SectionLabel>
               <p style={{ fontSize: "0.82rem", color: "var(--fg)", lineHeight: 1.6, margin: "0 0 14px", fontStyle: "italic" }}>
                 &ldquo;Bloomberg Intelligence analyst. Cold. Precise. Factual. No hype. No marketing language.&rdquo;
               </p>
-              <p style={{ fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600, margin: "0 0 6px" }}>
-                Data Sources
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {[
-                  { label: "On-chain books", desc: "Declared wallet manifests → classified transactions → P&L" },
-                  { label: "Grok research", desc: "Real-time X/web context on agents and ecosystems" },
-                  { label: "Attribution index", desc: "Which agents are included and what the gap represents" },
-                ].map((item) => (
-                  <div key={item.label} style={{ padding: "8px 10px", background: "var(--bg)", border: "1px solid var(--line)", borderRadius: 7 }}>
-                    <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: "0.75rem" }}>{item.label}</p>
-                    <p style={{ margin: 0, fontSize: "0.7rem", color: "var(--muted)", lineHeight: 1.4 }}>{item.desc}</p>
-                  </div>
+              <SectionLabel style={{ marginBottom: 6 }}>Data Sources</SectionLabel>
+              <LedgerCard>
+                {DATA_SOURCES.map((item, i) => (
+                  <LedgerRow
+                    key={item.label}
+                    first={i === 0}
+                    last={i === DATA_SOURCES.length - 1}
+                    label={item.label}
+                    value={item.desc}
+                    valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.7rem", color: "var(--muted)", textAlign: "right", maxWidth: 200 }}
+                  />
                 ))}
-              </div>
+              </LedgerCard>
             </div>
           </div>
         </div>
@@ -274,30 +313,25 @@ export default function LucaPage() {
       {/* ── Telegram terminal ── */}
       <section className="lp-section lp-section-alt">
         <div className="lp-section-head">
-          <p className="lp-section-label">Public Interface</p>
+          <SectionLabel>Public Interface</SectionLabel>
           <h2 className="lp-h2">Luca on Telegram.</h2>
           <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
             @AskLucaBot is Luca&rsquo;s public terminal. Submit a wallet address and Luca will return a
             financial analysis — revenue, expenses, net income, treasury activity summary.
           </p>
         </div>
-        <div style={{ display: "flex", gap: 14, flexWrap: "wrap", marginTop: 28 }}>
-          {[
-            "Submit any Base wallet address",
-            "Get revenue, expenses, net income",
-            "Treasury analysis summary",
-            "Settlement pattern detection",
-            "Ask questions about agent books",
-          ].map((item) => (
-            <div key={item} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "10px 14px", border: "1px solid var(--line)", borderRadius: 8,
-              background: "var(--surface-soft)", fontSize: "0.82rem",
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14, color: "var(--accent)" }}>check_circle</span>
-              {item}
-            </div>
-          ))}
+        <div style={{ marginTop: 28 }}>
+          <LedgerCard eyebrow="Features" title="@AskLucaBot capabilities">
+            {TELEGRAM_FEATURES.map((item, i) => (
+              <LedgerRow
+                key={item}
+                first={i === 0}
+                last={i === TELEGRAM_FEATURES.length - 1}
+                label={item}
+                value={<StatusBadge variant="green">Active</StatusBadge>}
+              />
+            ))}
+          </LedgerCard>
         </div>
         <div style={{ marginTop: 24 }}>
           <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary">
@@ -315,30 +349,26 @@ export default function LucaPage() {
       {/* ── Luca Skills ── */}
       <section className="lp-section lp-section-alt" id="skills">
         <div className="lp-section-head">
-          <p className="lp-section-label">API</p>
+          <SectionLabel>API</SectionLabel>
           <h2 className="lp-h2">Luca Skills.</h2>
           <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
             Seven callable financial intelligence endpoints. Plug Luca directly into your agent, dashboard, or workflow.
             Each skill enforces strict data integrity — no synthetic numbers, no attribution without a manifest.
           </p>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12, marginTop: 28 }}>
-          {[
-            { name: "Wallet Audit",         desc: "Classify any address and check books-eligibility" },
-            { name: "Agent Books",           desc: "Full P&L: revenue, expenses, net income, margin" },
-            { name: "Treasury Monitor",      desc: "Live stablecoin balances and health signal" },
-            { name: "Revenue Analysis",      desc: "Gross inflow vs operating revenue breakdown" },
-            { name: "Registry Check",        desc: "Look up any agent by slug, name, or address" },
-            { name: "Luca Report",           desc: "Full composite: identity + books + treasury + narrative" },
-            { name: "B20 Token Analysis",    desc: "Token identity, issuer, activity, financial readiness" },
-          ].map((skill) => (
-            <div key={skill.name} style={{
-              background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px",
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 5 }}>{skill.name}</div>
-              <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{skill.desc}</div>
-            </div>
-          ))}
+        <div style={{ marginTop: 28 }}>
+          <LedgerCard eyebrow="7 endpoints" title="Callable intelligence functions">
+            {LUCA_SKILLS.map((skill, i) => (
+              <LedgerRow
+                key={skill.name}
+                first={i === 0}
+                last={i === LUCA_SKILLS.length - 1}
+                label={skill.name}
+                value={skill.desc}
+                valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.75rem", color: "var(--muted)", textAlign: "right", maxWidth: 340 }}
+              />
+            ))}
+          </LedgerCard>
         </div>
         <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link href="/docs/luca-skills" className="lp-btn-primary">View Luca Skills API →</Link>

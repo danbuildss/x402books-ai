@@ -17,7 +17,7 @@
 // Luca must call this before emitting any per-agent financial or attribution claim.
 
 import { NextRequest, NextResponse } from "next/server";
-import { v1Auth } from "@/lib/v1-auth";
+import { v1Auth, agentScopeViolation } from "@/lib/v1-auth";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { buildAgentBooks } from "@/lib/agent-books";
 import { getWalletStableBalance } from "@/lib/treasury-balance";
@@ -107,6 +107,16 @@ export async function POST(req: NextRequest) {
     if (!match) {
       match = agents.find((a) => a.name.toLowerCase().includes(queryLower));
       if (match) matchType = "name";
+    }
+
+    // Agent-scoped keys may only read their own agent — the identifier is
+    // free-form here, so scope is enforced after resolution.
+    if (match) {
+      const violation = agentScopeViolation(auth.agentScope, toSlug(match.name));
+      if (violation) {
+        auth.finish(403, Date.now() - start, endpoint);
+        return NextResponse.json({ error: violation }, { status: 403 });
+      }
     }
 
     // ── Step 2: Not indexed ──────────────────────────────────────────────────

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { LogoMark } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import { SiteFooter } from "@/components/site-footer";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 const WALLETS_JSON_EXAMPLE = `{
   "agent": "Your Agent Name",
@@ -154,10 +156,7 @@ export function RegisterClient() {
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px" }}>
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
-          <p style={{
-            fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
-            letterSpacing: "0.1em", color: "var(--accent)", marginBottom: 10,
-          }}>For Agent Teams</p>
+          <SectionLabel style={{ marginBottom: 10, color: "var(--accent)" }}>For Agent Teams</SectionLabel>
           <h1 style={{ fontSize: "clamp(1.6rem, 4vw, 2.2rem)", fontWeight: 800, margin: "0 0 12px", letterSpacing: "-0.03em", lineHeight: 1.15 }}>
             Register your agent.
           </h1>
@@ -167,37 +166,18 @@ export function RegisterClient() {
         </div>
 
         {/* Trust ladder */}
-        <div style={{
-          display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap",
-          padding: "14px 18px", background: "var(--surface-soft)",
-          border: "1px solid var(--line)", borderRadius: 10, marginBottom: 36,
-          fontSize: "0.75rem", color: "var(--muted)",
-        }}>
-          {[
-            { label: "Candidate", color: "#94a3b8" },
-            { arrow: true },
-            { label: "Wallets Declared", color: "#6DB874" },
-            { arrow: true },
-            { label: "Verified", color: "#6DB874", icon: "verified" },
-          ].map((item, i) =>
-            "arrow" in item ? (
-              <span key={i} style={{ color: "var(--muted)", fontSize: "0.7rem" }}>→</span>
-            ) : (
-              <span key={i} style={{
-                display: "inline-flex", alignItems: "center", gap: 3,
-                padding: "2px 8px", borderRadius: 99, background: `${item.color}18`,
-                border: `1px solid ${item.color}40`, color: item.color, fontWeight: 700,
-                fontSize: "0.68rem",
-              }}>
-                {item.icon && <span className="material-symbols-outlined" style={{ fontSize: 10 }}>{item.icon}</span>}
-                {item.label}
-              </span>
-            )
-          )}
-          <span style={{ marginLeft: "auto", fontSize: "0.7rem" }}>
-            Submit a manifest to advance from Candidate → Verified
-          </span>
-        </div>
+        <LedgerCard eyebrow="Verification path" style={{ marginBottom: 36 }}>
+          <div style={{ padding: "14px 0", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <StatusBadge variant="candidate">Candidate</StatusBadge>
+            <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>→</span>
+            <StatusBadge variant="wallets-declared">Wallets Declared</StatusBadge>
+            <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>→</span>
+            <StatusBadge variant="verified">Verified</StatusBadge>
+            <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)" }}>
+              Submit a manifest to advance from Candidate → Verified
+            </span>
+          </div>
+        </LedgerCard>
 
         {/* Form tabs */}
         <div style={{
@@ -232,15 +212,9 @@ export function RegisterClient() {
             </p>
 
             {/* Schema preview */}
-            <div style={{
-              background: "var(--surface-soft)", border: "1px solid var(--line)",
-              borderRadius: 10, marginBottom: 24, overflow: "hidden",
-            }}>
-              <div style={{
-                padding: "8px 14px", borderBottom: "1px solid var(--line)",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}>
-                <span style={{ fontSize: "0.72rem", fontFamily: "monospace", color: "var(--muted)" }}>.agent/wallets.json</span>
+            <LedgerCard
+              eyebrow="Schema template"
+              action={
                 <button
                   type="button"
                   onClick={copySchema}
@@ -255,19 +229,22 @@ export function RegisterClient() {
                   </span>
                   {copied ? "Copied" : "Copy"}
                 </button>
-              </div>
+              }
+              style={{ marginBottom: 24 }}
+            >
               <pre style={{
                 margin: 0, padding: "14px 16px", fontSize: "0.72rem", lineHeight: 1.6,
                 color: "var(--fg)", overflowX: "auto", fontFamily: "monospace",
+                background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8,
               }}>
                 {WALLETS_JSON_EXAMPLE}
               </pre>
-            </div>
+            </LedgerCard>
 
             {repoState === "done" && fetchedAgent ? (
               <div style={{
-                padding: "20px", background: "rgba(109,184,116,0.06)",
-                border: "1px solid rgba(109,184,116,0.3)", borderRadius: 10, marginBottom: 20,
+                padding: "20px", background: "rgba(74,232,160,0.06)",
+                border: "1px solid rgba(74,232,160,0.3)", borderRadius: 10, marginBottom: 20,
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 20, color: "var(--accent)" }}>check_circle</span>
@@ -297,24 +274,26 @@ export function RegisterClient() {
                 )}
                 {fetchedWallets && fetchedWallets.length > 0 && (
                   <div>
-                    <p style={{ margin: "0 0 8px", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)" }}>
-                      {fetchedWallets.length} wallet{fetchedWallets.length !== 1 ? "s" : ""} found for <strong style={{ color: "var(--fg)" }}>{fetchedAgent}</strong>
-                    </p>
-                    {fetchedWallets.map((w, i) => (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "center", gap: 8,
-                        padding: "6px 0", borderBottom: "1px solid var(--line)", fontSize: "0.78rem",
-                      }}>
-                        <span style={{
-                          padding: "1px 7px", borderRadius: 99, fontSize: "0.65rem", fontWeight: 700,
-                          background: "rgba(109,184,116,0.12)", border: "1px solid rgba(109,184,116,0.3)", color: "var(--accent)",
-                        }}>{w.role}</span>
-                        <code style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "0.72rem" }}>
-                          {w.address.slice(0, 8)}…{w.address.slice(-6)}
-                        </code>
-                        <span style={{ color: "var(--muted)", fontSize: "0.68rem" }}>{w.chain}</span>
-                      </div>
-                    ))}
+                    <SectionLabel style={{ marginBottom: 8 }}>
+                      {fetchedWallets.length} wallet{fetchedWallets.length !== 1 ? "s" : ""} found for {fetchedAgent}
+                    </SectionLabel>
+                    <LedgerCard>
+                      {fetchedWallets.map((w, i) => (
+                        <LedgerRow
+                          key={i}
+                          first={i === 0}
+                          last={i === fetchedWallets.length - 1}
+                          label={
+                            <code style={{ fontFamily: "monospace", color: "var(--muted)", fontSize: "0.72rem" }}>
+                              {w.address.slice(0, 8)}…{w.address.slice(-6)}
+                            </code>
+                          }
+                          value={w.chain}
+                          valueStyle={{ fontFamily: "inherit", fontSize: "0.72rem", color: "var(--muted)", fontWeight: 400 }}
+                          badge={<StatusBadge variant="green">{w.role}</StatusBadge>}
+                        />
+                      ))}
+                    </LedgerCard>
                   </div>
                 )}
                 <p style={{ margin: "14px 0 0", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.6 }}>
@@ -344,7 +323,7 @@ export function RegisterClient() {
                   </p>
                 </div>
                 {repoState === "error" && (
-                  <p style={{ color: "#ef4444", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
+                  <p style={{ color: "#F46060", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
                 )}
                 <button
                   type="submit"
@@ -368,8 +347,8 @@ export function RegisterClient() {
           <div>
             {manualState === "done" ? (
               <div style={{
-                padding: "24px", background: "rgba(109,184,116,0.06)",
-                border: "1px solid rgba(109,184,116,0.3)", borderRadius: 10,
+                padding: "24px", background: "rgba(74,232,160,0.06)",
+                border: "1px solid rgba(74,232,160,0.3)", borderRadius: 10,
               }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 28, color: "var(--accent)", display: "block", marginBottom: 10 }}>check_circle</span>
                 <p style={{ fontWeight: 700, marginBottom: 6 }}>{manualMsg}</p>
@@ -418,7 +397,11 @@ export function RegisterClient() {
                 ].map(({ key, label, placeholder, required, type }) => (
                   <div key={key}>
                     <label style={{ display: "block", fontSize: "0.78rem", fontWeight: 600, color: "var(--fg)", marginBottom: 5 }}>
-                      {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
+                      {label}
+                      {required
+                        ? <StatusBadge variant="red" style={{ marginLeft: 6, fontSize: "0.6rem" }}>required</StatusBadge>
+                        : <StatusBadge variant="neutral" style={{ marginLeft: 6, fontSize: "0.6rem" }}>optional</StatusBadge>
+                      }
                     </label>
                     <input
                       type={type}
@@ -452,7 +435,7 @@ export function RegisterClient() {
                 </label>
 
                 {manualState === "error" && (
-                  <p style={{ color: "#ef4444", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
+                  <p style={{ color: "#F46060", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
                 )}
                 <button
                   type="submit"
@@ -471,10 +454,10 @@ export function RegisterClient() {
           </div>
         )}
 
-        {/* FAQ */}
+        {/* How it works */}
         <div style={{ marginTop: 56, paddingTop: 32, borderTop: "1px solid var(--line)" }}>
           <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 20 }}>How it works</h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <LedgerCard>
             {[
               {
                 step: "1",
@@ -496,29 +479,40 @@ export function RegisterClient() {
                 title: "Books generated automatically",
                 body: "Once verified, Luca builds attributed books for your agent — revenue, expenses, runway, classification — refreshed every 4 hours.",
               },
-            ].map(({ step, title, body }) => (
-              <div key={step} style={{ display: "flex", gap: 16 }}>
-                <div style={{
-                  width: 28, height: 28, borderRadius: "50%", background: "rgba(109,184,116,0.12)",
-                  border: "1px solid rgba(109,184,116,0.3)", color: "var(--accent)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.72rem", fontWeight: 800, flexShrink: 0, marginTop: 1,
-                }}>{step}</div>
-                <div>
-                  <p style={{ margin: "0 0 3px", fontWeight: 700, fontSize: "0.88rem" }}>{title}</p>
-                  <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>{body}</p>
-                </div>
-              </div>
+            ].map(({ step, title, body }, i, arr) => (
+              <LedgerRow
+                key={step}
+                first={i === 0}
+                last={i === arr.length - 1}
+                label={
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--ink)" }}>{title}</div>
+                    <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400, marginTop: 2, lineHeight: 1.5 }}>{body}</div>
+                  </div>
+                }
+                value=""
+                badge={
+                  <div style={{
+                    width: 26, height: 26, borderRadius: "50%", background: "rgba(74,232,160,0.12)",
+                    border: "1px solid rgba(74,232,160,0.3)", color: "var(--accent)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.72rem", fontWeight: 800, flexShrink: 0,
+                  }}>{step}</div>
+                }
+                style={{ padding: "14px" }}
+              />
             ))}
-          </div>
+          </LedgerCard>
         </div>
 
-        <div style={{ marginTop: 32, padding: "14px 18px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
-          <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>
-            Questions? Message <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>@zettatracker</a> on X. Already registered?{" "}
-            <Link href="/registry" style={{ color: "var(--accent)", textDecoration: "none" }}>Browse the registry →</Link>
-          </p>
-        </div>
+        <LedgerCard style={{ marginTop: 32 }}>
+          <div style={{ padding: "4px 0" }}>
+            <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>
+              Questions? Message <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>@zettatracker</a> on X. Already registered?{" "}
+              <Link href="/registry" style={{ color: "var(--accent)", textDecoration: "none" }}>Browse the registry →</Link>
+            </p>
+          </div>
+        </LedgerCard>
       </main>
 
       <SiteFooter />

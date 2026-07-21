@@ -275,6 +275,10 @@ async function computeAgentBooks(
     ),
   );
 
+  // Any wallet whose tx fetch hit its pagination cap inside the window means
+  // these books may be incomplete — surfaced as a confidence flag below.
+  const txWindowTruncated = scans.some((s) => s.truncated);
+
   // Merge transactions across wallets; deduplicate legs that appear in two
   // scans when a transfer occurs between two of the agent's own wallets.
   const seen = new Set<string>();
@@ -514,12 +518,13 @@ async function computeAgentBooks(
   if (attributionConfidence === "low") confidenceFlags.push("low_wallet_attestation");
   if (revenueIsPrimarilyAgentToken) confidenceFlags.push("revenue_primarily_agent_token");
   if (hasTruthEngineFeeReceipts) confidenceFlags.push("truth_engine_fee_receipts_confirmed");
+  if (txWindowTruncated) confidenceFlags.push("tx_window_truncated");
 
   // Revenue confidence tiering:
   // - low:    quarantined > operating revenue (data dominated by noise)
   // - medium: low attribution, single wallet, OR revenue is >50% agent token
   // - high:   stablecoin settlement revenue OR truth-engine fee receipts, clean attribution
-  const revenueConfidence: BooksConfidence =
+  const revenueConfidenceBase: BooksConfidence =
     hasQuarantinedEvents && quarantinedUsd > revenue
       ? "low"
       : revenueIsPrimarilyAgentToken || attributionConfidence === "low" || !hasMultipleWallets
@@ -527,6 +532,9 @@ async function computeAgentBooks(
         : hasSettlementRevenue || hasTruthEngineFeeReceipts
           ? "high"
           : "medium";
+  // Incomplete windows can never be high-confidence — totals may be missing txs.
+  const revenueConfidence: BooksConfidence =
+    txWindowTruncated && revenueConfidenceBase === "high" ? "medium" : revenueConfidenceBase;
 
   const expenseConfidence: BooksConfidence =
     !hasExpenseWallet

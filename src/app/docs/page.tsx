@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { StatusBadge } from "@/components/ui/badge";
 
 const NAV_GROUPS = [
   {
@@ -187,6 +190,24 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   );
 }
 
+const ROADMAP_STATUS_VARIANT: Record<string, "green" | "blue" | "neutral"> = {
+  live: "green",
+  next: "blue",
+  planned: "neutral",
+};
+
+const TIER_ROWS = [
+  ["Registry API (/api/registry/agents)", "Free", "Free", "Free"],
+  ["Public stats (/api/stats)", "Free", "Free", "Free"],
+  ["Verification badges (/api/badge/*)", "Free", "Free", "Free"],
+  ["Agent financial state (v1)", "100/day", "500/day", "2,000/day"],
+  ["Agent intelligence report (v1)", "100/day", "500/day", "2,000/day"],
+  ["Priority manifest review", "—", "Included", "Included"],
+  ["Priority claim processing", "—", "Included", "Included"],
+  ["Premium Luca reports", "—", "—", "Included"],
+  ["Enterprise monitoring API", "—", "—", "Included"],
+];
+
 export default function DocsPage() {
   const [activeId, setActiveId] = useState("overview");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -272,7 +293,7 @@ export default function DocsPage() {
 
           {/* ── Overview ── */}
           <section id="overview" className="docs-section">
-            <span className="docs-tag">Introduction</span>
+            <SectionLabel>Introduction</SectionLabel>
             <h1 className="docs-h1">Zetta</h1>
             <p className="docs-lead">Financial Identity Infrastructure for Autonomous Agents.</p>
             <p className="docs-p">
@@ -287,29 +308,41 @@ export default function DocsPage() {
             </div>
 
             <h2 className="docs-h2">What Zetta does</h2>
-            <ul className="docs-list">
-              <li><strong>Indexes</strong> — 125+ autonomous agents across 5 ecosystems in a public registry</li>
-              <li><strong>Verifies</strong> — agents declare wallets via manifest, Zetta validates ownership</li>
-              <li><strong>Scores</strong> — Transparency Score (0–100) based on wallets, status, activity, evidence</li>
-              <li><strong>Classifies</strong> — settlement patterns: treasury, revenue, operational spend, inference</li>
-              <li><strong>Interprets</strong> — Luca writes financial verdicts and monitors agent finances</li>
-              <li><strong>Distributes</strong> — SVG badges, public profiles, embeddable cards, API data</li>
-            </ul>
-
-            <h2 className="docs-h2">Who it's for</h2>
-            <div className="docs-audience-grid">
-              {[
-                { label: "Agent Developers",  desc: "Give your agent a verifiable financial identity. Declare wallets, get verified, embed a trust badge." },
-                { label: "Protocol Teams",    desc: "Index your ecosystem's agents. Surface financial transparency across your community." },
-                { label: "Builders & Auditors", desc: "Query live agent financial data via API. Verify wallet ownership. Assess trust signals." },
-                { label: "Prediction Markets", desc: "Use /api/stats as a live resolution oracle for adoption-based prediction markets." },
-              ].map((a) => (
-                <div key={a.label} className="docs-audience-card">
-                  <strong>{a.label}</strong>
-                  <p>{a.desc}</p>
-                </div>
+            <LedgerCard>
+              {["Indexes — 125+ autonomous agents across 5 ecosystems in a public registry",
+                "Verifies — agents declare wallets via manifest, Zetta validates ownership",
+                "Scores — Transparency Score (0–100) based on wallets, status, activity, evidence",
+                "Classifies — settlement patterns: treasury, revenue, operational spend, inference",
+                "Interprets — Luca writes financial verdicts and monitors agent finances",
+                "Distributes — SVG badges, public profiles, embeddable cards, API data",
+              ].map((item, i, arr) => (
+                <LedgerRow
+                  key={item}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                  value=""
+                />
               ))}
-            </div>
+            </LedgerCard>
+
+            <h2 className="docs-h2">Who it&apos;s for</h2>
+            <LedgerCard>
+              {[
+                { label: "Agent Developers",     desc: "Give your agent a verifiable financial identity. Declare wallets, get verified, embed a trust badge." },
+                { label: "Protocol Teams",        desc: "Index your ecosystem's agents. Surface financial transparency across your community." },
+                { label: "Builders & Auditors",   desc: "Query live agent financial data via API. Verify wallet ownership. Assess trust signals." },
+                { label: "Prediction Markets",    desc: "Use /api/stats as a live resolution oracle for adoption-based prediction markets." },
+              ].map((a, i, arr) => (
+                <LedgerRow
+                  key={a.label}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<strong>{a.label}</strong>}
+                  value={<span style={{ fontSize: "0.78rem", color: "var(--muted)", fontFamily: "inherit", fontWeight: 400, textAlign: "right", maxWidth: 360, lineHeight: 1.5 }}>{a.desc}</span>}
+                />
+              ))}
+            </LedgerCard>
 
             <h2 className="docs-h2">The architecture</h2>
             <p className="docs-p">
@@ -325,31 +358,33 @@ $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
 
           {/* ── What We Built ── */}
           <section id="features" className="docs-section">
-            <span className="docs-tag">Introduction</span>
+            <SectionLabel>Introduction</SectionLabel>
             <h1 className="docs-h1">What We Built</h1>
             <p className="docs-lead">The full infrastructure stack — live today.</p>
             <div className="docs-version-status">
               <span className="docs-status-dot" />
               All features below are live. 125+ agents indexed.
             </div>
-            <div className="docs-features-grid">
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {FEATURES.map((f) => (
-                <div key={f.label} className="docs-feature-card">
-                  <div className="docs-feature-head">
-                    <span className="material-symbols-outlined docs-feature-icon">{f.icon}</span>
-                    <strong>{f.label}</strong>
-                  </div>
-                  <ul className="docs-feature-list">
-                    {f.items.map((item) => <li key={item}>{item}</li>)}
-                  </ul>
-                </div>
+                <LedgerCard key={f.label} eyebrow={f.label}>
+                  {f.items.map((item, i) => (
+                    <LedgerRow
+                      key={item}
+                      first={i === 0}
+                      last={i === f.items.length - 1}
+                      label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                      value=""
+                    />
+                  ))}
+                </LedgerCard>
               ))}
             </div>
           </section>
 
           {/* ── The Manifest Loop ── */}
           <section id="how-it-works" className="docs-section">
-            <span className="docs-tag">Introduction</span>
+            <SectionLabel>Introduction</SectionLabel>
             <h1 className="docs-h1">The Manifest Loop</h1>
             <p className="docs-lead">From zero identity to verified financial profile in four steps.</p>
 
@@ -391,42 +426,55 @@ $LUCA      =  ecosystem asset (API tier, priority verification)`}</pre>
             </div>
 
             <h2 className="docs-h2">Verification tiers</h2>
-            <div className="docs-code-block">
-              <div className="docs-code-head"><span>Trust pipeline</span></div>
-              <pre>{`Candidate          →  Indexed, no proof of ownership
-Needs Verification →  Flagged for review
-Wallets Declared   →  Manifest submitted + validated ← start here
-Claimed            →  Wallet address matches declared wallet
-Verified           →  Luca-reviewed, fully verified
-Luca Managed       →  Luca actively monitors finances`}</pre>
-            </div>
+            <LedgerCard>
+              {[
+                { tier: "Candidate",          desc: "Indexed, no proof of ownership",                  variant: "candidate" as const },
+                { tier: "Needs Verification", desc: "Flagged for review",                              variant: "neutral" as const },
+                { tier: "Wallets Declared",   desc: "Manifest submitted + validated ← start here",    variant: "wallets-declared" as const },
+                { tier: "Claimed",            desc: "Wallet address matches declared wallet",          variant: "claimed" as const },
+                { tier: "Verified",           desc: "Luca-reviewed, fully verified",                  variant: "verified" as const },
+                { tier: "Luca Managed",       desc: "Luca actively monitors finances",                variant: "luca-managed" as const },
+              ].map((t, i, arr) => (
+                <LedgerRow
+                  key={t.tier}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<StatusBadge variant={t.variant}>{t.tier}</StatusBadge>}
+                  value={<span style={{ fontSize: "0.78rem", color: "var(--muted)", fontFamily: "inherit", fontWeight: 400 }}>{t.desc}</span>}
+                />
+              ))}
+            </LedgerCard>
           </section>
 
           {/* ── Core Product ── */}
           <section id="core-pages" className="docs-section">
-            <span className="docs-tag">Product</span>
+            <SectionLabel>Product</SectionLabel>
             <h1 className="docs-h1">Core Product</h1>
             <p className="docs-lead">The pages that make up the financial identity infrastructure.</p>
 
-            <div className="docs-pages-list">
-              {CORE_PAGES.map((page) => (
-                <div key={page.path} className="docs-page-row">
-                  <div className="docs-page-path">
-                    <code>{page.path}</code>
-                    <strong>{page.name}</strong>
-                  </div>
-                  <div className="docs-page-detail">
-                    <p>{page.desc}</p>
-                    <span className="docs-page-actions">{page.actions}</span>
-                  </div>
-                </div>
+            <LedgerCard>
+              {CORE_PAGES.map((page, i) => (
+                <LedgerRow
+                  key={page.path}
+                  first={i === 0}
+                  last={i === CORE_PAGES.length - 1}
+                  label={
+                    <div>
+                      <code style={{ fontSize: "0.78rem", color: "var(--accent)", display: "block", marginBottom: 2 }}>{page.path}</code>
+                      <strong style={{ fontSize: "0.84rem" }}>{page.name}</strong>
+                      <p style={{ fontSize: "0.75rem", color: "var(--muted)", margin: "3px 0 0", lineHeight: 1.5, maxWidth: 420 }}>{page.desc}</p>
+                    </div>
+                  }
+                  value={<span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "inherit", fontWeight: 400, textAlign: "right", maxWidth: 200, lineHeight: 1.5 }}>{page.actions}</span>}
+                  style={{ alignItems: "flex-start", padding: "12px 14px" }}
+                />
               ))}
-            </div>
+            </LedgerCard>
           </section>
 
           {/* ── API Reference ── */}
           <section id="api" className="docs-section">
-            <span className="docs-tag">Product</span>
+            <SectionLabel>Product</SectionLabel>
             <h1 className="docs-h1">API Reference</h1>
             <p className="docs-lead">Financial identity data for agents, builders, and prediction markets.</p>
 
@@ -618,75 +666,85 @@ Authorization: Bearer zt_live_...`}</pre>
 
           {/* ── $LUCA ── */}
           <section id="xbooks" className="docs-section">
-            <span className="docs-tag">Token</span>
+            <SectionLabel>Token</SectionLabel>
             <h1 className="docs-h1">$LUCA</h1>
             <p className="docs-lead">The token for Luca — not for Zetta API access.</p>
             <p className="docs-p">
               $LUCA is Luca&apos;s intelligence token. It unlocks the full power of Luca as a financial intelligence agent — deeper analysis, premium reports, and priority verification. It is not required to use Zetta or the registry API.
             </p>
 
-            <div className="docs-utility-grid">
+            <LedgerCard eyebrow="What $LUCA unlocks">
               {[
-                { icon: "analytics", title: "Deep Financial Analysis", desc: "Luca goes beyond surface scores. Full settlement classification, treasury runway, counterparty concentration — the complete operational picture." },
-                { icon: "description", title: "Premium Treasury Reports", desc: "Audit-ready financial reports for your agent. Shareable, generated by Luca on demand, structured for compliance." },
-                { icon: "verified", title: "Priority Verification", desc: "Skip the queue. $LUCA holders get priority wallet manifest review and faster profile upgrades in the registry." },
-              ].map((u) => (
-                <div key={u.title} className="docs-utility-card">
-                  <span className="material-symbols-outlined docs-utility-icon">{u.icon}</span>
-                  <div>
-                    <strong>{u.title}</strong>
-                    <p>{u.desc}</p>
-                  </div>
-                </div>
+                { title: "Deep Financial Analysis", desc: "Luca goes beyond surface scores. Full settlement classification, treasury runway, counterparty concentration — the complete operational picture." },
+                { title: "Premium Treasury Reports", desc: "Audit-ready financial reports for your agent. Shareable, generated by Luca on demand, structured for compliance." },
+                { title: "Priority Verification", desc: "Skip the queue. $LUCA holders get priority wallet manifest review and faster profile upgrades in the registry." },
+              ].map((u, i, arr) => (
+                <LedgerRow
+                  key={u.title}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={
+                    <div>
+                      <strong style={{ display: "block", marginBottom: 2 }}>{u.title}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5 }}>{u.desc}</span>
+                    </div>
+                  }
+                  value=""
+                  style={{ alignItems: "flex-start", padding: "12px 14px" }}
+                />
               ))}
-            </div>
+            </LedgerCard>
 
             <div className="docs-callout">
               <strong>Zetta API is separate.</strong> Accessing the registry, wallet data, and financial intelligence endpoints does not require $LUCA. API access is tiered by usage volume — free, developer, and enterprise.
             </div>
 
             <h2 className="docs-h2">Access tiers</h2>
-            <div className="docs-tier-table-wrap">
-              <table className="docs-tier-table">
-                <thead>
-                  <tr>
-                    <th>Feature</th>
-                    <th>Free</th>
-                    <th>Holder ≥1K</th>
-                    <th>Whale ≥10K</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ["Registry API (/api/registry/agents)", "✓", "✓", "✓"],
-                    ["Public stats (/api/stats)", "✓", "✓", "✓"],
-                    ["Verification badges (/api/badge/*)", "✓", "✓", "✓"],
-                    ["Agent financial state (v1)", "100/day", "500/day", "2,000/day"],
-                    ["Agent intelligence report (v1)", "100/day", "500/day", "2,000/day"],
-                    ["Priority manifest review", "—", "✓", "✓"],
-                    ["Priority claim processing", "—", "✓", "✓"],
-                    ["Premium Luca reports", "—", "—", "✓"],
-                    ["Enterprise monitoring API", "—", "—", "✓"],
-                  ].map(([feat, ...tiers]) => (
-                    <tr key={String(feat)}>
-                      <td>{feat}</td>
-                      {tiers.map((v, i) => (
-                        <td key={i} className={v === "✓" ? "tier-yes" : v === "—" ? "tier-no" : ""}>{v}</td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <MetricGrid cols={3} style={{ marginBottom: 20 }}>
+              <MetricCard label="Free" value="100/day" sub="Any API key" />
+              <MetricCard label="Holder ≥1K $LUCA" value="500/day" sub="Priority review" valueColor="var(--accent)" />
+              <MetricCard label="Whale ≥10K $LUCA" value="2,000/day" sub="Premium reports + enterprise API" valueColor="var(--accent)" />
+            </MetricGrid>
+
+            <LedgerCard eyebrow="Feature access by tier">
+              <LedgerRow
+                first
+                label="Feature"
+                value={
+                  <div style={{ display: "flex", gap: 32, fontFamily: "inherit", fontWeight: 700, fontSize: "0.78rem" }}>
+                    <span>Free</span><span>Holder</span><span>Whale</span>
+                  </div>
+                }
+                labelStyle={{ color: "var(--muted)", fontWeight: 700, fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                style={{ background: "var(--bg)" }}
+              />
+              {TIER_ROWS.map((row, i) => {
+                const [feat, free, holder, whale] = row;
+                return (
+                  <LedgerRow
+                    key={String(feat)}
+                    last={i === TIER_ROWS.length - 1}
+                    label={<span style={{ fontWeight: 400 }}>{feat}</span>}
+                    value={
+                      <div style={{ display: "flex", gap: 32, fontFamily: "var(--font-mono)", fontSize: "0.78rem" }}>
+                        <span style={{ color: free === "—" ? "var(--muted)" : "var(--ink)", minWidth: 60, textAlign: "center" }}>{free}</span>
+                        <span style={{ color: holder === "—" ? "var(--muted)" : "var(--accent)", minWidth: 60, textAlign: "center" }}>{holder}</span>
+                        <span style={{ color: whale === "—" ? "var(--muted)" : "var(--accent)", minWidth: 60, textAlign: "center" }}>{whale}</span>
+                      </div>
+                    }
+                  />
+                );
+              })}
+            </LedgerCard>
           </section>
 
           {/* ── Monetization ── */}
           <section id="monetization" className="docs-section">
-            <span className="docs-tag">Token</span>
+            <SectionLabel>Token</SectionLabel>
             <h1 className="docs-h1">Monetization</h1>
             <p className="docs-lead">Infrastructure companies monetize through trust, access, and data.</p>
 
-            <div className="docs-mono-grid">
+            <LedgerCard>
               {[
                 { n: "01", title: "API Access (live)",            desc: "Tiered API access for financial intelligence endpoints. Free: 100 req/day. $LUCA Holder: 500/day. $LUCA Whale: 2,000/day." },
                 { n: "02", title: "Verification Program",         desc: "Verification as a service — formal review, Luca verdict, and Verified badge for agent teams that want priority processing." },
@@ -694,51 +752,59 @@ Authorization: Bearer zt_live_...`}</pre>
                 { n: "04", title: "$LUCA Token",                  desc: "Token powers API tier upgrades, priority verification, and future governance over registry standards." },
                 { n: "05", title: "Enterprise Monitoring API",    desc: "Bulk agent monitoring, custom dashboards, and compliance-grade exports for protocols managing agent fleets." },
                 { n: "06", title: "Ecosystem Analytics",          desc: "Aggregated financial intelligence for protocol teams — ecosystem-level transparency scores, adoption metrics, settlement trends." },
-              ].map((m) => (
-                <div key={m.n} className="docs-mono-card">
-                  <span className="docs-mono-num">{m.n}</span>
-                  <div>
-                    <strong>{m.title}</strong>
-                    <p>{m.desc}</p>
-                  </div>
-                </div>
+              ].map((m, i, arr) => (
+                <LedgerRow
+                  key={m.n}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={
+                    <div>
+                      <strong style={{ display: "block", marginBottom: 2 }}>{m.title}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)", lineHeight: 1.5 }}>{m.desc}</span>
+                    </div>
+                  }
+                  value={<span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{m.n}</span>}
+                  style={{ alignItems: "flex-start", padding: "12px 14px" }}
+                />
               ))}
-            </div>
+            </LedgerCard>
           </section>
 
           {/* ── Roadmap ── */}
           <section id="roadmap" className="docs-section">
-            <span className="docs-tag">Vision</span>
+            <SectionLabel>Vision</SectionLabel>
             <h1 className="docs-h1">Roadmap</h1>
             <p className="docs-lead">Six phases from v1 to the financial operating system for autonomous agents.</p>
 
-            <div className="docs-roadmap">
-              {ROADMAP.map((phase, i) => (
-                <div key={phase.phase} className="docs-roadmap-item">
-                  <div className="docs-roadmap-line-wrap">
-                    <div className={`docs-roadmap-dot ${phase.status}`} />
-                    {i < ROADMAP.length - 1 && <div className="docs-roadmap-line" />}
-                  </div>
-                  <div className="docs-roadmap-body">
-                    <div className="docs-roadmap-head">
-                      <span className="docs-roadmap-phase">{phase.phase}</span>
-                      <strong>{phase.title}</strong>
-                      <span className={`docs-roadmap-status ${phase.status}`}>
-                        {phase.status === "live" ? "Live" : phase.status === "next" ? "Up next" : "Planned"}
-                      </span>
-                    </div>
-                    <ul className="docs-roadmap-list">
-                      {phase.items.map((item) => <li key={item}>{item}</li>)}
-                    </ul>
-                  </div>
-                </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {ROADMAP.map((phase) => (
+                <LedgerCard
+                  key={phase.phase}
+                  eyebrow={phase.phase}
+                  title={phase.title}
+                  action={
+                    <StatusBadge variant={ROADMAP_STATUS_VARIANT[phase.status]}>
+                      {phase.status === "live" ? "Live" : phase.status === "next" ? "Up next" : "Planned"}
+                    </StatusBadge>
+                  }
+                >
+                  {phase.items.map((item, i) => (
+                    <LedgerRow
+                      key={item}
+                      first={i === 0}
+                      last={i === phase.items.length - 1}
+                      label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                      value=""
+                    />
+                  ))}
+                </LedgerCard>
               ))}
             </div>
           </section>
 
           {/* ── Security ── */}
           <section id="security" className="docs-section">
-            <span className="docs-tag">Trust</span>
+            <SectionLabel>Trust</SectionLabel>
             <h1 className="docs-h1">Security</h1>
             <p className="docs-lead">Zetta AI is read-only. It never touches your funds.</p>
 
@@ -747,21 +813,42 @@ Authorization: Bearer zt_live_...`}</pre>
             </div>
 
             <h2 className="docs-h2">What Zetta AI does not do</h2>
-            <ul className="docs-list docs-list-check">
-              <li>Request or store private keys</li>
-              <li>Execute transactions from any wallet</li>
-              <li>Take custody of funds</li>
-              <li>Access wallet signing capabilities</li>
-              <li>Store raw wallet secrets</li>
-            </ul>
+            <LedgerCard>
+              {[
+                "Request or store private keys",
+                "Execute transactions from any wallet",
+                "Take custody of funds",
+                "Access wallet signing capabilities",
+                "Store raw wallet secrets",
+              ].map((item, i, arr) => (
+                <LedgerRow
+                  key={item}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                  badge={<StatusBadge variant="red">Never</StatusBadge>}
+                  value=""
+                />
+              ))}
+            </LedgerCard>
 
             <h2 className="docs-h2">What Zetta AI does</h2>
-            <ul className="docs-list">
-              <li>Reads public onchain USDC transfer data via Base RPC</li>
-              <li>Stores Privy user IDs, email addresses, and X handles in Supabase</li>
-              <li>Associates wallet addresses with user sessions (opt-in)</li>
-              <li>Generates AI summaries using Claude Haiku (Anthropic)</li>
-            </ul>
+            <LedgerCard>
+              {[
+                "Reads public onchain USDC transfer data via Base RPC",
+                "Stores Privy user IDs, email addresses, and X handles in Supabase",
+                "Associates wallet addresses with user sessions (opt-in)",
+                "Generates AI summaries using Claude Haiku (Anthropic)",
+              ].map((item, i, arr) => (
+                <LedgerRow
+                  key={item}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                  value=""
+                />
+              ))}
+            </LedgerCard>
 
             <h2 className="docs-h2">Authentication</h2>
             <p className="docs-p">
@@ -776,7 +863,7 @@ Authorization: Bearer zt_live_...`}</pre>
 
           {/* ── FAQ ── */}
           <section id="faq" className="docs-section">
-            <span className="docs-tag">Trust</span>
+            <SectionLabel>Trust</SectionLabel>
             <h1 className="docs-h1">FAQ</h1>
             <p className="docs-lead">Common questions about Zetta AI.</p>
             <div className="docs-faq-list">
@@ -788,7 +875,7 @@ Authorization: Bearer zt_live_...`}</pre>
 
           {/* ── Positioning ── */}
           <section id="positioning" className="docs-section docs-section-last">
-            <span className="docs-tag">Trust</span>
+            <SectionLabel>Trust</SectionLabel>
             <h1 className="docs-h1">Positioning</h1>
             <p className="docs-lead">Financial identity infrastructure for autonomous agents.</p>
 
@@ -819,22 +906,32 @@ These are three distinct things. Never blur them.`}</pre>
 
             <h2 className="docs-h2">The moat</h2>
             <p className="docs-p">
-              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.agent/wallets.json</code> to their repo plugs into Zetta' verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
+              The moat is the <strong>Agent Wallet Manifest standard</strong>. Any agent that adds <code>.agent/wallets.json</code> to their repo plugs into Zetta&apos; verification pipeline, leaderboards, and badge system. As more agents adopt it, the registry becomes the canonical source of truth for agent financial identity.
             </p>
             <p className="docs-p">
               Infrastructure compounds slowly. Trust compounds slowly. Once infra wins — it is extremely difficult to replace.
             </p>
 
             <h2 className="docs-h2">What we are not</h2>
-            <ul className="docs-list">
-              <li>Not a wallet scanner for retail users</li>
-              <li>Not another AI agent personality</li>
-              <li>Not a token project or memecoin</li>
-              <li>Not a dashboard for human wallet tracking</li>
-            </ul>
+            <LedgerCard>
+              {[
+                "Not a wallet scanner for retail users",
+                "Not another AI agent personality",
+                "Not a token project or memecoin",
+                "Not a dashboard for human wallet tracking",
+              ].map((item, i, arr) => (
+                <LedgerRow
+                  key={item}
+                  first={i === 0}
+                  last={i === arr.length - 1}
+                  label={<span style={{ fontWeight: 400 }}>{item}</span>}
+                  value=""
+                />
+              ))}
+            </LedgerCard>
 
             <div className="docs-callout docs-callout-green">
-              <strong>The one question.</strong> Before we ship anything: <em>"Does this make autonomous agents more financially readable, trustworthy, or auditable?"</em> If yes — ship it. If no — don't build it.
+              <strong>The one question.</strong> Before we ship anything: <em>&quot;Does this make autonomous agents more financially readable, trustworthy, or auditable?&quot;</em> If yes — ship it. If no — don&apos;t build it.
             </div>
           </section>
 

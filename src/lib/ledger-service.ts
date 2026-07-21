@@ -59,7 +59,7 @@ export async function buildLedgerScan(params: {
   }
 
   // Run Alchemy fetch and ecosystem registry in parallel; registry has 4s hard cap
-  const [rawTransactions, ecosystem] = await Promise.all([
+  const [fetchResult, ecosystem] = await Promise.all([
     fetchBaseErc20Transfers({
       apiKey,
       wallet: params.wallet,
@@ -67,6 +67,7 @@ export async function buildLedgerScan(params: {
     }),
     getEcosystemRegistrySafe(),
   ]);
+  const rawTransactions = fetchResult.transactions;
 
   // Collect unique non-stablecoin addresses for price lookup.
   // ETH transfers come in as tokenAddress "eth" — swap for WETH on Base for price resolution.
@@ -142,6 +143,9 @@ export async function buildLedgerScan(params: {
     wallet: params.wallet,
     range: params.range,
     generatedAt: new Date().toISOString(),
+    // True when the tx fetch hit its pagination cap inside the requested
+    // window — totals from this scan may be incomplete.
+    truncated: fetchResult.truncated,
     summary,
     report,
     categories,

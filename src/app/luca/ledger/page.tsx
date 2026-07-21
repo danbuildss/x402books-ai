@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
+import { CostStatusBadge } from "@/components/ui/badge";
 import {
   getInferenceEvents,
   summarizeInferenceEvents,
@@ -31,7 +33,7 @@ function relativeTime(iso: string) {
 }
 
 function StatusDot({ status }: { status: string }) {
-  const color = status === "success" ? "var(--accent)" : status === "error" ? "#f87171" : "var(--muted)";
+  const color = status === "success" ? "var(--accent)" : status === "error" ? "#F46060" : "var(--muted)";
   return (
     <span style={{
       display: "inline-block", width: 6, height: 6,
@@ -52,16 +54,16 @@ function CostStatusBanner({ costStatus, requestCount }: { costStatus: CostSource
       note: "Cost figures are sourced from provider billing.",
     },
     estimated: {
-      bg: "#f59e0b12",
-      border: "#f59e0b40",
-      dot: "#f59e0b",
+      bg: "#F4B94212",
+      border: "#F4B94240",
+      dot: "#F4B942",
       label: "Cost data: estimated",
       note: "Spend is estimated from model pricing and token usage. Actual provider billing may differ.",
     },
     missing: {
-      bg: "#f8717112",
-      border: "#f8717140",
-      dot: "#f87171",
+      bg: "#F4606012",
+      border: "#F4606040",
+      dot: "#F46060",
       label: "Cost data: missing",
       note: "Requests are being tracked, but cost data is missing. Financial reporting is incomplete until provider cost metadata is active.",
     },
@@ -146,7 +148,7 @@ function ProviderBreakdown({ breakdown, total, hasCostData }: { breakdown: Provi
 }
 
 function StatementBlock({ statement }: { statement: MonthlyStatement }) {
-  const netColor = statement.netPosition > 0 ? "var(--accent)" : statement.netPosition < 0 ? "#f87171" : "var(--ink)";
+  const netColor = statement.netPosition > 0 ? "var(--accent)" : statement.netPosition < 0 ? "#F46060" : "var(--ink)";
   const spendDisplay = statement.inferenceSpend > 0 ? `-${usd(statement.inferenceSpend)}` : "—";
 
   return (
@@ -154,45 +156,15 @@ function StatementBlock({ statement }: { statement: MonthlyStatement }) {
       <p style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
         Monthly Statement · {statement.month}
       </p>
-      <div style={{
-        background: "var(--surface)", border: "1px solid var(--line)",
-        borderRadius: 10, padding: "16px 18px",
-      }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {[
-            ["Inference Spend", spendDisplay, statement.inferenceSpend > 0 ? "#f87171" : "var(--muted)"],
-            ["Revenue",         "+$0.00",     "var(--muted)"],
-          ].map(([label, value, color]) => (
-            <div key={label as string} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
-              <span style={{ color: "var(--muted)" }}>{label}</span>
-              <span style={{ fontFamily: "monospace", color: color as string }}>{value}</span>
-            </div>
-          ))}
-          <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid var(--line)", paddingTop: 8, fontSize: "0.88rem", fontWeight: 700 }}>
-            <span>Net Position</span>
-            <span style={{ fontFamily: "monospace", color: netColor }}>
-              {statement.netPosition === 0 ? "—" : `${statement.netPosition >= 0 ? "+" : ""}${usd(Math.abs(statement.netPosition))}`}
-            </span>
-          </div>
-        </div>
-
-        <div style={{ borderTop: "1px solid var(--line)", marginTop: 12, paddingTop: 12 }}>
-          {statement.topProvider && (
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem", marginBottom: 6 }}>
-              <span style={{ color: "var(--muted)" }}>Primary Provider</span>
-              <span style={{ color: "var(--ink)", textTransform: "capitalize" }}>{statement.topProvider}</span>
-            </div>
-          )}
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.82rem" }}>
-            <span style={{ color: "var(--muted)" }}>Requests</span>
-            <span style={{ color: "var(--ink)" }}>{statement.requestCount}</span>
-          </div>
-        </div>
-
-        <div style={{ borderTop: "1px solid var(--line)", marginTop: 12, paddingTop: 12 }}>
-          <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Verdict</p>
-          <p style={{ fontSize: "0.82rem", color: "var(--ink)", lineHeight: 1.55 }}>{statement.verdict}</p>
-        </div>
+      <div>
+        <LedgerRow first label="Inference Spend" value={spendDisplay} valueStyle={{ color: statement.inferenceSpend > 0 ? "#F46060" : "var(--muted)" }} />
+        <LedgerRow label="Revenue" value="—" valueStyle={{ color: "var(--muted)" }} />
+        <LedgerRow label="Net Position" value={statement.netPosition === 0 ? "—" : `${statement.netPosition >= 0 ? "+" : ""}${usd(Math.abs(statement.netPosition))}`} valueStyle={{ color: netColor, fontWeight: 700 }} />
+        {statement.topProvider && (
+          <LedgerRow label="Primary Provider" value={statement.topProvider} valueStyle={{ textTransform: "capitalize", fontFamily: "inherit" }} />
+        )}
+        <LedgerRow label="Requests" value={statement.requestCount.toString()} />
+        <LedgerRow last label="Verdict" value="" detail={statement.verdict} />
       </div>
     </section>
   );
@@ -246,6 +218,7 @@ function EventFeed({ events }: { events: InferenceEvent[] }) {
                 {e.requestType}
               </span>
             )}
+            <CostStatusBadge status={e.costSource ?? "missing"} />
             <span style={{
               fontSize: "0.78rem", fontFamily: "monospace",
               color: e.costSource === "missing" ? "var(--muted)" : "var(--ink)",

@@ -34,22 +34,22 @@ export type AgentConfidenceLabel = {
 export const CONFIDENCE_META: Record<ConfidenceLevel, { label: string; color: string; description: string }> = {
   high: {
     label:       "High Confidence",
-    color:       "#22c55e",
+    color:       "#4AE8A0",
     description: "Revenue figures verified against on-chain evidence. Stablecoin-denominated, Base-native, full wallet attribution.",
   },
   medium: {
     label:       "Medium Confidence",
-    color:       "#f59e0b",
+    color:       "#F4B942",
     description: "Revenue figures are directional. Partial wallet coverage or mixed token/stablecoin activity may affect precision.",
   },
   low: {
     label:       "Low Confidence",
-    color:       "#ef4444",
+    color:       "#F46060",
     description: "Revenue figure is unreliable. High quarantine rate, missing wallets, or unresolved classification issues.",
   },
   under_review: {
     label:       "Attribution Under Review",
-    color:       "#6b7280",
+    color:       "var(--muted)",
     description: "Revenue attribution is being verified. Figure may change once wallet data and classification are confirmed.",
   },
 };

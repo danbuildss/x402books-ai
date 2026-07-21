@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { getRegistryAgents } from "@/lib/registry-db";
 import { verifyMessage } from "viem";
-
-function toSlug(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
+import { toSlug } from "@/lib/slug";
 
 // POST /api/registry/claim
 // Agent teams submit a wallet address to claim their profile.

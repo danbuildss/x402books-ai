@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import styles from "./page.module.css";
+import { SectionErrorBoundary } from "./SectionErrorBoundary";
 import type { AttributionMetrics, AgentAttributionHealth, ManifestStatus, AttributionConfidence } from "@/lib/attribution-health";
 import type { AgentRevenueAudit, AuditTx } from "@/lib/agent-books";
 import type { AuditFlag } from "@/app/api/admin/revenue-audit/route";
@@ -128,7 +129,7 @@ const LAYERS = [
     label: "L3",
     title: "Registry + Agent Relations",
     purpose: "Growth + verification",
-    color: "#a78bfa",
+    color: "#8B7CF6",
     agents: [
       { name: "Registry Agent",     role: "Tracks agent wallets and confidence labels", cadence: "Weekly", status: "active" },
       { name: "Verification Agent", role: "Prepares wallet verification requests", cadence: "On demand", status: "planned" },
@@ -380,7 +381,7 @@ function ManifestSubmissions({ secret }: { secret: string }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <p className={styles.cardTitle} style={{ margin: 0 }}>Manifest Submissions</p>
         {manifests.filter((m) => m.status === "pending").length > 0 && (
-          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#f59e0b22", color: "#f59e0b" }}>
+          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#F4B94222", color: "#F4B942" }}>
             {manifests.filter((m) => m.status === "pending").length} pending
           </span>
         )}
@@ -404,8 +405,8 @@ function ManifestSubmissions({ secret }: { secret: string }) {
                     <strong style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{m.agent_name}</strong>
                     <span style={{
                       padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
-                      background: m.status === "pending" ? "#f59e0b22" : m.status === "approved" ? "var(--accent-soft)" : "#ef444422",
-                      color: m.status === "pending" ? "#f59e0b" : m.status === "approved" ? "var(--accent)" : "#ef4444",
+                      background: m.status === "pending" ? "#F4B94222" : m.status === "approved" ? "var(--accent-soft)" : "#F4606022",
+                      color: m.status === "pending" ? "#F4B942" : m.status === "approved" ? "var(--accent)" : "#F46060",
                     }}>{m.status}</span>
                     {m.proposed_data?.ecosystem && (
                       <span style={{ fontSize: "0.7rem", color: "var(--muted)", fontWeight: 600 }}>{m.proposed_data.ecosystem}</span>
@@ -434,11 +435,11 @@ function ManifestSubmissions({ secret }: { secret: string }) {
                 {m.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(m.id, "approve")} disabled={acting === m.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(m.id, "reject")} disabled={acting === m.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#F46060", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === m.id ? 0.5 : 1 }}>
                       Reject
                     </button>
                   </div>
@@ -501,7 +502,7 @@ function ClaimsReview({ secret }: { secret: string }) {
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <p className={styles.cardTitle} style={{ margin: 0 }}>Profile Claim Requests</p>
         {pending.length > 0 && (
-          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#f59e0b22", color: "#f59e0b" }}>
+          <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#F4B94222", color: "#F4B942" }}>
             {pending.length} pending
           </span>
         )}
@@ -525,13 +526,13 @@ function ClaimsReview({ secret }: { secret: string }) {
                     <strong style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{c.agent_name}</strong>
                     <span style={{
                       padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
-                      background: c.status === "pending" ? "#f59e0b22" : c.status === "approved" ? "var(--accent-soft)" : "#ef444422",
-                      color: c.status === "pending" ? "#f59e0b" : c.status === "approved" ? "var(--accent)" : "#ef4444",
+                      background: c.status === "pending" ? "#F4B94222" : c.status === "approved" ? "var(--accent-soft)" : "#F4606022",
+                      color: c.status === "pending" ? "#F4B942" : c.status === "approved" ? "var(--accent)" : "#F46060",
                     }}>{c.status}</span>
                     <span style={{
                       padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
                       background: c.wallet_matched ? "var(--accent-soft)" : "rgba(248,113,113,0.1)",
-                      color: c.wallet_matched ? "var(--accent)" : "#f87171",
+                      color: c.wallet_matched ? "var(--accent)" : "#F46060",
                     }}>
                       {c.wallet_matched ? "Wallet matched" : "No wallet match"}
                     </span>
@@ -546,11 +547,11 @@ function ClaimsReview({ secret }: { secret: string }) {
                 {c.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(c.id, "approve")} disabled={acting === c.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(c.id, "reject")} disabled={acting === c.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#F46060", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === c.id ? 0.5 : 1 }}>
                       Reject
                     </button>
                   </div>
@@ -614,7 +615,59 @@ function RegistrySection({ secret }: { secret: string }) {
   const [overrideSaving, setOverrideSaving] = useState(false);
   const [overrideMsg, setOverrideMsg]       = useState("");
 
+  const [runBooksSlug, setRunBooksSlug]   = useState("");
+  const [runBooksRunning, setRunBooksRunning] = useState(false);
+  const [runBooksMsg, setRunBooksMsg]     = useState("");
+  const [fixEligRunning, setFixEligRunning] = useState(false);
+  const [fixEligMsg, setFixEligMsg]       = useState("");
+
   const headers = { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" };
+
+  async function runBooks(e: React.FormEvent) {
+    e.preventDefault();
+    if (!runBooksSlug.trim()) return;
+    setRunBooksRunning(true);
+    setRunBooksMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/run-books", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ slug: runBooksSlug.trim().toLowerCase() }),
+      });
+      const d = await res.json() as {
+        ok: boolean; error?: string;
+        eligibility_fixed?: number; wallets_synced?: number;
+        txs_indexed?: number; snapshot_saved?: boolean;
+      };
+      if (d.ok) {
+        setRunBooksMsg(`✓ Fixed ${d.eligibility_fixed ?? 0} eligibility · ${d.wallets_synced ?? 0} wallets synced · ${d.txs_indexed ?? 0} txs indexed · snapshot ${d.snapshot_saved ? "saved" : "skipped"}`);
+      } else {
+        setRunBooksMsg(`✗ ${d.error ?? "Failed"}`);
+      }
+    } catch {
+      setRunBooksMsg("✗ Network error");
+    } finally {
+      setRunBooksRunning(false);
+    }
+  }
+
+  async function fixEligibility() {
+    setFixEligRunning(true);
+    setFixEligMsg("");
+    try {
+      const res = await fetch("/api/admin/registry/fix-eligibility", { method: "POST", headers });
+      const d = await res.json() as { ok: boolean; fixed?: number; error?: string };
+      if (d.ok) {
+        setFixEligMsg(`✓ Fixed ${d.fixed ?? 0} wallets`);
+      } else {
+        setFixEligMsg(`✗ ${d.error ?? "Failed"}`);
+      }
+    } catch {
+      setFixEligMsg("✗ Network error");
+    } finally {
+      setFixEligRunning(false);
+    }
+  }
 
   async function loadStats() {
     setStatsLoading(true);
@@ -789,7 +842,7 @@ function RegistrySection({ secret }: { secret: string }) {
             </button>
           </div>
         </div>
-        {statsError && <p style={{ fontSize: "0.78rem", color: "#ef4444", margin: "0 0 8px" }}>{statsError}</p>}
+        {statsError && <p style={{ fontSize: "0.78rem", color: "#F46060", margin: "0 0 8px" }}>{statsError}</p>}
         {!stats && !statsLoading && (
           <p style={{ fontSize: "0.78rem", color: "var(--muted)", margin: 0 }}>Click Refresh to load live stats from Supabase.</p>
         )}
@@ -854,13 +907,13 @@ function RegistrySection({ secret }: { secret: string }) {
             <div style={{ paddingTop: 8, borderTop: "1px solid var(--line)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <button type="button" onClick={bulkRefreshVerdicts} disabled={bulkRefreshing}
-                  style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: bulkRefreshing ? "not-allowed" : "pointer", opacity: bulkRefreshing ? 0.5 : 1 }}>
+                  style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: bulkRefreshing ? "not-allowed" : "pointer", opacity: bulkRefreshing ? 0.5 : 1 }}>
                   {bulkRefreshing ? "Refreshing all verdicts…" : "Refresh All Verdicts →"}
                 </button>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>Luca calls this daily — or run manually here.</span>
               </div>
               {bulkMsg && (
-                <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: bulkMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{bulkMsg}</p>
+                <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: bulkMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>{bulkMsg}</p>
               )}
             </div>
           </div>
@@ -898,13 +951,51 @@ function RegistrySection({ secret }: { secret: string }) {
             </select>
           </div>
           <button type="submit" disabled={overrideSaving || !overrideAddr.trim()}
-            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: overrideSaving || !overrideAddr.trim() ? "not-allowed" : "pointer", opacity: overrideSaving || !overrideAddr.trim() ? 0.5 : 1 }}>
+            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: overrideSaving || !overrideAddr.trim() ? "not-allowed" : "pointer", opacity: overrideSaving || !overrideAddr.trim() ? 0.5 : 1 }}>
             {overrideSaving ? "Saving…" : "Override"}
           </button>
         </form>
         {overrideMsg && (
-          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: overrideMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{overrideMsg}</p>
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: overrideMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>{overrideMsg}</p>
         )}
+      </div>
+
+      {/* Run Books — one-click pipeline */}
+      <div className={styles.card} style={{ marginBottom: 16 }}>
+        <p className={styles.cardTitle} style={{ margin: "0 0 4px" }}>Run Books Pipeline</p>
+        <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)" }}>
+          Fix eligibility → sync wallets → index on-chain → save snapshot. One click per agent.
+        </p>
+        <form onSubmit={runBooks} style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "1 1 200px" }}>
+            <label style={{ fontSize: "0.72rem", color: "var(--muted)", fontWeight: 600 }}>Agent Slug</label>
+            <input
+              value={runBooksSlug}
+              onChange={(e) => setRunBooksSlug(e.target.value)}
+              placeholder="e.g. sleuth-ai"
+              style={{ padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", fontSize: "0.82rem" }}
+            />
+          </div>
+          <button type="submit" disabled={runBooksRunning || !runBooksSlug.trim()}
+            style={{ padding: "7px 14px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: runBooksRunning || !runBooksSlug.trim() ? "not-allowed" : "pointer", opacity: runBooksRunning || !runBooksSlug.trim() ? 0.5 : 1 }}>
+            {runBooksRunning ? "Running…" : "Run Books →"}
+          </button>
+        </form>
+        {runBooksMsg && (
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: runBooksMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{runBooksMsg}</p>
+        )}
+        <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--muted)" }}>
+            Fix all manifest wallets missing address_type across all agents at once:
+          </p>
+          <button type="button" onClick={fixEligibility} disabled={fixEligRunning}
+            style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--surface)", color: "var(--fg)", fontSize: "0.8rem", cursor: fixEligRunning ? "not-allowed" : "pointer", opacity: fixEligRunning ? 0.5 : 1 }}>
+            {fixEligRunning ? "Fixing…" : "Fix All Eligibility"}
+          </button>
+          {fixEligMsg && (
+            <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: fixEligMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>{fixEligMsg}</p>
+          )}
+        </div>
       </div>
 
       {/* Manifest Submissions (repo-submitted wallets.json) */}
@@ -919,7 +1010,7 @@ function RegistrySection({ secret }: { secret: string }) {
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <p className={styles.cardTitle} style={{ margin: 0 }}>Verification Submissions</p>
             {pendingCount > 0 && (
-              <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#ef444422", color: "#ef4444" }}>
+              <span style={{ padding: "1px 7px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700, background: "#F4606022", color: "#F46060" }}>
                 {pendingCount} pending
               </span>
             )}
@@ -949,21 +1040,21 @@ function RegistrySection({ secret }: { secret: string }) {
                     {s.x_handle && <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>{s.x_handle}</span>}
                     <span style={{
                       padding: "1px 8px", borderRadius: 999, fontSize: "0.65rem", fontWeight: 700,
-                      background: s.status === "pending" ? "#f59e0b22" : s.status === "approved" ? "var(--accent-soft)" : "#ef444422",
-                      color: s.status === "pending" ? "#f59e0b" : s.status === "approved" ? "var(--accent)" : "#ef4444",
+                      background: s.status === "pending" ? "#F4B94222" : s.status === "approved" ? "var(--accent-soft)" : "#F4606022",
+                      color: s.status === "pending" ? "#F4B942" : s.status === "approved" ? "var(--accent)" : "#F46060",
                     }}>{s.status}</span>
                   </div>
                   <code style={{ fontSize: "0.75rem", color: "var(--ink)", wordBreak: "break-all" }}>{s.wallet_address}</code>
                   {s.gitlawb_repo && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>Gitlawb: {s.gitlawb_repo}</p>}
                   {s.notes && <p style={{ margin: "3px 0 0", fontSize: "0.75rem", color: "var(--muted)" }}>{s.notes}</p>}
                   {s.b20_token_address && (
-                    <div style={{ margin: "6px 0 0", padding: "5px 10px", background: "#f59e0b10", border: "1px solid #f59e0b40", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#f59e0b" }}>B20 Token</span>
+                    <div style={{ margin: "6px 0 0", padding: "5px 10px", background: "#F4B94210", border: "1px solid #F4B94240", borderRadius: 6, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#F4B942" }}>B20 Token</span>
                       <code style={{ fontSize: "0.72rem", color: "var(--ink)", fontFamily: "monospace" }}>{s.b20_token_address}</code>
                       {s.b20_token_address.startsWith("0xb200") ? (
-                        <span style={{ fontSize: "0.65rem", color: "#22c55e", fontWeight: 700 }}>✓ prefix ok</span>
+                        <span style={{ fontSize: "0.65rem", color: "#4AE8A0", fontWeight: 700 }}>✓ prefix ok</span>
                       ) : (
-                        <span style={{ fontSize: "0.65rem", color: "#ef4444", fontWeight: 700 }}>✗ not 0xB200 — do not flag</span>
+                        <span style={{ fontSize: "0.65rem", color: "#F46060", fontWeight: 700 }}>✗ not 0xB200 — do not flag</span>
                       )}
                     </div>
                   )}
@@ -974,11 +1065,11 @@ function RegistrySection({ secret }: { secret: string }) {
                 {s.status === "pending" && (
                   <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                     <button type="button" onClick={() => act(s.id, "approved")} disabled={acting === s.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
                       Approve
                     </button>
                     <button type="button" onClick={() => act(s.id, "rejected")} disabled={acting === s.id}
-                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
+                      style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)", background: "rgba(239,68,68,0.07)", color: "#F46060", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer", opacity: acting === s.id ? 0.5 : 1 }}>
                       Reject
                     </button>
                   </div>
@@ -998,7 +1089,7 @@ function RegistrySection({ secret }: { secret: string }) {
               Writes all 84 agents from <code>data.ts</code> into Supabase. Run once to go fully DB-driven.
             </p>
             {seedMsg && (
-              <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: seedMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+              <p style={{ margin: "6px 0 0", fontSize: "0.8rem", color: seedMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>
                 {seedMsg}
               </p>
             )}
@@ -1007,7 +1098,7 @@ function RegistrySection({ secret }: { secret: string }) {
             type="button"
             onClick={seedRegistry}
             disabled={seeding}
-            style={{ padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: seeding ? "not-allowed" : "pointer", opacity: seeding ? 0.6 : 1, whiteSpace: "nowrap" }}
           >
             {seeding ? "Seeding…" : "Seed Registry →"}
           </button>
@@ -1041,8 +1132,8 @@ function RegistrySection({ secret }: { secret: string }) {
             {[
               { label: "New Agent",     color: "var(--accent)" },
               { label: "Score Update",  color: "var(--blue)" },
-              { label: "Wallet Update", color: "#f59e0b" },
-              { label: "Status Change", color: "#a78bfa" },
+              { label: "Wallet Update", color: "#F4B942" },
+              { label: "Status Change", color: "#8B7CF6" },
             ].map((t) => (
               <span key={t.label} style={{ padding: "3px 10px", borderRadius: 999, fontSize: "0.75rem", fontWeight: 700, background: `color-mix(in srgb, ${t.color} 12%, transparent)`, color: t.color, border: `1px solid color-mix(in srgb, ${t.color} 25%, transparent)` }}>
                 {t.label}
@@ -1107,13 +1198,13 @@ function RegistrySection({ secret }: { secret: string }) {
             <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
             <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />
             <button type="submit" disabled={editSaving || !editName.trim()}
-              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
               {editSaving ? "Saving…" : "Save →"}
             </button>
           </div>
         </form>
         {editMsg && (
-          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: editMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: editMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>
             {editMsg}
           </p>
         )}
@@ -1137,13 +1228,13 @@ function RegistrySection({ secret }: { secret: string }) {
           <button
             type="submit"
             disabled={refreshing || !verdictTarget.trim()}
-            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: refreshing || !verdictTarget.trim() ? "not-allowed" : "pointer", opacity: refreshing || !verdictTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: refreshing || !verdictTarget.trim() ? "not-allowed" : "pointer", opacity: refreshing || !verdictTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
           >
             {refreshing ? "Generating…" : "Refresh Verdict →"}
           </button>
         </form>
         {verdictMsg && (
-          <p style={{ margin: "8px 0 4px", fontSize: "0.8rem", color: verdictMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+          <p style={{ margin: "8px 0 4px", fontSize: "0.8rem", color: verdictMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>
             {verdictMsg}
           </p>
         )}
@@ -1156,7 +1247,7 @@ function RegistrySection({ secret }: { secret: string }) {
 
       {/* Danger Zone */}
       <div className={styles.card} style={{ marginTop: 16, border: "1px solid rgba(239,68,68,0.25)" }}>
-        <p className={styles.cardTitle} style={{ color: "#ef4444" }}>Danger Zone — Delete Agent Row</p>
+        <p className={styles.cardTitle} style={{ color: "#F46060" }}>Danger Zone — Delete Agent Row</p>
         <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
           Permanently removes an agent and all its wallet rows from the DB. Use this to clean up ghost rows
           before re-submitting a manifest (e.g. <code>AEON</code> vs <code>Aeon</code> casing mismatches).
@@ -1173,13 +1264,13 @@ function RegistrySection({ secret }: { secret: string }) {
           <button
             type="submit"
             disabled={deleting || !deleteTarget.trim()}
-            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#ef4444", fontSize: "0.8rem", fontWeight: 700, cursor: deleting || !deleteTarget.trim() ? "not-allowed" : "pointer", opacity: deleting || !deleteTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#F46060", fontSize: "0.8rem", fontWeight: 700, cursor: deleting || !deleteTarget.trim() ? "not-allowed" : "pointer", opacity: deleting || !deleteTarget.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
           >
             {deleting ? "Deleting…" : "Delete Agent →"}
           </button>
         </form>
         {deleteMsg && (
-          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: deleteMsg.startsWith("✓") ? "var(--accent)" : "#ef4444" }}>
+          <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: deleteMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>
             {deleteMsg}
           </p>
         )}
@@ -1269,8 +1360,8 @@ function AttributionSection({ secret }: { secret: string }) {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 20 }}>
           {[
             { label: "Total Indexed",    value: data.total_indexed,                     color: "var(--fg)" },
-            { label: "Attributed",       value: data.total_attributed,                  color: "#6DB874" },
-            { label: "Anomaly (wallets, not attributed)", value: data.total_unattributed_with_wallets, color: "#f59e0b" },
+            { label: "Attributed",       value: data.total_attributed,                  color: "#4AE8A0" },
+            { label: "Anomaly (wallets, not attributed)", value: data.total_unattributed_with_wallets, color: "#F4B942" },
             { label: "No Wallets",       value: data.total_no_wallets,                  color: "var(--muted)" },
           ].map((t) => (
             <div key={t.label} style={{ padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
@@ -1312,7 +1403,7 @@ function AttributionSection({ secret }: { secret: string }) {
       </div>
 
       {loading && <div className={styles.stateBox}>Loading attribution data…</div>}
-      {error   && <div className={styles.stateBox} style={{ color: "#ef4444" }}>Error: {error}</div>}
+      {error   && <div className={styles.stateBox} style={{ color: "#F46060" }}>Error: {error}</div>}
 
       {!loading && !error && (
         <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
@@ -1328,7 +1419,7 @@ function AttributionSection({ secret }: { secret: string }) {
           )}
 
           {filtered.map((a) => {
-            const statusColor = a.attributed === true ? "#6DB874" : a.attributed === false && a.wallets_declared > 0 ? "#f59e0b" : "var(--muted)";
+            const statusColor = a.attributed === true ? "#4AE8A0" : a.attributed === false && a.wallets_declared > 0 ? "#F4B942" : "var(--muted)";
             const statusLabel = a.attributed === true ? "✓ attributed" : a.attributed === false ? "✗ not attributed" : "not scanned";
             return (
               <div key={a.slug} style={{ display: "grid", gridTemplateColumns: "1fr 80px 80px 90px 110px 110px 140px", gap: 10, padding: "10px 14px", borderBottom: "1px solid var(--line)", alignItems: "center" }}>
@@ -1336,12 +1427,12 @@ function AttributionSection({ secret }: { secret: string }) {
                   <span style={{ fontWeight: 600, fontSize: "0.85rem" }}>{a.name}</span>
                   <span style={{ marginLeft: 8, fontSize: "0.7rem", color: "var(--muted)" }}>{a.ecosystem}</span>
                   {a.reason && (
-                    <div style={{ fontSize: "0.68rem", color: "#f59e0b", marginTop: 2 }}>{a.reason}</div>
+                    <div style={{ fontSize: "0.68rem", color: "#F4B942", marginTop: 2 }}>{a.reason}</div>
                   )}
                 </div>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.wallets_declared}</span>
                 <span style={{ fontSize: "0.72rem", fontWeight: 600, color: statusColor }}>{statusLabel}</span>
-                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#6DB874" }}>{fmtUSD(a.revenue_usd)}</span>
+                <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "#4AE8A0" }}>{fmtUSD(a.revenue_usd)}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{fmtUSD(a.expenses_usd)}</span>
                 <span style={{ fontFamily: "monospace", fontSize: "0.8rem", color: "var(--muted)" }}>{a.tx_count?.toLocaleString() ?? "—"}</span>
                 <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>{fmtTime(a.last_refresh)}</span>
@@ -1387,7 +1478,7 @@ function EconomicsSection() {
 
   const s = data?.summary;
   const netPos = s?.netAgentPosition ?? 0;
-  const netColor = netPos > 0.01 ? "var(--accent)" : netPos < -0.01 ? "#ef4444" : "var(--ink)";
+  const netColor = netPos > 0.01 ? "var(--accent)" : netPos < -0.01 ? "#F46060" : "var(--ink)";
 
   return (
     <div>
@@ -1436,7 +1527,7 @@ function EconomicsSection() {
 
           <div className={styles.card}>
             {[
-              { label: "Inference Spend",   value: `-${usd(s.totalInferenceSpend)}`,   color: s.totalInferenceSpend > 0 ? "#ef4444" : undefined,    sub: undefined },
+              { label: "Inference Spend",   value: `-${usd(s.totalInferenceSpend)}`,   color: s.totalInferenceSpend > 0 ? "#F46060" : undefined,    sub: undefined },
               { label: "Inference Revenue", value: `+${usd(s.totalInferenceRevenue)}`, color: s.totalInferenceRevenue > 0 ? "var(--accent)" : undefined, sub: undefined },
               { label: "Provider Spend",    value: `-${usd(s.providerSpend)}`,         color: undefined,                                              sub: s.topProvider ? `Top: ${s.topProvider}` : undefined },
               { label: "Fallback Usage",    value: `-${usd(s.fallbackProviderSpend)}`, color: undefined,                                              sub: `${s.fallbackUsageCount} call${s.fallbackUsageCount === 1 ? "" : "s"}` },
@@ -1547,7 +1638,7 @@ function GrowthSection({ secret }: { secret: string }) {
                         <td>{n(row.reports_generated)}</td>
                         <td>{n(row.api_calls)}</td>
                         <td>{n(row.unique_wallets)}</td>
-                        <td style={{ color: row.failed_scans > 0 ? "#ef4444" : undefined }}>
+                        <td style={{ color: row.failed_scans > 0 ? "#F46060" : undefined }}>
                           {n(row.failed_scans)}
                         </td>
                         <td>{n(row.registry_submissions)}</td>
@@ -1586,7 +1677,7 @@ function GrowthSection({ secret }: { secret: string }) {
               {data && data.registryEvents.length > 0 ? (
                 <div className={styles.queueList}>
                   {data.registryEvents.slice(0, 8).map((e, i) => {
-                    const c = e.event_type === "approval" ? "var(--accent)" : e.event_type === "rejection" ? "#ef4444" : "#f59e0b";
+                    const c = e.event_type === "approval" ? "var(--accent)" : e.event_type === "rejection" ? "#F46060" : "#F4B942";
                     return (
                       <div key={i} className={styles.queueItem}>
                         <div>
@@ -1609,7 +1700,7 @@ function GrowthSection({ secret }: { secret: string }) {
 
           {data && data.failedScans.length > 0 && (
             <>
-              <p className={styles.subHead} style={{ color: "#ef4444" }}>Failed Scans</p>
+              <p className={styles.subHead} style={{ color: "#F46060" }}>Failed Scans</p>
               <div className={styles.tableWrap}>
                 <table className={styles.dataTable}>
                   <thead><tr><th>Wallet</th><th>Reason</th><th>Time</th></tr></thead>
@@ -1636,11 +1727,11 @@ function GrowthSection({ secret }: { secret: string }) {
             const sumField = (arr: DailyMetric[], f: keyof DailyMetric) =>
               arr.reduce((t, r) => t + ((r[f] as number) ?? 0), 0);
             const trend = (a: number, b: number): { label: string; color: string } => {
-              if (b === 0) return a > 0 ? { label: "Growing", color: "#22c55e" } : { label: "No data", color: "#6b7280" };
+              if (b === 0) return a > 0 ? { label: "Growing", color: "#4AE8A0" } : { label: "No data", color: "var(--muted)" };
               const pct = ((a - b) / b) * 100;
-              if (pct >= 10)  return { label: `▲ ${pct.toFixed(0)}%`, color: "#22c55e" };
-              if (pct <= -10) return { label: `▼ ${Math.abs(pct).toFixed(0)}%`, color: "#ef4444" };
-              return { label: "Flat", color: "#f59e0b" };
+              if (pct >= 10)  return { label: `▲ ${pct.toFixed(0)}%`, color: "#4AE8A0" };
+              if (pct <= -10) return { label: `▼ ${Math.abs(pct).toFixed(0)}%`, color: "#F46060" };
+              return { label: "Flat", color: "#F4B942" };
             };
             const signals = [
               { label: "Wallet Scans",         a: sumField(recent, "wallet_scans"),         b: sumField(prior, "wallet_scans") },
@@ -1685,20 +1776,20 @@ const COMM_LABELS = [
 ] as const;
 
 const PLATFORM_COLORS: Record<string, string> = {
-  wiretap:   "#f59e0b",
+  wiretap:   "#F4B942",
   telegram:  "var(--blue)",
   x:         "var(--ink)",
-  email:     "#a78bfa",
-  discord:   "#6366f1",
-  farcaster: "#a78bfa",
+  email:     "#8B7CF6",
+  discord:   "#5B9EF4",
+  farcaster: "#8B7CF6",
   other:     "var(--muted)",
 };
 
 const LABEL_COLOR: Record<string, string> = {
-  "payment request observed":  "#f59e0b",
-  "settlement not confirmed":  "#ef4444",
+  "payment request observed":  "#F4B942",
+  "settlement not confirmed":  "#F46060",
   "needs wallet confirmation": "var(--blue)",
-  "reconciliation candidate":  "#a78bfa",
+  "reconciliation candidate":  "#8B7CF6",
 };
 
 type CommEntry = {
@@ -1878,7 +1969,7 @@ function CommIntelSection({ secret }: { secret: string }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {filtered.map((entry) => {
             const pc = PLATFORM_COLORS[entry.platform] ?? "var(--muted)";
-            const cc = entry.confidence === "confirmed" ? "var(--accent)" : "#f59e0b";
+            const cc = entry.confidence === "confirmed" ? "var(--accent)" : "#F4B942";
             return (
               <div key={entry.id ?? entry.handle} className={styles.card}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
@@ -1914,7 +2005,7 @@ function CommIntelSection({ secret }: { secret: string }) {
                   {entry.id && (
                     <button type="button" onClick={() => handleDelete(entry.id!)} disabled={deleting === entry.id}
                       style={{ padding: "4px 10px", borderRadius: 6, border: "1px solid rgba(239,68,68,0.28)",
-                        background: "rgba(239,68,68,0.07)", color: "#ef4444", fontSize: "0.75rem",
+                        background: "rgba(239,68,68,0.07)", color: "#F46060", fontSize: "0.75rem",
                         fontWeight: 600, cursor: "pointer", opacity: deleting === entry.id ? 0.5 : 1 }}>
                       {deleting === entry.id ? "…" : "Delete"}
                     </button>
@@ -2044,10 +2135,10 @@ type IndexAllResult = {
 
 const CLS_COLOR: Record<string, string> = {
   settlement_revenue:  "var(--accent)",
-  fee_received:        "#6366f1",
+  fee_received:        "#5B9EF4",
   inference_spend:     "var(--blue)",
-  treasury_movement:   "#f59e0b",
-  token_distribution:  "#a78bfa",
+  treasury_movement:   "#F4B942",
+  token_distribution:  "#8B7CF6",
   external_expense:    "var(--muted)",
   unknown:             "var(--muted)",
 };
@@ -2190,7 +2281,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
             </div>
           </div>
           <button type="submit" disabled={walletLoading}
-            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: walletLoading ? "not-allowed" : "pointer", opacity: walletLoading ? 0.6 : 1 }}>
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: walletLoading ? "not-allowed" : "pointer", opacity: walletLoading ? 0.6 : 1 }}>
             {walletLoading ? "Indexing…" : "Index Wallet →"}
           </button>
         </form>
@@ -2200,7 +2291,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
         {walletResult && (
           <div style={{ marginTop: 14, padding: "12px 14px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 8 }}>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8 }}>
-              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: walletResult.ok ? "var(--accent)" : "#ef4444" }}>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: walletResult.ok ? "var(--accent)" : "#F46060" }}>
                 {walletResult.ok ? "✓ Indexed" : "✗ Error"}
               </span>
               <span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
@@ -2213,13 +2304,13 @@ function TruthEngineSection({ secret }: { secret: string }) {
               )}
             </div>
             {walletResult.fetch_error && (
-              <p style={{ fontSize: "0.75rem", color: "#f59e0b", margin: "0 0 6px" }}>⚠ {walletResult.fetch_error}</p>
+              <p style={{ fontSize: "0.75rem", color: "#F4B942", margin: "0 0 6px" }}>⚠ {walletResult.fetch_error}</p>
             )}
             {Object.keys(walletResult.classified_counts ?? {}).length > 0 && (
               <ClassifiedCountBadges counts={walletResult.classified_counts} />
             )}
             {(walletResult.errors ?? []).length > 0 && (
-              <p style={{ fontSize: "0.72rem", color: "#ef4444", marginTop: 6 }}>
+              <p style={{ fontSize: "0.72rem", color: "#F46060", marginTop: 6 }}>
                 {walletResult.errors.length} insert error(s): {walletResult.errors[0]}
               </p>
             )}
@@ -2250,7 +2341,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
             </div>
           </div>
           <button type="submit" disabled={allLoading}
-            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(109,184,116,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: allLoading ? "not-allowed" : "pointer", opacity: allLoading ? 0.6 : 1 }}>
+            style={{ marginTop: 8, padding: "6px 16px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: allLoading ? "not-allowed" : "pointer", opacity: allLoading ? 0.6 : 1 }}>
             {allLoading ? "Running… (may take 30–60s)" : "Index All →"}
           </button>
         </form>
@@ -2276,7 +2367,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
             </div>
 
             {allResult.truncated && (
-              <p style={{ fontSize: "0.75rem", color: "#f59e0b", marginBottom: 8 }}>
+              <p style={{ fontSize: "0.75rem", color: "#F4B942", marginBottom: 8 }}>
                 ⚠ Truncated at {allResult.truncated_at} wallets. Run again with a higher max_wallets or different offset.
               </p>
             )}
@@ -2286,7 +2377,7 @@ function TruthEngineSection({ secret }: { secret: string }) {
                 {allResult.per_wallet.map((w, i) => (
                   <div key={i} style={{ padding: "9px 12px", background: "var(--surface-soft)", border: "1px solid var(--line)", borderRadius: 7 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: w.skipped ? "#f59e0b" : "var(--ink)" }}>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: w.skipped ? "#F4B942" : "var(--ink)" }}>
                         {w.agent_slug}
                       </span>
                       <code style={{ fontSize: "0.65rem", color: "var(--muted)" }}>
@@ -2304,10 +2395,10 @@ function TruthEngineSection({ secret }: { secret: string }) {
                         </span>
                       )}
                       {w.skipped && (
-                        <span style={{ fontSize: "0.68rem", color: "#f59e0b" }}>skipped: {w.skip_reason}</span>
+                        <span style={{ fontSize: "0.68rem", color: "#F4B942" }}>skipped: {w.skip_reason}</span>
                       )}
                       {w.fetch_error && !w.skipped && (
-                        <span style={{ fontSize: "0.65rem", color: "#f59e0b" }}>⚠ fallback used</span>
+                        <span style={{ fontSize: "0.65rem", color: "#F4B942" }}>⚠ fallback used</span>
                       )}
                     </div>
                     {!w.skipped && Object.keys(w.classified_counts).length > 0 && (
@@ -2332,7 +2423,7 @@ function PendingUpdatesSection({ secret }: { secret: string }) {
   const [acting, setActing]   = useState<string | null>(null);
 
   const UPDATE_TYPE_COLORS: Record<string, string> = {
-    new_agent: "#22c55e", score_update: "#3b82f6", wallet_update: "#f59e0b", status_change: "#a855f7",
+    new_agent: "#4AE8A0", score_update: "#5B9EF4", wallet_update: "#F4B942", status_change: "#8B7CF6",
   };
   const UPDATE_TYPE_LABELS: Record<string, string> = {
     new_agent: "New Agent", score_update: "Score Update", wallet_update: "Wallet Update", status_change: "Status Change",
@@ -2398,11 +2489,11 @@ function PendingUpdatesSection({ secret }: { secret: string }) {
             )}
             <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
               <button type="button" onClick={() => act(u.id, "approve")} disabled={acting === u.id}
-                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#22c55e", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
+                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#4AE8A0", color: "#000", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
                 Approve
               </button>
               <button type="button" onClick={() => act(u.id, "reject")} disabled={acting === u.id}
-                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#ef4444", color: "#fff", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
+                style={{ padding: "5px 14px", borderRadius: 6, border: "none", background: "#F46060", color: "#fff", fontWeight: 700, fontSize: "0.78rem", cursor: "pointer", opacity: acting === u.id ? 0.5 : 1 }}>
                 Reject
               </button>
             </div>
@@ -2415,11 +2506,18 @@ function PendingUpdatesSection({ secret }: { secret: string }) {
 
 // ── Attribution Health section ─────────────────────────────────────────────────
 
+const ATTR_STATUS_META: Record<ManifestStatus, { label: string; color: string }> = {
+  manifest: { label: "Manifest",     color: "#4AE8A0" },
+  admin:    { label: "Admin",        color: "#4AE8A0" },
+  inferred: { label: "Inferred",     color: "#F4B942" },
+  none:     { label: "Unattributed", color: "var(--muted)" },
+};
+
 const ATTR_CONF_META: Record<AttributionConfidence, { label: string; color: string }> = {
-  high:         { label: "High",         color: "#22c55e" },
-  medium:       { label: "Medium",       color: "#f59e0b" },
-  low:          { label: "Low",          color: "#ef4444" },
-  unattributed: { label: "–",            color: "#6b7280" },
+  high:         { label: "High",         color: "#4AE8A0" },
+  medium:       { label: "Medium",       color: "#F4B942" },
+  low:          { label: "Low",          color: "#F46060" },
+  unattributed: { label: "–",            color: "var(--muted)" },
 };
 
 type AttrSortKey = "name" | "status" | "wallets" | "confidence";
@@ -2438,10 +2536,10 @@ function attrSortAgents(agents: AgentAttributionHealth[], key: AttrSortKey, dir:
 }
 
 function getAttrBadge(agent: AgentAttributionHealth) {
-  if (agent.attribution_tier === "manifest_attributed") return { label: "Books Eligible", color: "#22c55e" };
-  if (agent.manifest_status === "manifest") return { label: "Manifest Invalid", color: "#ef4444" };
-  if (agent.attribution_tier === "discovered") return { label: "Discovered", color: "#f59e0b" };
-  return { label: "Unattributed", color: "#6b7280" };
+  if (agent.attribution_tier === "manifest_attributed") return { label: "Books Eligible", color: "#4AE8A0" };
+  if (agent.manifest_status === "manifest") return { label: "Manifest Invalid", color: "#F46060" };
+  if (agent.attribution_tier === "discovered") return { label: "Discovered", color: "#F4B942" };
+  return { label: "Unattributed", color: "var(--muted)" };
 }
 
 function AttributionHealthSection() {
@@ -2491,12 +2589,12 @@ function AttributionHealthSection() {
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
             {[
               { label: "Indexed",         value: metrics.total_agents,               color: "var(--ink)" },
-              { label: "Attributed",      value: metrics.manifest_attributed_agents, color: "#22c55e" },
-              { label: "Discovered",      value: metrics.discovered_agents,          color: "#f59e0b" },
-              { label: "Unattributed",    value: metrics.unattributed_agents,        color: "#6b7280" },
-              { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#6DB874" },
-              { label: "Books-eligible",  value: metrics.books_eligible_wallets,     color: "#22c55e" },
-              { label: "Contract wallets",value: metrics.contract_wallets,           color: "#ef4444" },
+              { label: "Attributed",      value: metrics.manifest_attributed_agents, color: "#4AE8A0" },
+              { label: "Discovered",      value: metrics.discovered_agents,          color: "#F4B942" },
+              { label: "Unattributed",    value: metrics.unattributed_agents,        color: "var(--muted)" },
+              { label: "Coverage",        value: `${metrics.attribution_coverage_pct}%`, color: "#4AE8A0" },
+              { label: "Books-eligible",  value: metrics.books_eligible_wallets,     color: "#4AE8A0" },
+              { label: "Contract wallets",value: metrics.contract_wallets,           color: "#F46060" },
             ].map((kpi) => (
               <div key={kpi.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "10px 14px", minWidth: 100 }}>
                 <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.06em" }}>{kpi.label}</div>
@@ -2538,7 +2636,7 @@ function AttributionHealthSection() {
                         {agent.wallet_count > 0 ? (
                           <>
                             {agent.wallet_count}
-                            {agent.books_eligible_wallet_count > 0 && <span style={{ fontSize: 10, color: "#22c55e", marginLeft: 4 }}>({agent.books_eligible_wallet_count} eligible)</span>}
+                            {agent.books_eligible_wallet_count > 0 && <span style={{ fontSize: 10, color: "#4AE8A0", marginLeft: 4 }}>({agent.books_eligible_wallet_count} eligible)</span>}
                           </>
                         ) : "—"}
                       </td>
@@ -2558,6 +2656,17 @@ function AttributionHealthSection() {
 }
 
 // ── Address Classification section ────────────────────────────────────────────
+
+const ADDR_TYPE_META: Record<string, { label: string; color: string }> = {
+  eoa:               { label: "EOA",               color: "#4AE8A0" },
+  token_contract:    { label: "Token Contract",    color: "#F46060" },
+  proxy_contract:    { label: "Proxy Contract",    color: "#8B7CF6" },
+  treasury_contract: { label: "Treasury Contract", color: "#4AE8A0" },
+  vault:             { label: "Vault",             color: "#5B9EF4" },
+  smart_contract:    { label: "Smart Contract",    color: "#F4B942" },
+  smart_account:     { label: "Smart Account",     color: "#5B9EF4" },
+  unknown:           { label: "Unknown",           color: "var(--muted)" },
+};
 
 type AddrClassificationReport = {
   ok: boolean;
@@ -2619,12 +2728,12 @@ function AddressClassificationSection({ secret }: { secret: string }) {
           {loading ? "Classifying…" : "Run Classification"}
         </button>
         <button type="button" onClick={() => runAudit(true)} disabled={loading || writing}
-          style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: "#3b82f6", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: writing ? 0.6 : 1 }}>
+          style={{ padding: "8px 18px", borderRadius: 6, border: "none", background: "#5B9EF4", color: "#fff", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: writing ? 0.6 : 1 }}>
           {writing ? "Writing…" : "Classify & Write to DB"}
         </button>
       </div>
       {writeMsg && (
-        <div style={{ background: writeMsg.startsWith("Error") ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)", border: `1px solid ${writeMsg.startsWith("Error") ? "#ef4444" : "#22c55e"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: writeMsg.startsWith("Error") ? "#ef4444" : "#22c55e" }}>
+        <div style={{ background: writeMsg.startsWith("Error") ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)", border: `1px solid ${writeMsg.startsWith("Error") ? "#F46060" : "#4AE8A0"}`, borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: writeMsg.startsWith("Error") ? "#F46060" : "#4AE8A0" }}>
           {writeMsg}
         </div>
       )}
@@ -2633,8 +2742,8 @@ function AddressClassificationSection({ secret }: { secret: string }) {
         <>
           {report.critical_issues.length > 0 && (
             <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "12px 16px", marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: "#ef4444", marginBottom: 8 }}>Critical Issues ({report.critical_issues.length})</div>
-              {report.critical_issues.map((issue, i) => <div key={i} style={{ fontSize: 13, color: "#ef4444", marginBottom: 4 }}>• {issue}</div>)}
+              <div style={{ fontWeight: 700, fontSize: 12, color: "#F46060", marginBottom: 8 }}>Critical Issues ({report.critical_issues.length})</div>
+              {report.critical_issues.map((issue, i) => <div key={i} style={{ fontSize: 13, color: "#F46060", marginBottom: 4 }}>• {issue}</div>)}
             </div>
           )}
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
@@ -2668,14 +2777,14 @@ function AddressClassificationSection({ secret }: { secret: string }) {
                     </td>
                     <td>
                       <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4,
-                        background: a.attribution_status === "attributed" ? "#22c55e18" : a.attribution_status === "discovered_only" ? "#f59e0b18" : "#6b728018",
-                        color: a.attribution_status === "attributed" ? "#22c55e" : a.attribution_status === "discovered_only" ? "#f59e0b" : "#6b7280" }}>
+                        background: a.attribution_status === "attributed" ? "#4AE8A018" : a.attribution_status === "discovered_only" ? "#F4B94218" : "var(--muted)18",
+                        color: a.attribution_status === "attributed" ? "#4AE8A0" : a.attribution_status === "discovered_only" ? "#F4B942" : "var(--muted)" }}>
                         {a.attribution_status}
                       </span>
                     </td>
                     <td style={{ fontFamily: "var(--font-mono)" }}>{a.wallets.length}</td>
-                    <td style={{ fontFamily: "var(--font-mono)", color: a.eoa_count > 0 ? "#22c55e" : "var(--muted)" }}>{a.eoa_count}</td>
-                    <td style={{ fontFamily: "var(--font-mono)", color: a.contract_count > 0 ? "#ef4444" : "var(--muted)" }}>{a.contract_count}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: a.eoa_count > 0 ? "#4AE8A0" : "var(--muted)" }}>{a.eoa_count}</td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: a.contract_count > 0 ? "#F46060" : "var(--muted)" }}>{a.contract_count}</td>
                   </tr>
                 ))}
               </tbody>
@@ -2727,7 +2836,7 @@ function Erc8004Section({ secret }: { secret: string }) {
     finally { setLoading(false); }
   }
 
-  const ERC_STATUS_COLOR: Record<string, string> = { upserted: "#22c55e", skipped: "#f59e0b", error: "#ef4444" };
+  const ERC_STATUS_COLOR: Record<string, string> = { upserted: "#4AE8A0", skipped: "#F4B942", error: "#F46060" };
 
   return (
     <div>
@@ -2739,7 +2848,7 @@ function Erc8004Section({ secret }: { secret: string }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["contract", "batch"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: mode === m ? "#6DB874" : "var(--bg)", color: mode === m ? "#fff" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--line)", background: mode === m ? "#4AE8A0" : "var(--bg)", color: mode === m ? "#fff" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {m === "contract" ? "All Agents (contract scan)" : "Batch (specific IDs)"}
             </button>
           ))}
@@ -2759,13 +2868,13 @@ function Erc8004Section({ secret }: { secret: string }) {
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-          <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+          <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#4AE8A0" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
             <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
           </button>
           <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
           <span style={{ fontSize: 11, color: "var(--muted)" }}>{dryRun ? "No DB writes" : "Will write to DB"}</span>
         </div>
-        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Running…" : "Run Ingestion"}
         </button>
       </div>
@@ -2773,15 +2882,15 @@ function Erc8004Section({ secret }: { secret: string }) {
       {report && (
         <>
           <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 12 }}>
-            {report.dry_run && <span style={{ fontWeight: 700, color: "#f59e0b", marginRight: 8 }}>[DRY RUN]</span>}
+            {report.dry_run && <span style={{ fontWeight: 700, color: "#F4B942", marginRight: 8 }}>[DRY RUN]</span>}
             Generated {new Date(report.generated_at).toLocaleString()}
           </div>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
             {[
               { label: "Discovered", value: report.summary.total_discovered },
-              { label: "Upserted",   value: report.summary.agents_upserted,  color: "#22c55e" },
-              { label: "Skipped",    value: report.summary.agents_skipped,   color: "#f59e0b" },
-              { label: "Errors",     value: report.summary.errors,           color: "#ef4444" },
+              { label: "Upserted",   value: report.summary.agents_upserted,  color: "#4AE8A0" },
+              { label: "Skipped",    value: report.summary.agents_skipped,   color: "#F4B942" },
+              { label: "Errors",     value: report.summary.errors,           color: "#F46060" },
               { label: "Metadata %", value: `${report.summary.metadata_coverage_pct}%` },
               { label: "DID %",      value: `${report.summary.did_coverage_pct}%` },
               { label: "Manifest %", value: `${report.summary.manifest_coverage_pct}%` },
@@ -2803,8 +2912,8 @@ function Erc8004Section({ secret }: { secret: string }) {
                       <td style={{ fontFamily: "var(--font-mono)", color: "var(--muted)" }}>{a.agent_id}</td>
                       <td style={{ fontWeight: 600 }}>{a.name}</td>
                       <td><span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 4, background: `${ERC_STATUS_COLOR[a.status]}18`, color: ERC_STATUS_COLOR[a.status] }}>{a.status}</span></td>
-                      <td style={{ color: a.has_did ? "#a855f7" : "var(--muted)" }}>{a.has_did ? "✓" : "—"}</td>
-                      <td style={{ color: a.books_eligible ? "#22c55e" : "var(--muted)" }}>{a.books_eligible ? "Yes" : "No"}</td>
+                      <td style={{ color: a.has_did ? "#8B7CF6" : "var(--muted)" }}>{a.has_did ? "✓" : "—"}</td>
+                      <td style={{ color: a.books_eligible ? "#4AE8A0" : "var(--muted)" }}>{a.books_eligible ? "Yes" : "No"}</td>
                       <td style={{ fontSize: 11, color: "var(--muted)" }}>{a.warnings.join(", ") || "—"}</td>
                     </tr>
                   ))}
@@ -2822,11 +2931,11 @@ function Erc8004Section({ secret }: { secret: string }) {
 
 type RATabKey = "revenue" | "quarantined" | "dex" | "bridge" | "internal";
 const RA_TABS: { key: RATabKey; label: string; color: string }[] = [
-  { key: "revenue",     label: "Operating Revenue", color: "#22c55e" },
-  { key: "quarantined", label: "Quarantined",        color: "#f59e0b" },
-  { key: "dex",         label: "DEX Excluded",       color: "#3b82f6" },
-  { key: "bridge",      label: "Bridge Excluded",    color: "#8b5cf6" },
-  { key: "internal",    label: "Internal Transfers", color: "#6b7280" },
+  { key: "revenue",     label: "Operating Revenue", color: "#4AE8A0" },
+  { key: "quarantined", label: "Quarantined",        color: "#F4B942" },
+  { key: "dex",         label: "DEX Excluded",       color: "#5B9EF4" },
+  { key: "bridge",      label: "Bridge Excluded",    color: "#8B7CF6" },
+  { key: "internal",    label: "Internal Transfers", color: "var(--muted)" },
 ];
 const QUARANTINE_LABELS: Record<string, string> = {
   capital_injection: "Capital Injection", grant_program: "Grant Program",
@@ -2834,8 +2943,8 @@ const QUARANTINE_LABELS: Record<string, string> = {
   unknown_large_inflow: "Unknown Large Inflow",
 };
 const QUARANTINE_COLORS: Record<string, string> = {
-  capital_injection: "#ef4444", grant_program: "#8b5cf6", bridge_receipt: "#3b82f6",
-  token_distribution: "#f59e0b", unknown_large_inflow: "#6b7280",
+  capital_injection: "#F46060", grant_program: "#8B7CF6", bridge_receipt: "#5B9EF4",
+  token_distribution: "#F4B942", unknown_large_inflow: "var(--muted)",
 };
 function raFmtUsd(v: number) {
   if (v >= 1_000_000) return `$${(v / 1_000_000).toFixed(2)}M`;
@@ -2848,18 +2957,18 @@ function raFmtHash(hash: string) { return hash?.length > 10 ? `${hash.slice(0, 8
 function RaWaterfall({ audit }: { audit: AgentRevenueAudit }) {
   const s = audit.summary;
   const rows = [
-    { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "#e2e8f0" },
-    { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8b5cf6" },
-    { label: "− DEX swaps excluded",                  value: s.dex_excluded_usd,           sign: "−",  color: "#3b82f6" },
-    { label: "− Quarantined (cap. injections/grants)", value: s.quarantined_usd,            sign: "−",  color: "#f59e0b" },
-    { label: "= Operating revenue",                   value: s.operating_revenue_usd,       sign: "=",  color: "#22c55e" },
+    { label: "Gross inflows",                          value: s.gross_inflow_usd,           sign: null, color: "var(--ink)" },
+    { label: "− Bridge receipts excluded",             value: s.bridge_excluded_inflow_usd, sign: "−",  color: "#8B7CF6" },
+    { label: "− DEX swaps excluded",                  value: s.dex_excluded_usd,           sign: "−",  color: "#5B9EF4" },
+    { label: "− Quarantined (cap. injections/grants)", value: s.quarantined_usd,            sign: "−",  color: "#F4B942" },
+    { label: "= Operating revenue",                   value: s.operating_revenue_usd,       sign: "=",  color: "#4AE8A0" },
   ];
   return (
     <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 16 }}>
       <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", fontWeight: 700, fontSize: 13 }}>Revenue Waterfall — {audit.period}</div>
       {rows.map((row, i) => (
         <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 16px", borderBottom: i < rows.length - 1 ? "1px solid var(--line)" : "none", background: row.sign === "=" ? "rgba(34,197,94,0.06)" : "transparent" }}>
-          <span style={{ fontSize: 13, color: row.sign === "=" ? "#22c55e" : "var(--ink)" }}>{row.label}</span>
+          <span style={{ fontSize: 13, color: row.sign === "=" ? "#4AE8A0" : "var(--ink)" }}>{row.label}</span>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: row.sign === "=" ? 700 : 400, color: row.color }}>{row.sign === "−" ? "−" : ""}{raFmtUsd(row.value)}</span>
         </div>
       ))}
@@ -2883,10 +2992,10 @@ function RaTxTable({ txs, tab }: { txs: AuditTx[]; tab: RATabKey }) {
           {txs.map((tx, i) => (
             <tr key={tx.txHash + i} style={{ borderBottom: "1px solid var(--line)" }}>
               <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)" }}>
-                <a href={`https://basescan.org/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: "#3b82f6", textDecoration: "none" }}>{raFmtHash(tx.txHash)}</a>
+                <a href={`https://basescan.org/tx/${tx.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: "#5B9EF4", textDecoration: "none" }}>{raFmtHash(tx.txHash)}</a>
               </td>
               <td style={{ padding: "8px 12px", color: "var(--muted)", whiteSpace: "nowrap" }}>{new Date(tx.timestamp).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</td>
-              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: tx.direction === "income" ? "#22c55e" : "#ef4444" }}>
+              <td style={{ padding: "8px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: tx.direction === "income" ? "#4AE8A0" : "#F46060" }}>
                 {tx.direction === "expense" ? "−" : "+"}{raFmtUsd(tx.amount_usd)}
               </td>
               <td style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>{tx.token_symbol}</td>
@@ -2981,11 +3090,11 @@ function RevenueAuditSection({ secret }: { secret: string }) {
           <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 16 }}>{audit.period} · {new Date(audit.generated_at).toLocaleString()}</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 10, marginBottom: 16 }}>
             {[
-              { label: "Gross Inflows",     value: audit.summary.gross_inflow_usd,           color: "#e2e8f0" },
-              { label: "Operating Revenue", value: audit.summary.operating_revenue_usd,      color: "#22c55e" },
-              { label: "Quarantined",       value: audit.summary.quarantined_usd,            color: "#f59e0b" },
-              { label: "DEX Excluded",      value: audit.summary.dex_excluded_usd,           color: "#3b82f6" },
-              { label: "Bridge Excluded",   value: audit.summary.bridge_excluded_inflow_usd, color: "#8b5cf6" },
+              { label: "Gross Inflows",     value: audit.summary.gross_inflow_usd,           color: "var(--ink)" },
+              { label: "Operating Revenue", value: audit.summary.operating_revenue_usd,      color: "#4AE8A0" },
+              { label: "Quarantined",       value: audit.summary.quarantined_usd,            color: "#F4B942" },
+              { label: "DEX Excluded",      value: audit.summary.dex_excluded_usd,           color: "#5B9EF4" },
+              { label: "Bridge Excluded",   value: audit.summary.bridge_excluded_inflow_usd, color: "#8B7CF6" },
             ].map((c) => (
               <div key={c.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "12px 14px" }}>
                 <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>{c.label}</div>
@@ -2996,7 +3105,7 @@ function RevenueAuditSection({ secret }: { secret: string }) {
           <RaWaterfall audit={audit} />
           {audit.aeon_diff_notes.length > 0 && (
             <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-              <div style={{ fontWeight: 700, fontSize: 12, color: "#ef4444", marginBottom: 8 }}>AEON Diff</div>
+              <div style={{ fontWeight: 700, fontSize: 12, color: "#F46060", marginBottom: 8 }}>AEON Diff</div>
               {audit.aeon_diff_notes.map((note, i) => <div key={i} style={{ fontSize: 13 }}>› {note}</div>)}
             </div>
           )}
@@ -3052,7 +3161,7 @@ function AccuracyReportSection({ secret }: { secret: string }) {
     finally { setLoading(false); }
   }, [secret, period, targetAll]);
 
-  function sevColor(s: AuditFlag["severity"]) { return s === "high" ? "#ef4444" : s === "medium" ? "#f59e0b" : "#6b7280"; }
+  function sevColor(s: AuditFlag["severity"]) { return s === "high" ? "#F46060" : s === "medium" ? "#F4B942" : "var(--muted)"; }
 
   return (
     <div>
@@ -3088,10 +3197,10 @@ function AccuracyReportSection({ secret }: { secret: string }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 10, marginBottom: 20 }}>
             {[
               { label: "Agents Audited",          value: report.agent_count.toString(),                    color: "var(--ink)" },
-              { label: "Total Gross Inflows",     value: accFmtUsd(report.summary.total_gross_inflows),    color: "#e2e8f0" },
-              { label: "Total Operating Revenue", value: accFmtUsd(report.summary.total_operating_revenue),color: "#22c55e" },
-              { label: "Total Quarantined",       value: accFmtUsd(report.summary.total_quarantined),      color: "#f59e0b" },
-              { label: "High-Risk Agents",        value: report.summary.high_risk_agents.length.toString(),color: "#ef4444" },
+              { label: "Total Gross Inflows",     value: accFmtUsd(report.summary.total_gross_inflows),    color: "var(--ink)" },
+              { label: "Total Operating Revenue", value: accFmtUsd(report.summary.total_operating_revenue),color: "#4AE8A0" },
+              { label: "Total Quarantined",       value: accFmtUsd(report.summary.total_quarantined),      color: "#F4B942" },
+              { label: "High-Risk Agents",        value: report.summary.high_risk_agents.length.toString(),color: "#F46060" },
             ].map((c) => (
               <div key={c.label} style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "14px 16px" }}>
                 <div style={{ fontSize: 11, color: "var(--muted)", marginBottom: 6 }}>{c.label}</div>
@@ -3118,17 +3227,17 @@ function AccuracyReportSection({ secret }: { secret: string }) {
               <thead><tr><th>Agent</th><th>Gross</th><th>Operating Rev</th><th>Quarantined</th><th>Flags</th></tr></thead>
               <tbody>
                 {report.results.map((r, i) => {
-                  if (!r.ok) return <tr key={i}><td colSpan={5} style={{ color: "#ef4444", fontSize: 12 }}>{r.slug}: {r.error}</td></tr>;
+                  if (!r.ok) return <tr key={i}><td colSpan={5} style={{ color: "#F46060", fontSize: 12 }}>{r.slug}: {r.error}</td></tr>;
                   return (
                     <tr key={i}>
                       <td style={{ fontWeight: 600 }}>{r.audit.agent.name}</td>
                       <td style={{ fontFamily: "var(--font-mono)" }}>{accFmtUsd(r.audit.summary.gross_inflow_usd)}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", color: "#22c55e" }}>{accFmtUsd(r.audit.summary.operating_revenue_usd)}</td>
-                      <td style={{ fontFamily: "var(--font-mono)", color: "#f59e0b" }}>{accFmtUsd(r.audit.summary.quarantined_usd)}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "#4AE8A0" }}>{accFmtUsd(r.audit.summary.operating_revenue_usd)}</td>
+                      <td style={{ fontFamily: "var(--font-mono)", color: "#F4B942" }}>{accFmtUsd(r.audit.summary.quarantined_usd)}</td>
                       <td style={{ fontSize: 12 }}>
                         {r.flags.length > 0 ? (
-                          <span style={{ color: r.flags.some((f) => f.severity === "high") ? "#ef4444" : "#f59e0b" }}>{r.flags.length} flag{r.flags.length !== 1 ? "s" : ""}</span>
-                        ) : <span style={{ color: "#22c55e" }}>Clean</span>}
+                          <span style={{ color: r.flags.some((f) => f.severity === "high") ? "#F46060" : "#F4B942" }}>{r.flags.length} flag{r.flags.length !== 1 ? "s" : ""}</span>
+                        ) : <span style={{ color: "#4AE8A0" }}>Clean</span>}
                       </td>
                     </tr>
                   );
@@ -3158,10 +3267,10 @@ const CONF_PRIORITY_AGENTS: { slug: string; name: string }[] = [
   { slug: "coinbase-agentkit", name: "Coinbase AgentKit" },
 ];
 const CONF_LEVELS: { value: ConfidenceLevel; label: string; color: string }[] = [
-  { value: "high",         label: "High Confidence",          color: "#22c55e" },
-  { value: "medium",       label: "Medium Confidence",        color: "#f59e0b" },
-  { value: "low",          label: "Low Confidence",           color: "#ef4444" },
-  { value: "under_review", label: "Attribution Under Review", color: "#6b7280" },
+  { value: "high",         label: "High Confidence",          color: "#4AE8A0" },
+  { value: "medium",       label: "Medium Confidence",        color: "#F4B942" },
+  { value: "low",          label: "Low Confidence",           color: "#F46060" },
+  { value: "under_review", label: "Attribution Under Review", color: "var(--muted)" },
 ];
 
 function ConfAgentCard({ row, secret, onSaved }: { row: ConfAgentRow; secret: string; onSaved: () => void }) {
@@ -3209,12 +3318,12 @@ function ConfAgentCard({ row, secret, onSaved }: { row: ConfAgentRow; secret: st
           style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, resize: "vertical", boxSizing: "border-box" }} />
         <textarea value={internalNote} onChange={(e) => setInternalNote(e.target.value)} placeholder="Internal reason (admin only)" rows={2}
           style={{ width: "100%", padding: "7px 10px", borderRadius: 6, border: "1px solid var(--line)", background: "var(--bg)", color: "var(--ink)", fontSize: 12, resize: "vertical", boxSizing: "border-box" }} />
-        {error && <div style={{ fontSize: 12, color: "#ef4444" }}>{error}</div>}
+        {error && <div style={{ fontSize: 12, color: "#F46060" }}>{error}</div>}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <button onClick={save} disabled={saving || !level} style={{ padding: "7px 18px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: 600, background: saving || !level ? "var(--line)" : (meta?.color ?? "var(--accent)"), color: saving || !level ? "var(--muted)" : "#fff", cursor: "pointer" }}>
             {saving ? "Saving…" : "Save Label"}
           </button>
-          {saved && <span style={{ fontSize: 12, color: "#22c55e" }}>Saved</span>}
+          {saved && <span style={{ fontSize: 12, color: "#4AE8A0" }}>Saved</span>}
         </div>
       </div>
     </div>
@@ -3305,14 +3414,14 @@ function B20Section({ secret }: { secret: string }) {
       <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderRadius: 8, padding: "18px 20px", marginBottom: 20 }}>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
           {(["detect_from_registry", "from_registry", "single", "activity_only"] as const).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: mode === m ? "#6DB874" : "var(--line)", background: mode === m ? "#6DB87418" : "transparent", color: mode === m ? "#6DB874" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            <button key={m} onClick={() => setMode(m)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: mode === m ? "#4AE8A0" : "var(--line)", background: mode === m ? "#4AE8A018" : "transparent", color: mode === m ? "#4AE8A0" : "var(--ink)", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {m.replace(/_/g, " ")}
             </button>
           ))}
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
           {(["base", "base-sepolia"] as const).map((c) => (
-            <button key={c} onClick={() => setChain(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: chain === c ? "#5B8FA8" : "var(--line)", background: chain === c ? "#5B8FA818" : "transparent", color: chain === c ? "#5B8FA8" : "var(--muted)", fontSize: 12, cursor: "pointer" }}>
+            <button key={c} onClick={() => setChain(c)} style={{ padding: "5px 12px", borderRadius: 6, border: "1px solid", borderColor: chain === c ? "#5B9EF4" : "var(--line)", background: chain === c ? "#5B9EF418" : "transparent", color: chain === c ? "#5B9EF4" : "var(--muted)", fontSize: 12, cursor: "pointer" }}>
               {c}
             </button>
           ))}
@@ -3325,13 +3434,13 @@ function B20Section({ secret }: { secret: string }) {
         )}
         {!isDetect && (
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#6DB874" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
+            <button onClick={() => setDryRun((v) => !v)} style={{ width: 36, height: 20, borderRadius: 10, background: dryRun ? "#4AE8A0" : "var(--line)", border: "none", cursor: "pointer", position: "relative" }}>
               <span style={{ position: "absolute", top: 3, left: dryRun ? 18 : 3, width: 14, height: 14, borderRadius: "50%", background: "#fff", transition: "left 0.15s" }} />
             </button>
             <span style={{ fontSize: 12, fontWeight: 600 }}>Dry Run</span>
           </div>
         )}
-        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#6DB874", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
+        <button onClick={run} disabled={loading} style={{ padding: "8px 20px", borderRadius: 6, background: "#4AE8A0", color: "#fff", border: "none", fontWeight: 600, fontSize: 13, cursor: "pointer", opacity: loading ? 0.6 : 1 }}>
           {loading ? "Running…" : "Run"}
         </button>
       </div>
@@ -3359,7 +3468,7 @@ function B20Section({ secret }: { secret: string }) {
                     <td style={{ fontWeight: 600 }}>{r.agent_name}</td>
                     <td style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>{r.address.slice(0, 10)}…</td>
                     <td style={{ fontFamily: "var(--font-mono)" }}>{r.symbol ?? "—"}</td>
-                    <td style={{ color: r.confirmed_on_chain ? "#22c55e" : "#ef4444" }}>{r.confirmed_on_chain ? "Yes" : "No"}</td>
+                    <td style={{ color: r.confirmed_on_chain ? "#4AE8A0" : "#F46060" }}>{r.confirmed_on_chain ? "Yes" : "No"}</td>
                     <td style={{ fontSize: 12, color: "var(--muted)" }}>{r.recommendation}</td>
                   </tr>
                 ))}
@@ -3370,7 +3479,7 @@ function B20Section({ secret }: { secret: string }) {
       )}
       {report && isIndex && "summary" in report && (
         <>
-          {(report as B20IndexReport).dry_run && <div style={{ color: "#f59e0b", fontWeight: 700, marginBottom: 8 }}>[DRY RUN]</div>}
+          {(report as B20IndexReport).dry_run && <div style={{ color: "#F4B942", fontWeight: 700, marginBottom: 8 }}>[DRY RUN]</div>}
           <div style={{ background: "rgba(239,68,68,0.06)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "var(--muted)" }}>
             ⚠ {(report as B20IndexReport).summary.data_integrity_note}
           </div>
@@ -3429,7 +3538,7 @@ function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health:
                   ? <span style={{ color: "var(--muted)", fontSize: "0.72rem", fontWeight: 700 }}>● unknown</span>
                   : ok
                   ? <span className={styles.envSet}>● set</span>
-                  : <span style={{ color: "#ef4444", fontSize: "0.72rem", fontWeight: 700 }}>● missing</span>
+                  : <span style={{ color: "#F46060", fontSize: "0.72rem", fontWeight: 700 }}>● missing</span>
                 }
               </div>
             ))}
@@ -3448,8 +3557,8 @@ function SettingsSection({ onSignOut, health }: { onSignOut: () => void; health:
 const RUN_STATUS_COLOR: Record<string, string> = {
   running: "var(--blue)",
   success: "var(--accent)",
-  failed:  "#f87171",
-  timeout: "#f59e0b",
+  failed:  "#F46060",
+  timeout: "#F4B942",
 };
 
 function fmtDuration(ms: number | null) {
@@ -3533,7 +3642,7 @@ function SubagentRunsSection({ secret }: { secret: string }) {
                 </p>
               )}
               {run.error && (
-                <p style={{ fontSize: "0.75rem", color: "#f87171", margin: "4px 0 0", paddingLeft: 18, fontFamily: "monospace" }}>
+                <p style={{ fontSize: "0.75rem", color: "#F46060", margin: "4px 0 0", paddingLeft: 18, fontFamily: "monospace" }}>
                   {run.error}
                 </p>
               )}
@@ -3549,14 +3658,14 @@ function SubagentRunsSection({ secret }: { secret: string }) {
 
 const RISK_COLOR: Record<string, string> = {
   low:    "var(--accent)",
-  medium: "#f59e0b",
-  high:   "#f87171",
+  medium: "#F4B942",
+  high:   "#F46060",
 };
 
 const STATUS_BG: Record<string, string> = {
   approved: "var(--accent)",
-  rejected: "#f87171",
-  posted:   "#22c55e",
+  rejected: "#F46060",
+  posted:   "#4AE8A0",
 };
 
 function PendingRepliesSection({ secret }: { secret: string }) {
@@ -3610,7 +3719,7 @@ function PendingRepliesSection({ secret }: { secret: string }) {
         <h2 style={{ display: "flex", alignItems: "center", gap: 8 }}>
           X Reply Queue
           {pendingCount > 0 && (
-            <span style={{ fontSize: "0.6em", background: "#f87171", color: "#fff", borderRadius: 99, padding: "2px 8px" }}>
+            <span style={{ fontSize: "0.6em", background: "#F46060", color: "#fff", borderRadius: 99, padding: "2px 8px" }}>
               {pendingCount}
             </span>
           )}
@@ -3708,7 +3817,7 @@ function PendingRepliesSection({ secret }: { secret: string }) {
                   <button type="button" onClick={() => copyReply(reply.id, reply.draft_reply)}
                     style={{
                       padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
-                      background: copied === reply.id ? "#22c55e" : "var(--surface)",
+                      background: copied === reply.id ? "#4AE8A0" : "var(--surface)",
                       color: copied === reply.id ? "#fff" : "var(--muted)",
                       fontSize: "0.75rem", fontWeight: 600, transition: "background 0.2s",
                     }}>
@@ -3747,7 +3856,7 @@ function PendingRepliesSection({ secret }: { secret: string }) {
                       </button>
                       <button type="button" disabled={acting === reply.id}
                         onClick={() => act(reply.id, "reject")} className={styles.ghostBtn}
-                        style={{ color: "#f87171", borderColor: "#f87171" }}>
+                        style={{ color: "#F46060", borderColor: "#F46060" }}>
                         Reject
                       </button>
                     </div>
@@ -3759,7 +3868,7 @@ function PendingRepliesSection({ secret }: { secret: string }) {
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <button type="button" disabled={acting === reply.id}
                       onClick={() => act(reply.id, "post")} className={styles.actionBtn}
-                      style={{ background: "#22c55e", borderColor: "#22c55e" }}>
+                      style={{ background: "#4AE8A0", borderColor: "#4AE8A0" }}>
                       {acting === reply.id ? "…" : "Mark as Posted"}
                     </button>
                     <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
@@ -3972,7 +4081,7 @@ function OutreachSection({ secret }: { secret: string }) {
       </div>
 
       {loading && <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading agents…</p>}
-      {error && <p style={{ color: "#f87171", fontSize: "0.85rem" }}>{error}</p>}
+      {error && <p style={{ color: "#F46060", fontSize: "0.85rem" }}>{error}</p>}
 
       {!loading && visibleAgents.length === 0 && (
         <div style={{ padding: "24px 0", textAlign: "center", color: "var(--muted)", fontSize: "0.85rem" }}>
@@ -3993,7 +4102,7 @@ function OutreachSection({ secret }: { secret: string }) {
                     <a href={`/registry/${a.slug}`} target="_blank" rel="noreferrer" style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--ink)", textDecoration: "none" }}>{a.name}</a>
                     <span style={{ fontSize: "0.7rem", color: "var(--muted)", background: "var(--line)", padding: "1px 7px", borderRadius: 99 }}>{a.ecosystem}</span>
                     {a.xHandle && (
-                      <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#1d9bf0", textDecoration: "none" }}>{a.xHandle}</a>
+                      <a href={`https://x.com/${a.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "#5B9EF4", textDecoration: "none" }}>{a.xHandle}</a>
                     )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
@@ -4255,26 +4364,26 @@ export default function LucaAdminPage() {
 
         {/* Workspace */}
         <main className={styles.workspace}>
-          {section === "overview"  && <OverviewSection health={health} today={todayMetrics} />}
-          {section === "registry"    && <RegistrySection secret={secret} />}
-          {section === "attribution" && <AttributionSection secret={secret} />}
-          {section === "economics"   && <EconomicsSection />}
-          {section === "truth-engine" && <TruthEngineSection secret={secret} />}
-          {section === "growth"    && <GrowthSection secret={secret} />}
-          {section === "reports"   && <ReportsSection secret={secret} />}
-          {section === "comm"      && <CommIntelSection secret={secret} />}
-          {section === "outreach"  && <OutreachSection secret={secret} />}
-          {section === "subagent-runs"   && <SubagentRunsSection secret={secret} />}
-          {section === "pending-replies" && <PendingRepliesSection secret={secret} />}
-          {section === "pending-updates"        && <PendingUpdatesSection secret={secret} />}
-          {section === "attribution-health"    && <AttributionHealthSection />}
-          {section === "address-classification"&& <AddressClassificationSection secret={secret} />}
-          {section === "erc8004"               && <Erc8004Section secret={secret} />}
-          {section === "revenue-audit"         && <RevenueAuditSection secret={secret} />}
-          {section === "accuracy-report"       && <AccuracyReportSection secret={secret} />}
-          {section === "confidence-labels"     && <ConfidenceLabelsSection secret={secret} />}
-          {section === "b20"                   && <B20Section secret={secret} />}
-          {section === "settings"              && <SettingsSection onSignOut={handleSignOut} health={health} />}
+          {section === "overview"  && <SectionErrorBoundary name="Overview"><OverviewSection health={health} today={todayMetrics} /></SectionErrorBoundary>}
+          {section === "registry"    && <SectionErrorBoundary name="Registry"><RegistrySection secret={secret} /></SectionErrorBoundary>}
+          {section === "attribution" && <SectionErrorBoundary name="Attribution"><AttributionSection secret={secret} /></SectionErrorBoundary>}
+          {section === "economics"   && <SectionErrorBoundary name="Economics"><EconomicsSection /></SectionErrorBoundary>}
+          {section === "truth-engine" && <SectionErrorBoundary name="Truth Engine"><TruthEngineSection secret={secret} /></SectionErrorBoundary>}
+          {section === "growth"    && <SectionErrorBoundary name="Growth"><GrowthSection secret={secret} /></SectionErrorBoundary>}
+          {section === "reports"   && <SectionErrorBoundary name="Reports"><ReportsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "comm"      && <SectionErrorBoundary name="Comm Intel"><CommIntelSection secret={secret} /></SectionErrorBoundary>}
+          {section === "outreach"  && <SectionErrorBoundary name="Outreach"><OutreachSection secret={secret} /></SectionErrorBoundary>}
+          {section === "subagent-runs"   && <SectionErrorBoundary name="Subagent Runs"><SubagentRunsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "pending-replies" && <SectionErrorBoundary name="Pending Replies"><PendingRepliesSection secret={secret} /></SectionErrorBoundary>}
+          {section === "pending-updates"        && <SectionErrorBoundary name="Pending Updates"><PendingUpdatesSection secret={secret} /></SectionErrorBoundary>}
+          {section === "attribution-health"     && <SectionErrorBoundary name="Attribution Health"><AttributionHealthSection /></SectionErrorBoundary>}
+          {section === "address-classification" && <SectionErrorBoundary name="Address Classification"><AddressClassificationSection secret={secret} /></SectionErrorBoundary>}
+          {section === "erc8004"                && <SectionErrorBoundary name="ERC-8004"><Erc8004Section secret={secret} /></SectionErrorBoundary>}
+          {section === "revenue-audit"          && <SectionErrorBoundary name="Revenue Audit"><RevenueAuditSection secret={secret} /></SectionErrorBoundary>}
+          {section === "accuracy-report"        && <SectionErrorBoundary name="Accuracy Report"><AccuracyReportSection secret={secret} /></SectionErrorBoundary>}
+          {section === "confidence-labels"      && <SectionErrorBoundary name="Confidence Labels"><ConfidenceLabelsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "b20"                    && <SectionErrorBoundary name="B20"><B20Section secret={secret} /></SectionErrorBoundary>}
+          {section === "settings"               && <SectionErrorBoundary name="Settings"><SettingsSection onSignOut={handleSignOut} health={health} /></SectionErrorBoundary>}
         </main>
       </div>
     </div>

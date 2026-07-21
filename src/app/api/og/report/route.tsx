@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
             left: 0,
             right: 0,
             height: 4,
-            background: "#6DB874",
+            background: "#4AE8A0",
           }}
         />
 
@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <span
               style={{
-                color: "#6DB874",
+                color: "#4AE8A0",
                 fontSize: 18,
                 fontWeight: 700,
                 letterSpacing: "0.04em",
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
             style={{
               background: "#0f1f0f",
               border: "1px solid #1a3a1a",
-              color: "#6DB874",
+              color: "#4AE8A0",
               padding: "5px 16px",
               borderRadius: 20,
               fontSize: 14,
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
                 <span style={{ fontSize: 13, color: "#4a5a4a", letterSpacing: "0.08em", fontWeight: 600 }}>
                   AGENT GDP (30D)
                 </span>
-                <span style={{ fontSize: 30, fontWeight: 700, color: "#6DB874", fontFamily: "monospace" }}>
+                <span style={{ fontSize: 30, fontWeight: 700, color: "#4AE8A0", fontFamily: "monospace" }}>
                   {fmtUSD(gdp)}
                 </span>
               </div>
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#6DB874" }}>By Luca</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "#4AE8A0" }}>By Luca</span>
             <span style={{ fontSize: 14, color: "#3a4a3a" }}>zettaai.co/research</span>
           </div>
         </div>

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { MetricCard, MetricGrid } from "@/components/ui/metric";
+import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
+import { StatusBadge } from "@/components/ui/badge";
 
 type Agent = {
   name: string;
@@ -54,11 +57,11 @@ function runwayLabel(days: number | null, netDaily: number | null) {
   return `${Math.round(days)}d`;
 }
 
-function statusColor(status: TreasuryEntry["status"]) {
-  if (status === "healthy")  return "#6DB874";
-  if (status === "watch")    return "#f59e0b";
-  if (status === "critical") return "#e74c3c";
-  return "var(--muted)";
+function statusVariant(status: TreasuryEntry["status"]): "green" | "amber" | "red" | "neutral" {
+  if (status === "healthy")  return "green";
+  if (status === "watch")    return "amber";
+  if (status === "critical") return "red";
+  return "neutral";
 }
 
 function computeStatus(entry: Omit<TreasuryEntry, "status" | "loading" | "agent" | "slug">): TreasuryEntry["status"] {
@@ -162,75 +165,72 @@ export default function TreasuryPage() {
       {entries.length > 0 && (
         <>
           {/* Summary tiles */}
-          <div className="op-stat-grid" style={{ marginBottom: 24 }}>
-            <div className="op-stat">
-              <p className="op-stat-label">Total Treasury</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + (e.treasuryUsd ?? 0), 0))}</p>
-              <p className="op-stat-sub">across {entries.filter((e) => e.treasuryUsd !== null).length} attributed agents</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Daily Burn</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + (e.burnRateUsd ?? 0), 0))}</p>
-              <p className="op-stat-sub">combined 30d avg</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Daily Revenue</p>
-              <p className="op-stat-value">{fmtUsd(entries.reduce((s, e) => s + ((e.revenueUsd ?? 0) / 30), 0))}</p>
-              <p className="op-stat-sub">combined 30d avg</p>
-            </div>
-            <div className="op-stat">
-              <p className="op-stat-label">Critical Agents</p>
-              <p className="op-stat-value" style={{ color: entries.filter((e) => e.status === "critical").length > 0 ? "#e74c3c" : "var(--ink)" }}>
-                {entries.filter((e) => e.status === "critical").length}
-              </p>
-              <p className="op-stat-sub">runway &lt; 14 days</p>
-            </div>
-          </div>
+          <MetricGrid cols={4} style={{ marginBottom: 24 }}>
+            <MetricCard
+              label="Total Treasury"
+              value={fmtUsd(entries.reduce((s, e) => s + (e.treasuryUsd ?? 0), 0))}
+              sub={`across ${entries.filter((e) => e.treasuryUsd !== null).length} attributed agents`}
+            />
+            <MetricCard
+              label="Daily Burn"
+              value={fmtUsd(entries.reduce((s, e) => s + (e.burnRateUsd ?? 0), 0))}
+              sub="combined 30d avg"
+            />
+            <MetricCard
+              label="Daily Revenue"
+              value={fmtUsd(entries.reduce((s, e) => s + ((e.revenueUsd ?? 0) / 30), 0))}
+              sub="combined 30d avg"
+            />
+            <MetricCard
+              label="Critical Agents"
+              value={entries.filter((e) => e.status === "critical").length}
+              sub="runway < 14 days"
+              valueColor={entries.filter((e) => e.status === "critical").length > 0 ? "#F46060" : undefined}
+            />
+          </MetricGrid>
 
-          {/* Per-agent table */}
-          <div className="op-card">
-            <table className="op-table">
-              <thead>
-                <tr>
-                  <th>Agent</th>
-                  <th>Treasury</th>
-                  <th>Daily Burn</th>
-                  <th>Daily Revenue</th>
-                  <th>Net/Day</th>
-                  <th>Runway</th>
-                  <th>Status</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((e) => {
-                  const color = statusColor(e.status);
-                  return (
-                    <tr key={e.slug}>
-                      <td style={{ fontWeight: 600 }}>{e.agent.name}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.treasuryUsd)}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.burnRateUsd)}</td>
-                      <td>{e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}</td>
-                      <td style={{ color: e.netDaily !== null ? (e.netDaily >= 0 ? "#6DB874" : "#e74c3c") : "var(--muted)", fontWeight: 600 }}>
-                        {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : (e.netDaily !== null ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) : "—")}
-                      </td>
-                      <td style={{ fontWeight: 600, color }}>
-                        {e.loading ? <span style={{ color: "var(--muted)" }}>…</span> : runwayLabel(e.runwayDays, e.netDaily)}
-                      </td>
-                      <td>
-                        <span className="op-badge" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
-                          {e.loading ? "…" : e.status}
-                        </span>
-                      </td>
-                      <td>
-                        <Link href={`/registry/${e.slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Profile →</Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {/* Per-agent ledger */}
+          <LedgerCard eyebrow="Agents" title="Treasury by Agent">
+            {entries.map((e, i) => (
+              <LedgerRow
+                key={e.slug}
+                first={i === 0}
+                last={i === entries.length - 1}
+                label={e.agent.name}
+                badge={
+                  <StatusBadge variant={statusVariant(e.status)}>
+                    {e.loading ? "…" : e.status}
+                  </StatusBadge>
+                }
+                detail={
+                  e.loading ? "…" : [
+                    `Treasury: ${fmtUsd(e.treasuryUsd)}`,
+                    `Burn: ${fmtUsd(e.burnRateUsd)}/day`,
+                    `Rev: ${fmtUsd(e.revenueUsd !== null ? e.revenueUsd / 30 : null)}/day`,
+                  ].join(" · ")
+                }
+                value={
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem",
+                      color: e.loading ? "var(--muted)"
+                        : e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#F46060")
+                        : "var(--muted)",
+                    }}>
+                      {e.loading ? "…"
+                        : e.netDaily !== null
+                          ? (e.netDaily >= 0 ? "+" : "") + fmtUsd(e.netDaily) + "/day"
+                          : "—"}
+                    </span>
+                    <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "var(--ink)" }}>
+                      {e.loading ? "…" : runwayLabel(e.runwayDays, e.netDaily)}
+                    </span>
+                    <Link href={`/registry/${e.slug}`} className="op-btn" style={{ fontSize: "0.72rem", padding: "4px 8px" }}>Profile →</Link>
+                  </div>
+                }
+              />
+            ))}
+          </LedgerCard>
 
           <p style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: 12 }}>
             Runway = treasury ÷ daily burn (30d avg). Profitable agents show ∞. Requires attributed wallets.

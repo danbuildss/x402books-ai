@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   await new Promise<void>((resolve) => {
     doc.on("end", resolve);
 
-    const GREEN = "#6DB874";
+    const GREEN = "#4AE8A0";
     const DARK = "#1A1C1A";
     const MUTED = "#6B6960";
     const LINE = "#E2E4E2";
