@@ -22,6 +22,7 @@ import {
   type TimeRange,
 } from "@/lib/ledger";
 import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
+import { BOOKS_CACHE_TTL_MS } from "@/lib/status-tags";
 import { getConfidenceLabel } from "@/lib/revenue-confidence";
 import {
   isBridgeContract,
@@ -111,7 +112,8 @@ const BOOKS_CACHE_TTL = 10 * 60 * 1000;
 
 // DB cache TTL: 4 hours. Cron refreshes every 4h so this keeps data fresh
 // without triggering live Alchemy scans on every profile page load.
-const DB_CACHE_TTL_MS = 4 * 60 * 60 * 1000;
+// Shared with the books_status derivation so the two can't drift.
+const DB_CACHE_TTL_MS = BOOKS_CACHE_TTL_MS;
 
 async function getDbCachedBooks(
   slug: string,

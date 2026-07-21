@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 
 type Signal = { eco: string; color: string; text: string; ago: string };
 
@@ -43,7 +44,11 @@ const STATIC: Record<TabKey, Signal[]> = {
 export function HomeSignals({ liveSignals }: { liveSignals?: Signal[] }) {
   const [tab, setTab] = useState<TabKey>("growing");
 
-  const signals = tab === "growing" && liveSignals?.length ? liveSignals : STATIC[tab];
+  // Scope lock: placeholder signals show only focus-ecosystem entries.
+  const staticSignals = BANKR_ONLY
+    ? STATIC[tab].filter((s) => s.eco === FOCUS_ECOSYSTEM)
+    : STATIC[tab];
+  const signals = tab === "growing" && liveSignals?.length ? liveSignals : staticSignals;
 
   return (
     <div style={{ maxWidth: 1200, margin: "24px auto 0", padding: "0 40px" }}>

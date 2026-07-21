@@ -1,5 +1,7 @@
 "use client";
 
+import { BANKR_ONLY } from "@/lib/focus";
+
 export function AnimatedGlobe() {
   return (
     <div className="zg-wrap" aria-hidden="true">
@@ -110,14 +112,17 @@ export function AnimatedGlobe() {
         </circle>
       </svg>
 
-      {/* Floating chips — slide in from sides */}
-      <div className="zg-chip zg-chip-1">
-        <span className="zg-chip-dot" style={{ background: "#8B7CF6" }} />
-        <div className="zg-chip-body">
-          <span className="zg-chip-name">AEON</span>
-          <span className="zg-chip-rev" style={{ color: "#8B7CF6" }}>Attributed</span>
+      {/* Floating chips — slide in from sides.
+          Under the Bankr scope lock only the BANKR chip renders. */}
+      {!BANKR_ONLY && (
+        <div className="zg-chip zg-chip-1">
+          <span className="zg-chip-dot" style={{ background: "#8B5CF6" }} />
+          <div className="zg-chip-body">
+            <span className="zg-chip-name">AEON</span>
+            <span className="zg-chip-rev" style={{ color: "#8B5CF6" }}>Attributed</span>
+          </div>
         </div>
-      </div>
+      )}
       <div className="zg-chip zg-chip-2">
         <span className="zg-chip-dot" style={{ background: "#4AE8A0" }} />
         <div className="zg-chip-body">
@@ -125,13 +130,15 @@ export function AnimatedGlobe() {
           <span className="zg-chip-rev" style={{ color: "#4AE8A0" }}>Attributed</span>
         </div>
       </div>
-      <div className="zg-chip zg-chip-3">
-        <span className="zg-chip-dot" style={{ background: "#5B9EF4" }} />
-        <div className="zg-chip-body">
-          <span className="zg-chip-name">VIRTUALS</span>
-          <span className="zg-chip-rev" style={{ color: "#5B9EF4" }}>Attributed</span>
+      {!BANKR_ONLY && (
+        <div className="zg-chip zg-chip-3">
+          <span className="zg-chip-dot" style={{ background: "#5B8FA8" }} />
+          <div className="zg-chip-body">
+            <span className="zg-chip-name">VIRTUALS</span>
+            <span className="zg-chip-rev" style={{ color: "#5B8FA8" }}>Attributed</span>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

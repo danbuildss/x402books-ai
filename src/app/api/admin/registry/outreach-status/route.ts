@@ -5,9 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { internalAuthDetailed, logAdminAccess } from "@/lib/internal-auth";
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
-
-const VALID_STATUSES = ["Not started", "In progress", "Connected"] as const;
-type OutreachStatus = (typeof VALID_STATUSES)[number];
+import { OUTREACH_STATUSES, type OutreachStatus } from "@/app/registry/types";
 
 export async function POST(req: NextRequest) {
   const start = Date.now();
@@ -34,9 +32,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "slug is required" }, { status: 400 });
   }
 
-  if (!status || !VALID_STATUSES.includes(status as OutreachStatus)) {
+  if (!status || !OUTREACH_STATUSES.includes(status as OutreachStatus)) {
     return NextResponse.json(
-      { ok: false, error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
+      { ok: false, error: `status must be one of: ${OUTREACH_STATUSES.join(", ")}` },
       { status: 400 },
     );
   }

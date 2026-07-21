@@ -18,7 +18,7 @@ import {
 } from "@/lib/b20-db";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // B20 prefix: all B20 tokens deployed by the factory start with 0xB200
 const B20_PREFIX = "0xb200";
@@ -38,6 +38,7 @@ type IndexB20Body = {
   chain?: B20Chain;
   includeActivity?: boolean;
   dryRun?: boolean;
+  fromBlock?: string;
 };
 
 type TokenResult = {
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { mode, address, includeActivity = false, dryRun = false } = body;
+  const { mode, address, includeActivity = false, dryRun = false, fromBlock = "0x0" } = body;
   const chain: B20Chain = body.chain && VALID_CHAINS.includes(body.chain) ? body.chain : "base";
   const isTestnet = chain !== "base";
 
@@ -170,7 +171,7 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, "base-sepolia");
+    const scan = await fetchB20FactoryLogs(B20_FACTORY, apiKey, "base-sepolia");
 
     // Attempt Alchemy confirmation for each candidate
     type FactoryCandidate = {
@@ -183,7 +184,7 @@ export async function POST(req: NextRequest) {
     };
     const results: FactoryCandidate[] = [];
 
-    for (const addr of candidates) {
+    for (const addr of scan.candidates) {
       let confirmed = false;
       let name: string | null = null;
       let symbol: string | null = null;
@@ -213,11 +214,19 @@ export async function POST(req: NextRequest) {
       mode: "detect_testnet_factory",
       chain: "base-sepolia",
       is_testnet: true,
-      factory: B20_FACTORY,
-      logs_scanned: logsScanned,
-      b20_candidates_found: candidates.length,
+      factory: scan.factory,
+      scan_debug: {
+        from_block: scan.fromBlock,
+        to_block: scan.toBlock,
+        blocks_scanned: scan.blocksScanned,
+        chunks_run: scan.chunks,
+        logs_found: scan.logsScanned,
+      },
+      logs_scanned: scan.logsScanned,
+      b20_candidates_found: scan.candidates.length,
       confirmed: results.filter((r) => r.confirmed_on_chain).length,
       results,
+      ...(scan.logsError && { logs_error: scan.logsError }),
       note: "Read-only. No data was written. Use mode=single with chain=base-sepolia to index confirmed candidates.",
       testnet_warning: "All data here is Base Sepolia testnet. It is for demo/proof only. Testnet tokens never enter Agent Books, Agent GDP, or production B20 intelligence.",
       generated_at: new Date().toISOString(),
@@ -226,7 +235,7 @@ export async function POST(req: NextRequest) {
 
   // ── detect_factory: scan factory logs on any chain (mainnet or testnet) ──────
   if (mode === "detect_factory") {
-    const { logsScanned, candidates } = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain);
+    const scan = await fetchB20FactoryLogs(B20_FACTORY, apiKey, chain, fromBlock || undefined);
 
     type FactoryCandidate = {
       address: string;
@@ -238,7 +247,7 @@ export async function POST(req: NextRequest) {
     };
     const results: FactoryCandidate[] = [];
 
-    for (const addr of candidates) {
+    for (const addr of scan.candidates) {
       let confirmed = false;
       let name: string | null = null;
       let symbol: string | null = null;
@@ -265,17 +274,30 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    const zeroTokensMessage = scan.candidates.length === 0 && !scan.logsError
+      ? `Scan completed successfully. No initialized B20 tokens were found in blocks ${scan.fromBlock}–${scan.toBlock} (${scan.blocksScanned.toLocaleString()} blocks, ${scan.chunks} chunk${scan.chunks !== 1 ? "s" : ""}).`
+      : null;
+
     return NextResponse.json({
       ok: true,
       mode: "detect_factory",
       chain,
       is_testnet: isTestnet,
-      factory: B20_FACTORY,
-      logs_scanned: logsScanned,
-      b20_candidates_found: candidates.length,
+      factory: scan.factory,
+      rpc_url: scan.rpcUrl,
+      scan_debug: {
+        from_block: scan.fromBlock,
+        to_block: scan.toBlock,
+        blocks_scanned: scan.blocksScanned,
+        chunks_run: scan.chunks,
+        logs_found: scan.logsScanned,
+      },
+      logs_scanned: scan.logsScanned,
+      b20_candidates_found: scan.candidates.length,
       confirmed: results.filter((r) => r.confirmed_on_chain).length,
       results,
-      note: "Read-only. No data was written. Use mode=single to index confirmed candidates.",
+      note: zeroTokensMessage ?? "Read-only. No data was written. Use mode=single to index confirmed candidates.",
+      ...(scan.logsError && { logs_error: scan.logsError }),
       ...(isTestnet && {
         testnet_warning: "All data here is testnet. It is for demo/proof only. Testnet tokens never enter Agent Books, Agent GDP, or production B20 intelligence.",
       }),

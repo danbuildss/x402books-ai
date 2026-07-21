@@ -11,7 +11,7 @@ export type AgentGDPEntry = {
   expenses_usd: number;
   net_income_usd: number;
   tx_count: number;
-  treasury_balance_usd: number | null;
+  treasury_balance_usd: number | null; // stable-coin balance of declared treasury wallets (books cache, 4h)
   inference_spend_usd: number;
 };
 

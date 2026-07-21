@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -26,6 +26,28 @@ import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
 import { CONFIDENCE_META } from "@/lib/revenue-confidence";
+import {
+  buildBooksMetrics,
+  buildDataQuality,
+  buildOperatorVerdict,
+  buildProfileMetrics,
+  buildRevenueBuckets,
+  mapExpenseCategories,
+} from "@/lib/books-presenter";
+import {
+  BOOKS_STATUS_META,
+  PROFILE_STATUS_META,
+  WALLET_STATUS_META,
+} from "@/app/registry/filters";
+import {
+  BooksSummaryStrip,
+  DataQualityBlock,
+  ExpenseBreakdown,
+  LucaVerdictBlock,
+  MetricsStrip,
+  RevenueBreakdown,
+  WalletAttributionSection,
+} from "./books-sections";
 
 // ── Confidence badge (fetched client-side from confidence label API) ──────────
 
@@ -229,10 +251,7 @@ function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; ag
 
 // ── Agent Books block ─────────────────────────────────────────────────────────
 
-function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed }) {
-  const usd = (n: number) =>
-    "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
+function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUnattributed; children?: ReactNode }) {
   if (!books.attributed) {
     if (books.reason === "wallets_declared_not_scannable") {
       return (
@@ -276,7 +295,6 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
   }
 
   const f = books.financials;
-  const netPositive = f.net_income_usd >= 0;
 
   return (
     <section id="agent-books" className="prof-section">
@@ -302,14 +320,8 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         </p>
       )}
 
-      {/* Primary stats: Revenue / Expenses / Net Income.
-          Doctrine: a zero is only shown when the window was scanned and
-          measured activity (tx_count > 0). Unmeasured zeros render as "—". */}
-      <MetricGrid cols={3} style={{ marginBottom: 14 }}>
-        <MetricCard label="Revenue"    value={f.tx_count > 0 ? usd(f.revenue_usd) : "—"}  valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
-        <MetricCard label="Expenses"   value={f.tx_count > 0 ? usd(f.expenses_usd) : "—"} valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
-        <MetricCard label="Net Income" value={f.tx_count > 0 ? (netPositive ? "+" : "−") + usd(f.net_income_usd) : "—"} valueColor={f.tx_count === 0 ? undefined : netPositive ? "var(--accent)" : "#F46060"} />
-      </MetricGrid>
+      {/* P4 metrics strip (BooksSummaryStrip) injected by the parent */}
+      {children}
 
       {/* Secondary stats */}
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", fontSize: "0.77rem", color: "var(--muted)", marginBottom: 12 }}>
@@ -360,56 +372,9 @@ function AgentBooksBlock({ books }: { books: AgentBooks | AgentBooksUnattributed
         )}
       </div>
 
-      {/* Quarantine disclosure */}
-      {books.classification.quarantined_inflows_usd > 0 && (
-        <LedgerCard eyebrow="Classification · Quarantined Inflows" style={{ marginBottom: 12 }}>
-          <LedgerRow
-            first
-            label="Operating Revenue"
-            value={usd(f.revenue_usd)}
-            valueStyle={{ color: f.revenue_usd > 0 ? "var(--accent)" : "var(--muted)" }}
-          />
-          <LedgerRow
-            last
-            label="Quarantined Inflows"
-            value={usd(books.classification.quarantined_inflows_usd)}
-            valueStyle={{ color: "#F4B942" }}
-          />
-          {books.classification.quarantined_events.length > 0 && (
-            <p style={{ margin: "6px 0 0", fontSize: "0.7rem", color: "var(--muted)", lineHeight: 1.5 }}>
-              Reason:{" "}
-              {[...new Set(books.classification.quarantined_events.map((e) => e.reason.replace(/_/g, " ")))].join(", ")}
-            </p>
-          )}
-        </LedgerCard>
-      )}
-
-      {/* Expense breakdown */}
-      {books.breakdown.expenses_by_category.length > 0 && (
-        <LedgerCard eyebrow="Expenses by Category" style={{ marginBottom: 12 }}>
-          {books.breakdown.expenses_by_category.slice(0, 4).map((e, i, arr) => (
-            <LedgerRow
-              key={e.category}
-              first={i === 0}
-              last={i === arr.length - 1}
-              label={e.label}
-              value={`−${usd(e.total_usd)}`}
-              valueStyle={{ color: "#F46060" }}
-            />
-          ))}
-        </LedgerCard>
-      )}
-
-      {/* Luca financial summary */}
-      {books.luca_summary && (
-        <p style={{
-          fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6,
-          paddingTop: 10, borderTop: "1px solid var(--line)",
-        }}>
-          <span style={{ fontWeight: 600, color: "var(--ink)" }}>Luca: </span>
-          {books.luca_summary}
-        </p>
-      )}
+      {/* Quarantine, category breakdowns, and the Luca summary now render in
+          their own sections (Revenue/Expense Breakdown at item 9, Luca Verdict
+          at item 5) — kept out of here to avoid double-counting on the page. */}
 
       {/* Methodology note */}
       <p style={{ margin: "10px 0 0", fontSize: "0.68rem", color: "var(--muted)", lineHeight: 1.55 }}>
@@ -564,45 +529,8 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
   );
 }
 
-// ── Settlement pattern display ────────────────────────────────────────────────
-
-const PATTERN_STYLE: Record<SettlementPattern, { bg: string; color: string; border: string }> = {
-  dormant:                       { bg: "rgba(125,130,141,0.08)", color: "var(--muted)",  border: "rgba(125,130,141,0.14)" },
-  active_operational:            { bg: "rgba(74,232,160,0.08)", color: "var(--accent)", border: "rgba(74,232,160,0.15)" },
-  stable_treasury:               { bg: "rgba(74,232,160,0.08)", color: "var(--accent)", border: "rgba(74,232,160,0.15)" },
-  revenue_generating:            { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  high_spend_low_revenue:        { bg: "rgba(248,113,113,0.08)", color: "#F46060",        border: "rgba(248,113,113,0.15)" },
-  heavy_outbound_settlement:     { bg: "rgba(251,191,36,0.08)",  color: "#F4B942",        border: "rgba(251,191,36,0.15)"  },
-  high_internal_transfer:        { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  recurring_flow_detected:       { bg: "rgba(91,143,168,0.08)",  color: "var(--blue)",   border: "rgba(91,143,168,0.15)"  },
-  incomplete_wallet_role:        { bg: "rgba(251,191,36,0.08)",  color: "#F4B942",        border: "rgba(251,191,36,0.15)"  },
-  unknown_counterparty_dominant: { bg: "rgba(251,191,36,0.08)",  color: "#F4B942",        border: "rgba(251,191,36,0.15)"  },
-};
-
-const PATTERN_LABEL: Record<SettlementPattern, string> = {
-  dormant:                       "Dormant",
-  active_operational:            "Active",
-  stable_treasury:               "Stable Treasury",
-  revenue_generating:            "Revenue Generating",
-  high_spend_low_revenue:        "High Spend",
-  heavy_outbound_settlement:     "Heavy Outbound",
-  high_internal_transfer:        "High Internal Transfer",
-  recurring_flow_detected:       "Recurring Flows",
-  incomplete_wallet_role:        "Roles Unverified",
-  unknown_counterparty_dominant: "Unknown Counterparties",
-};
-
-function SettlementSection({ classification }: { classification: SettlementClassification }) {
-  if (classification.signals.length === 0) return null;
-  return (
-    <section className="prof-section">
-      <p className="prof-section-title">Activity Pattern</p>
-      <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55 }}>
-        {classification.signals.slice(0, 2).join(" · ")}
-      </p>
-    </section>
-  );
-}
+// (SettlementSection removed — classification signals now render inside
+// LucaVerdictBlock in books-sections.tsx.)
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1947,42 +1875,104 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
 
 // ── Main profile ──────────────────────────────────────────────────────────────
 
-type ProfileTab = "overview" | "books" | "inference" | "history" | "attribution" | "research";
-
-const PROF_TABS: { key: ProfileTab; label: string; badge?: string }[] = [
-  { key: "overview",     label: "Overview"     },
-  { key: "books",        label: "Books"        },
-  { key: "inference",    label: "Inference"    },
-  { key: "history",      label: "History"      },
-  { key: "attribution",  label: "Attribution"  },
-  { key: "research",     label: "Research"     },
-];
-
-function OverviewFinancials({ books }: { books: AgentBooks }) {
-  const f = books.financials;
-  const usd = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const netPos = f.net_income_usd >= 0;
+// Detailed score sections — moved BELOW the financial content per P3
+// acceptance ("financial metrics before detailed score sections"); rendered
+// inside a collapsed <details> in the Data Quality area.
+function ScoreBreakdownDetails({ agent, verificationScore }: { agent: Agent; verificationScore?: VerificationScore }) {
+  const hs = agentHealthScore(agent);
+  const gc = gradeColor(hs.grade);
   return (
-    <section className="prof-section">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-        <p className="prof-section-title" style={{ margin: 0 }}>Financial Summary</p>
-        <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{books.period}</span>
-      </div>
-      {/* Zeros are only shown when measured (tx_count > 0); otherwise "—". */}
-      <MetricGrid cols={3} style={{ marginBottom: 10 }}>
-        <MetricCard label="Revenue"    value={f.tx_count > 0 ? usd(f.revenue_usd) : "—"}  valueColor={f.revenue_usd > 0 ? "var(--accent)" : undefined} />
-        <MetricCard label="Expenses"   value={f.tx_count > 0 ? usd(f.expenses_usd) : "—"} valueColor={f.expenses_usd > 0 ? "#F46060" : undefined} />
-        <MetricCard label="Net Income" value={f.tx_count > 0 ? (netPos ? "+" : "−") + usd(f.net_income_usd) : "—"} valueColor={f.tx_count === 0 ? undefined : netPos ? "var(--accent)" : "#F46060"} />
-      </MetricGrid>
-      {f.tx_count > 0 && (
-        <p style={{ margin: 0, fontSize: "0.72rem", color: "var(--muted)" }}>
-          {f.tx_count} txs · {books.wallets.analyzed} wallets
-          {f.margin_pct !== null && <> · <strong style={{ color: "var(--ink)" }}>{f.margin_pct.toFixed(1)}%</strong> margin</>}
-        </p>
+    <>
+      {verificationScore && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "8px 14px",
+          background: "var(--surface-soft)",
+          border: "1px solid var(--line)",
+          borderRadius: 8,
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 36 }}>
+            <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)", lineHeight: 1, fontFamily: "monospace" }}>
+              {verificationScore.total}
+            </span>
+            <span style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>/ 100</span>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)" }}>Verification Score</span>
+              <span className={`reg-badge ${TIER_BADGE_CLASS[verificationScore.tier]}`} style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
+                {TIER_LABELS[verificationScore.tier]}
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {[
+                { label: "Manifest",   val: verificationScore.breakdown.manifest,   max: 30 },
+                { label: "Wallets",    val: verificationScore.breakdown.wallets,     max: 25 },
+                { label: "Activity",   val: verificationScore.breakdown.activity,    max: 20 },
+                { label: "Metadata",   val: verificationScore.breakdown.metadata,    max: 15 },
+                { label: "Ecosystem",  val: verificationScore.breakdown.ecosystem,   max: 10 },
+              ].map((d) => (
+                <div key={d.label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 52 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{d.label}</span>
+                    <span style={{ fontSize: "0.6rem", color: "var(--muted)", fontFamily: "monospace" }}>{d.val}/{d.max}</span>
+                  </div>
+                  <div style={{ height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${(d.val / d.max) * 100}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.3s ease" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
-    </section>
+
+      <div style={{
+        display: "flex", alignItems: "center", gap: 16,
+        padding: "10px 16px",
+        background: `color-mix(in srgb, ${gc} 6%, var(--surface-soft))`,
+        border: "1px solid var(--line)",
+        borderLeft: `3px solid ${gc}`,
+        borderRadius: 8,
+      }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
+          <span style={{ fontSize: "1.4rem", fontWeight: 800, color: gc, lineHeight: 1, fontFamily: "monospace" }}>{hs.grade}</span>
+          <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{hs.total}/100</span>
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
+            {[
+              { label: "Wallets",      val: hs.wallet_coverage,  max: 30 },
+              { label: "Verification", val: hs.verification,     max: 35 },
+              { label: "Evidence",     val: hs.evidence,         max: 20 },
+              { label: "Activity",     val: hs.activity,         max: 15 },
+            ].map(({ label, val, max }) => (
+              <div key={label} style={{ minWidth: 70 }}>
+                <div style={{ fontSize: "0.6rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+                <div style={{ height: 3, width: 70, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: gc, borderRadius: 2 }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ margin: 0, fontSize: "0.67rem", color: "var(--muted)" }}>
+            Financial health score — transparency and identity signal, not revenue.
+          </p>
+        </div>
+      </div>
+    </>
   );
 }
+
+// Secondary tabs only — the main flow is a single scroll in P3 spec order.
+// (Overview/Books/Attribution content lives in the main flow now.)
+type ProfileTab = "inference" | "history" | "research";
+
+const PROF_TABS: { key: ProfileTab; label: string; badge?: string }[] = [
+  { key: "inference", label: "Inference" },
+  { key: "history",   label: "History"   },
+  { key: "research",  label: "Research"  },
+];
 
 export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory, anomalies = [], verificationScore }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[]; anomalies?: Anomaly[]; verificationScore?: VerificationScore }) {
   const router = useRouter();
@@ -1990,7 +1980,17 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
   const [showEmbed, setShowEmbed] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
   const [embedError, setEmbedError] = useState(false);
-  const [tab, setTab] = useState<ProfileTab>("overview");
+  const [tab, setTab] = useState<ProfileTab>("inference");
+
+  // P3/P4 derived view-model (pure presenter — the tested unit).
+  const booksOrFallback: AgentBooks | AgentBooksUnattributed = books ?? {
+    agent: { slug, name: agent.name, ecosystem: agent.ecosystem },
+    attributed: false,
+    reason: "books_unavailable",
+  };
+  const profileMetrics = buildProfileMetrics(booksOrFallback, BOOKS_STATUS_META[agent.booksStatus].label);
+  const dq = buildDataQuality(agent, booksOrFallback);
+  const operatorVerdict = buildOperatorVerdict(booksOrFallback, agent);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.zettaai.co";
   const embedCode = `<iframe src="${baseUrl}/registry/${slug}/card" width="400" height="280" frameborder="0" style="border-radius:12px;border:none;" loading="lazy"></iframe>`;
@@ -2047,31 +2047,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             <div className="prof-name-row">
               <h1 className="prof-name">{agent.name}</h1>
               <span className="prof-symbol">{agent.symbol}</span>
-            </div>
-            <div className="prof-badges">
               <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
-              <StatusBadge status={agent.verificationStatus} />
-              <HealthBadge h={agent.treasuryHealth} />
-              {(() => {
-                if (!booksHistory || booksHistory.length < 2) return null;
-                const m = computeMomentum(booksHistory, 7);
-                if (!m) return null;
-                const dir = m.revenue.direction;
-                const icon  = dir === "growing" ? "↑" : dir === "declining" ? "↓" : "→";
-                const color = dir === "growing" ? "#4AE8A0" : dir === "declining" ? "#F46060" : "var(--muted)";
-                const pct   = m.revenue.pct;
-                return (
-                  <span style={{
-                    fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 99,
-                    background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                    border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-                    color, fontFamily: "monospace",
-                  }}>
-                    {icon} Rev {dir === "stable" ? "stable" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`} 7d
-                  </span>
-                );
-              })()}
             </div>
+            {/* 2 — Bio / one-line description */}
+            <p className="prof-bio" style={{ margin: "4px 0 6px", fontSize: "0.84rem", lineHeight: 1.55, color: agent.bio ? "var(--ink)" : "var(--muted)", fontStyle: agent.bio ? "normal" : "italic" }}>
+              {agent.bio ?? "No bio yet — claim this profile to add one."}
+            </p>
             <div className="prof-links">
               {agent.xHandle && (
                 <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="prof-link">
@@ -2139,162 +2120,142 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </div>
         )}
 
-        {/* Verification score */}
-        {verificationScore && (
-          <div style={{
-            display: "flex", alignItems: "center", gap: 12,
-            padding: "8px 14px",
-            background: "var(--surface-soft)",
-            border: "1px solid var(--line)",
-            borderRadius: 8,
-            marginBottom: 6,
-          }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, minWidth: 36 }}>
-              <span style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--accent)", lineHeight: 1, fontFamily: "monospace" }}>
-                {verificationScore.total}
-              </span>
-              <span style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>/ 100</span>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)" }}>Verification Score</span>
-                <span className={`reg-badge ${TIER_BADGE_CLASS[verificationScore.tier]}`} style={{ fontSize: "0.6rem", padding: "1px 6px" }}>
-                  {TIER_LABELS[verificationScore.tier]}
-                </span>
-              </div>
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {[
-                  { label: "Manifest",   val: verificationScore.breakdown.manifest,   max: 30 },
-                  { label: "Wallets",    val: verificationScore.breakdown.wallets,     max: 25 },
-                  { label: "Activity",   val: verificationScore.breakdown.activity,    max: 20 },
-                  { label: "Metadata",   val: verificationScore.breakdown.metadata,    max: 15 },
-                  { label: "Ecosystem",  val: verificationScore.breakdown.ecosystem,   max: 10 },
-                ].map((d) => (
-                  <div key={d.label} style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 52 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.04em" }}>{d.label}</span>
-                      <span style={{ fontSize: "0.6rem", color: "var(--muted)", fontFamily: "monospace" }}>{d.val}/{d.max}</span>
-                    </div>
-                    <div style={{ height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${(d.val / d.max) * 100}%`, background: "var(--accent)", borderRadius: 2, transition: "width 0.3s ease" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Health score strip */}
-        {(() => {
-          const hs = agentHealthScore(agent);
-          const gc = gradeColor(hs.grade);
-          return (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 16,
-              padding: "10px 16px",
-              background: `color-mix(in srgb, ${gc} 6%, var(--surface-soft))`,
-              border: "1px solid var(--line)",
-              borderLeft: `3px solid ${gc}`,
-              borderRadius: 8,
-              marginBottom: 6,
-            }}>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-                <span style={{ fontSize: "1.4rem", fontWeight: 800, color: gc, lineHeight: 1, fontFamily: "monospace" }}>{hs.grade}</span>
-                <span style={{ fontSize: "0.58rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{hs.total}/100</span>
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 6 }}>
-                  {[
-                    { label: "Wallets",      val: hs.wallet_coverage,  max: 30 },
-                    { label: "Verification", val: hs.verification,     max: 35 },
-                    { label: "Evidence",     val: hs.evidence,         max: 20 },
-                    { label: "Activity",     val: hs.activity,         max: 15 },
-                  ].map(({ label, val, max }) => (
-                    <div key={label} style={{ minWidth: 70 }}>
-                      <div style={{ fontSize: "0.6rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
-                      <div style={{ height: 3, width: 70, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: gc, borderRadius: 2 }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p style={{ margin: 0, fontSize: "0.67rem", color: "var(--muted)" }}>
-                  Financial health score — transparency and identity signal, not revenue.
-                </p>
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Tab navigation */}
-        <div className="prof-tabs">
-          {PROF_TABS.map((t) => {
-            const showBadge = t.key === "inference" && !!inferenceActivity;
+        {/* 3 — Verification + wallet status (compact pill row) */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+          <StatusBadge status={agent.verificationStatus} />
+          {([
+            { meta: PROFILE_STATUS_META[agent.profileStatus], prefix: "Profile" },
+            { meta: WALLET_STATUS_META[agent.walletStatus], prefix: "Wallets" },
+            { meta: BOOKS_STATUS_META[agent.booksStatus], prefix: "Books" },
+          ] as const).map(({ meta, prefix }) => (
+            <span
+              key={prefix}
+              title={meta.tip}
+              style={{
+                fontSize: "0.65rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99,
+                border: `1px solid color-mix(in srgb, ${meta.color} 30%, transparent)`,
+                background: `color-mix(in srgb, ${meta.color} 9%, transparent)`,
+                color: meta.color, whiteSpace: "nowrap",
+              }}
+            >
+              {prefix}: {meta.label}
+            </span>
+          ))}
+          <HealthBadge h={agent.treasuryHealth} />
+          {(() => {
+            if (!booksHistory || booksHistory.length < 2) return null;
+            const m = computeMomentum(booksHistory, 7);
+            if (!m) return null;
+            const dir = m.revenue.direction;
+            const icon  = dir === "growing" ? "↑" : dir === "declining" ? "↓" : "→";
+            const color = dir === "growing" ? "#6DB874" : dir === "declining" ? "#ef4444" : "var(--muted)";
+            const pct   = m.revenue.pct;
             return (
-              <button
-                key={t.key}
-                type="button"
-                className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
-                onClick={() => setTab(t.key)}
-              >
-                {t.label}
-                {showBadge && (
-                  <span style={{
-                    marginLeft: 5,
-                    fontSize: "0.6rem", fontWeight: 700,
-                    padding: "1px 5px", borderRadius: 99,
-                    background: "var(--accent)18",
-                    border: "1px solid var(--accent)40",
-                    color: "var(--accent)",
-                    verticalAlign: "middle",
-                  }}>
-                    Live
-                  </span>
-                )}
-              </button>
+              <span style={{
+                fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 99,
+                background: `color-mix(in srgb, ${color} 12%, transparent)`,
+                border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
+                color, fontFamily: "monospace",
+              }}>
+                {icon} Rev {dir === "stable" ? "stable" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`} 7d
+              </span>
             );
-          })}
+          })()}
         </div>
 
+        {/* 4 — Financial metrics strip */}
+        <MetricsStrip metrics={profileMetrics} />
+
+        {/* 5 — Luca verdict (right after metrics) */}
+        <LucaVerdictBlock
+          verdict={operatorVerdict}
+          adminNotes={agent.adminNotes}
+          lastChecked={agent.lastChecked}
+          classification={classification}
+        />
+
         <div className="prof-body">
-          {/* Claim banner — always shown */}
+
+          {/* 6 — Agent Books (P4 header + 11-metric strip; honest unattributed states) */}
+          <AgentBooksBlock books={booksOrFallback}>
+            {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
+          </AgentBooksBlock>
+
+          {/* 7 — Wallet attribution (role groups + source pills) */}
+          <WalletAttributionSection
+            agent={agent}
+            toolDecisionsBlock={toolDecisions && toolDecisions.length > 0 ? <ToolDecisionsBlock events={toolDecisions} /> : undefined}
+          />
+
+          {/* 8 — Treasury */}
+          {books?.attributed && <TreasurySignals books={books} />}
+
+          {/* 9 — Revenue / expenses (P4 breakdowns) */}
+          {books?.attributed ? (
+            <>
+              <RevenueBreakdown buckets={buildRevenueBuckets(books)} />
+              <ExpenseBreakdown buckets={mapExpenseCategories(books.breakdown.expenses_by_category)} />
+            </>
+          ) : (
+            <section className="prof-section">
+              <p className="prof-section-title">Revenue &amp; Expenses</p>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                No books yet — revenue and expense breakdowns appear once wallets are attributed via manifest.
+              </p>
+            </section>
+          )}
+
+          {/* 10 — Data quality (every profile) + detailed scores, collapsed */}
+          <DataQualityBlock dq={dq} />
+          <details className="prof-section" style={{ padding: "12px 16px" }}>
+            <summary style={{ cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, color: "var(--ink)" }}>
+              Verification &amp; health breakdown
+            </summary>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <ScoreBreakdownDetails agent={agent} verificationScore={verificationScore} />
+            </div>
+          </details>
+          {economics && <AgentEconomicsBlock economics={economics} />}
+
+          {/* 11 — Claim / submit manifest CTA */}
           <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
 
-          {/* ── OVERVIEW ── insight first, data second */}
-          {tab === "overview" && (
-            <>
-              {agent.adminNotes && (
-                <div className="prof-verdict">
-                  <div className="prof-verdict-label">
-                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
-                    From the Research
-                  </div>
-                  <p className="prof-verdict-text">{agent.adminNotes}</p>
-                  {agent.lastChecked && <p className="prof-verdict-date">Last reviewed: {agent.lastChecked}</p>}
-                </div>
-              )}
-              {books?.attributed && <OverviewFinancials books={books} />}
-              {classification && <SettlementSection classification={classification} />}
-              {books?.attributed && booksHistory && booksHistory.length >= 2 && (
-                <MomentumSection history={booksHistory} />
-              )}
-              {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
-              {economics && <AgentEconomicsBlock economics={economics} />}
-            </>
-          )}
-
-          {/* ── BOOKS — full P&L + treasury */}
-          {tab === "books" && (
-            <>
-              {books && <AgentBooksBlock books={books} />}
-              {books?.attributed && <TreasurySignals books={books} />}
-            </>
-          )}
+          {/* Secondary tabs — demoted from the old tab system */}
+          <div className="prof-tabs prof-subtabs" style={{ marginTop: 8 }}>
+            {PROF_TABS.map((t) => {
+              const showBadge = t.key === "inference" && !!inferenceActivity;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
+                  onClick={() => setTab(t.key)}
+                >
+                  {t.label}
+                  {showBadge && (
+                    <span style={{
+                      marginLeft: 5,
+                      fontSize: "0.6rem", fontWeight: 700,
+                      padding: "1px 5px", borderRadius: 99,
+                      background: "var(--accent)18",
+                      border: "1px solid var(--accent)40",
+                      color: "var(--accent)",
+                      verticalAlign: "middle",
+                    }}>
+                      Live
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
           {/* ── INFERENCE — Surplus pilot full report */}
           {tab === "inference" && (
-            <InferenceTab ia={inferenceActivity} slug={slug} books={books} />
+            <>
+              {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
+              <InferenceTab ia={inferenceActivity} slug={slug} books={books} />
+            </>
           )}
 
           {/* ── HISTORY — snapshots + momentum */}
@@ -2312,130 +2273,6 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 </p>
               </section>
             )
-          )}
-
-          {/* ── ATTRIBUTION — wallets + tool decisions */}
-          {tab === "attribution" && (
-            <div className="prof-grid">
-              <section className="prof-section">
-                <p className="prof-section-title">Wallets</p>
-                {(() => {
-                  const CONTRACT_TYPES = new Set(["token_contract", "smart_contract", "proxy_contract", "vault"]);
-                  const allWallets = Array.from(
-                    new Map((agent.wallets ?? []).map((w) => [w.address.toLowerCase(), w])).values(),
-                  );
-
-                  const manifestWallets = allWallets.filter((w) => {
-                    const src = (w.evidenceSource ?? "").toLowerCase();
-                    const atype = (w.address_type ?? "").toLowerCase();
-                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
-                    return src === "manifest" && !isTokenAddr && !CONTRACT_TYPES.has(atype);
-                  });
-                  const contractWallets = allWallets.filter((w) => {
-                    const atype = (w.address_type ?? "").toLowerCase();
-                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
-                    return CONTRACT_TYPES.has(atype) || isTokenAddr || (w.role ?? "").toLowerCase() === "token_contract";
-                  });
-                  const discoveredWallets = allWallets.filter((w) => {
-                    const src = (w.evidenceSource ?? "").toLowerCase();
-                    const atype = (w.address_type ?? "").toLowerCase();
-                    const isTokenAddr = agent.tokenAddress && w.address.toLowerCase() === agent.tokenAddress.toLowerCase();
-                    return src !== "manifest" && !CONTRACT_TYPES.has(atype) && !isTokenAddr && (w.role ?? "").toLowerCase() !== "token_contract";
-                  });
-
-                  const hasManifest = manifestWallets.length > 0;
-                  const hasDiscovered = discoveredWallets.length > 0 || contractWallets.length > 0;
-
-                  return (
-                    <>
-                      {/* No books warning */}
-                      {!hasManifest && hasDiscovered && (
-                        <div style={{ marginBottom: 10, padding: "8px 12px", background: "#F4B94210", border: "1px solid #F4B94230", borderRadius: 6 }}>
-                          <p style={{ margin: 0, fontSize: "0.72rem", color: "#F4B942", lineHeight: 1.5 }}>
-                            Wallet manifest required. Contract addresses and discovered addresses are not used for books.{" "}
-                            <a href="/api#manifest" style={{ color: "#F4B942", textDecoration: "underline" }}>Add .agent/wallets.json →</a>
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Manifest wallets */}
-                      {manifestWallets.length > 0 && (
-                        <>
-                          <p style={{ margin: "0 0 6px", fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "#4AE8A0", fontWeight: 700 }}>
-                            Manifest wallets — books eligible
-                          </p>
-                          {manifestWallets.map((w) => (
-                            <div key={w.address} className="reg-card-wallet-row">
-                              <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
-                              {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
-                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                                {truncate(w.address)}
-                              </a>
-                              {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {/* Contract addresses */}
-                      {(contractWallets.length > 0 || agent.tokenAddress) && (
-                        <>
-                          <p style={{ margin: `${manifestWallets.length > 0 ? "12px" : "0"} 0 6px`, fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 700 }}>
-                            Contract addresses — not used for books
-                          </p>
-                          {agent.tokenAddress && !contractWallets.some((w) => w.address.toLowerCase() === agent.tokenAddress!.toLowerCase()) && (
-                            <div className="reg-card-wallet-row">
-                              <span className="reg-wallet-label-pill reg-wallet-candidate">token contract</span>
-                              <a href={`https://basescan.org/token/${agent.tokenAddress}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                                {truncate(agent.tokenAddress)}
-                              </a>
-                            </div>
-                          )}
-                          {contractWallets.map((w) => (
-                            <div key={w.address} className="reg-card-wallet-row" style={{ opacity: 0.65 }}>
-                              <span className="reg-wallet-label-pill reg-wallet-candidate">
-                                {w.address_type ?? "contract"}
-                              </span>
-                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                                {truncate(w.address)}
-                              </a>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {/* Discovered wallets */}
-                      {discoveredWallets.length > 0 && (
-                        <>
-                          <p style={{ margin: `${manifestWallets.length > 0 || contractWallets.length > 0 ? "12px" : "0"} 0 6px`, fontSize: "0.66rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", fontWeight: 700 }}>
-                            Discovered addresses — not used for books
-                          </p>
-                          {discoveredWallets.map((w) => (
-                            <div key={w.address} className="reg-card-wallet-row" style={{ opacity: 0.65 }}>
-                              <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
-                              {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
-                              <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                                {truncate(w.address)}
-                              </a>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {/* No wallets at all */}
-                      {!hasManifest && !hasDiscovered && !agent.tokenAddress && (
-                        <p className="reg-card-no-wallet">Wallet discovery pending — Luca is researching public data.</p>
-                      )}
-                    </>
-                  );
-                })()}
-              </section>
-              {toolDecisions && toolDecisions.length > 0 && <ToolDecisionsBlock events={toolDecisions} />}
-              <p className="prof-footer-note" style={{ gridColumn: "1 / -1" }}>
-                Luca analyzed public data associated with {agent.name}. Wallets are candidate unless marked Verified.{" "}
-                <Link href="/registry#verify">Verify your agent →</Link>
-              </p>
-            </div>
           )}
 
           {/* ── RESEARCH — published Luca reports for this agent */}

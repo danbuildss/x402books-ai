@@ -351,46 +351,130 @@ type FactoryLog = {
   transactionHash: string;
 };
 
+// keccak256("B20Created(address,uint8,string,string,uint8,bytes)")
+// Computed via viem: keccak256(toBytes(sig))
+const B20_CREATED_TOPIC = "0xfd9bf2730513a1709722ff379a0844dfd8f997d600693c2bcc659e188bbdba0d";
+
+// Base: ~2s/block → 43200 blocks/day.
+// Chunk size kept at 2000 blocks — Alchemy's safe limit per eth_getLogs call.
+const CHUNK_SIZE = 2000;
+const MAX_CHUNKS = 25; // 50k blocks max per scan run (~28h on Base)
+
+async function getCurrentBlock(apiKey: string, chain: B20Chain): Promise<number> {
+  const blockHex = await rpc(apiKey, "eth_blockNumber", [], chain) as string;
+  return parseInt(blockHex, 16);
+}
+
+export type FactoryLogResult = {
+  logsScanned: number;
+  blocksScanned: number;
+  fromBlock: number;
+  toBlock: number;
+  rpcUrl: string;
+  factory: string;
+  candidates: string[];
+  logsError: string | null;
+  chunks: number;
+};
+
 export async function fetchB20FactoryLogs(
   factoryAddress: string,
   apiKey: string,
   chain: B20Chain = "base-sepolia",
-): Promise<{ logsScanned: number; candidates: string[] }> {
+  fromBlock?: string,
+): Promise<FactoryLogResult> {
   const B20_PREFIX = "0xb200";
-  let logs: FactoryLog[] = [];
+  const factory = factoryAddress.toLowerCase();
+  const rpcEndpoint = `${CHAIN_RPC[chain]}/${apiKey.slice(0, 6)}…`;
+
+  // Resolve start block
+  let startBlock: number;
+  let currentBlock: number;
+  let blockError: string | null = null;
 
   try {
-    const result = await rpc(apiKey, "eth_getLogs", [{
-      fromBlock: "0x0",
-      toBlock: "latest",
-      address: factoryAddress.toLowerCase(),
-    }], chain);
-    logs = (result as FactoryLog[]) ?? [];
-  } catch {
-    // Factory not yet deployed or no logs on this chain
+    currentBlock = await getCurrentBlock(apiKey, chain);
+  } catch (e) {
+    blockError = `eth_blockNumber failed: ${e instanceof Error ? e.message : String(e)}`;
+    // Hard fallback — B20 launch block on Base mainnet
+    currentBlock = 0x2CAF000;
   }
 
+  if (fromBlock) {
+    startBlock = parseInt(fromBlock, 16);
+    if (isNaN(startBlock)) {
+      return {
+        logsScanned: 0, blocksScanned: 0, fromBlock: 0, toBlock: currentBlock,
+        rpcUrl: rpcEndpoint, factory, candidates: [], chunks: 0,
+        logsError: `Invalid fromBlock "${fromBlock}" — must be a hex string like 0x2C9E740`,
+      };
+    }
+  } else {
+    // Default: last 24h on Base mainnet, all blocks on testnet (small chain)
+    startBlock = chain === "base" ? Math.max(0, currentBlock - 43200) : 0;
+  }
+
+  const endBlock = currentBlock;
   const seen = new Set<string>();
+  let totalLogs = 0;
+  let chunksRun = 0;
+  const errors: string[] = [];
+  if (blockError) errors.push(blockError);
 
-  for (const log of logs) {
-    // Topics: 0x + 64 hex — last 40 chars are address
-    for (const topic of log.topics ?? []) {
-      if (topic.length === 66) {
-        const addr = "0x" + topic.slice(26).toLowerCase();
-        if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
-            && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
+  // Scan in 2000-block chunks, stop after MAX_CHUNKS
+  let chunkStart = startBlock;
+  while (chunkStart <= endBlock && chunksRun < MAX_CHUNKS) {
+    const chunkEnd = Math.min(chunkStart + CHUNK_SIZE - 1, endBlock);
+    chunksRun++;
+
+    try {
+      const result = await rpc(apiKey, "eth_getLogs", [{
+        fromBlock: "0x" + chunkStart.toString(16),
+        toBlock:   "0x" + chunkEnd.toString(16),
+        address:   factory,
+        topics:    [B20_CREATED_TOPIC],
+      }], chain);
+      const logs = (result as FactoryLog[]) ?? [];
+      totalLogs += logs.length;
+
+      for (const log of logs) {
+        for (const topic of log.topics ?? []) {
+          if (topic.length === 66) {
+            const addr = "0x" + topic.slice(26).toLowerCase();
+            if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
+                && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
+          }
+        }
+        const data = (log.data ?? "").replace(/^0x/, "");
+        for (let slot = 0; slot + 64 <= data.length; slot += 64) {
+          const addr = "0x" + data.slice(slot + 24, slot + 64).toLowerCase();
+          if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
+              && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
+        }
       }
+    } catch (e) {
+      const msg = `chunk ${chunkStart}–${chunkEnd}: ${e instanceof Error ? e.message : String(e)}`;
+      errors.push(msg);
+      // Stop on first chunk error — don't hammer Alchemy with failing calls
+      break;
     }
-    // Data: ABI-encoded slots of 64 hex chars; address at bytes 12–32 of each slot
-    const data = (log.data ?? "").replace(/^0x/, "");
-    for (let slot = 0; slot + 64 <= data.length; slot += 64) {
-      const addr = "0x" + data.slice(slot + 24, slot + 64).toLowerCase();
-      if (addr.startsWith(B20_PREFIX) && /^0x[0-9a-f]{40}$/.test(addr)
-          && !B20_INFRASTRUCTURE_ADDRESSES.has(addr)) seen.add(addr);
-    }
+
+    chunkStart = chunkEnd + 1;
+    // Small pause between chunks to stay within rate limits
+    if (chunkStart <= endBlock) await new Promise((r) => setTimeout(r, 100));
   }
 
-  return { logsScanned: logs.length, candidates: [...seen] };
+  return {
+    logsScanned: totalLogs,
+    blocksScanned: Math.min(chunkStart, endBlock + 1) - startBlock,
+    fromBlock: startBlock,
+    toBlock: endBlock,
+    rpcUrl: rpcEndpoint,
+    factory,
+    candidates: [...seen],
+    logsError: errors.length > 0 ? errors.join(" | ") : null,
+    chunks: chunksRun,
+  };
 }
 
 // ── issuer → agent linker ─────────────────────────────────────────────────────

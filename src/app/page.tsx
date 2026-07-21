@@ -13,6 +13,7 @@ import type { AgentGDP } from "@/lib/agent-gdp";
 import type { ResearchReport } from "@/lib/research-db";
 import type { GDPSnapshot } from "@/lib/gdp-history";
 import type { AttributionMetrics } from "@/lib/attribution-health";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 
 export const revalidate = 3600;
 
@@ -86,7 +87,10 @@ export default async function HomePage() {
   try { attr = await getAttributionMetrics(); } catch { /* unavailable */ }
   try { b20Stats = await getB20Stats(); } catch { /* unavailable */ }
 
-  const topAgents = gdp?.top_agents ?? [];
+  // Scope lock: agent lists and live signals show only focus-ecosystem agents.
+  const topAgents = (gdp?.top_agents ?? []).filter(
+    (a) => !BANKR_ONLY || a.ecosystem === FOCUS_ECOSYSTEM,
+  );
 
   return (
     <div className="lp-root">
@@ -116,12 +120,12 @@ export default async function HomePage() {
               <div className="zetta-trusted-row">
                 <span className="zetta-trusted-label">Active in</span>
                 {[
-                  { name: "BASE", color: "#5B9EF4" },
-                  { name: "AEON", color: "#8B7CF6" },
-                  { name: "BANKR", color: "#4AE8A0" },
-                  { name: "EigenCloud", color: "#F4B942" },
-                  { name: "VIRTUALS", color: "#5B9EF4" },
-                ].map((e) => (
+                  { name: "BASE", color: "#4F46E5" },
+                  { name: "AEON", color: "#8B5CF6" },
+                  { name: "BANKR", color: "#6DB874" },
+                  { name: "EigenCloud", color: "#F97316" },
+                  { name: "VIRTUALS", color: "#5B8FA8" },
+                ].filter((e) => !BANKR_ONLY || e.name === FOCUS_ECOSYSTEM).map((e) => (
                   <span key={e.name} className="zetta-trusted-item">
                     <span className="zetta-trusted-dot" style={{ background: e.color }} />
                     {e.name}
@@ -347,7 +351,8 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* ── B20 TOKEN INTELLIGENCE ── */}
+      {/* ── B20 TOKEN INTELLIGENCE ── (non-Bankr surface, hidden under scope lock) */}
+      {!BANKR_ONLY && (
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
         <div style={{
           background: "var(--surface)",
@@ -385,6 +390,7 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* ── LIVE SIGNALS (tabbed) ── */}
       <HomeSignals liveSignals={topAgents.length > 0 ? topAgents.slice(0, 4).map((agent, i) => ({
