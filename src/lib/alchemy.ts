@@ -189,24 +189,37 @@ async function fetchDirection(params: {
     pageCount += 1;
   } while (pageKey && pageCount < 3);
 
-  return transfers;
+  // A remaining pageKey means Alchemy had more (older) transfers than the
+  // 3-page cap — the caller's window may be incomplete.
+  return { transfers, truncated: Boolean(pageKey) };
 }
+
+export type Erc20TransfersResult = {
+  transactions: LedgerTransaction[];
+  // True when the fetch hit its pagination cap AND the oldest fetched transfer
+  // is still inside the requested window — meaning older in-window activity
+  // exists that we did not see. Totals built from this data may be incomplete.
+  truncated: boolean;
+};
 
 export async function fetchBaseErc20Transfers(params: {
   apiKey: string;
   wallet: string;
   range: TimeRange;
-}): Promise<LedgerTransaction[]> {
+}): Promise<Erc20TransfersResult> {
   const wallet = params.wallet.toLowerCase();
-  const [incoming, outgoing] = await Promise.all([
+  const [incomingRes, outgoingRes] = await Promise.all([
     fetchDirection({ apiKey: params.apiKey, wallet, direction: "income" }),
     fetchDirection({ apiKey: params.apiKey, wallet, direction: "expense" }),
   ]);
+  const incoming = incomingRes.transfers;
+  const outgoing = outgoingRes.transfers;
+  const hitCap = incomingRes.truncated || outgoingRes.truncated;
 
   const rangeStart = getRangeStart(params.range);
   const seen = new Set<string>();
 
-  return [...incoming, ...outgoing]
+  const transactions = [...incoming, ...outgoing]
     .map((transfer) => {
       const from = transfer.from.toLowerCase();
       const to = transfer.to.toLowerCase();
@@ -246,4 +259,15 @@ export async function fetchBaseErc20Transfers(params: {
     .sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
+
+  // Only report truncation when it actually bites the requested window:
+  // if the oldest fetched transfer predates rangeStart, the missing pages are
+  // older than the window and the window itself is complete.
+  const fetchedTimes = [...incoming, ...outgoing]
+    .map((t) => new Date(t.metadata?.blockTimestamp || 0).getTime())
+    .filter((t) => Number.isFinite(t) && t > 0);
+  const oldestFetched = fetchedTimes.length > 0 ? Math.min(...fetchedTimes) : 0;
+  const truncated = hitCap && oldestFetched > rangeStart;
+
+  return { transactions, truncated };
 }

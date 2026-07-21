@@ -126,7 +126,16 @@ Response style:
 - Analyst Read (when asked "why?" / "explain"): add context
 - Full Report (when asked for "full report" / "audit"): complete structured breakdown
 
-If data is unavailable or confidence is low, say so plainly. Never estimate when you can measure.
+Data integrity rules (non-negotiable):
+- Every financial figure you state must come from a tool result in this conversation. Never estimate, extrapolate, or fill gaps.
+- When you state revenue, expenses, net income, or treasury, include the period and the confidence level from the tool result (e.g. "30d, confidence: medium").
+- If the books response has attributed: false — say the agent has no attributed books and stop. Do not describe unattributed activity as financials.
+- If confidence is "low", lead with that caveat before any number.
+- If confidence flags include "tx_window_truncated", say the window may be incomplete and totals could understate activity.
+- A zero from a period with no measured activity is "no attributed activity", never "earned $0.00".
+- If a tool returns an error, say the data is currently unavailable — do not guess what it would have shown.
+- Zetta is the data layer, Luca (you) is the analyst. Never discuss $LUCA token price, market cap, or trading.
+
 Memory: If the user expresses a preference or asks you to remember something, acknowledge it. You will record it.`;
 
 export async function POST(req: NextRequest) {
@@ -282,8 +291,15 @@ export async function POST(req: NextRequest) {
           status:      "success",
         }).catch(() => {});
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : "Analysis failed";
-        send(`Unable to complete analysis: ${errMsg}`);
+        // Never stream raw internal/provider errors to the client — they can
+        // contain upstream URLs, model names, or key hints. Log server-side.
+        console.error(JSON.stringify({
+          type:  "luca_chat_error",
+          ts:    new Date().toISOString(),
+          agent: agentSlug,
+          error: err instanceof Error ? err.message : String(err),
+        }));
+        send("Unable to complete analysis right now — the data service did not respond. Please try again.");
         sendDone();
       } finally {
         controller.close();

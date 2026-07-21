@@ -31,16 +31,23 @@ export interface FetchResult {
   transactions: NormalizedTransaction[];
   provider:     "alchemy" | "etherscan" | "none";
   error?:       string;         // present when fallback used or both failed
+  // True when the number of returned transactions reached the per-direction
+  // cap — older activity likely exists that was not fetched, so any totals
+  // built from this result may be incomplete.
+  truncated?:   boolean;
 }
 
 export async function fetchWalletTransactions(params: FetchParams): Promise<FetchResult> {
   const hasAlchemy   = Boolean(process.env.ALCHEMY_API_KEY);
   const hasEtherscan = Boolean(process.env.BASESCAN_API_KEY || process.env.ETHERSCAN_API_KEY);
 
+  const cap = params.limit ?? 500;
+  const isTruncated = (txs: NormalizedTransaction[]) => txs.length >= cap;
+
   if (hasAlchemy) {
     try {
       const transactions = await fetchAlchemy(params);
-      return { transactions, provider: "alchemy" };
+      return { transactions, provider: "alchemy", truncated: isTruncated(transactions) };
     } catch (alchemyErr) {
       const alchemyMsg = String(alchemyErr);
       if (!hasEtherscan) {
@@ -56,6 +63,7 @@ export async function fetchWalletTransactions(params: FetchParams): Promise<Fetc
           transactions,
           provider: "etherscan",
           error: `Alchemy unavailable (${alchemyMsg}), used Etherscan fallback.`,
+          truncated: isTruncated(transactions),
         };
       } catch (ethErr) {
         return {
@@ -70,7 +78,7 @@ export async function fetchWalletTransactions(params: FetchParams): Promise<Fetc
   if (hasEtherscan) {
     try {
       const transactions = await fetchEtherscan(params);
-      return { transactions, provider: "etherscan" };
+      return { transactions, provider: "etherscan", truncated: isTruncated(transactions) };
     } catch (e) {
       return { transactions: [], provider: "none", error: `Etherscan failed: ${String(e)}` };
     }

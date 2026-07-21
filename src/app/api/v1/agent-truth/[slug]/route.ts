@@ -13,19 +13,13 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
-  const auth = await v1Auth(req);
-  if (!auth.ok) {
-    return auth.response;
-  }
-
   const { slug } = await params;
   const agentSlug = slug.toLowerCase().trim();
 
-  if (auth.agentScope && auth.agentScope !== agentSlug) {
-    return NextResponse.json(
-      { error: `This API key is scoped to agent '${auth.agentScope}', not '${agentSlug}'. Use a key scoped to this agent, or an unscoped key.` },
-      { status: 403 },
-    );
+  // Agent-scoped keys may only query their own agent's data — enforced centrally
+  const auth = await v1Auth(req, { agentSlug });
+  if (!auth.ok) {
+    return auth.response;
   }
 
   if (!hasSupabaseAdminEnv()) {
