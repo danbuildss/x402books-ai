@@ -52,7 +52,9 @@ export async function POST(req: NextRequest) {
 
   for (const wallet of candidates) {
     const role = (wallet.role ?? "").toLowerCase();
-    const newType = ROLE_TO_TYPE[role] ?? "eoa";
+    // Unmapped roles stay unclassified — never default to eoa.
+    const newType = ROLE_TO_TYPE[role];
+    if (!newType) continue;
 
     const { error: updateError } = await sb
       .from("registry_agent_wallets")

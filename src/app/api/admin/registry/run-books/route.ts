@@ -77,7 +77,9 @@ export async function POST(req: NextRequest) {
     const role = (w.role ?? "").toLowerCase();
     if (INELIGIBLE_ROLES.has(role)) continue;
     if (!w.address_type || w.address_type === "unknown") {
-      const newType = ROLE_TO_TYPE[role] ?? "eoa";
+      // Unmapped roles stay unclassified — never default to eoa.
+      const newType = ROLE_TO_TYPE[role];
+      if (!newType) continue;
       await sb.from("registry_agent_wallets").update({ address_type: newType }).eq("id", w.id);
       eligibilityFixed++;
     }

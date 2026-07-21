@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   // Validate
   const validation = validateManifest(manifest);
   const parsed     = parseManifest(manifest);
-  const agentSlug  = parsed.agent.toLowerCase().replace(/\s+/g, "-");
+  const agentSlug  = toSlug(parsed.agent);
   const sourceRef  = source_url ?? repo_url ?? ".agent/wallets.json";
 
   if (!hasSupabaseAdminEnv()) {

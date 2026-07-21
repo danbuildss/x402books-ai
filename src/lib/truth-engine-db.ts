@@ -1,3 +1,4 @@
+import { toSlug } from "@/lib/slug";
 import { getSupabaseAdminClient } from "./supabase-admin";
 import { validateManifest, parseManifest } from "./truth-engine/manifest-validator";
 import { normalizeWalletGraph } from "./truth-engine/wallet-graph";
@@ -150,7 +151,7 @@ export async function ingestManifestTruth(
   try {
     const validation = validateManifest(manifest);
     const parsed     = parseManifest(manifest);
-    const agentSlug  = parsed.agent.toLowerCase().replace(/\s+/g, "-");
+    const agentSlug  = toSlug(parsed.agent);
     const sourceRef  = options.sourceUrl ?? options.repoUrl ?? ".agent/wallets.json";
 
     await upsertManifestSubmission({

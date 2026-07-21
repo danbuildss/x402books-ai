@@ -11,6 +11,7 @@
 // Protected by ZETTA_INTERNAL_SECRET.
 // Uses Alchemy Base-mainnet RPC to classify each address.
 
+import { toSlug } from "@/lib/slug";
 import { NextRequest, NextResponse } from "next/server";
 import { internalAuth } from "@/lib/internal-auth";
 import { getRegistryAgents } from "@/lib/registry-db";
@@ -121,7 +122,7 @@ export async function GET(req: NextRequest) {
     if (wallets.length === 0) {
       agentReports.push({
         name: agent.name,
-        slug: agent.name.toLowerCase().replace(/\s+/g, "-"),
+        slug: toSlug(agent.name),
         ecosystem: agent.ecosystem,
         token_address: agent.tokenAddress,
         wallets: [],
@@ -183,7 +184,7 @@ export async function GET(req: NextRequest) {
 
     agentReports.push({
       name: agent.name,
-      slug: agent.name.toLowerCase().replace(/\s+/g, "-"),
+      slug: toSlug(agent.name),
       ecosystem: agent.ecosystem,
       token_address: agent.tokenAddress,
       wallets: walletReports,

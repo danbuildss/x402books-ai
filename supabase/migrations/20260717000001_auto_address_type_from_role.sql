@@ -15,7 +15,7 @@
 --   deployer       → eoa
 --   token_contract → (unchanged — intentionally ineligible)
 --   token          → (unchanged — intentionally ineligible)
---   anything else  → eoa (safe default for manifest wallets)
+--   anything else  → (unchanged — unmapped roles stay ineligible)
 --
 -- This trigger must fire BEFORE registry_agent_wallets_books_eligible.
 -- Postgres fires BEFORE triggers in alphabetical name order, so naming
@@ -38,7 +38,9 @@ BEGIN
       WHEN 'token_contract'  THEN NEW.address_type  -- leave unchanged
       WHEN 'token'           THEN NEW.address_type  -- leave unchanged
       WHEN 'smart_contract'  THEN NEW.address_type  -- leave unchanged
-      ELSE 'eoa'
+      -- Unmapped roles stay unclassified (ineligible) — never default to eoa,
+      -- which would silently widen books eligibility for unknown roles.
+      ELSE NEW.address_type
     END;
   END IF;
   RETURN NEW;
@@ -61,11 +63,10 @@ SET address_type = CASE lower(coalesce(role, ''))
   WHEN 'revenue'         THEN 'eoa'
   WHEN 'surplus_wallet'  THEN 'eoa'
   WHEN 'deployer'        THEN 'eoa'
-  ELSE 'eoa'
 END
 WHERE lower(coalesce(evidence_source, '')) = 'manifest'
   AND (address_type IS NULL OR lower(coalesce(address_type, '')) IN ('unknown', ''))
-  AND lower(coalesce(role, '')) NOT IN ('token_contract', 'token', 'smart_contract');
+  AND lower(coalesce(role, '')) IN ('treasury', 'operator', 'fee', 'revenue', 'surplus_wallet', 'deployer');
 
 -- ── Verification ──────────────────────────────────────────────────────────────
 -- SELECT evidence_source, address_type, role, books_eligible, COUNT(*)
