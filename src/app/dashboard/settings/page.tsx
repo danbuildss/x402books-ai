@@ -73,6 +73,13 @@ export default function SettingsPage() {
     window.location.href = "/";
   }
 
+  const SECTIONS = [
+    { id: "wallet", label: "Wallet & Identity" },
+    { id: "account", label: "Account" },
+    { id: "keys", label: "API Keys", href: "/dashboard/keys" },
+    { id: "agent", label: "My Agent", href: "/dashboard/attribution" },
+  ];
+
   return (
     <div className="op-page">
       <div className="op-page-header">
@@ -80,7 +87,21 @@ export default function SettingsPage() {
         <p className="op-page-sub">Manage your workspace preferences.</p>
       </div>
 
+      <div className="op-settings-cols">
+        {/* Section nav */}
+        <nav className="op-settings-nav" aria-label="Settings sections">
+          {SECTIONS.map((s) =>
+            s.href ? (
+              <a key={s.id} href={s.href} className="op-settings-nav-item">{s.label} →</a>
+            ) : (
+              <a key={s.id} href={`#${s.id}`} className="op-settings-nav-item">{s.label}</a>
+            ),
+          )}
+        </nav>
+
+        <div style={{ minWidth: 0, flex: 1 }}>
       {/* Linked Wallet */}
+      <div id="wallet" />
       <LedgerCard eyebrow="Identity" title="Linked Wallet">
         <LedgerRow
           first
@@ -145,6 +166,7 @@ export default function SettingsPage() {
       </LedgerCard>
 
       {/* Account */}
+      <div id="account" />
       <LedgerCard eyebrow="Account" title="Account">
         <LedgerRow
           first
@@ -164,6 +186,8 @@ export default function SettingsPage() {
           detail="Contact us to rotate"
         />
       </LedgerCard>
+        </div>
+      </div>
     </div>
   );
 }

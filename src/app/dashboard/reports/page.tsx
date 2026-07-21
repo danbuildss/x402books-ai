@@ -14,6 +14,23 @@ export default function ReportsPage() {
         <Link href="/research" className="op-btn" target="_blank">View Published Research ↗</Link>
       </div>
 
+      {/* Quick generate — each card opens Luca with the report prompt prefilled */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, marginBottom: 20 }}>
+        {[
+          { title: "Books Report · 30d", desc: "Revenue, expenses, net income and confidence for the last 30 days.", q: "Generate my 30d books report." },
+          { title: "Treasury Snapshot", desc: "Current stablecoin balances across declared wallets, with runway.", q: "What's my treasury health and runway?" },
+          { title: "Revenue Quality Audit", desc: "Settlement vs token revenue, quarantined inflows, and unknowns.", q: "Audit my revenue quality: what's settlement revenue vs quarantined or unknown?" },
+        ].map((c) => (
+          <div key={c.title} style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)", display: "flex", flexDirection: "column", gap: 8 }}>
+            <p style={{ margin: 0, fontSize: "0.86rem", fontWeight: 700, color: "var(--ink)" }}>{c.title}</p>
+            <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.55, flex: 1 }}>{c.desc}</p>
+            <Link href={`/dashboard/luca?q=${encodeURIComponent(c.q)}`} className="op-btn" style={{ fontSize: "0.75rem", alignSelf: "flex-start" }}>
+              Generate with Luca →
+            </Link>
+          </div>
+        ))}
+      </div>
+
       {/* Generate reports */}
       <LedgerCard eyebrow="On-demand" title="Agent Financial Reports">
         <LedgerRow

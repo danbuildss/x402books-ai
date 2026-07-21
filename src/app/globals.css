@@ -12767,3 +12767,97 @@ html, body {
   .lp-marquee-track { animation: none !important; }
   .skeleton { animation: none !important; opacity: 0.7; }
 }
+
+/* ── Registry mobile cards (desktop keeps the terminal table) ─────────────── */
+.reg-mcards { display: none; }
+.reg-mcard {
+  display: block;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  text-decoration: none;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.reg-mcard:active { background: var(--surface-soft); }
+.reg-mcard-head { display: flex; align-items: flex-start; gap: 10px; }
+.reg-mcard-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.reg-mcard-name { font-weight: 700; font-size: 0.88rem; }
+.reg-mcard-bio {
+  font-size: 0.72rem; color: var(--muted); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.reg-mcard-bio-empty { font-style: italic; }
+.reg-mcard-metrics {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+}
+.reg-mcard-metric { display: flex; flex-direction: column; gap: 3px; }
+.reg-mcard-metric-label {
+  font-size: 0.58rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--muted);
+}
+.reg-mcard-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line);
+  font-size: 0.68rem; color: var(--muted);
+}
+.reg-mcard-cta { color: var(--accent); font-weight: 600; }
+@media (max-width: 720px) {
+  .reg-table-wrap { display: none; }
+  .reg-mcards { display: block; }
+}
+
+/* ── Header nav dropdowns ─────────────────────────────────────────────────── */
+.lp-nav-dd-item {
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.lp-nav-dd-item:hover { background: var(--surface-soft); color: var(--accent); }
+
+/* ── Landing "one layer" platform grid ────────────────────────────────────── */
+.zetta-platform-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 900px) { .zetta-platform-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .zetta-platform-grid { grid-template-columns: 1fr; } }
+.zetta-platform-card {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  transition: border-color 0.15s;
+}
+.zetta-platform-card:hover { border-color: color-mix(in srgb, #4AE8A0 35%, var(--line)); }
+.zetta-platform-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, #4AE8A0 10%, transparent);
+  color: #4AE8A0; font-size: 0.95rem; margin-bottom: 12px;
+}
+
+/* ── Dashboard settings two-column ────────────────────────────────────────── */
+.op-settings-cols { display: flex; gap: 20px; align-items: flex-start; }
+.op-settings-nav {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 170px; position: sticky; top: 16px;
+  padding: 6px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface);
+}
+.op-settings-nav-item {
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); text-decoration: none;
+}
+.op-settings-nav-item:hover { background: var(--surface-soft); color: var(--ink); }
+@media (max-width: 760px) {
+  .op-settings-cols { flex-direction: column; }
+  .op-settings-nav { flex-direction: row; flex-wrap: wrap; position: static; width: 100%; min-width: 0; }
+}

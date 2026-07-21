@@ -146,6 +146,10 @@ export type ProfileMetrics = {
   treasuryBalance: Metric;
   booksStatus: string; // label from BOOKS_STATUS_META
   confidence: string; // auto BooksConfidence; human label rendered separately
+  // True when any wallet's tx fetch hit its pagination cap inside the window —
+  // totals may be incomplete and must be labeled, never shown as complete.
+  truncated: boolean;
+  generatedAt: string | null; // "as of" timestamp for every financial surface
 };
 
 export type BooksMetrics = {
@@ -160,7 +164,12 @@ export type BooksMetrics = {
   quarantinedInflows: Metric;
   unknownActivity: Metric;
   lastUpdated: string | null;
+  truncated: boolean;
 };
+
+export function isBooksTruncated(books: Books): boolean {
+  return books.attributed && books.confidence.flags.includes("tx_window_truncated");
+}
 
 function unattributedNote(books: AgentBooksUnattributed): string {
   switch (books.reason) {
@@ -184,6 +193,8 @@ export function buildProfileMetrics(books: Books, booksStatusLabel?: string): Pr
       treasuryBalance: na,
       booksStatus: booksStatusLabel ?? BOOKS_STATUS_META.no_books.label,
       confidence: "n/a",
+      truncated: false,
+      generatedAt: null,
     };
   }
   const f = books.financials;
@@ -197,6 +208,8 @@ export function buildProfileMetrics(books: Books, booksStatusLabel?: string): Pr
         : { value: f.treasury_balance_usd },
     booksStatus: booksStatusLabel ?? BOOKS_STATUS_META.live.label,
     confidence: books.confidence.overall,
+    truncated: isBooksTruncated(books),
+    generatedAt: books.generated_at,
   };
 }
 
@@ -220,6 +233,7 @@ export function buildBooksMetrics(books: AgentBooks): BooksMetrics {
     quarantinedInflows: { value: books.classification.quarantined_inflows_usd },
     unknownActivity: { value: deriveUnknownInflows(books) },
     lastUpdated: books.generated_at,
+    truncated: isBooksTruncated(books),
   };
 }
 
@@ -230,6 +244,7 @@ export type DataQuality = {
   booksStatus: string;
   lastIndexed: string | null;
   dataFreshness: "fresh" | "stale" | "unknown";
+  truncated: boolean; // tx fetch hit its cap inside the window — totals may be incomplete
   missing: string[]; // explicit — never hidden
   nextAction: string;
 };
@@ -274,6 +289,9 @@ export function buildDataQuality(agent: QualityAgent, books: Books): DataQuality
     }
     const unknown = deriveUnknownInflows(books);
     if (unknown > 0) missing.push(`$${unknown.toFixed(2)} of inflows unclassified`);
+    if (isBooksTruncated(books)) {
+      missing.push("Transaction window truncated — totals may understate activity");
+    }
 
     if (books.confidence.overall === "low" || books.classification.quarantined_inflows_usd > 0) {
       nextAction = "Review flagged inflows and confirm counterparties.";
@@ -295,6 +313,7 @@ export function buildDataQuality(agent: QualityAgent, books: Books): DataQuality
     lastIndexed: books.attributed ? books.generated_at : null,
     dataFreshness:
       agent.dataStatus === "fresh" ? "fresh" : agent.dataStatus === "stale" ? "stale" : "unknown",
+    truncated: isBooksTruncated(books),
     missing,
     nextAction,
   };
