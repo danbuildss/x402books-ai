@@ -37,6 +37,15 @@ const NAV_GROUPS = [
         ),
       },
       {
+        label: "Transactions",
+        href: "/dashboard/transactions",
+        icon: (
+          <svg className="op-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 5h12M11 2l3 3-3 3M14 11H2M5 8l-3 3 3 3" />
+          </svg>
+        ),
+      },
+      {
         label: "Luca",
         href: "/dashboard/luca",
         icon: (

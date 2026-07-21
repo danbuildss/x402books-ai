@@ -12,16 +12,18 @@ function toSlug(name: string) {
 }
 
 const PROMPTS = [
-  "What is my agent's revenue this week?",
+  "What's my agent's net position this month?",
   "Is my agent profitable?",
   "What's my treasury health?",
-  "Are there any anomalies in my books?",
-  "Summarise my financial activity.",
+  "Why were some of my inflows quarantined?",
+  "How good is my data quality and confidence?",
+  "Generate my 30d books report.",
 ];
 
 function LucaChat() {
   const searchParams = useSearchParams();
   const agentParam = searchParams.get("agent");
+  const promptParam = searchParams.get("q");
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -61,6 +63,12 @@ function LucaChat() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Prefill from ?q= (e.g. Reports quick-generate cards) — user still hits Send.
+  useEffect(() => {
+    if (promptParam) setInput(promptParam);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [promptParam]);
 
   async function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -191,11 +199,23 @@ function LucaChat() {
       {/* Messages */}
       <div className="op-chat-messages">
         {messages.length === 0 && (
-          <div style={{ textAlign: "center", paddingTop: 40, color: "var(--muted)" }}>
-            <div style={{ fontSize: "2rem", marginBottom: 12 }}>◎</div>
-            <p style={{ fontWeight: 700, color: "var(--ink)", fontSize: "0.95rem", margin: "0 0 6px" }}>Ask Luca about your agent</p>
-            <p style={{ fontSize: "0.8rem", maxWidth: 380, margin: "0 auto", lineHeight: 1.55 }}>
-              Luca reads your agent&apos;s attributed books and answers financial questions.
+          <div style={{ textAlign: "center", paddingTop: 48, color: "var(--muted)" }}>
+            <div style={{
+              width: 52, height: 52, margin: "0 auto 16px", borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              background: "color-mix(in srgb, #4AE8A0 12%, transparent)",
+              border: "1px solid color-mix(in srgb, #4AE8A0 30%, transparent)",
+              color: "#4AE8A0", fontSize: "1.4rem",
+            }}>◎</div>
+            <p style={{ fontWeight: 700, color: "var(--ink)", fontSize: "1.15rem", margin: "0 0 4px" }}>
+              {(() => { const h = new Date().getHours(); return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"; })()}
+              {selectedSlug ? `, ${selectedSlug}` : ""}
+            </p>
+            <p style={{ fontWeight: 700, color: "#4AE8A0", fontSize: "1rem", margin: "0 0 10px" }}>
+              What should I read for you today?
+            </p>
+            <p style={{ fontSize: "0.8rem", maxWidth: 420, margin: "0 auto", lineHeight: 1.55 }}>
+              Luca answers from your agent&apos;s attributed books only — every figure carries its period and confidence, and missing data is called missing.
               {!isReady && " Link your wallet or select an agent to get started."}
             </p>
           </div>

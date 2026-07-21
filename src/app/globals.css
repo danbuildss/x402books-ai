@@ -12842,3 +12842,22 @@ html, body {
   background: color-mix(in srgb, #4AE8A0 10%, transparent);
   color: #4AE8A0; font-size: 0.95rem; margin-bottom: 12px;
 }
+
+/* ── Dashboard settings two-column ────────────────────────────────────────── */
+.op-settings-cols { display: flex; gap: 20px; align-items: flex-start; }
+.op-settings-nav {
+  display: flex; flex-direction: column; gap: 2px;
+  min-width: 170px; position: sticky; top: 16px;
+  padding: 6px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface);
+}
+.op-settings-nav-item {
+  padding: 7px 10px; border-radius: 6px;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--muted); text-decoration: none;
+}
+.op-settings-nav-item:hover { background: var(--surface-soft); color: var(--ink); }
+@media (max-width: 760px) {
+  .op-settings-cols { flex-direction: column; }
+  .op-settings-nav { flex-direction: row; flex-wrap: wrap; position: static; width: 100%; min-width: 0; }
+}
