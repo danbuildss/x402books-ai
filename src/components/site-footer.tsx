@@ -1,3 +1,4 @@
+import { DOCS_URL } from "@/lib/docs-url";
 import Link from "next/link";
 import { LogoMark } from "@/components/logo";
 import { BANKR_ONLY } from "@/lib/focus";
@@ -33,7 +34,7 @@ export function SiteFooter() {
             <Link href="/registry#verify">Submit Agent</Link>
             <Link href="/manifest">Manifest Guide</Link>
             <Link href="/validate">Validate Manifest</Link>
-            <Link href="/docs">Documentation</Link>
+            <a href={DOCS_URL} target="_blank" rel="noreferrer">Documentation ↗</a>
           </div>
           <div>
             <h4>Company</h4>

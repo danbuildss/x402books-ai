@@ -10,6 +10,7 @@ import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
+import { DOCS_URL } from "@/lib/docs-url";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
@@ -243,6 +244,53 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
       <span className="reg-cell-num reg-cell-updated" style={{ color: agent.lastChecked ? DATA_STATUS_COLOR[agent.dataStatus] : "var(--muted)" }}>
         {agent.lastChecked ? relativeTime(agent.lastChecked) : "—"}
       </span>
+    </Link>
+  );
+}
+
+// ── Mobile agent card ─────────────────────────────────────────────────────────
+// Rendered instead of the 11-column grid below the mobile breakpoint — phones
+// never horizontal-scroll a 1220px table. Same data, compact hierarchy:
+// identity → bio → one status → three metrics → freshness + CTA.
+
+function MobileAgentCard({ agent, economics }: { agent: PublicAgent; economics?: AgentGDPEntry }) {
+  const status = PROFILE_STATUS_META[agent.profileStatus];
+  const booksMeta = BOOKS_STATUS_META[agent.booksStatus];
+  return (
+    <Link href={`/registry/${agent.slug}`} className="reg-mcard">
+      <div className="reg-mcard-head">
+        <AgentAvatar agent={agent} size={32} />
+        <div className="reg-mcard-id">
+          <span className="reg-mcard-name">
+            {agent.name}
+            {agent.symbol && agent.symbol !== "—" && <span className="reg-row-sym"> {agent.symbol}</span>}
+          </span>
+          {agent.bio
+            ? <span className="reg-mcard-bio">{agent.bio.length > 90 ? `${agent.bio.slice(0, 90)}…` : agent.bio}</span>
+            : <span className="reg-mcard-bio reg-mcard-bio-empty">{agent.ecosystem} agent · no bio yet</span>}
+        </div>
+        <StatusPill meta={status} />
+      </div>
+      <div className="reg-mcard-metrics">
+        <div className="reg-mcard-metric">
+          <span className="reg-mcard-metric-label">Treasury</span>
+          <MoneyCell value={economics?.treasury_balance_usd} />
+        </div>
+        <div className="reg-mcard-metric">
+          <span className="reg-mcard-metric-label">30d Rev</span>
+          <MoneyCell value={economics?.revenue_usd} color="#6DB874" />
+        </div>
+        <div className="reg-mcard-metric">
+          <span className="reg-mcard-metric-label">Books</span>
+          <StatusPill meta={booksMeta} />
+        </div>
+      </div>
+      <div className="reg-mcard-foot">
+        <span style={{ color: agent.lastChecked ? DATA_STATUS_COLOR[agent.dataStatus] : "var(--muted)" }}>
+          {agent.lastChecked ? `Updated ${relativeTime(agent.lastChecked)}` : "Not yet checked"}
+        </span>
+        <span className="reg-mcard-cta">View profile →</span>
+      </div>
     </Link>
   );
 }
@@ -774,7 +822,7 @@ export function RegistryClient({
           <Link href="/adopt">Adopt</Link>
           <Link href="/research">Research</Link>
           <Link href="/api">API</Link>
-          <Link href="/docs">Docs</Link>
+          <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs ↗</a>
           <Link href="/luca">Luca</Link>
         </nav>
         <div className="lp-header-right">
@@ -877,6 +925,15 @@ export function RegistryClient({
               ? `${agents.length} agents indexed`
               : `${sorted.length} of ${agents.length} agents`}
           </span>
+        </div>
+
+        {/* Mobile cards — shown below the breakpoint instead of the wide table */}
+        <div className="reg-mcards">
+          {paginated.length === 0 ? (
+            <div className="reg-empty-cards">No agents match your filters.</div>
+          ) : (
+            paginated.map((a) => <MobileAgentCard key={a.name} agent={a} economics={economics[toSlug(a.name)]} />)
+          )}
         </div>
 
         {/* Terminal table */}

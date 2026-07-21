@@ -21,7 +21,10 @@ import {
   type ProfileMetrics,
   type RevenueBuckets,
   type WalletRole,
+  type WalletSource,
 } from "@/lib/books-presenter";
+import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
+import { WALLET_STATUS_META } from "@/app/registry/filters";
 
 // ── Shared formatting ─────────────────────────────────────────────────────────
 
@@ -72,6 +75,52 @@ function TextTile({ label, value, color }: { label: string; value: string; color
 
 // ── P3 item 4 — financial metrics strip (6 tiles, early on the page) ─────────
 
+// Small amber chip marking incomplete data — truncated totals must never look complete.
+export function TruncatedChip() {
+  return (
+    <span
+      title="Transaction fetch hit its limit inside this window — older in-window activity was not scanned, so totals may understate real activity."
+      style={{
+        fontSize: "0.6rem", fontWeight: 700, padding: "1px 7px", borderRadius: 4,
+        background: "color-mix(in srgb, #F59E0B 12%, transparent)",
+        border: "1px solid color-mix(in srgb, #F59E0B 35%, transparent)",
+        color: "#F59E0B", textTransform: "uppercase", letterSpacing: "0.05em",
+      }}
+    >
+      Truncated
+    </span>
+  );
+}
+
+function asOf(ts: string | null): string | null {
+  if (!ts) return null;
+  const t = new Date(ts);
+  if (Number.isNaN(t.getTime())) return null;
+  return t.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+// Footer under every financial metric surface: period source + "as of" + staleness.
+// Financial numbers must never look live when they are old.
+export function MetricsAsOfLine({ generatedAt, truncated }: { generatedAt: string | null; truncated: boolean }) {
+  const label = asOf(generatedAt);
+  const ageMs = generatedAt ? Date.now() - new Date(generatedAt).getTime() : null;
+  const isStale = ageMs != null && ageMs > 8 * 60 * 60 * 1000; // beyond 2 refresh cycles
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+      <span style={{ fontSize: "0.66rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+        30d window · {label ? `as of ${label}` : "not yet computed"}
+      </span>
+      {isStale && (
+        <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#F97316", textTransform: "uppercase", letterSpacing: "0.05em" }}
+          title="These figures are from an older indexing run and may not reflect current activity.">
+          Stale
+        </span>
+      )}
+      {truncated && <TruncatedChip />}
+    </div>
+  );
+}
+
 export function MetricsStrip({ metrics }: { metrics: ProfileMetrics }) {
   const confColor =
     metrics.confidence === "high" ? "#6DB874" : metrics.confidence === "medium" ? "#F59E0B" : metrics.confidence === "low" ? "#ef4444" : "var(--muted)";
@@ -85,6 +134,9 @@ export function MetricsStrip({ metrics }: { metrics: ProfileMetrics }) {
         <TextTile label="Books Status" value={metrics.booksStatus} />
         <TextTile label="Confidence" value={metrics.confidence} color={confColor} />
       </div>
+      {(metrics.generatedAt || metrics.truncated) && (
+        <MetricsAsOfLine generatedAt={metrics.generatedAt} truncated={metrics.truncated} />
+      )}
     </section>
   );
 }
@@ -111,6 +163,9 @@ export function BooksSummaryStrip({ metrics }: { metrics: BooksMetrics }) {
         <span style={{ fontSize: "0.74rem", fontFamily: "var(--font-mono)", color: "var(--muted)" }}>
           {metrics.lastUpdated ? new Date(metrics.lastUpdated).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
         </span>
+      </div>
+      <div style={{ gridColumn: "1 / -1" }}>
+        <MetricsAsOfLine generatedAt={metrics.lastUpdated} truncated={metrics.truncated} />
       </div>
     </div>
   );
@@ -189,6 +244,18 @@ const SOURCE_COLORS: Record<string, string> = {
 
 const ROLE_ORDER: WalletRole[] = ["treasury", "deployer", "operator", "unknown"];
 
+// Attribution trust order. Source dominates role in the display hierarchy:
+// a discovered (candidate) wallet must never visually outrank a
+// manifest-declared one, regardless of its declared role.
+const SOURCE_ORDER: WalletSource[] = ["manifest", "admin", "inferred", "candidate"];
+
+const SOURCE_GROUP_META: Record<WalletSource, { title: string; sub: string; dimmed: boolean }> = {
+  manifest:  { title: "Manifest-declared", sub: "Declared by the team via .agent/wallets.json — used for books", dimmed: false },
+  admin:     { title: "Admin-added",       sub: "Added after manual review",                                    dimmed: true },
+  inferred:  { title: "Inferred",          sub: "Attributed by Luca — not team-declared",                       dimmed: true },
+  candidate: { title: "Candidate / discovered", sub: "Discovered from public data — unconfirmed, never used for books", dimmed: true },
+};
+
 function SourcePill({ source }: { source: string }) {
   const color = SOURCE_COLORS[source] ?? "var(--muted)";
   return (
@@ -220,16 +287,34 @@ export function WalletAttributionSection({ agent, toolDecisionsBlock }: { agent:
 
   const operationalWallets = allWallets.filter((w) => !isContract(w));
   const contractWallets = allWallets.filter(isContract);
-  const byRole = new Map<WalletRole, AgentWallet[]>();
+  // Group by SOURCE first (trust order), then role order within each group.
+  const roleRank = (w: AgentWallet) => ROLE_ORDER.indexOf(walletRoleLabel(w.role));
+  const bySource = new Map<WalletSource, AgentWallet[]>();
   for (const w of operationalWallets) {
-    const role = walletRoleLabel(w.role);
-    byRole.set(role, [...(byRole.get(role) ?? []), w]);
+    const src = walletSourceLabel(w.evidenceSource);
+    bySource.set(src, [...(bySource.get(src) ?? []), w]);
   }
+  for (const list of bySource.values()) list.sort((a, b) => roleRank(a) - roleRank(b));
   const hasManifest = operationalWallets.some((w) => walletSourceLabel(w.evidenceSource) === "manifest");
+
+  const wsMeta = WALLET_STATUS_META[agent.walletStatus];
 
   return (
     <section className="prof-section" id="wallet-attribution">
-      <p className="prof-section-title">Wallet Attribution</p>
+      <p className="prof-section-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        Wallet Attribution
+        <span
+          title={wsMeta.tip}
+          style={{
+            fontSize: "0.62rem", fontWeight: 600, padding: "1px 8px", borderRadius: 99,
+            border: `1px solid color-mix(in srgb, ${wsMeta.color} 30%, transparent)`,
+            background: `color-mix(in srgb, ${wsMeta.color} 9%, transparent)`,
+            color: wsMeta.color, textTransform: "none", letterSpacing: 0,
+          }}
+        >
+          {wsMeta.label}
+        </span>
+      </p>
 
       {!hasManifest && allWallets.length > 0 && (
         <div style={{ marginBottom: 10, padding: "8px 12px", background: "#f59e0b10", border: "1px solid #f59e0b30", borderRadius: 6 }}>
@@ -240,30 +325,42 @@ export function WalletAttributionSection({ agent, toolDecisionsBlock }: { agent:
         </div>
       )}
 
-      {ROLE_ORDER.map((role) => {
-        const wallets = byRole.get(role);
+      {SOURCE_ORDER.map((source) => {
+        const wallets = bySource.get(source);
         if (!wallets || wallets.length === 0) return null;
+        const meta = SOURCE_GROUP_META[source];
         return (
-          <div key={role} style={{ marginBottom: 10 }}>
-            <p style={{ margin: "0 0 6px", ...LABEL_CAPS, color: role === "unknown" ? "var(--muted)" : "var(--ink)" }}>
-              {role === "unknown" ? "Unclassified role" : role}
+          <div key={source} style={{ marginBottom: 12, opacity: meta.dimmed ? 0.72 : 1 }}>
+            <p style={{ margin: "0 0 2px", ...LABEL_CAPS, color: meta.dimmed ? "var(--muted)" : "var(--ink)" }}>
+              {meta.title}
             </p>
-            {wallets.map((w) => (
-              <div key={w.address} className="reg-card-wallet-row">
-                <SourcePill source={walletSourceLabel(w.evidenceSource)} />
-                <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
-                {w.booksEligible && (
-                  <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#22c55e" }} title="Counted toward agent books">
-                    books ✓
-                  </span>
-                )}
-                {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
-                <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
-                  {truncate(w.address)}
-                </a>
-                {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
-              </div>
-            ))}
+            <p style={{ margin: "0 0 6px", fontSize: "0.66rem", color: "var(--muted)" }}>{meta.sub}</p>
+            {wallets.map((w) => {
+              const eligibility = isBooksEligibleWallet(w, agent.tokenAddress);
+              return (
+                <div key={w.address} className="reg-card-wallet-row">
+                  <SourcePill source={source} />
+                  <span className={`reg-wallet-label-pill reg-wallet-${w.label.replace(/\s+/g, "-")}`}>{w.label}</span>
+                  {eligibility.eligible ? (
+                    <span style={{ fontSize: "0.6rem", fontWeight: 700, color: "#22c55e" }} title="Counted toward agent books">
+                      books ✓
+                    </span>
+                  ) : (
+                    <span
+                      style={{ fontSize: "0.6rem", fontWeight: 600, color: "var(--muted)", textDecoration: "underline dotted" }}
+                      title={eligibility.reason ?? "Not eligible for books"}
+                    >
+                      not in books
+                    </span>
+                  )}
+                  {w.chain && <span className="reg-wallet-chain">{w.chain}</span>}
+                  <a href={`https://basescan.org/address/${w.address}`} target="_blank" rel="noreferrer" className="reg-mono reg-wallet-addr">
+                    {truncate(w.address)}
+                  </a>
+                  {w.notes && <span className="reg-wallet-note">{w.notes}</span>}
+                </div>
+              );
+            })}
           </div>
         );
       })}
@@ -313,6 +410,9 @@ export function DataQualityBlock({ dq }: { dq: DataQuality }) {
     ["Books status", dq.booksStatus],
     ["Last indexed", dq.lastIndexed ? new Date(dq.lastIndexed).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "Never"],
     ["Data freshness", <span key="f" style={{ color: freshColor, fontWeight: 600, textTransform: "capitalize" }}>{dq.dataFreshness}</span>],
+    ["Transaction coverage", dq.truncated
+      ? <span key="t" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><TruncatedChip /><span style={{ color: "var(--muted)" }}>window incomplete</span></span>
+      : <span key="t" style={{ color: "#6DB874", fontWeight: 600 }}>Complete</span>],
   ];
   return (
     <section className="prof-section" id="data-quality">

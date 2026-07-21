@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/effects";
 import { CardNav } from "@/components/card-nav";
+import { DOCS_URL } from "@/lib/docs-url";
 
 const SOCIAL = [
   {
@@ -32,7 +33,7 @@ const NAV_LINKS = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/adopt",       label: "Adopt"       },
   { href: "/research",    label: "Research"    },
-  { href: "/docs",        label: "Docs"        },
+  { href: DOCS_URL,       label: "Docs",  external: true },
   { href: "/luca",        label: "Luca"        },
 ];
 
@@ -49,9 +50,11 @@ export function HomeHeader() {
       <header className="lp-header">
         <a href="/" className="lp-brand"><Logo /></a>
         <nav className="lp-nav" aria-label="Main navigation">
-          {NAV_LINKS.map((l) => (
-            <Link key={l.label} href={l.href}>{l.label}</Link>
-          ))}
+          {NAV_LINKS.map((l) =>
+            l.external
+              ? <a key={l.label} href={l.href} target="_blank" rel="noreferrer">{l.label} ↗</a>
+              : <Link key={l.label} href={l.href}>{l.label}</Link>,
+          )}
         </nav>
         <div className="lp-header-right">
           <div className="lp-social-icons lp-social-icons-desktop">

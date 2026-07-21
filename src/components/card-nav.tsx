@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { DOCS_URL } from "@/lib/docs-url";
 import { LogoMark } from "@/components/logo";
 
 type NavLink = { label: string; href: string };
@@ -22,7 +23,7 @@ const ITEMS: NavItem[] = [
       { label: "Methodology", href: "/methodology" },
       { label: "Submit Agent", href: "/registry#verify" },
       { label: "Validate Manifest", href: "/validate" },
-      { label: "Documentation", href: "/docs" },
+      { label: "Documentation", href: DOCS_URL },
     ],
   },
   {

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
 import { Logo } from "@/components/logo";
+import { DOCS_URL } from "@/lib/docs-url";
 import { ThemeToggle } from "@/components/effects";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
@@ -2016,7 +2017,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           <Link href="/adopt">Adopt</Link>
           <Link href="/research">Research</Link>
           <Link href="/api">API</Link>
-          <Link href="/docs">Docs</Link>
+          <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs ↗</a>
           <Link href="/luca">Luca</Link>
         </nav>
         <div className="lp-header-right">
@@ -2120,46 +2121,41 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </div>
         )}
 
-        {/* 3 — Verification + wallet status (compact pill row) */}
+        {/* 3 — Exactly three labeled pills: Identity / Books / Data.
+            Wallet status lives in the wallet section; treasury health lives in
+            the metrics; momentum lives in the metrics strip. No badge pile. */}
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
-          <StatusBadge status={agent.verificationStatus} />
-          {([
-            { meta: PROFILE_STATUS_META[agent.profileStatus], prefix: "Profile" },
-            { meta: WALLET_STATUS_META[agent.walletStatus], prefix: "Wallets" },
-            { meta: BOOKS_STATUS_META[agent.booksStatus], prefix: "Books" },
-          ] as const).map(({ meta, prefix }) => (
-            <span
-              key={prefix}
-              title={meta.tip}
-              style={{
-                fontSize: "0.65rem", fontWeight: 600, padding: "2px 8px", borderRadius: 99,
-                border: `1px solid color-mix(in srgb, ${meta.color} 30%, transparent)`,
-                background: `color-mix(in srgb, ${meta.color} 9%, transparent)`,
-                color: meta.color, whiteSpace: "nowrap",
-              }}
-            >
-              {prefix}: {meta.label}
-            </span>
-          ))}
-          <HealthBadge h={agent.treasuryHealth} />
           {(() => {
-            if (!booksHistory || booksHistory.length < 2) return null;
-            const m = computeMomentum(booksHistory, 7);
-            if (!m) return null;
-            const dir = m.revenue.direction;
-            const icon  = dir === "growing" ? "↑" : dir === "declining" ? "↓" : "→";
-            const color = dir === "growing" ? "#6DB874" : dir === "declining" ? "#ef4444" : "var(--muted)";
-            const pct   = m.revenue.pct;
-            return (
-              <span style={{
-                fontSize: "0.65rem", fontWeight: 700, padding: "2px 7px", borderRadius: 99,
-                background: `color-mix(in srgb, ${color} 12%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${color} 25%, transparent)`,
-                color, fontFamily: "monospace",
-              }}>
-                {icon} Rev {dir === "stable" ? "stable" : `${pct > 0 ? "+" : ""}${pct.toFixed(1)}%`} 7d
+            const dataTruncated = books?.attributed && books.confidence.flags.includes("tx_window_truncated");
+            const dataMeta =
+              dataTruncated
+                ? { label: "Truncated", tip: "Transaction fetch hit its limit — financial totals may be incomplete.", color: "#F59E0B" }
+                : agent.dataStatus === "fresh"
+                  ? { label: "Fresh", tip: "Registry data checked within the last 7 days.", color: "#6DB874" }
+                  : agent.dataStatus === "stale"
+                    ? { label: "Stale", tip: "Registry data has not been checked recently.", color: "#F97316" }
+                    : { label: "Partial", tip: "Some registry data has never been checked.", color: "var(--muted)" };
+            const booksMeta = BOOKS_STATUS_META[agent.booksStatus];
+            const idMeta = STATUS_META[agent.verificationStatus];
+            const pills = [
+              { prefix: "Identity", label: idMeta.label, tip: PROFILE_STATUS_META[agent.profileStatus].tip, color: PROFILE_STATUS_META[agent.profileStatus].color },
+              { prefix: "Books", label: booksMeta.label, tip: booksMeta.tip, color: booksMeta.color },
+              { prefix: "Data", label: dataMeta.label, tip: dataMeta.tip, color: dataMeta.color },
+            ];
+            return pills.map((p) => (
+              <span
+                key={p.prefix}
+                title={p.tip}
+                style={{
+                  fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
+                  border: `1px solid color-mix(in srgb, ${p.color} 30%, transparent)`,
+                  background: `color-mix(in srgb, ${p.color} 9%, transparent)`,
+                  color: p.color, whiteSpace: "nowrap",
+                }}
+              >
+                {p.prefix}: {p.label}
               </span>
-            );
+            ));
           })()}
         </div>
 
@@ -2173,6 +2169,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           lastChecked={agent.lastChecked}
           classification={classification}
         />
+
+        {/* When there are no books, the manifest/claim CTA IS the next action —
+            surface it here instead of burying it below empty sections. */}
+        {agent.booksStatus === "no_books" && (
+          <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+        )}
 
         <div className="prof-body">
 
@@ -2217,8 +2219,10 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </details>
           {economics && <AgentEconomicsBlock economics={economics} />}
 
-          {/* 11 — Claim / submit manifest CTA */}
-          <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+          {/* 11 — Claim / submit manifest CTA (hoisted above when no books) */}
+          {agent.booksStatus !== "no_books" && (
+            <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+          )}
 
           {/* Secondary tabs — demoted from the old tab system */}
           <div className="prof-tabs prof-subtabs" style={{ marginTop: 8 }}>
