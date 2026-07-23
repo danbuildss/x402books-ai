@@ -44,6 +44,50 @@
   --sidebar-w: 240px;
 
   --shadow: 0 4px 16px rgba(15, 15, 17, 0.07);
+
+  /* ── Typography tokens (DESIGN.md §2) ──────────────────────────────── */
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "DM Sans", system-ui, sans-serif;
+
+  /* ── Border radius tokens (DESIGN.md §3) ───────────────────────────── */
+  --radius-sm:   3px;   /* badges, chips, tags */
+  --radius-md:   6px;   /* buttons, inputs */
+  --radius-card: 8px;   /* LedgerCard, MetricCard */
+
+  /* ── Spacing tokens (DESIGN.md §3) ─────────────────────────────────── */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* ── Page layout tokens ─────────────────────────────────────────────── */
+  --page-max:     1200px;
+  --page-pad:     40px;
+  --page-pad-sm:  16px;
+  --section-gap:  48px;
+
+  /* ── Type scale tokens (DESIGN.md §2) ──────────────────────────────── */
+  --text-display:   2.4rem;
+  --text-title:     1.6rem;
+  --text-metric:    1.8rem;
+  --text-metric-lg: 2.8rem;
+  --text-body:      0.875rem;
+  --text-body-sm:   0.8rem;
+  --text-data:      0.82rem;
+  --text-eyebrow:   0.6rem;
+  --text-label:     0.75rem;
+  --text-badge:     0.62rem;
+
+  /* ── Ink aliases (DESIGN.md §4) ────────────────────────────────────── */
+  --ink-mid:        #8B96A8;
+  --surface-hover:  rgba(255,255,255,0.025);
 }
 
 /* ── Terminal Ledger A — dark theme (official Zetta UI) ────────────────────── */
@@ -88,6 +132,10 @@
   --glow-c:        #5B9EF4;
 
   --shadow: 0 8px 28px rgba(0, 0, 0, 0.50);
+
+  /* Dark overrides for new tokens */
+  --ink-mid:        #8B96A8;
+  --surface-hover:  rgba(255,255,255,0.025);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -120,6 +168,8 @@
     --glow-b:        #3ACC8A;
     --glow-c:        #5B9EF4;
     --shadow: 0 8px 28px rgba(0, 0, 0, 0.50);
+    --ink-mid:       #8B96A8;
+    --surface-hover: rgba(255,255,255,0.025);
   }
 }
 
