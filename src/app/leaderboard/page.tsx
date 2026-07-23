@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { HomeHeader } from "@/app/home-header";
 import { SiteFooter } from "@/components/site-footer";
-import { MetricCard, MetricGrid } from "@/components/ui/metric";
-import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
+import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
 import { EcoBadge, StatusBadge } from "@/components/ui/badge";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
@@ -86,7 +85,7 @@ function GDPSparkline({
           fill={color}
         />
       </svg>
-      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#4AE8A0" : "#F46060", fontFamily: "monospace", fontWeight: 600 }}>
+      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "var(--accent)" : "#F46060", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
         {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
         <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
           across {snapshots.length} snapshots
@@ -107,14 +106,14 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
   return (
     <div style={{
       marginBottom: 24,
-      padding: "18px 20px",
-      background: "var(--surface-soft)",
+      padding: "16px 20px",
+      background: "var(--surface)",
       border: "1px solid var(--line)",
-      borderRadius: 10,
+      borderRadius: 8,
     }}>
-      <p style={{ margin: "0 0 14px", fontSize: "0.62rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>
+      <div className="tla-section-label" style={{ marginBottom: 14 }}>
         Agent GDP Trend · {oldest} → {newest}
-      </p>
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
         {([
           { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "#4AE8A0" },
@@ -122,8 +121,8 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
           { label: "Net Income", field: "total_net_income_usd" as TrendField, color: "#5B9EF4" },
         ]).map(({ label, field, color }) => (
           <div key={label}>
-            <p style={{ margin: "0 0 8px", fontSize: "0.72rem", color: "var(--muted)", fontWeight: 500 }}>{label}</p>
-            <p style={{ margin: "0 0 6px", fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color }}>
+            <p style={{ margin: "0 0 8px", fontSize: "0.68rem", color: "var(--muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em" }}>{label}</p>
+            <p style={{ margin: "0 0 6px", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.9rem", color }}>
               {fmtUSD(ordered[ordered.length - 1][field])}
             </p>
             <GDPSparkline snapshots={ordered} field={field} color={color} />
@@ -193,49 +192,34 @@ export default async function LeaderboardPage() {
         </nav>
 
         {/* Header */}
-        <div style={{ marginBottom: 36 }}>
-          <SectionLabel style={{ marginBottom: 8 }}>Agent Economy · 30 days</SectionLabel>
-          <h1 style={{ margin: "0 0 10px", fontSize: "clamp(1.6rem, 4vw, 2.4rem)", fontWeight: 800, lineHeight: 1.15 }}>
+        <div style={{ marginBottom: 32 }}>
+          <div className="tla-section-label" style={{ marginBottom: 10 }}>Agent Economy · 30 days</div>
+          <h1 style={{ margin: "0 0 10px", fontSize: "clamp(1.4rem, 3vw, 2rem)", fontWeight: 800, lineHeight: 1.15, fontFamily: "var(--font-mono)", letterSpacing: "-0.02em", color: "var(--ink-em)" }}>
             Economic Leaderboard
           </h1>
-          <p style={{ margin: 0, color: "var(--muted)", fontSize: "0.9rem", maxWidth: 560, lineHeight: 1.65 }}>
+          <p style={{ margin: 0, color: "var(--ink-mid)", fontSize: "0.82rem", maxWidth: 560, lineHeight: 1.65 }}>
             Ranked by 30-day revenue. Only agents with declared wallet manifests are included —{" "}
             {gdp ? `${gdp.attributed_agents} of ${gdp.total_agents} indexed agents are attributed.` : "attribution is the prerequisite."}
           </p>
         </div>
 
-        {/* GDP aggregate bar */}
+        {/* GDP aggregate — seamless TL-A metric grid */}
         {gdp && (
-          <MetricGrid cols={3} style={{ marginBottom: 36 }}>
-            <MetricCard
-              label="Agent GDP (Revenue)"
-              value={fmtUSD(gdp.total_revenue_usd)}
-              valueColor="#4AE8A0"
-            />
-            <MetricCard
-              label="Total Expenses"
-              value={fmtUSD(gdp.total_expenses_usd)}
-            />
-            <MetricCard
-              label="Net Income"
-              value={fmtUSD(gdp.total_net_income_usd)}
-              valueColor={gdp.total_net_income_usd >= 0 ? "#4AE8A0" : "#F46060"}
-            />
-            <MetricCard
-              label="Attributed Agents"
-              value={String(gdp.attributed_agents)}
-            />
-            <MetricCard
-              label="ERC-8004 Indexed"
-              value={String(gdp.erc8004_agents)}
-              valueColor="#8B7CF6"
-            />
-            <MetricCard
-              label="Total Indexed"
-              value={String(gdp.total_agents)}
-              valueColor="var(--muted)"
-            />
-          </MetricGrid>
+          <div className="tla-metric-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", marginBottom: 28 }}>
+            {[
+              { label: "Agent GDP (Revenue)", value: fmtUSD(gdp.total_revenue_usd),       color: "var(--accent)" },
+              { label: "Total Expenses",       value: fmtUSD(gdp.total_expenses_usd),      color: "var(--ink-hi)" },
+              { label: "Net Income",           value: fmtUSD(gdp.total_net_income_usd),    color: gdp.total_net_income_usd >= 0 ? "var(--accent)" : "var(--negative, #F46060)" },
+              { label: "Attributed Agents",    value: String(gdp.attributed_agents),       color: "var(--ink-hi)" },
+              { label: "ERC-8004 Indexed",     value: String(gdp.erc8004_agents),          color: "#8B7CF6" },
+              { label: "Total Indexed",        value: String(gdp.total_agents),            color: "var(--muted)" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="tla-metric-cell">
+                <div className="tla-metric-label">{label}</div>
+                <div className="tla-metric-value" style={{ color }}>{value}</div>
+              </div>
+            ))}
+          </div>
         )}
 
         {/* Last updated + methodology link */}
@@ -268,7 +252,7 @@ export default async function LeaderboardPage() {
             color: "var(--muted)",
             lineHeight: 1.6,
           }}>
-            <strong style={{ color: "var(--fg)" }}>Attribution gap: </strong>
+            <strong style={{ color: "var(--ink-em)" }}>Attribution gap: </strong>
             {gdp.total_agents - gdp.attributed_agents} of {gdp.total_agents} indexed agents — including {gdp.erc8004_agents} indexed via ERC-8004 — have not yet declared a wallet manifest and are excluded from financial rankings.
             Their on-chain identity is real and verified. Their finances become readable once they declare wallets.{" "}
             <Link href="/methodology" style={{ color: "var(--accent)" }}>Why attribution is required →</Link>
@@ -332,7 +316,7 @@ export default async function LeaderboardPage() {
                       vs ? (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
                           <span style={{
-                            fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
+                            fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 3,
                             background: `color-mix(in srgb, ${scoreColor} 12%, transparent)`,
                             border: `1px solid color-mix(in srgb, ${scoreColor} 28%, transparent)`,
                             color: scoreColor, fontFamily: "var(--font-mono)",

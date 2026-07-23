@@ -92,8 +92,8 @@ export function LeaderboardTable({
       <div style={{
         padding: "48px 28px",
         border: "1px solid var(--line)",
-        borderRadius: 10,
-        background: "var(--surface-soft)",
+        borderRadius: 8,
+        background: "var(--surface)",
         textAlign: "center",
       }}>
         <p style={{ margin: "0 0 8px", fontWeight: 700, fontSize: "0.95rem" }}>No attributed agents yet.</p>
@@ -107,36 +107,21 @@ export function LeaderboardTable({
 
   return (
     <div>
-      {/* Sort pills */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-        {SORT_PILLS.map(({ label, field }) => {
-          const active = sortField === field;
-          return (
-            <button
-              key={field}
-              onClick={() => setSortField(field)}
-              style={{
-                fontSize: "0.65rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.07em",
-                padding: "5px 12px",
-                borderRadius: 6,
-                border: `1px solid ${active ? "var(--accent)" : "var(--line)"}`,
-                background: active ? "rgba(74,232,160,0.12)" : "transparent",
-                color: active ? "var(--accent)" : "var(--muted)",
-                cursor: "pointer",
-                transition: "all 0.1s",
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
+      {/* TL-A segmented tab bar — no floating pills */}
+      <div className="tla-tabs-bar" style={{ marginBottom: 16 }}>
+        {SORT_PILLS.map(({ label, field }) => (
+          <button
+            key={field}
+            onClick={() => setSortField(field)}
+            className={`tla-tab-btn${sortField === field ? " active" : ""}`}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
       <LedgerCard eyebrow="Top Agents · 30 Days" style={{ marginBottom: 0 }}>
-        <div style={{ border: "1px solid var(--line)", borderRadius: 10, overflow: "hidden" }}>
+        <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
 
           {/* Header */}
           <div style={{
