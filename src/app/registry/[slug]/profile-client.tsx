@@ -62,7 +62,7 @@ function ConfidenceLabelBadge({ slug }: { slug: string }) {
   if (!label) return null;
   const meta = CONFIDENCE_META[label.confidence_level];
   return (
-    <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, border: `1px solid ${meta.color}44`, background: `${meta.color}0d` }}>
+    <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: "var(--radius-card, 8px)", border: `1px solid ${meta.color}44`, background: `${meta.color}0d` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: label.public_note ? 6 : 0 }}>
         <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
         <span style={{ fontSize: "0.75rem", fontWeight: 700, color: meta.color }}>{meta.label}</span>
@@ -151,7 +151,7 @@ function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; ag
     <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
           Not attributed
         </span>
       </div>
@@ -280,7 +280,7 @@ function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUn
         <section className="prof-section" style={{ borderLeft: "3px solid var(--muted)", paddingLeft: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--muted)18", border: "1px solid var(--muted)40", color: "var(--muted)", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3, background: "var(--muted)18", border: "1px solid var(--muted)40", color: "var(--muted)", letterSpacing: "0.02em" }}>
               Under Review
             </span>
           </div>
@@ -301,7 +301,7 @@ function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUn
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
         <span style={{
-          fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
+          fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3,
           background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)",
           letterSpacing: "0.02em",
         }}>
@@ -761,7 +761,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
               {visiblePatterns.map((p) => (
                 <span key={p} style={{
                   fontSize: "0.62rem", fontWeight: 600, padding: "2px 7px",
-                  borderRadius: 99, background: "rgba(80,70,50,0.07)",
+                  borderRadius: 3, background: "rgba(80,70,50,0.07)",
                   color: "#7a7364", border: "1px solid rgba(80,70,50,0.12)",
                 }}>
                   {CARD_PATTERN_LABEL[p] ?? p}
@@ -1039,7 +1039,7 @@ function InferenceTab({
       <section className="prof-section">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <p className="prof-section-title" style={{ margin: 0 }}>Inference · Last {ia.periodDays}d</p>
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "var(--accent)10", border: "1px solid var(--accent)30", color: "var(--accent)" }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 3, background: "var(--accent)10", border: "1px solid var(--accent)30", color: "var(--accent)" }}>
             Surplus Pilot
           </span>
         </div>
@@ -1101,11 +1101,11 @@ function InferenceTab({
         <p className="prof-section-title">Monthly Statement · {month}</p>
         <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 12px" }}>{verdict}</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+          <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
             {ia.costStatus === "actual" ? "Actual billing" : ia.costStatus === "estimated" ? "Estimated spend" : "Cost data missing"}
           </span>
           {ia.primaryProvider && (
-            <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)", textTransform: "capitalize" }}>
+            <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)", textTransform: "capitalize" }}>
               via {ia.primaryProvider}
             </span>
           )}
@@ -1257,7 +1257,7 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
     <section className="prof-section">
       <p className="prof-section-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         Tool Decisions
-        <span style={{ fontSize: "0.65rem", fontWeight: 500, color: "var(--muted)", background: "var(--surface-soft)", padding: "1px 6px", borderRadius: 99, border: "1px solid var(--line)" }}>
+        <span style={{ fontSize: "0.65rem", fontWeight: 500, color: "var(--muted)", background: "var(--surface-soft)", padding: "1px 6px", borderRadius: 3, border: "1px solid var(--line)" }}>
           via Nipmod
         </span>
       </p>
@@ -1300,7 +1300,7 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
                 <span style={{ fontSize: "0.68rem", color: "var(--muted)", flexShrink: 0 }}>{e.source}</span>
               )}
               <span style={{
-                fontSize: "0.64rem", fontWeight: 600, padding: "2px 6px", borderRadius: 99,
+                fontSize: "0.64rem", fontWeight: 600, padding: "2px 6px", borderRadius: 3,
                 color: rs.color, background: rs.bg, border: `1px solid ${rs.border}`,
                 flexShrink: 0, textTransform: "capitalize",
               }}>
@@ -2075,11 +2075,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           <div style={{
             display: "flex", flexDirection: "column", gap: 6,
             padding: "10px 14px",
-            background: "color-mix(in srgb, #F4B942 8%, var(--surface))",
-            border: "1px solid color-mix(in srgb, #F4B942 30%, transparent)",
+            background: "color-mix(in srgb, #F4B942 6%, var(--surface))",
+            border: "1px solid color-mix(in srgb, #F4B942 25%, transparent)",
             borderLeft: "3px solid #F4B942",
-            borderRadius: 8,
-            marginBottom: 6,
+            borderRadius: "var(--radius-card, 8px)",
+            marginBottom: 8,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
               <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#F4B942" }}>
@@ -2089,11 +2089,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").map((a, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{
-                  fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
-                  padding: "2px 5px", borderRadius: 3,
+                  fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
+                  padding: "2px 5px", borderRadius: "var(--radius-sm, 3px)",
                   background: a.severity === "high" ? "color-mix(in srgb, #F46060 15%, transparent)" : "color-mix(in srgb, #F4B942 15%, transparent)",
                   color: a.severity === "high" ? "#F46060" : "#F4B942",
                   flexShrink: 0, marginTop: 1,
+                  fontFamily: "var(--font-sans, sans-serif)",
                 }}>
                   {a.severity}
                 </span>
@@ -2129,10 +2130,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 key={p.prefix}
                 title={p.tip}
                 style={{
-                  fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
-                  border: `1px solid color-mix(in srgb, ${p.color} 30%, transparent)`,
+                  fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 3,
+                  border: `1px solid color-mix(in srgb, ${p.color} 28%, transparent)`,
                   background: `color-mix(in srgb, ${p.color} 9%, transparent)`,
                   color: p.color, whiteSpace: "nowrap",
+                  textTransform: "uppercase", letterSpacing: "0.06em",
+                  fontFamily: "var(--font-sans, sans-serif)",
                 }}
               >
                 {p.prefix}: {p.label}
@@ -2222,11 +2225,12 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                     <span style={{
                       marginLeft: 5,
                       fontSize: "0.6rem", fontWeight: 700,
-                      padding: "1px 5px", borderRadius: 99,
+                      padding: "1px 5px", borderRadius: 3,
                       background: "var(--accent)18",
                       border: "1px solid var(--accent)40",
                       color: "var(--accent)",
                       verticalAlign: "middle",
+                      textTransform: "uppercase", letterSpacing: "0.06em",
                     }}>
                       Live
                     </span>
@@ -2289,7 +2293,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           onClick={() => setShowEmbed(false)}
         >
           <div
-            style={{ background: "var(--surface)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 520, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
+            style={{ background: "var(--surface)", borderRadius: "var(--radius-card, 8px)", border: "1px solid var(--line)", padding: "28px 28px 24px", maxWidth: 520, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
@@ -2309,7 +2313,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <button
                 type="button"
                 onClick={copyEmbed}
-                style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: embedCopied ? "var(--accent)" : "var(--accent-soft)", color: embedCopied ? "#fff" : "var(--accent)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", transition: "background 0.2s" }}
+                style={{ flex: 1, padding: "9px 0", borderRadius: "var(--radius-md, 6px)", border: "none", background: embedCopied ? "var(--accent)" : "var(--accent-soft)", color: embedCopied ? "#0A0C10" : "var(--accent)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", transition: "background 0.2s", fontFamily: "var(--font-mono, monospace)" }}
               >
                 {embedCopied ? "Copied!" : "Copy embed code"}
               </button>
@@ -2317,7 +2321,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 href={`/registry/${slug}/card`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.82rem", textDecoration: "none", display: "flex", alignItems: "center" }}
+                style={{ padding: "9px 16px", borderRadius: "var(--radius-md, 6px)", border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.82rem", textDecoration: "none", display: "flex", alignItems: "center" }}
               >
                 Preview card
               </a>

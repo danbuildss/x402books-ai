@@ -262,7 +262,7 @@ function SourcePill({ source }: { source: string }) {
     <span
       title={`Attribution source: ${source}`}
       style={{
-        fontSize: "0.62rem", fontWeight: 700, padding: "1px 7px", borderRadius: 99,
+        fontSize: "0.6rem", fontWeight: 700, padding: "2px 6px", borderRadius: 3,
         background: `color-mix(in srgb, ${color} 10%, transparent)`,
         border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
         color, textTransform: "lowercase",
@@ -306,7 +306,7 @@ export function WalletAttributionSection({ agent, toolDecisionsBlock }: { agent:
         <span
           title={wsMeta.tip}
           style={{
-            fontSize: "0.62rem", fontWeight: 600, padding: "1px 8px", borderRadius: 99,
+            fontSize: "0.6rem", fontWeight: 600, padding: "2px 6px", borderRadius: 3,
             border: `1px solid color-mix(in srgb, ${wsMeta.color} 30%, transparent)`,
             background: `color-mix(in srgb, ${wsMeta.color} 9%, transparent)`,
             color: wsMeta.color, textTransform: "none", letterSpacing: 0,
