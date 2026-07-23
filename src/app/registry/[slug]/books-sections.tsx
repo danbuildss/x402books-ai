@@ -121,23 +121,49 @@ export function MetricsAsOfLine({ generatedAt, truncated }: { generatedAt: strin
   );
 }
 
+function metricsValueClass(metric: Metric, signed: boolean): string {
+  if (metric.value == null) return "tla-metric-value dim";
+  if (signed) return metric.value >= 0 ? "tla-metric-value pos" : "tla-metric-value neg";
+  return "tla-metric-value";
+}
+
 export function MetricsStrip({ metrics }: { metrics: ProfileMetrics }) {
+  const fmtUsd = (n: number | null) =>
+    n == null ? "—" : "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const confColor =
-    metrics.confidence === "high" ? "#6DB874" : metrics.confidence === "medium" ? "#F59E0B" : metrics.confidence === "low" ? "#ef4444" : "var(--muted)";
+    metrics.confidence === "high" ? "var(--positive)" : metrics.confidence === "medium" ? "var(--warning, #F4B942)" : metrics.confidence === "low" ? "var(--negative)" : "var(--muted)";
+
   return (
-    <section className="prof-section" style={{ padding: 0, border: "none" }}>
-      <div className="prof-metrics">
-        <MetricTile label="30d Revenue" metric={metrics.revenue30d} />
-        <MetricTile label="30d Expenses" metric={metrics.expenses30d} />
-        <MetricTile label="Net Position" metric={metrics.netPosition} signed />
-        <MetricTile label="Treasury Balance" metric={metrics.treasuryBalance} />
-        <TextTile label="Books Status" value={metrics.booksStatus} />
-        <TextTile label="Confidence" value={metrics.confidence} color={confColor} />
+    <div style={{ marginBottom: 4 }}>
+      <div className="tla-metric-grid">
+        <div className="tla-metric-cell">
+          <div className="tla-metric-label">30d Revenue</div>
+          <div className={metricsValueClass(metrics.revenue30d, false)}>{fmtUsd(metrics.revenue30d.value ?? null)}</div>
+        </div>
+        <div className="tla-metric-cell">
+          <div className="tla-metric-label">30d Expenses</div>
+          <div className={metricsValueClass(metrics.expenses30d, false) + " neg"}>{fmtUsd(metrics.expenses30d.value ?? null)}</div>
+        </div>
+        <div className="tla-metric-cell">
+          <div className="tla-metric-label">Net Position</div>
+          <div className={metricsValueClass(metrics.netPosition, true)}>
+            {metrics.netPosition.value != null
+              ? `${metrics.netPosition.value >= 0 ? "+" : "−"}${fmtUsd(metrics.netPosition.value)}`
+              : "—"}
+          </div>
+        </div>
+        <div className="tla-metric-cell">
+          <div className="tla-metric-label">Treasury (stables)</div>
+          <div className="tla-metric-value">{fmtUsd(metrics.treasuryBalance.value ?? null)}</div>
+        </div>
       </div>
       {(metrics.generatedAt || metrics.truncated) && (
-        <MetricsAsOfLine generatedAt={metrics.generatedAt} truncated={metrics.truncated} />
+        <div style={{ marginBottom: 12 }}>
+          <MetricsAsOfLine generatedAt={metrics.generatedAt} truncated={metrics.truncated} />
+        </div>
       )}
-    </section>
+    </div>
   );
 }
 
@@ -262,7 +288,7 @@ function SourcePill({ source }: { source: string }) {
     <span
       title={`Attribution source: ${source}`}
       style={{
-        fontSize: "0.62rem", fontWeight: 700, padding: "1px 7px", borderRadius: 99,
+        fontSize: "0.6rem", fontWeight: 700, padding: "2px 6px", borderRadius: 3,
         background: `color-mix(in srgb, ${color} 10%, transparent)`,
         border: `1px solid color-mix(in srgb, ${color} 28%, transparent)`,
         color, textTransform: "lowercase",
@@ -306,7 +332,7 @@ export function WalletAttributionSection({ agent, toolDecisionsBlock }: { agent:
         <span
           title={wsMeta.tip}
           style={{
-            fontSize: "0.62rem", fontWeight: 600, padding: "1px 8px", borderRadius: 99,
+            fontSize: "0.6rem", fontWeight: 600, padding: "2px 6px", borderRadius: 3,
             border: `1px solid color-mix(in srgb, ${wsMeta.color} 30%, transparent)`,
             background: `color-mix(in srgb, ${wsMeta.color} 9%, transparent)`,
             color: wsMeta.color, textTransform: "none", letterSpacing: 0,
@@ -452,44 +478,96 @@ export function LucaVerdictBlock({
   lastChecked: string | null;
   classification?: SettlementClassification;
 }) {
+  const now = lastChecked
+    ? new Date(lastChecked).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" });
+
+  const signals = classification?.signals?.slice(0, 3) ?? [];
+  const pattern = classification?.patterns?.[0] ?? null;
+  const confidence = verdict.confidence;
+
   return (
-    <div className="prof-verdict">
-      <div className="prof-verdict-label">
-        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>smart_toy</span>
-        Luca Verdict
+    <div className="tla-verdict-terminal">
+      <div className="tla-term-bar">
+        <div className="tla-term-dots">
+          <div className="tla-term-dot tla-td-r" />
+          <div className="tla-term-dot tla-td-a" />
+          <div className="tla-term-dot tla-td-g" />
+        </div>
+        <span className="tla-term-label">luca@zetta — audit --agent &lt;profile&gt; --period 30d</span>
       </div>
 
-      {adminNotes && <p className="prof-verdict-text">{adminNotes}</p>}
-
-      <p style={{ margin: "10px 0 4px", ...LABEL_CAPS }}>What we know</p>
-      <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 3 }}>
-        {verdict.whatWeKnow.map((k) => (
-          <li key={k} style={{ fontSize: "0.78rem", color: "var(--ink)", lineHeight: 1.55 }}>{k}</li>
+      <div className="tla-term-body">
+        <span className="tla-t-prompt">luca@zetta</span>
+        <span className="tla-t-dim">:</span>
+        <span className="tla-t-comment">~$</span>
+        {" "}
+        <span className="tla-t-cmd">audit --agent &lt;profile&gt; --period 30d</span>
+        <br />
+        <br />
+        {pattern && (
+          <>
+            <span className="tla-t-comment"># ── Classification ──────────────────────────────────────</span>
+            <br />
+            <span className="tla-t-key">pattern     </span>
+            <span className="tla-t-val">{pattern.replace(/_/g, " ")}</span>
+            <br />
+          </>
+        )}
+        {verdict.whatWeKnow.map((k, i) => (
+          <span key={i}>
+            <span className="tla-t-key">{i === 0 ? "signal      " : "            "}</span>
+            <span className="tla-t-val">{k}</span>
+            <br />
+          </span>
         ))}
-        {classification?.signals.slice(0, 2).map((s) => (
-          <li key={s} style={{ fontSize: "0.78rem", color: "var(--ink)", lineHeight: 1.55 }}>{s}</li>
-        ))}
-      </ul>
-
-      <p style={{ margin: "10px 0 4px", ...LABEL_CAPS }}>What is missing</p>
-      <ul style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 3 }}>
-        {verdict.missing.map((m) => (
-          <li key={m} style={{ fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.5 }}>{m}</li>
-        ))}
-      </ul>
-
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 10, fontSize: "0.76rem" }}>
-        <span>
-          <span style={{ ...LABEL_CAPS, marginRight: 6 }}>Confidence</span>
-          <span style={{ color: "var(--ink)", fontWeight: 600 }}>{verdict.confidence}</span>
-        </span>
-        <span>
-          <span style={{ ...LABEL_CAPS, marginRight: 6 }}>Next action</span>
-          <span style={{ color: "var(--ink)" }}>{verdict.nextAction}</span>
-        </span>
+        {signals.length > 0 && (
+          <>
+            <br />
+            <span className="tla-t-comment"># ── Signals ──────────────────────────────────────────────</span>
+            <br />
+            {signals.map((s, i) => (
+              <span key={i}>
+                <span className="tla-t-key">signal_{i + 1}    </span>
+                <span className="tla-t-val">{s}</span>
+                <br />
+              </span>
+            ))}
+          </>
+        )}
+        {verdict.missing.length > 0 && (
+          <>
+            <br />
+            <span className="tla-t-comment"># ── Missing ──────────────────────────────────────────────</span>
+            <br />
+            {verdict.missing.slice(0, 3).map((m, i) => (
+              <span key={i}>
+                <span className="tla-t-key">missing_{i + 1}   </span>
+                <span className="tla-t-warn">{m}</span>
+                <br />
+              </span>
+            ))}
+          </>
+        )}
+        <br />
+        <span className="tla-t-key">confidence  </span>
+        <span className={confidence === "high" ? "tla-t-pos" : confidence === "medium" ? "tla-t-warn" : "tla-t-neg"}>{confidence}</span>
+        <br />
+        <span className="tla-t-key">next_action </span>
+        <span className="tla-t-val">{verdict.nextAction}</span>
       </div>
 
-      {lastChecked && <p className="prof-verdict-date">Last reviewed: {lastChecked}</p>}
+      {(adminNotes || verdict.whatWeKnow.length > 0) && (
+        <div className="tla-term-verdict">
+          <div className="tla-verdict-dot" />
+          <div>
+            <div className="tla-verdict-label">Luca Verdict · {now}</div>
+            <div className="tla-verdict-text">
+              {adminNotes ?? verdict.whatWeKnow.join(" ")}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

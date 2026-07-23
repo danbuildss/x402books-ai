@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DM_Sans, Libre_Baskerville, IBM_Plex_Mono } from "next/font/google";
+import { DM_Sans, Libre_Baskerville, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/privy-provider";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
@@ -18,9 +18,9 @@ const libreBaskerville = Libre_Baskerville({
   variable: "--font-serif",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const jetBrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   variable: "--font-mono",
 });
@@ -63,7 +63,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${dmSans.variable} ${libreBaskerville.variable} ${ibmPlexMono.variable} ${dmSans.className}`}>
+      <body className={`${dmSans.variable} ${libreBaskerville.variable} ${jetBrainsMono.variable} ${dmSans.className}`}>
         <Providers>{children}</Providers>
         <Analytics />
       </body>
