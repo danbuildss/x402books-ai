@@ -9471,7 +9471,7 @@ html, body {
   align-items: center;
   gap: 3px;
   padding: 1px 7px;
-  border-radius: 20px;
+  border-radius: 3px;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
@@ -11046,6 +11046,249 @@ html, body {
 
 /* Mobile: the terminal table scrolls horizontally inside .reg-table-wrap —
    no columns are hidden, matching the financial-terminal read. */
+
+/* ── Registry nav — matches landing page exactly ─────────────────────────── */
+.reg-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 48px;
+  background: var(--nav-bg, rgba(12,13,16,0.92));
+  border-bottom: 1px solid var(--line);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.reg-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+
+/* Logo component renders <span class="brand"> */
+.reg-nav-brand .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.reg-nav-brand .brand .logo-mark {
+  height: 20px !important;
+  width: auto !important;
+}
+
+.reg-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.reg-nav-dd { position: relative; }
+
+.reg-nav-dd-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.reg-nav-dd-btn:hover { color: var(--ink); background: var(--line); }
+
+.reg-nav-dd-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--line-hi, rgba(255,255,255,0.10));
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+  padding: 8px;
+  z-index: 300;
+  display: none;
+}
+.reg-nav-dd:hover .reg-nav-dd-panel { display: block; }
+
+.reg-nav-dd-item {
+  display: block;
+  padding: 9px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: background 0.1s;
+}
+.reg-nav-dd-item:hover { background: var(--surface-soft); }
+
+.reg-nav-dd-title { font-size: 0.78rem; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+.reg-nav-dd-desc  { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+
+.reg-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.reg-nav-signin {
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--line-hi, rgba(255,255,255,0.10));
+  color: var(--ink);
+  background: var(--surface-soft);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.reg-nav-signin:hover { border-color: var(--accent); }
+
+@media (max-width: 920px) {
+  .reg-nav-center { display: none; }
+  .reg-nav { padding: 0 20px; }
+}
+
+/* ── Powered by Luca terminal section ────────────────────────────────────── */
+.reg-luca-section {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  padding: 48px 40px;
+}
+
+.reg-luca-inner {
+  max-width: 1160px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 52px;
+  align-items: start;
+}
+
+.reg-luca-body {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.reg-luca-bullets { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+
+.reg-luca-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.78rem;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.reg-luca-bullet-ico {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.5rem; font-weight: 900; color: var(--accent);
+}
+
+/* Terminal card */
+.reg-terminal {
+  background: var(--bg);
+  border: 1px solid var(--line-hi, rgba(255,255,255,0.10));
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+}
+
+.reg-terminal-bar {
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reg-terminal-dots { display: flex; gap: 5px; }
+.reg-terminal-dot  { width: 9px; height: 9px; border-radius: 50%; }
+.reg-td-red   { background: #E05050; opacity: 0.7; }
+.reg-td-amber { background: #E6A020; opacity: 0.7; }
+.reg-td-green { background: #3DCF88; opacity: 0.7; }
+
+.reg-terminal-title {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.reg-terminal-body {
+  padding: 14px 16px;
+  line-height: 1.85;
+  font-size: 0.72rem;
+}
+
+/* Terminal text colour helpers (no conflict with existing) */
+.t-prompt { color: var(--accent); }
+.t-cmd    { color: var(--ink); }
+.t-comment{ color: var(--muted); }
+.t-key    { color: #5B8FE0; }
+.t-val    { color: var(--accent); }
+.t-warn   { color: #E6A020; }
+.t-dim    { color: var(--muted); }
+.t-sep    { color: var(--muted); font-size: 0.64rem; }
+
+.reg-terminal-verdict {
+  margin: 4px 16px 14px;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 3px;
+  padding: 10px 12px;
+}
+
+.reg-verdict-label {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent);
+  margin-bottom: 5px;
+}
+
+.reg-verdict-text {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.71rem;
+  color: var(--ink);
+  line-height: 1.6;
+}
+
+@media (max-width: 920px) {
+  .reg-luca-section { padding: 36px 20px; }
+  .reg-luca-inner   { grid-template-columns: 1fr; gap: 28px; }
+}
 
 /* ── Leaderboard ─────────────────────────────────────────────────────────── */
 .ldb-row:hover { background: var(--surface-soft); }
