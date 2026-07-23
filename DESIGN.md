@@ -516,6 +516,200 @@ Replace the current hero/sections/footer stack with a command center layout:
 
 ---
 
+## Site Map & Page UX Structure
+
+*Recorded from agent decisions — 2026-07-23*
+
+### A. Public marketing / narrative layer
+
+| Route | Purpose |
+|-------|---------|
+| `/` | Homepage |
+| `/about` | Company / mission / why agent finance matters |
+| `/methodology` | Attribution logic, confidence system, definitions |
+| `/contact` | Contact / partner / enterprise / support |
+| `/access` | Sign in / request access |
+| `/adopt` | Why teams should adopt Zetta — manifests, reporting, API |
+
+### B. Public product layer
+
+| Route | Purpose |
+|-------|---------|
+| `/registry` | Agent Financial Registry index |
+| `/registry/[agent-slug]` | Individual agent profile |
+| `/leaderboard` | Rankings and performance views |
+| `/research` | Research archive |
+| `/research/[report-slug]` | Individual report page |
+| `/luca` | Luca overview / interface / product entry |
+| `/api` | API product page / endpoint overview / key use cases |
+| `/docs` | Docs entry |
+| `/validate` | Manifest validator |
+| `/submit-agent` | Submit or claim agent (long-term: own page, short-term: `/registry#verify`) |
+| `/manifest-guide` | How to declare wallets / schema / examples |
+
+### C. Authenticated operator layer
+
+| Route | Purpose |
+|-------|---------|
+| `/dashboard` | Operator overview |
+| `/dashboard/agents` | My agents |
+| `/dashboard/agents/[agent-slug]` | Operator agent workspace |
+| `/dashboard/wallets` | Wallet management — declared / candidate / inferred |
+| `/dashboard/books` | Books overview |
+| `/dashboard/reports` | Generated reports / exports / close summaries |
+| `/dashboard/luca` | Luca operator workspace |
+| `/dashboard/alerts` | Anomalies / treasury warnings / attribution issues |
+| `/dashboard/manifests` | Manifest submissions / validation / version history |
+| `/dashboard/verification` | Claim status / signature verification / evidence review |
+| `/dashboard/api` | API keys / usage / scopes |
+| `/dashboard/settings` | Workspace / team / billing / notification settings |
+
+### D. Secondary support pages
+
+`/privacy` · `/terms` · `/security` · `/status` · `/changelog`
+
+---
+
+### Page UX: Homepage `/`
+
+**Purpose:** Explain Zetta fast, prove it is real, route users into the right product surface.
+
+**Primary audience:** First-time visitors, founders, operators, partners, agent teams, ecosystem researchers.
+
+**Top nav:** Zetta · Registry · Research · Leaderboard · Luca · Docs · Open App · Sign In
+
+**Hero / command center** — not a generic hero; narrative + live market board hybrid:
+- Left: headline, subheadline, primary CTA (Explore Registry), secondary CTA (Open App / View Research)
+- Right: live metrics panel (indexed agents, attributed agents, coverage, agent GDP, expenses, net income, last updated, ecosystem tags)
+
+**Proof strip:** Top revenue agents · newest attributed agent · manifest submissions · Luca note · latest report
+
+**"How it works":** Attribution → Books → History → Intelligence → Verification → API
+
+**Product routing grid:** Registry · Leaderboard · Luca · Research · API · Docs — each card answers: what it is, why it matters, who it is for
+
+**Trust / doctrine section:** declared vs discovered vs inferred · verified vs candidate · books over hype · accuracy over breadth
+
+**Final CTA:** Submit Agent · Explore Registry · Open App
+
+---
+
+### Page UX: Registry `/registry`
+
+**Purpose:** Public source of truth for tracked agents.
+
+**Header:** agents tracked · wallets declared · verified agents · attributed agents
+
+**Filters:** ecosystem · attribution status · verification level · has manifest · revenue active
+
+**Sortable table:** name · ecosystem · wallet status · financial activity · treasury health · last updated
+
+**Right rail / top strip:** newest declarations · newly reviewed agents · Luca registry notes
+
+**User goal:** Find, compare, and audit public agent profiles fast.
+
+---
+
+### Page UX: Agent Profile `/registry/[agent-slug]`
+
+**Purpose:** Single public financial profile for one agent.
+
+**Header:** agent name · ecosystem · website · X handle · status badges · last updated · claim/verify CTA if applicable
+
+**Summary row:** wallets tracked · declared wallets · attribution confidence · treasury health · financial activity score · revenue / expenses / net flow
+
+**Tabs / panel sections:** Overview · Wallets · Books · Verification · Research / notes · History
+
+**Wallets section:** address · role · chain · confidence · evidence source · declared / discovered / inferred label
+
+**Books section:** revenue · expenses · treasury · net income · chart over time · caveat text when incomplete
+
+**Luca pane:** verdict · confidence · anomalies or gaps · "good signal / weak attribution" style notes
+
+**Verification section:** current state · manifest present? · signed proof? · evidence notes · what remains unresolved
+
+---
+
+### Page UX: Leaderboard `/leaderboard`
+
+**Purpose:** Public rankings and market structure surface.
+
+**Ranking type tabs:** Revenue · Net income · Treasury · Growth · Newly attributed · Most active
+
+**Filters:** ecosystem · timeframe · attribution quality
+
+**Dense table:** rank · agent · revenue · expenses · net · trend · attribution confidence
+
+**Side insight panel:** concentration notes · top movers · Luca market notes
+
+**User goal:** See who matters financially, not socially.
+
+---
+
+### Page UX: Research Index `/research`
+
+**Purpose:** Archive of analyst-grade financial intelligence.
+
+**Structure:** featured report · categories (weekly reports / treasury observations / registry scans / methodology notes / ecosystem analysis) · filters (ecosystem / date / report type) · report list with title, date, one-line verdict, key metric
+
+**User goal:** Read the books of the ecosystem, not just browse news.
+
+---
+
+### Page UX: Report Page `/research/[report-slug]`
+
+**Structure:** title · date · report type · summary verdict · key metrics row · core findings · concentration / attribution / anomaly sections · linked agents · methodology note · CTA to registry / Luca / API
+
+**Optional right rail:** key figures · related agents · related reports
+
+---
+
+### Page UX: Luca `/luca`
+
+**Purpose:** Explain and expose Luca as the analyst surface.
+
+**Top section:** what Luca is · what Luca does · short example prompts (audit this wallet / summarize agent books / show treasury anomalies / compare agent revenue)
+
+**Product sections:** wallet audits · reports · anomaly review · monthly close · registry intelligence · operator notes
+
+**Output examples:** short audit · treasury warning · registry note · weekly finance summary
+
+**CTA:** Open Luca in app · Try demo query · View methodology
+
+**Important:** This page should feel like analyst interface, not chatbot marketing.
+
+---
+
+### Page UX: API `/api`
+
+**Purpose:** Sell developer and operator value.
+
+**Headline:** Machine-readable books for the agent economy.
+
+**Use cases:** pull registry data · query agent books · power internal dashboards · generate audits
+
+**Endpoint categories:** registry · books · reports · truth / verification
+
+**CTA:** Get API access · Read docs
+
+**Important:** Less dev-tool fluff, more financial data utility.
+
+---
+
+### Page UX: Docs `/docs`
+
+**Structure:** quickstart · manifest schema · verification flow · API references · examples · tutorials · glossary
+
+**Rule:** Clean and readable, not overloaded with marketing language.
+
+---
+
+### Page UX: Validate `/validate`
+
+**Structure:** paste manifest / upload file / repo path · validate schema · show errors / warnings · show inferred wallet roles if possible
+
+---
+
 ## Decisions Log
 
 | Decision | Rationale |
