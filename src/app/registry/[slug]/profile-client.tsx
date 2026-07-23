@@ -2160,54 +2160,252 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
         <div className="prof-body">
 
-          {/* 6 — Agent Books (P4 header + 11-metric strip; honest unattributed states) */}
+          {/* ── Agent Books ledger card ── */}
           <div className="tla-section-label">Agent Books · 30d</div>
-          <AgentBooksBlock books={booksOrFallback}>
-            {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
-          </AgentBooksBlock>
+          {books?.attributed ? (() => {
+            const f = books.financials;
+            const usdFmt = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const booksConfColor = (v: string) => v === "high" ? "tla-b-green" : v === "medium" ? "tla-b-amber" : "tla-b-red";
+            return (
+              <div className="ledger-card" style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
+                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Agent Books</span>
+                  <span className="tla-badge tla-b-muted">{books.period}</span>
+                </div>
+                {[
+                  { label: "Revenue",                    value: `+${usdFmt(f.revenue_usd)}`,  cls: "tla-t-pos" },
+                  { label: "Expenses",                   value: `−${usdFmt(f.expenses_usd)}`, cls: "tla-t-neg" },
+                  { label: "Net Income",                 value: f.net_income_usd >= 0 ? `+${usdFmt(f.net_income_usd)}` : `−${usdFmt(f.net_income_usd)}`, cls: f.net_income_usd >= 0 ? "tla-t-pos" : "tla-t-neg" },
+                  { label: "Net Margin",                 value: f.margin_pct !== null ? `${f.margin_pct.toFixed(1)}%` : "—", cls: (f.margin_pct ?? 0) >= 0 ? "tla-t-pos" : "tla-t-neg" },
+                  { label: "Transactions",               value: String(f.tx_count), cls: "" },
+                  { label: "Wallets Analyzed",           value: String(books.wallets.analyzed), cls: "" },
+                  { label: "Internal Transfers Excluded",value: String(books.attribution.internal_transfers_removed), cls: "" },
+                  { label: "Attribution Source",         value: books.attribution.source, cls: "" },
+                ].map(({ label, value, cls }, i, arr) => (
+                  <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
+                    <span style={{ color: "var(--muted)" }}>{label}</span>
+                    <span className={cls} style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", fontWeight: 600, fontVariantNumeric: "tabular-nums", textTransform: "capitalize" }}>{value}</span>
+                  </div>
+                ))}
+                <div style={{ display: "flex", gap: 6, padding: "10px 16px", borderTop: "1px solid var(--line)", flexWrap: "wrap" }}>
+                  {(["revenue","expenses","treasury","overall"] as const).map((k) => (
+                    <span key={k} className={`tla-badge ${booksConfColor(books.confidence[k])}`}>
+                      {k.charAt(0).toUpperCase() + k.slice(1)}: {books.confidence[k].charAt(0).toUpperCase() + books.confidence[k].slice(1)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })() : (
+            <AgentBooksBlock books={booksOrFallback}>
+              {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
+            </AgentBooksBlock>
+          )}
 
-          {/* 7 — Wallet attribution (role groups + source pills) */}
+          {/* ── Two-col: Treasury Signals + Score/Health ── */}
+          {books?.attributed && (
+            <div className="tla-two-col">
+              {/* Left — Treasury Signals as ledger card */}
+              <TreasurySignals books={books} />
+
+              {/* Right — Verification score + financial health stacked */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {verificationScore && (
+                  <div className="tla-score-block">
+                    <div className="tla-score-top">
+                      <div>
+                        <div className="tla-score-num">{verificationScore.total}</div>
+                        <div className="tla-score-denom">/100</div>
+                      </div>
+                      <div className="tla-score-info">
+                        <div className="tla-score-title">Verification Score</div>
+                        <span className="tla-score-tier">{TIER_LABELS[verificationScore.tier]}</span>
+                      </div>
+                    </div>
+                    <div className="tla-score-bars">
+                      {[
+                        { label: "Manifest",  val: verificationScore.breakdown.manifest,  max: 30 },
+                        { label: "Wallets",   val: verificationScore.breakdown.wallets,    max: 25 },
+                        { label: "Activity",  val: verificationScore.breakdown.activity,   max: 20 },
+                        { label: "Metadata",  val: verificationScore.breakdown.metadata,   max: 15 },
+                        { label: "Ecosystem", val: verificationScore.breakdown.ecosystem,  max: 10 },
+                      ].map((d) => (
+                        <div key={d.label} className="tla-score-bar-row">
+                          <span className="tla-score-bar-label">{d.label}</span>
+                          <div className="tla-score-bar-track"><div className="tla-score-bar-fill" style={{ width: `${(d.val / d.max) * 100}%` }} /></div>
+                          <span className="tla-score-bar-num">{d.val}/{d.max}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(() => {
+                  const hs = agentHealthScore(agent);
+                  const gc = gradeColor(hs.grade);
+                  return (
+                    <div className="tla-health-block" style={{ borderLeftColor: gc }}>
+                      <div>
+                        <div className="tla-grade-letter" style={{ color: gc }}>{hs.grade}</div>
+                        <div style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>{hs.total}/100</div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--ink-em, var(--ink))", marginBottom: 8 }}>Financial Health</div>
+                        <div className="tla-score-bars">
+                          {[
+                            { label: "Wallets",      val: hs.wallet_coverage, max: 30 },
+                            { label: "Verification", val: hs.verification,    max: 35 },
+                            { label: "Evidence",     val: hs.evidence,        max: 20 },
+                            { label: "Activity",     val: hs.activity,        max: 15 },
+                          ].map((d) => (
+                            <div key={d.label} className="tla-score-bar-row">
+                              <span className="tla-score-bar-label">{d.label}</span>
+                              <div className="tla-score-bar-track"><div className="tla-score-bar-fill" style={{ width: `${(d.val / d.max) * 100}%`, background: gc }} /></div>
+                              <span className="tla-score-bar-num">{d.val}/{d.max}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+
+          {/* ── Financial Breakdown — two-col side by side ── */}
+          {books?.attributed ? (() => {
+            const revBuckets = buildRevenueBuckets(books);
+            const expBuckets = mapExpenseCategories(books.breakdown.expenses_by_category);
+            const usdFmt = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const revSources = books.breakdown.revenue_by_source;
+            const totalRev = books.financials.revenue_usd || 1;
+            return (
+              <>
+                <div className="tla-section-label">Financial Breakdown</div>
+                <div className="tla-two-col">
+                  {/* Revenue by source */}
+                  <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Revenue by Source</span>
+                      <span className="tla-badge tla-b-green" style={{ fontSize: "0.6rem" }}>{revSources.length} sources</span>
+                    </div>
+                    {revSources.slice(0, 5).map((src, i, arr) => {
+                      const pct = Math.round((src.total_usd / totalRev) * 100);
+                      return (
+                        <div key={src.address} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
+                          <span style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>{src.address.slice(0, 6)}…{src.address.slice(-4)}</span>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                            <span style={{ fontFamily: "var(--font-mono)", color: "var(--positive)", fontWeight: 600 }}>{usdFmt(src.total_usd)}</span>
+                            <div style={{ width: 80, height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
+                              <div style={{ height: "100%", width: `${pct}%`, background: i === 0 ? "var(--positive)" : i === 1 ? "var(--blue, #5B9EF4)" : "var(--muted)", borderRadius: 2 }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {revSources.length === 0 && (
+                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "var(--muted)" }}>No revenue sources attributed.</div>
+                    )}
+                    {revBuckets.agentToken > 0 && (
+                      <div style={{ padding: "10px 16px", borderTop: "1px solid var(--line)", fontSize: "0.68rem", color: "var(--muted)" }}>
+                        Agent-token inflows ({usdFmt(revBuckets.agentToken)}) excluded from operating revenue.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Expenses by category */}
+                  <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Expenses by Category</span>
+                      <span className="tla-badge tla-b-red" style={{ fontSize: "0.6rem" }}>{Object.values(expBuckets).filter((b) => "value" in b && b.value > 0).length} categories</span>
+                    </div>
+                    {[
+                      { label: "Inference Compute", bucket: expBuckets.inference },
+                      { label: "Provider Spend",    bucket: expBuckets.provider  },
+                      { label: "External Expenses", bucket: expBuckets.external  },
+                      { label: "Unknown Expenses",  bucket: expBuckets.unknown   },
+                    ].filter(({ bucket }) => "value" in bucket && bucket.value > 0).map(({ label, bucket }, i, arr) => (
+                      <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
+                        <span style={{ color: "var(--muted)" }}>{label}</span>
+                        <span style={{ fontFamily: "var(--font-mono)", color: "var(--negative)", fontWeight: 600 }}>−{usdFmt("value" in bucket ? bucket.value : 0)}</span>
+                      </div>
+                    ))}
+                    {Object.values(expBuckets).every((b) => !("value" in b) || b.value === 0) && (
+                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "var(--muted)" }}>No expense categories tracked.</div>
+                    )}
+                  </div>
+                </div>
+              </>
+            );
+          })() : null}
+
+          {/* ── Momentum + sparkline (inline, not in tab) ── */}
+          {books?.attributed && booksHistory && booksHistory.length >= 2 && (() => {
+            const m = computeMomentum(booksHistory, 30);
+            const ordered = [...booksHistory].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime());
+            const oldest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const newest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            if (!m) return null;
+            const momentumRows = [
+              { label: "Revenue",    metric: m.revenue    },
+              { label: "Net Income", metric: m.net_income },
+              { label: "Expenses",   metric: m.expenses   },
+              { label: "Treasury",   metric: m.treasury   },
+            ].filter((r): r is { label: string; metric: NonNullable<typeof r.metric> } => r.metric !== null);
+            const revVals = ordered.map((s) => s.revenue_usd);
+            const maxRev = Math.max(...revVals) || 1;
+            return (
+              <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", padding: 16, marginBottom: 24 }}>
+                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", marginBottom: 14 }}>
+                  30-Day Momentum · {m.snapshot_count} snapshots
+                </div>
+                <div className="tla-momentum-grid">
+                  {momentumRows.map(({ label, metric }) => {
+                    const icon  = metric.direction === "growing" ? "↑" : metric.direction === "declining" ? "↓" : "→";
+                    const color = metric.direction === "growing" ? "var(--positive)" : metric.direction === "declining" ? "var(--negative)" : "var(--muted)";
+                    const pctLabel = metric.direction === "stable" ? "stable" : `${metric.pct > 0 ? "+" : ""}${metric.pct.toFixed(1)}%`;
+                    return (
+                      <div key={label}>
+                        <div style={{ fontSize: "0.62rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
+                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", fontWeight: 700, color }}>{icon} {pctLabel}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
+                  <div style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
+                    Revenue trend · {oldest} → {newest}
+                  </div>
+                  <div className="tla-sparkline-row">
+                    {revVals.map((v, i) => (
+                      <div key={i} className="tla-spark-bar" style={{ height: `${Math.max(10, (v / maxRev) * 100)}%`, opacity: 0.4 + (i / revVals.length) * 0.6 }} />
+                    ))}
+                  </div>
+                  {m.revenue && m.revenue.direction !== "stable" && (
+                    <div style={{ fontSize: "0.62rem", color: "var(--positive)", fontFamily: "var(--font-mono)", fontWeight: 600, marginTop: 5 }}>
+                      {m.revenue.direction === "growing" ? "↑" : "↓"} {Math.abs(m.revenue.pct).toFixed(1)}%{" "}
+                      <span style={{ color: "var(--muted)", fontWeight: 400 }}>across {m.snapshot_count} snapshots</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* ── Wallet attribution (role groups + source pills) ── */}
           <WalletAttributionSection
             agent={agent}
             toolDecisionsBlock={toolDecisions && toolDecisions.length > 0 ? <ToolDecisionsBlock events={toolDecisions} /> : undefined}
           />
 
-          {/* 8 — Treasury */}
-          {books?.attributed && <TreasurySignals books={books} />}
-
-          {/* 9 — Revenue / expenses (P4 breakdowns) */}
-          {books?.attributed ? (
-            <>
-              <RevenueBreakdown buckets={buildRevenueBuckets(books)} />
-              <ExpenseBreakdown buckets={mapExpenseCategories(books.breakdown.expenses_by_category)} />
-            </>
-          ) : (
-            <section className="prof-section">
-              <p className="prof-section-title">Revenue &amp; Expenses</p>
-              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
-                No books yet — revenue and expense breakdowns appear once wallets are attributed via manifest.
-              </p>
-            </section>
-          )}
-
-          {/* 10 — Data quality (every profile) + detailed scores, collapsed */}
+          {/* ── Data quality + claim CTA ── */}
           <DataQualityBlock dq={dq} />
-          <details className="prof-section" style={{ padding: "12px 16px" }}>
-            <summary style={{ cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, color: "var(--ink)" }}>
-              Verification &amp; health breakdown
-            </summary>
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-              <ScoreBreakdownDetails agent={agent} verificationScore={verificationScore} />
-            </div>
-          </details>
-          {economics && <AgentEconomicsBlock economics={economics} />}
-
-          {/* 11 — Claim / submit manifest CTA (hoisted above when no books) */}
           {agent.booksStatus !== "no_books" && (
             <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
           )}
+          {economics && <AgentEconomicsBlock economics={economics} />}
 
-          {/* Secondary tabs — segmented TL-A control */}
+          {/* ── Details tabs — segmented TL-A control ── */}
           <div className="tla-section-label" style={{ marginTop: 16 }}>Details</div>
           <div className="tla-tabs-bar">
             {PROF_TABS.map((t) => (
@@ -2231,7 +2429,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             ))}
           </div>
 
-          {/* ── INFERENCE — Surplus pilot full report */}
+          {/* ── INFERENCE ── */}
           {tab === "inference" && (
             <>
               {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
@@ -2239,14 +2437,42 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </>
           )}
 
-          {/* ── HISTORY — snapshots + momentum */}
+          {/* ── HISTORY — snapshot table + verification timeline ── */}
           {tab === "history" && (
-            books?.attributed && booksHistory && booksHistory.length >= 2 ? (
-              <>
-                <AgentBooksTrendSection snapshots={booksHistory} />
-                <MomentumSection history={booksHistory} />
-              </>
-            ) : (
+            books?.attributed && booksHistory && booksHistory.length >= 2 ? (() => {
+              const ordered = [...booksHistory].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime()).reverse();
+              const oldest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              const newest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+              const usdShort = (n: number | null) => n == null ? "—" : "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
+              return (
+                <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
+                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Agent Books · Historical Trend</span>
+                    <span className="tla-badge tla-b-muted">{oldest} → {newest}</span>
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <div style={{ minWidth: 480 }}>
+                      <div className="tla-snapshot-row" style={{ borderBottom: "1px solid var(--line)" }}>
+                        <div className="tla-snapshot-date tla-snapshot-head">Date</div>
+                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--positive)" }}>Revenue</div>
+                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--negative)" }}>Expenses</div>
+                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--positive)" }}>Net Income</div>
+                        <div className="tla-snapshot-cell tla-snapshot-head">Treasury</div>
+                      </div>
+                      {ordered.map((s) => (
+                        <div key={s.snapshotted_at} className="tla-snapshot-row">
+                          <div className="tla-snapshot-date">{new Date(s.snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                          <div className="tla-snapshot-cell" style={{ color: "var(--positive)" }}>{usdShort(s.revenue_usd)}</div>
+                          <div className="tla-snapshot-cell" style={{ color: "var(--negative)" }}>{usdShort(s.expenses_usd)}</div>
+                          <div className="tla-snapshot-cell" style={{ color: (s.net_income_usd ?? 0) >= 0 ? "var(--positive)" : "var(--negative)" }}>{s.net_income_usd != null ? `${s.net_income_usd >= 0 ? "+" : "−"}${usdShort(s.net_income_usd)}` : "—"}</div>
+                          <div className="tla-snapshot-cell">{usdShort(s.treasury_usd)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
               <section className="prof-section prof-empty-state">
                 <p style={{ margin: "0 0 6px", fontWeight: 700 }}>No history yet.</p>
                 <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)" }}>
@@ -2256,16 +2482,27 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             )
           )}
 
-          {/* ── RESEARCH — published Luca reports for this agent */}
+          {/* ── RESEARCH — published reports ── */}
           {tab === "research" && (
-            <section className="prof-section prof-empty-state">
-              <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Research for {agent.name}</p>
-              <p style={{ margin: "0 0 20px", fontSize: "0.82rem", color: "var(--muted)" }}>
-                Luca publishes analysis when sufficient attributed data exists. Check the research hub for published reports.
-              </p>
-              <Link href="/research" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>Browse All Research →</Link>
-            </section>
+            <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
+              <div className="tla-research-item">
+                <span className="tla-research-tag tla-b-muted">Note</span>
+                <div>
+                  <div className="tla-research-title">Research for {agent.name}</div>
+                  <div className="tla-research-desc">Luca publishes analysis when sufficient attributed data exists. Check the research hub for published reports on this agent.</div>
+                  <div className="tla-research-meta" style={{ marginTop: 8 }}>
+                    <Link href="/research" style={{ color: "var(--accent)", textDecoration: "none" }}>Browse All Research →</Link>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
+
+          {/* Methodology note */}
+          <p style={{ fontSize: "0.65rem", color: "var(--muted)", lineHeight: 1.65, padding: "0 2px", marginTop: 24, marginBottom: 32 }}>
+            Revenue reflects operating inflows only. Capital injections, bridge transfers, grants, token distributions, and swaps are excluded or quarantined.{" "}
+            <Link href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Methodology →</Link>
+          </p>
         </div>
       </main>
 
