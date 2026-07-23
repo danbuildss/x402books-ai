@@ -423,6 +423,99 @@ Data is the hero. Chrome is minimized. Trust is earned through density and preci
 
 ---
 
+## Product Architecture & Density Doctrine
+
+*Recorded from agent decisions — 2026-07-23*
+
+### Three-layer architecture
+
+The Zetta product has three distinct surfaces, each with a different audience, job, and density.
+
+| Layer | Surface | Audience | Job |
+|-------|---------|----------|-----|
+| 1 | Landing page (`/`) | New visitors, founders, partners, researchers, agent teams | Explain the system. Build trust. Route people. |
+| 2 | Public subpages | Anyone evaluating Zetta, developers, ecosystem participants | Demonstrate the system. Live data. Proof of activity. |
+| 3 | Operator dashboard (`/dashboard`) | Operators, treasury owners, agent teams with active agents | Operate the system. Monitor. Manage. Review. |
+
+**One system, three densities.** The same terminal grammar applies across all three. What changes is compression and hierarchy — not the visual language.
+
+### Framing sentence
+
+> The homepage explains the system. The public pages demonstrate the system. The dashboard operates the system.
+
+### Density levels
+
+**Landing density (lowest)**
+- Sharp, credible, product-first
+- Terminal-influenced but readable for first-time visitors
+- Selective live panels showing the system working
+- Key metrics, short Luca notes, routing CTAs
+- Goal: "I understand what Zetta is. This is real. I know where to go next."
+
+**Public product density (medium-high)**
+- Table and panel driven
+- Live data, searchable lists, reports
+- Closer to Zetta Terminal feel
+- Subpages: Registry, Research, Luca, Leaderboard, API, Docs, Methodology
+- These pages are the product shell — not extras
+
+**Operator dashboard density (highest)**
+- Most compressed, workflow-first, least marketing
+- Management views: my agents, my wallets, manifest status, attribution review, reports, alerts, treasury/spend/revenue, Luca notes, API keys
+- Built for daily use by people who already understand the product
+
+### Terminal direction
+
+The terminal aesthetic is about credibility and function, not decoration.
+
+**Use:**
+- Dark charcoal / near-black base
+- Muted gray panels
+- Off-white data text
+- Green for positive net flow / verified / healthy
+- Amber/orange for warnings, active tabs, labels
+- Red for anomalies / negative flow / critical
+- Blue sparingly for links or neutral info
+- Uppercase section labels (AGENT GDP, ATTRIBUTION STATUS, LUCA VERDICT)
+- Monospaced numbers throughout
+- Condensed, tightly spaced headers
+- Dense panel layouts — think panes, not sections
+
+**Never use:**
+- Neon cyberpunk / scanlines / glowing code rain
+- Fake console prompts as decoration
+- Soft rainbow gradients
+- Oversized cards with excess whitespace
+- Generic SaaS hero + feature card + footer marketing stack
+
+Bloomberg works because it feels expensive, compressed, and authoritative. Zetta should feel like a modern onchain financial terminal — not a hacker toy.
+
+### Luca placement
+
+Luca is not a page-hero or mascot. Luca is an analyst pane embedded in the terminal.
+
+Correct treatment:
+- Live "Luca Note" panel inline beside real numbers
+- Short verdicts with confidence labels
+- Source-backed observations
+- Treasury warnings and anomaly flags inline
+
+Examples of correct Luca voice in panels:
+- `Luca Note: Revenue visible. Attribution still thin.`
+- `Treasury Watch: Activity concentrated in top 1 agent.`
+- `Registry Alert: 12 manifests submitted. 6 agents attributed.`
+
+### Homepage command center structure
+
+Replace the current hero/sections/footer stack with a command center layout:
+
+- **Top bar**: Zetta wordmark, ecosystem filter, search, last updated, Open App, Registry, Docs
+- **Main center**: Agent GDP, Net income, Total expenses, Attributed revenue, Coverage %, active ecosystem
+- **Right panel**: Luca Verdict, latest registry alert, manifest status, newest research brief
+- **Bottom strip**: Top revenue agents, newly attributed agents, verification queue, latest financial events
+
+---
+
 ## Decisions Log
 
 | Decision | Rationale |
