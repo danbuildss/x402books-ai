@@ -834,7 +834,7 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
   const [failed, setFailed] = useState(false);
   if (failed || !agent.xHandle) {
     return (
-      <div className="prof-avatar prof-avatar-fallback">
+      <div className="tla-avatar">
         {agent.name[0]}
       </div>
     );
@@ -844,9 +844,9 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
     <Image
       src={src}
       alt={agent.name}
-      width={72}
-      height={72}
-      className="prof-avatar"
+      width={56}
+      height={56}
+      className="tla-avatar"
       onError={() => setFailed(true)}
       unoptimized
     />
@@ -2023,20 +2023,19 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           Agent Registry
         </button>
 
-        {/* Identity card */}
-        <div className="prof-identity">
+        {/* Identity — TL-A grid (no card wrapper) */}
+        <div className="tla-identity">
           <ProfileAvatar agent={agent} />
-          <div className="prof-identity-info">
-            <div className="prof-name-row">
-              <h1 className="prof-name">{agent.name}</h1>
-              <span className="prof-symbol">{agent.symbol}</span>
-              <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
+          <div className="tla-identity-info">
+            <div className="tla-name-row">
+              <h1 className="tla-agent-name">{agent.name}</h1>
+              {agent.symbol && <span className="tla-agent-symbol">{agent.symbol}</span>}
+              <span className={`tla-badge tla-b-blue`}>{agent.ecosystem}</span>
             </div>
-            {/* 2 — Bio / one-line description */}
-            <p className="prof-bio" style={{ margin: "4px 0 6px", fontSize: "0.84rem", lineHeight: 1.55, color: agent.bio ? "var(--ink)" : "var(--muted)", fontStyle: agent.bio ? "normal" : "italic" }}>
+            <p className="tla-agent-bio" style={{ color: agent.bio ? "var(--ink)" : "var(--muted)", fontStyle: agent.bio ? "normal" : "italic" }}>
               {agent.bio ?? "No bio yet — claim this profile to add one."}
             </p>
-            <div className="prof-links">
+            <div className="tla-status-row">
               {agent.xHandle && (
                 <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="prof-link">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -2058,16 +2057,15 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               )}
             </div>
           </div>
-          <div className="prof-share-wrap" style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button type="button" className="prof-share-btn" onClick={() => setShowEmbed(true)} style={{ opacity: 0.8 }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>code</span>
-              Embed
-            </button>
-            <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
-              Share
-            </button>
-          </div>
+        </div>
+
+        {/* Actions row */}
+        <div className="tla-actions-row">
+          <button type="button" className="tla-btn" onClick={() => setShowShare(true)}>↗ Share Profile</button>
+          <button type="button" className="tla-btn" onClick={() => setShowEmbed(true)}>⧉ Copy Embed</button>
+          <span style={{ fontSize: "0.74rem", color: "var(--muted)", padding: "7px 0", fontFamily: "var(--font-mono)" }}>
+            zettaai.co/registry/{slug}
+          </span>
         </div>
 
         {/* Anomaly alerts */}
@@ -2104,50 +2102,49 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </div>
         )}
 
-        {/* 3 — Exactly three labeled pills: Identity / Books / Data.
-            Wallet status lives in the wallet section; treasury health lives in
-            the metrics; momentum lives in the metrics strip. No badge pile. */}
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
+        {/* 3 — Status badges row */}
+        <div className="tla-status-row" style={{ marginBottom: 16 }}>
           {(() => {
             const dataTruncated = books?.attributed && books.confidence.flags.includes("tx_window_truncated");
             const dataMeta =
               dataTruncated
-                ? { label: "Truncated", tip: "Transaction fetch hit its limit — financial totals may be incomplete.", color: "#F59E0B" }
+                ? { label: "Truncated", tip: "Transaction fetch hit its limit — financial totals may be incomplete.", cls: "tla-b-amber" }
                 : agent.dataStatus === "fresh"
-                  ? { label: "Fresh", tip: "Registry data checked within the last 7 days.", color: "#6DB874" }
+                  ? { label: "Fresh",   tip: "Registry data checked within the last 7 days.", cls: "tla-b-green" }
                   : agent.dataStatus === "stale"
-                    ? { label: "Stale", tip: "Registry data has not been checked recently.", color: "#F97316" }
-                    : { label: "Partial", tip: "Some registry data has never been checked.", color: "var(--muted)" };
+                    ? { label: "Stale",   tip: "Registry data has not been checked recently.", cls: "tla-b-red" }
+                    : { label: "Partial", tip: "Some registry data has never been checked.", cls: "tla-b-muted" };
             const booksMeta = BOOKS_STATUS_META[agent.booksStatus];
-            const idMeta = STATUS_META[agent.verificationStatus];
-            const pills = [
-              { prefix: "Identity", label: idMeta.label, tip: PROFILE_STATUS_META[agent.profileStatus].tip, color: PROFILE_STATUS_META[agent.profileStatus].color },
-              { prefix: "Books", label: booksMeta.label, tip: booksMeta.tip, color: booksMeta.color },
-              { prefix: "Data", label: dataMeta.label, tip: dataMeta.tip, color: dataMeta.color },
-            ];
-            return pills.map((p) => (
-              <span
-                key={p.prefix}
-                title={p.tip}
-                style={{
-                  fontSize: "0.6rem", fontWeight: 700, padding: "3px 8px", borderRadius: 3,
-                  border: `1px solid color-mix(in srgb, ${p.color} 28%, transparent)`,
-                  background: `color-mix(in srgb, ${p.color} 9%, transparent)`,
-                  color: p.color, whiteSpace: "nowrap",
-                  textTransform: "uppercase", letterSpacing: "0.06em",
-                  fontFamily: "var(--font-sans, sans-serif)",
-                }}
-              >
-                {p.prefix}: {p.label}
-              </span>
-            ));
+            const booksCls = booksMeta.color === "#4AE8A0" || booksMeta.color === "#6DB874" || booksMeta.color === "#1CB870"
+              ? "tla-b-green" : booksMeta.color === "#F59E0B" || booksMeta.color === "#F4B942"
+              ? "tla-b-amber" : booksMeta.color === "#F46060" || booksMeta.color === "#D43F3F" || booksMeta.color === "#ef4444"
+              ? "tla-b-red" : "tla-b-muted";
+            const idColor = PROFILE_STATUS_META[agent.profileStatus].color;
+            const idCls = idColor === "#4AE8A0" || idColor === "#6DB874" || idColor === "#1CB870"
+              ? "tla-b-green" : idColor === "#F59E0B" || idColor === "#F4B942"
+              ? "tla-b-amber" : idColor === "#F46060" || idColor === "#D43F3F"
+              ? "tla-b-red" : "tla-b-muted";
+            return (
+              <>
+                <span className={`tla-badge ${idCls}`} title={PROFILE_STATUS_META[agent.profileStatus].tip}>
+                  Identity: {STATUS_META[agent.verificationStatus].label}
+                </span>
+                <span className={`tla-badge ${booksCls}`} title={booksMeta.tip}>
+                  Books: {booksMeta.label}
+                </span>
+                <span className={`tla-badge ${dataMeta.cls}`} title={dataMeta.tip}>
+                  Data: {dataMeta.label}
+                </span>
+              </>
+            );
           })()}
         </div>
 
-        {/* 4 — Financial metrics strip */}
+        {/* 4 — Financial metrics strip (seamless TL-A grid) */}
         <MetricsStrip metrics={profileMetrics} />
 
-        {/* 5 — Luca verdict (right after metrics) */}
+        {/* 5 — Luca verdict (terminal style) */}
+        <div className="tla-section-label">Luca Verdict</div>
         <LucaVerdictBlock
           verdict={operatorVerdict}
           adminNotes={agent.adminNotes}
@@ -2164,6 +2161,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         <div className="prof-body">
 
           {/* 6 — Agent Books (P4 header + 11-metric strip; honest unattributed states) */}
+          <div className="tla-section-label">Agent Books · 30d</div>
           <AgentBooksBlock books={booksOrFallback}>
             {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
           </AgentBooksBlock>
@@ -2209,35 +2207,28 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
           )}
 
-          {/* Secondary tabs — demoted from the old tab system */}
-          <div className="prof-tabs prof-subtabs" style={{ marginTop: 8 }}>
-            {PROF_TABS.map((t) => {
-              const showBadge = t.key === "inference" && !!inferenceActivity;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
-                  onClick={() => setTab(t.key)}
-                >
-                  {t.label}
-                  {showBadge && (
-                    <span style={{
-                      marginLeft: 5,
-                      fontSize: "0.6rem", fontWeight: 700,
-                      padding: "1px 5px", borderRadius: 3,
-                      background: "var(--accent)18",
-                      border: "1px solid var(--accent)40",
-                      color: "var(--accent)",
-                      verticalAlign: "middle",
-                      textTransform: "uppercase", letterSpacing: "0.06em",
-                    }}>
-                      Live
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+          {/* Secondary tabs — segmented TL-A control */}
+          <div className="tla-section-label" style={{ marginTop: 16 }}>Details</div>
+          <div className="tla-tabs-bar">
+            {PROF_TABS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className={`tla-tab-btn${tab === t.key ? " active" : ""}`}
+                onClick={() => setTab(t.key)}
+              >
+                {t.label}
+                {t.key === "inference" && !!inferenceActivity && (
+                  <span style={{
+                    marginLeft: 5, fontSize: "0.6rem", fontWeight: 700,
+                    padding: "1px 5px", borderRadius: 3,
+                    background: "rgba(74,232,160,0.10)", border: "1px solid rgba(74,232,160,0.28)",
+                    color: "var(--accent)", verticalAlign: "middle",
+                    textTransform: "uppercase", letterSpacing: "0.06em",
+                  }}>Live</span>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* ── INFERENCE — Surplus pilot full report */}
