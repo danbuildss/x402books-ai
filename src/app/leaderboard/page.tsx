@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
 import { EcoBadge, StatusBadge } from "@/components/ui/badge";
@@ -180,7 +180,7 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <article style={{ maxWidth: 1000, margin: "0 auto", padding: "3rem 24px 6rem" }}>
 

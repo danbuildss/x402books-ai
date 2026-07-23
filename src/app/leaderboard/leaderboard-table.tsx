@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { LedgerCard } from "@/components/ui/ledger";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 
 function fmtUSD(n: number): string {
@@ -120,8 +119,7 @@ export function LeaderboardTable({
         ))}
       </div>
 
-      <LedgerCard eyebrow="Top Agents · 30 Days" style={{ marginBottom: 0 }}>
-        <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 28 }}>
 
           {/* Header */}
           <div style={{
@@ -129,7 +127,7 @@ export function LeaderboardTable({
             gridTemplateColumns: GRID,
             gap: 12,
             padding: "10px 16px",
-            background: "var(--surface-soft)",
+            background: "var(--surface-hi)",
             borderBottom: "1px solid var(--line)",
           }}>
             {[
@@ -211,8 +209,7 @@ export function LeaderboardTable({
               </Link>
             );
           })}
-        </div>
-      </LedgerCard>
+      </div>
     </div>
   );
 }

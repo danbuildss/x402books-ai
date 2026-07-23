@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 import { toSlug } from "./[slug]/slug";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import type { PublicAgent, Ecosystem, VerificationStatus } from "./types";
 import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
@@ -742,7 +742,7 @@ export function RegistryClient({
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink-hi,var(--ink))" }}>
 
       {/* ── Shared nav — matches landing page ── */}
-      <HomeHeader />
+      <SiteNav />
 
       {/* ── Hero ── */}
       <div className="rg-page">
