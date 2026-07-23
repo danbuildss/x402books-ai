@@ -5,9 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
-import { Logo } from "@/components/logo";
-import { DOCS_URL } from "@/lib/docs-url";
-import { ThemeToggle } from "@/components/effects";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
 import { StatusBadge as UIStatusBadge, CostStatusBadge } from "@/components/ui/badge";
@@ -23,6 +20,7 @@ import type { VerificationScore } from "@/lib/verification-scorer";
 import { TIER_LABELS, TIER_BADGE_CLASS } from "@/lib/verification-scorer";
 import { computeMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
+import { SiteNav } from "@/components/site-nav";
 import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
@@ -2009,23 +2007,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
   return (
     <div className="prof-page">
       {/* Header */}
-      <header className="lp-header">
-        <Link href="/" className="lp-brand"><Logo /></Link>
-        <nav className="lp-nav" aria-label="Main navigation">
-          <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
-          <Link href="/leaderboard">Leaderboard</Link>
-          <Link href="/adopt">Adopt</Link>
-          <Link href="/research">Research</Link>
-          <Link href="/api">API</Link>
-          <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs ↗</a>
-          <Link href="/luca">Luca</Link>
-        </nav>
-        <div className="lp-header-right">
-          <ThemeToggle />
-          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
-        </div>
-      </header>
+      <SiteNav />
 
       <main className="prof-main">
         {/* Back */}
