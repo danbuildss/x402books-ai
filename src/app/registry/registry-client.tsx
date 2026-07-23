@@ -14,7 +14,6 @@ import { DOCS_URL } from "@/lib/docs-url";
 import type { AgentGDPEntry } from "@/lib/agent-gdp";
 import type { AgentMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
-import { VerificationBadge } from "@/components/ui/badge";
 import { scoreAgent } from "@/lib/verification-scorer";
 import { relativeTime } from "@/lib/ledger";
 import {
@@ -101,6 +100,28 @@ function EcoBadge({ eco }: { eco: Ecosystem }) {
   return <span className={`reg-badge reg-eco reg-eco-${eco.toLowerCase()}`}>{eco}</span>;
 }
 
+const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
+  "Candidate":          { cls: "candidate",        label: "Candidate"          },
+  "Needs Verification": { cls: "needs-verify",     label: "Needs Verification" },
+  "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"   },
+  "Claimed":            { cls: "claimed",           label: "Claimed by Team", icon: "handshake" },
+  "Verified":           { cls: "verified",          label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed",      label: "Luca Managed"       },
+  "ERC-8004 Indexed":   { cls: "candidate",         label: "ERC-8004 Indexed"   },
+  "Awaiting Manifest":  { cls: "needs-verify",      label: "Awaiting Manifest"  },
+};
+
+function StatusBadge({ status }: { status: VerificationStatus }) {
+  const m = STATUS_META[status];
+  return (
+    <span className={`reg-badge reg-vstatus reg-vstatus-${m.cls}`}>
+      {m.icon && (
+        <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{m.icon}</span>
+      )}
+      {m.label}
+    </span>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -666,7 +687,7 @@ function LucaExample() {
             <div className="reg-audit-row"><span>Agent</span><strong>Gitlawb</strong></div>
             <div className="reg-audit-row"><span>Token</span><strong>$GITLAWB</strong></div>
             <div className="reg-audit-row"><span>Wallet</span><strong className="reg-mono">0x5F98…3DBa3</strong></div>
-            <div className="reg-audit-row"><span>Status</span><VerificationBadge status="Needs Verification" /></div>
+            <div className="reg-audit-row"><span>Status</span><StatusBadge status="Needs Verification" /></div>
             <div className="reg-audit-divider" />
             <div className="reg-audit-row"><span>Transactions (30d)</span><strong>48</strong></div>
             <div className="reg-audit-row"><span>Revenue (30d)</span><strong className="reg-positive">$521.58</strong></div>

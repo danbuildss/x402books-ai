@@ -552,15 +552,25 @@ function HealthBadge({ h }: { h: Health }) {
 }
 
 const STATUS_META: Record<VerificationStatus, { cls: string; label: string; icon?: string }> = {
-  "Candidate":          { cls: "candidate",        label: "Candidate"          },
-  "Needs Verification": { cls: "needs-verify",     label: "Needs Verification" },
-  "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"   },
-  "Claimed":            { cls: "claimed",           label: "Claimed by Team"    },
-  "Verified":           { cls: "verified",          label: "Verified"           },
-  "Luca Managed":       { cls: "luca-managed",      label: "Luca Managed"       },
-  "ERC-8004 Indexed":   { cls: "candidate",         label: "ERC-8004 Indexed"   },
-  "Awaiting Manifest":  { cls: "needs-verify",      label: "Awaiting Manifest"  },
+  "Candidate":          { cls: "candidate",       label: "Candidate"          },
+  "Needs Verification": { cls: "needs-verify",    label: "Needs Verification" },
+  "Wallets Declared":   { cls: "wallets-declared", label: "Wallets Declared"  },
+  "Claimed":            { cls: "claimed",          label: "Claimed by Team", icon: "handshake" },
+  "Verified":           { cls: "verified",         label: "Verified", icon: "verified" },
+  "Luca Managed":       { cls: "luca-managed",     label: "Luca Managed"       },
+  "ERC-8004 Indexed":   { cls: "candidate",        label: "ERC-8004 Indexed"   },
+  "Awaiting Manifest":  { cls: "needs-verify",     label: "Awaiting Manifest"  },
 };
+
+function StatusBadge({ status }: { status: VerificationStatus }) {
+  const m = STATUS_META[status];
+  return (
+    <span className={`reg-badge reg-vstatus reg-vstatus-${m.cls}`}>
+      {m.icon && <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{m.icon}</span>}
+      {m.label}
+    </span>
+  );
+}
 
 // ── Card helpers (shared with share modal) ───────────────────────────────────
 

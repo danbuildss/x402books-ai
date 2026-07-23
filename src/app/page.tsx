@@ -2,12 +2,22 @@ import Link from "next/link";
 import { FadeContent } from "@/components/effects";
 import { HomeHeader } from "./home-header";
 import { SiteFooter } from "@/components/site-footer";
+import { AnimatedGlobe } from "@/components/animated-globe";
+import { HomeSignals } from "@/components/home-signals";
 import { getAgentGDP } from "@/lib/agent-gdp";
+import { listReports } from "@/lib/research-db";
+import { getGDPHistory } from "@/lib/gdp-history";
 import { getAttributionMetrics } from "@/lib/attribution-health";
+import { getB20Stats } from "@/lib/b20-db";
 import type { AgentGDP } from "@/lib/agent-gdp";
+import type { ResearchReport } from "@/lib/research-db";
+import type { GDPSnapshot } from "@/lib/gdp-history";
 import type { AttributionMetrics } from "@/lib/attribution-health";
+import { BANKR_ONLY, FOCUS_ECOSYSTEM } from "@/lib/focus";
 
 export const revalidate = 3600;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmtUSD(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
@@ -15,138 +25,50 @@ function fmtUSD(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-// ── Shared primitives ─────────────────────────────────────────────────────────
-
-function Tag({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      display: "inline-block",
-      margin: "0 0 16px",
-      padding: "3px 10px",
-      background: "rgba(74,232,160,0.08)",
-      border: "1px solid rgba(74,232,160,0.2)",
-      borderRadius: 3,
-      fontSize: "0.6rem",
-      fontWeight: 700,
-      fontFamily: "var(--font-sans)",
-      letterSpacing: "0.1em",
-      textTransform: "uppercase" as const,
-      color: "#4AE8A0",
-    }}>
-      {children}
-    </p>
-  );
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function H2({ children }: { children: React.ReactNode }) {
+const ECO_COLORS: Record<string, string> = {
+  BANKR: "#4AE8A0",
+  Virtuals: "#5B9EF4",
+  AEON: "#8B7CF6",
+  EigenCloud: "#F4B942",
+  Base: "#5B9EF4",
+};
+
+
+
+function GDPChart({ snapshots }: { snapshots: GDPSnapshot[] }) {
+  if (snapshots.length < 2) {
+    return (
+      <div style={{ height: 80, display: "flex", alignItems: "center", justifyContent: "center", border: "1px dashed var(--line)", borderRadius: 6 }}>
+        <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Not enough history yet</p>
+      </div>
+    );
+  }
+  const ordered = [...snapshots].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime());
+  const vals = ordered.map((s) => s.total_revenue_usd);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const range = max - min || 1;
+  const W = 300, H = 80, PAD = 4;
+  const pts = ordered.map((s, i) => {
+    const x = PAD + (i / (ordered.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((s.total_revenue_usd - min) / range) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  const fillPts = `${PAD},${H} ` + pts + ` ${W - PAD},${H}`;
   return (
-    <h2 style={{
-      margin: "0 0 16px",
-      fontSize: "clamp(1.4rem, 2.4vw, 2rem)",
-      fontWeight: 700,
-      fontFamily: "var(--font-mono)",
-      color: "#D0D4E0",
-      lineHeight: 1.2,
-    }}>
-      {children}
-    </h2>
-  );
-}
-
-function Badge({ children, color = "#4AE8A0" }: { children: React.ReactNode; color?: string }) {
-  return (
-    <span style={{
-      background: `${color}18`,
-      color,
-      border: `1px solid ${color}38`,
-      borderRadius: 3,
-      padding: "2px 7px",
-      fontSize: "0.58rem",
-      fontWeight: 700,
-      fontFamily: "var(--font-sans)",
-      letterSpacing: "0.06em",
-      textTransform: "uppercase" as const,
-    }}>
-      {children}
-    </span>
-  );
-}
-
-// ── Hero product preview ──────────────────────────────────────────────────────
-
-function HeroPreview() {
-  return (
-    <div className="lp2-hero-preview">
-      {/* Card header */}
-      <div style={{
-        background: "#181C24",
-        padding: "10px 16px",
-        borderBottom: "1px solid #21262F",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 8,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "#505870", fontSize: "0.58rem", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Agent</span>
-          <span style={{ color: "#D0D4E0", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.85rem" }}>AEON</span>
-        </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          <Badge>Wallets Declared</Badge>
-          <Badge>Live</Badge>
-        </div>
-      </div>
-
-      {/* Metrics */}
-      <div style={{ padding: "14px 16px 12px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, borderBottom: "1px solid #21262F" }}>
-        {[
-          { label: "Treasury",    value: "—",      color: "#D0D4E0" },
-          { label: "30d Revenue", value: "—",      color: "#D0D4E0" },
-          { label: "Net Flow",    value: "—",      color: "#D0D4E0" },
-          { label: "Confidence",  value: "Medium", color: "#F4B942" },
-        ].map((m) => (
-          <div key={m.label}>
-            <div style={{ color: "#505870", fontSize: "0.56rem", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4 }}>{m.label}</div>
-            <div style={{ color: m.color, fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.85rem" }}>{m.value}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Luca verdict */}
-      <div style={{ padding: "14px 16px" }}>
-        <div style={{
-          borderLeft: "3px solid #4AE8A0",
-          paddingLeft: 12,
-          background: "rgba(74,232,160,0.04)",
-          padding: "10px 12px",
-          borderRadius: "0 4px 4px 0",
-        }}>
-          <div style={{ color: "#4AE8A0", fontSize: "0.58rem", fontWeight: 700, fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
-            Luca&apos;s Read
-          </div>
-          <div style={{ color: "#8B96A8", fontSize: "0.75rem", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}>
-            This agent has declared wallets. Revenue confidence depends on attributed wallet activity.
-          </div>
-        </div>
-      </div>
-
-      {/* Footer row */}
-      <div style={{ borderTop: "1px solid #21262F", padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 16 }}>
-          {[
-            { label: "Books",   value: "Live",        color: "#4AE8A0" },
-            { label: "Data",    value: "Fresh",       color: "#4AE8A0" },
-            { label: "Wallets", value: "2 declared",  color: "#D0D4E0" },
-          ].map((item) => (
-            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span style={{ color: "#505870", fontSize: "0.6rem", fontFamily: "var(--font-sans)" }}>{item.label}</span>
-              <span style={{ color: item.color, fontSize: "0.6rem", fontFamily: "var(--font-mono)", fontWeight: 600 }}>{item.value}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#4AE8A0", flexShrink: 0 }} />
-      </div>
-    </div>
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", height: H, display: "block" }}>
+      <defs>
+        <linearGradient id="gdp-fill-lp" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#4AE8A0" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#4AE8A0" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <polygon points={fillPts} fill="url(#gdp-fill-lp)" />
+      <polyline points={pts} fill="none" stroke="#4AE8A0" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -154,59 +76,78 @@ function HeroPreview() {
 
 export default async function HomePage() {
   let gdp: AgentGDP | null = null;
+  let reports: ResearchReport[] = [];
+  let history: GDPSnapshot[] = [];
   let attr: AttributionMetrics | null = null;
+  let b20Stats: Awaited<ReturnType<typeof getB20Stats>> | null = null;
 
   try { gdp = await getAgentGDP(); } catch { /* unavailable */ }
+  try { reports = await listReports(3); } catch { /* unavailable */ }
+  try { history = await getGDPHistory(30); } catch { /* unavailable */ }
   try { attr = await getAttributionMetrics(); } catch { /* unavailable */ }
+  try { b20Stats = await getB20Stats(); } catch { /* unavailable */ }
+
+  // Scope lock: agent lists and live signals show only focus-ecosystem agents.
+  const topAgents = (gdp?.top_agents ?? []).filter(
+    (a) => !BANKR_ONLY || a.ecosystem === FOCUS_ECOSYSTEM,
+  );
 
   return (
     <div className="lp-root">
       <HomeHeader />
 
-      {/* ── 1. HERO ─────────────────────────────────────────────────────────── */}
-      <section style={{
-        background: "radial-gradient(ellipse 80% 50% at 50% -5%, rgba(74,232,160,0.055) 0%, transparent 65%)",
-        padding: "80px 40px 64px",
-      }}>
-        <div className="lp2-hero">
-          <FadeContent>
-            <Tag>Financial Intelligence Platform</Tag>
-            <h1 style={{
-              margin: "0 0 20px",
-              fontSize: "clamp(1.9rem, 3.4vw, 3rem)",
-              fontWeight: 800,
-              fontFamily: "var(--font-mono)",
-              color: "#D0D4E0",
-              lineHeight: 1.1,
-              letterSpacing: "-0.02em",
-            }}>
-              Financial intelligence<br />
-              for autonomous{" "}
-              <em style={{ fontStyle: "normal", color: "#4AE8A0" }}>agents.</em>
-            </h1>
-            <p style={{ margin: "0 0 32px", fontSize: "1rem", color: "#8B96A8", lineHeight: 1.7, maxWidth: 460, fontFamily: "var(--font-sans)" }}>
-              Zetta turns attributed agent wallet activity into Agent Books, treasury monitoring, revenue analysis, and Luca-powered reports.
-            </p>
-            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-              <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Registry →</Link>
-              <Link href="/registry#verify" className="lp-btn-ghost lp-btn-lg">Register Agent</Link>
-            </div>
-            <p style={{ margin: 0, fontSize: "0.72rem", color: "#505870", fontFamily: "var(--font-sans)" }}>
-              Bankr-first. Accuracy over breadth. No manifest, no official books.
-            </p>
-          </FadeContent>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <HeroPreview />
+      {/* ── HERO ── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "20px 40px 0" }}>
+        <div className="zetta-hero-grid">
+          {/* Left: Copy */}
+          <div>
+            <FadeContent>
+              <p className="lp-eyebrow">Zetta · Financial Intelligence Platform</p>
+              <h1 className="lp-h1" style={{ fontSize: "clamp(1.5rem, 2.8vw, 2.4rem)", maxWidth: 480 }}>
+                Financial Intelligence<br />
+                for the{" "}
+                <em style={{ fontStyle: "italic", color: "#4AE8A0" }}>Agent Economy.</em>
+              </h1>
+              <p className="lp-hero-sub">
+                Autonomous agents earn, spend, and manage capital on-chain. Zetta is the attribution layer that turns wallet activity into auditable books: revenue, expenses, treasury, and net income — per agent.
+              </p>
+              <div className="lp-hero-actions" style={{ marginBottom: 16 }}>
+                <Link href="/registry" className="lp-btn-primary lp-btn-lg">Explore Registry →</Link>
+                <Link href="/research" className="lp-btn-ghost lp-btn-lg">View Research</Link>
+              </div>
+
+              {/* Trusted-by row */}
+              <div className="zetta-trusted-row">
+                <span className="zetta-trusted-label">Active in</span>
+                {[
+                  { name: "BASE", color: "#4F46E5" },
+                  { name: "AEON", color: "#8B5CF6" },
+                  { name: "BANKR", color: "#6DB874" },
+                  { name: "EigenCloud", color: "#F97316" },
+                  { name: "VIRTUALS", color: "#5B8FA8" },
+                ].filter((e) => !BANKR_ONLY || e.name === FOCUS_ECOSYSTEM).map((e) => (
+                  <span key={e.name} className="zetta-trusted-item">
+                    <span className="zetta-trusted-dot" style={{ background: e.color }} />
+                    {e.name}
+                  </span>
+                ))}
+              </div>
+            </FadeContent>
+          </div>
+
+          {/* Right: Globe only */}
+          <div>
+            <AnimatedGlobe />
           </div>
         </div>
       </section>
 
-      {/* ── 2. STATS BAR ─────────────────────────────────────────────────────── */}
-      <div className="zetta-stats-bar" style={{ marginTop: 0 }}>
+      {/* ── STATS BAR ── */}
+      <div className="zetta-stats-bar" style={{ marginTop: 32 }}>
         {[
           { label: "Indexed Agents",       value: attr ? String(attr.total_agents) : "—" },
           { label: "Attributed Agents",    value: attr ? String(attr.attributed_agents) : "—" },
-          { label: "Attribution Coverage", value: attr ? `${attr.attribution_coverage_pct}%` : "—" },
+          { label: "Attribution Coverage", value: attr ? `${attr.attribution_coverage_pct}%` : "—%" },
           { label: "Agent GDP (30d)",      value: gdp  ? fmtUSD(gdp.total_revenue_usd) : "$—" },
         ].map((s) => (
           <div key={s.label} className="zetta-stats-bar-item">
@@ -216,417 +157,283 @@ export default async function HomePage() {
         ))}
       </div>
 
-      {/* ── 3. PROBLEM ───────────────────────────────────────────────────────── */}
-      <section style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-center" style={{ marginBottom: 48 }}>
-            <Tag>The Problem</Tag>
-            <H2>Agent wallets are hard to trust without attribution.</H2>
-            <p className="lp2-narrow" style={{ margin: "0 auto", fontSize: "0.9rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-              Agents operate wallets, receive payments, pay for inference, hold treasury, and deploy contracts. Raw wallet data cannot tell you who owns a wallet or whether activity is real revenue.
-            </p>
+      {/* ── ONE LAYER FOR ALL AGENT FINANCE ── */}
+      <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px 16px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "space-between", alignItems: "flex-end", marginBottom: 22 }}>
+          <div>
+            <p className="lp-eyebrow">Attributed data, defensible decisions</p>
+            <h2 style={{ margin: 0, fontSize: "clamp(1.3rem, 2.2vw, 1.8rem)", fontWeight: 700, color: "var(--ink)", maxWidth: 460 }}>
+              One layer for all agent finance
+            </h2>
           </div>
-          <div className="lp2-3col">
-            {[
-              {
-                label: "Unknown Ownership",
-                desc: "A wallet may be discovered, but that does not make it official. Discovery is not attribution.",
-                top: "#F4B942",
-              },
-              {
-                label: "Misleading Revenue",
-                desc: "Gross inflow, token transfers, and bridge receipts can look like revenue when they are not.",
-                top: "#F46060",
-              },
-              {
-                label: "Missing Context",
-                desc: "Without wallet roles, confidence levels, and source labels, users cannot trust the numbers.",
-                top: "#505870",
-              },
-            ].map((c) => (
-              <div key={c.label} style={{
-                background: "#111418",
-                border: "1px solid #21262F",
-                borderTop: `3px solid ${c.top}`,
-                borderRadius: 8,
-                padding: "24px",
-              }}>
-                <h3 style={{ margin: "0 0 10px", fontSize: "0.88rem", fontWeight: 700, color: "#D0D4E0", fontFamily: "var(--font-mono)" }}>{c.label}</h3>
-                <p style={{ margin: 0, fontSize: "0.8rem", color: "#8B96A8", lineHeight: 1.65, fontFamily: "var(--font-sans)" }}>{c.desc}</p>
-              </div>
-            ))}
-          </div>
+          <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 340 }}>
+            Index, attribute, classify, and explain agent finances with one platform built for accuracy over breadth.
+          </p>
+        </div>
+        <div className="zetta-platform-grid">
+          {[
+            { icon: "◈", title: "Identity & Registry", desc: "Every agent indexed with verified metadata, ecosystem tags, and a public financial profile." },
+            { icon: "▤", title: "Wallet Attribution", desc: "Teams declare wallets via .agent/wallets.json. Declared, discovered, and inferred wallets are never confused." },
+            { icon: "≡", title: "Agent Books", desc: "Attributed activity becomes auditable statements: revenue, expenses, treasury, and net income — with confidence levels." },
+            { icon: "◎", title: "Luca Intelligence", desc: "An AI analyst that reads the books, cites its sources, and refuses to invent missing data." },
+            { icon: "✓", title: "Verification", desc: "Signature-based claims and manifest checks separate verified operators from unverified candidates." },
+            { icon: "⌁", title: "API Access", desc: "Books, registry, and truth endpoints with scoped keys — the same numbers the UI shows, machine-readable." },
+          ].map((c) => (
+            <div key={c.title} className="zetta-platform-card">
+              <div className="zetta-platform-icon" aria-hidden="true">{c.icon}</div>
+              <p style={{ margin: "0 0 6px", fontSize: "0.88rem", fontWeight: 700, color: "var(--ink)" }}>{c.title}</p>
+              <p style={{ margin: 0, fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.6 }}>{c.desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ── 4. WHAT ZETTA DOES (Features) ────────────────────────────────────── */}
-      <section className="lp2-section-bg" style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-center" style={{ marginBottom: 48 }}>
-            <Tag>The Platform</Tag>
-            <H2>One layer for agent financial intelligence.</H2>
-          </div>
-          <div className="lp2-6col">
+      {/* ── ZETTA STACK ── */}
+      <section className="zetta-stack-section">
+        <div className="zetta-stack-inner">
+          <p className="zetta-stack-eyebrow">How Zetta Works</p>
+          <div className="zetta-stack-flow">
             {[
-              { icon: "◈", label: "Agent Registry",    desc: "Browse indexed agents with verification, wallet, books, and data status." },
-              { icon: "▤", label: "Wallet Attribution", desc: "Agents declare official wallets through .agent/wallets.json. Declared wallets are never confused with discovered ones." },
-              { icon: "≡", label: "Agent Books",        desc: "Attributed wallet activity becomes readable revenue, expenses, treasury, and net flow — with confidence levels." },
-              { icon: "◎", label: "Luca Reports",       desc: "Luca explains what is known, what is missing, and what needs verification — without inventing data." },
-              { icon: "⌁", label: "API Access",         desc: "Build with agent books, revenue, wallet truth, registry, and badge endpoints. Machine-readable." },
-              { icon: "✓", label: "Trust Rules",        desc: "Missing data is not zero. Discovered wallets are not official. Token activity is not revenue." },
-            ].map((c) => (
-              <div key={c.label} className="lp2-feature-card">
-                <div style={{ fontSize: "1.1rem", color: "#4AE8A0", marginBottom: 12, fontFamily: "var(--font-mono)" }} aria-hidden="true">{c.icon}</div>
-                <h3 style={{ margin: "0 0 8px", fontSize: "0.85rem", fontWeight: 700, color: "#D0D4E0", fontFamily: "var(--font-sans)" }}>{c.label}</h3>
-                <p style={{ margin: 0, fontSize: "0.76rem", color: "#505870", lineHeight: 1.65, fontFamily: "var(--font-sans)" }}>{c.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 5. HOW IT WORKS ──────────────────────────────────────────────────── */}
-      <section style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-center" style={{ marginBottom: 48 }}>
-            <Tag>Process</Tag>
-            <H2>From wallet declaration to financial intelligence.</H2>
-          </div>
-          <div className="lp2-flow">
-            {[
-              { step: "Agent Profile",      desc: "Agent indexed with identity, ecosystem, and metadata." },
-              { step: ".agent/wallets.json", desc: "Team submits a manifest declaring official wallets and roles." },
-              { step: "Wallet Attribution", desc: "Declared wallets are attributed. Discovered wallets remain unattributed." },
-              { step: "On-chain Data",      desc: "Attributed wallet transactions are fetched and stored." },
-              { step: "Classification",     desc: "Activity classified as revenue, expenses, treasury, or internal transfer." },
-              { step: "Agent Books",        desc: "Classified data becomes readable financial statements per agent." },
-              { step: "Luca Report",        desc: "Luca reads the books and writes a plain-language financial verdict." },
-              { step: "API / Profile",      desc: "Data served through public profiles and developer API endpoints." },
+              { step: "Attribution", desc: "Wallet manifests declare which addresses belong to each agent. This is the foundation — no attribution, no books.", color: "#4AE8A0" },
+              { step: "Books",       desc: "Attributed transactions are classified into operating revenue, expenses, treasury, and net income per agent.", color: "#5B9EF4" },
+              { step: "History",     desc: "Books are snapshotted across reporting periods to track trends, growth, and operational health over time.", color: "#8B7CF6" },
+              { step: "Economy",     desc: "All attributed agents are aggregated into the Agent GDP — the financial pulse of the autonomous economy.", color: "#F4B942" },
+              { step: "Intelligence", desc: "Luca reads the attributed books and produces financial verdicts: signals, verdicts, confidence levels.", color: "#4AE8A0" },
             ].map((item, i, arr) => (
-              <div key={item.step} style={{ display: "flex", alignItems: "flex-start" }}>
-                <div className="lp2-flow-step">
-                  <div style={{ color: "#4AE8A0", fontSize: "0.6rem", fontFamily: "var(--font-mono)", fontWeight: 700, marginBottom: 6 }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </div>
-                  <div style={{ color: "#D0D4E0", fontSize: "0.75rem", fontWeight: 700, fontFamily: "var(--font-sans)", marginBottom: 6, lineHeight: 1.3 }}>
-                    {item.step}
-                  </div>
-                  <div style={{ color: "#505870", fontSize: "0.68rem", fontFamily: "var(--font-sans)", lineHeight: 1.55 }}>
-                    {item.desc}
-                  </div>
+              <div key={item.step} className="zetta-stack-item">
+                <div className="zetta-stack-step-head">
+                  <span className="zetta-stack-num" style={{ color: item.color }}>{String(i + 1).padStart(2, "0")}</span>
+                  <span className="zetta-stack-label" style={{ color: item.color }}>{item.step}</span>
                 </div>
-                {i < arr.length - 1 && (
-                  <div className="lp2-flow-arrow" aria-hidden="true">→</div>
-                )}
+                <p className="zetta-stack-desc">{item.desc}</p>
+                {i < arr.length - 1 && <span className="zetta-stack-arrow" aria-hidden="true">→</span>}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── 6. AGENT BOOKS PREVIEW ────────────────────────────────────────────── */}
-      <section className="lp2-section-bg" style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-2col">
-            <div>
-              <Tag>Agent Books</Tag>
-              <H2>Readable books for autonomous agents.</H2>
-              <p style={{ margin: "0 0 20px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-                Agent Books are generated only from attributed, books-eligible wallets. If data is missing, Zetta shows —, not fake $0.00.
-              </p>
-              <ul style={{ margin: "0 0 28px", padding: "0 0 0 16px", color: "#8B96A8", fontSize: "0.82rem", fontFamily: "var(--font-sans)", lineHeight: 1.9 }}>
-                <li>Only manifest-declared wallets contribute to books</li>
-                <li>Operating revenue is separate from token inflows</li>
-                <li>Every figure carries source, period, and confidence</li>
-                <li>Missing data is shown as — not $0.00</li>
-              </ul>
-              <Link href="/registry" className="lp-btn-primary" style={{ display: "inline-flex" }}>Explore Agent Profiles →</Link>
-            </div>
-            <div style={{ background: "#0A0C10", border: "1px solid #21262F", borderRadius: 8, overflow: "hidden" }}>
-              <div style={{
-                background: "#181C24",
-                padding: "10px 16px",
-                borderBottom: "1px solid #21262F",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}>
-                <span style={{ color: "#D0D4E0", fontSize: "0.78rem", fontFamily: "var(--font-mono)", fontWeight: 700 }}>Agent Books</span>
-                <Badge color="#F4B942">Confidence: Medium</Badge>
-              </div>
-              <div style={{ padding: 16 }}>
-                {[
-                  { label: "Period",           value: "30d",                      color: "#D0D4E0" },
-                  { label: "Source",           value: "Manifest-declared wallets", color: "#D0D4E0" },
-                  { label: "Wallets included", value: "2",                        color: "#D0D4E0" },
-                  { label: "Data status",      value: "Fresh",                    color: "#4AE8A0" },
-                ].map((row) => (
-                  <div key={row.label} className="lp2-books-row">
-                    <span style={{ color: "#505870", fontFamily: "var(--font-sans)" }}>{row.label}</span>
-                    <span style={{ color: row.color, fontFamily: "var(--font-mono)", fontWeight: 600 }}>{row.value}</span>
-                  </div>
-                ))}
-                <div style={{ marginTop: 16, background: "#181C24", borderRadius: 6, padding: "12px 14px" }}>
-                  {[
-                    { label: "Operating Revenue", value: "—" },
-                    { label: "Expenses",          value: "—" },
-                    { label: "Net Flow",          value: "—" },
-                    { label: "Treasury",          value: "—" },
-                  ].map((row) => (
-                    <div key={row.label} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontSize: "0.82rem" }}>
-                      <span style={{ color: "#8B96A8", fontFamily: "var(--font-sans)" }}>{row.label}</span>
-                      <span style={{ color: "#D0D4E0", fontFamily: "var(--font-mono)", fontWeight: 700 }}>{row.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ── THREE-COLUMN DATA GRID ── */}
+      <div className="zetta-data-grid" style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 40px" }}>
 
-      {/* ── 7. LUCA ───────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-2col">
-            <div>
-              <Tag>Intelligence</Tag>
-              <H2>Meet Luca, the AI financial analyst for agents.</H2>
-              <p style={{ margin: "0 0 28px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-                Luca reads Zetta data and explains agent finances in plain language. Luca cites its sources, flags what is missing, and never invents data that is not in the books.
-              </p>
-              <Link href="/luca" className="lp-btn-primary" style={{ display: "inline-flex" }}>Ask Luca →</Link>
-            </div>
-            <div style={{ background: "#111418", border: "1px solid #21262F", borderRadius: 8, overflow: "hidden" }}>
-              <div style={{ background: "#181C24", padding: "10px 16px", borderBottom: "1px solid #21262F" }}>
-                <span style={{ color: "#4AE8A0", fontSize: "0.58rem", fontWeight: 700, fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Luca&apos;s Read</span>
-              </div>
-              <div style={{ padding: "20px" }}>
-                {[
-                  {
-                    label: "What we know",
-                    points: [
-                      "Wallets have been declared.",
-                      "Books are generated from eligible wallets.",
-                      "Revenue confidence is medium.",
-                    ],
-                    color: "#4AE8A0",
-                  },
-                  {
-                    label: "What is missing",
-                    points: [
-                      "More wallet evidence may improve confidence.",
-                      "Some activity may be unclassified.",
-                    ],
-                    color: "#F4B942",
-                  },
-                ].map((s) => (
-                  <div key={s.label} style={{ marginBottom: 20 }}>
-                    <div style={{ color: s.color, fontSize: "0.6rem", fontWeight: 700, fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-                      {s.label}
-                    </div>
-                    {s.points.map((pt) => (
-                      <div key={pt} style={{ color: "#8B96A8", fontSize: "0.77rem", fontFamily: "var(--font-sans)", lineHeight: 1.6, marginBottom: 4, paddingLeft: 10, borderLeft: "2px solid #21262F" }}>
-                        {pt}
+        {/* Col 1: Top Growing Agents */}
+        <div className="zetta-data-panel">
+          <div className="zetta-panel-header">
+            <span className="zetta-panel-title">Top Growing Agents</span>
+            <Link href="/leaderboard" className="zetta-panel-link">View all →</Link>
+          </div>
+          <table className="zetta-agent-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Agent</th>
+                <th>Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topAgents.length > 0 ? topAgents.slice(0, 6).map((agent, i) => {
+                const ecoColor = ECO_COLORS[agent.ecosystem] ?? "#4AE8A0";
+                return (
+                  <tr key={agent.slug}>
+                    <td style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>{i + 1}</td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: ecoColor, flexShrink: 0, display: "inline-block" }} />
+                        <Link href={`/registry/${agent.slug}`} style={{ fontWeight: 600, color: "var(--ink)", fontSize: "0.78rem" }}>{agent.name}</Link>
                       </div>
-                    ))}
-                  </div>
-                ))}
-                <div>
-                  <div style={{ color: "#5B9EF4", fontSize: "0.6rem", fontWeight: 700, fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-                    Next action
-                  </div>
-                  <div style={{ color: "#8B96A8", fontSize: "0.77rem", fontFamily: "var(--font-sans)", lineHeight: 1.6, paddingLeft: 10, borderLeft: "2px solid #21262F" }}>
-                    Submit or update the wallet manifest.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                    </td>
+                    <td style={{ fontFamily: "var(--font-mono)", color: "#4AE8A0", fontSize: "0.76rem" }}>{fmtUSD(agent.revenue_usd)}</td>
+                  </tr>
+                );
+              }) : (
+                <tr>
+                  <td colSpan={3} style={{ color: "var(--muted)", fontSize: "0.78rem", padding: "20px 8px" }}>
+                    Financial data loads as agents submit wallet manifests.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </section>
 
-      {/* ── 8. WALLET MANIFEST ────────────────────────────────────────────────── */}
-      <section className="lp2-section-bg" style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-2col">
-            <div>
-              <Tag>Wallet Manifest</Tag>
-              <H2>No manifest, no official books.</H2>
-              <p style={{ margin: "0 0 14px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-                The Agent Wallet Manifest is how agent teams declare official wallets. Without it, Zetta can discover wallets but cannot attribute them.
-              </p>
-              <p style={{ margin: "0 0 28px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-                Once submitted, attributed wallets contribute to Agent Books, revenue attribution, and Luca reports.
-              </p>
-              <Link href="/registry#verify" className="lp-btn-primary" style={{ display: "inline-flex" }}>Submit Manifest →</Link>
-            </div>
-            <div style={{ background: "#0A0C10", border: "1px solid #21262F", borderRadius: 8, overflow: "hidden" }}>
-              {/* Terminal bar */}
-              <div style={{ background: "#181C24", padding: "8px 14px", borderBottom: "1px solid #21262F", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F46060", display: "inline-block" }} />
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F4B942", display: "inline-block" }} />
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", display: "inline-block" }} />
-                <span style={{ marginLeft: 8, color: "#505870", fontSize: "0.6rem", fontFamily: "var(--font-mono)" }}>.agent/wallets.json</span>
-              </div>
-              <pre style={{
-                margin: 0,
-                padding: "20px",
-                fontSize: "0.72rem",
-                lineHeight: 1.7,
-                fontFamily: "var(--font-mono)",
-                color: "#8B96A8",
-                overflowX: "auto",
-              }}>
-{`{
-  "agent": "MyAgent",
-  "ecosystem": "Bankr",
-  "x": "@myagent",
-  "wallets": [
-    {
-      "address": "0x...",
-      "role": "treasury",
-      "chain": "base",
-      "notes": "Primary treasury wallet"
-    }
-  ]
-}`}
-              </pre>
-            </div>
+        {/* Col 2: Agent GDP Chart */}
+        <div className="zetta-data-panel">
+          <div className="zetta-panel-header">
+            <span className="zetta-panel-title">Agent GDP (30d)</span>
+            <Link href="/research" className="zetta-panel-link">Reports →</Link>
           </div>
-        </div>
-      </section>
-
-      {/* ── 9. BANKR-FIRST ───────────────────────────────────────────────────── */}
-      <section style={{ padding: "72px 40px", borderTop: "1px solid #21262F" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-center" style={{ marginBottom: 40 }}>
-            <Tag>Bankr-First</Tag>
-            <H2>Starting with Bankr agents.</H2>
-            <p className="lp2-narrow" style={{ margin: "0 auto 40px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-              Zetta is currently focused on making Bankr agents financially readable before expanding broadly across every ecosystem. Accuracy over breadth.
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
+              {gdp ? fmtUSD(gdp.total_revenue_usd) : "$—"}
             </p>
           </div>
-          <div className="lp2-4col" style={{ marginBottom: 40 }}>
-            {[
-              { label: "Agents Indexed",     value: attr ? String(attr.total_agents) : "—" },
-              { label: "Manifests Submitted", value: attr ? String(attr.status_breakdown.manifest) : "—" },
-              { label: "Live Books",          value: attr ? String(attr.attributed_agents) : "—" },
-              { label: "Needing Manifest",    value: attr ? String(attr.status_breakdown.none) : "—" },
-            ].map((s) => (
-              <div key={s.label} className="lp2-bankr-stat">
-                <div style={{ fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#D0D4E0", marginBottom: 6 }}>{s.value}</div>
-                <div style={{ fontSize: "0.65rem", color: "#505870", fontFamily: "var(--font-sans)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{s.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="lp2-center">
-            <Link href="/registry#verify" className="lp-btn-primary lp-btn-lg">Register your Bankr agent →</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 10. API ───────────────────────────────────────────────────────────── */}
-      <section className="lp2-section-bg" style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-2col">
-            <div>
-              <Tag>Developer API</Tag>
-              <H2>Build with agent financial data.</H2>
-              <p style={{ margin: "0 0 28px", fontSize: "0.875rem", color: "#8B96A8", lineHeight: 1.7, fontFamily: "var(--font-sans)" }}>
-                Use Zetta APIs to read attributed agent books, revenue, wallet truth, registry data, and badges. The same numbers the UI shows, machine-readable.
+          <GDPChart snapshots={history} />
+          <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <div className="zetta-economy-stat">
+              <p className="zetta-stat-label">Total Expenses</p>
+              <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)" }}>
+                {gdp ? fmtUSD(gdp.total_expenses_usd) : "$—"}
               </p>
-              <Link href="/api" className="lp-btn-primary" style={{ display: "inline-flex" }}>View Developers →</Link>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {[
-                { method: "GET", path: "/api/v1/agent-books/{slug}",    desc: "Agent financial statements" },
-                { method: "GET", path: "/api/v1/agent-revenue/{slug}",  desc: "Revenue attribution and breakdown" },
-                { method: "GET", path: "/api/v1/agent-truth/{slug}",    desc: "Wallet truth and attribution status" },
-                { method: "GET", path: "/api/registry/agents",          desc: "Full agent registry" },
-                { method: "GET", path: "/api/badge/{slug}",             desc: "Embeddable agent badge" },
-              ].map((ep) => (
-                <div key={ep.path} className="lp2-endpoint">
-                  <span style={{ color: "#4AE8A0", background: "rgba(74,232,160,0.08)", padding: "2px 6px", borderRadius: 3, fontSize: "0.6rem", fontWeight: 700, flexShrink: 0 }}>
-                    {ep.method}
-                  </span>
-                  <span style={{ color: "#D0D4E0", fontSize: "0.72rem", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {ep.path}
-                  </span>
-                  <span style={{ color: "#505870", fontSize: "0.68rem", fontFamily: "var(--font-sans)", flexShrink: 0 }}>
-                    {ep.desc}
-                  </span>
-                </div>
-              ))}
+            <div className="zetta-economy-stat">
+              <p className="zetta-stat-label">Net Income</p>
+              <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "#4AE8A0" }}>
+                {gdp ? fmtUSD(gdp.total_net_income_usd) : "$—"}
+              </p>
             </div>
           </div>
         </div>
-      </section>
 
-      {/* ── 11. TRUST ─────────────────────────────────────────────────────────── */}
-      <section style={{ padding: "72px 40px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div className="lp2-center" style={{ marginBottom: 48 }}>
-            <Tag>Trust &amp; Safety</Tag>
-            <H2>Designed for financial truth, not hype.</H2>
+        {/* Col 3: Latest Research */}
+        <div className="zetta-data-panel">
+          <div className="zetta-panel-header">
+            <span className="zetta-panel-title">Latest Research</span>
+            <Link href="/research" className="zetta-panel-link">All reports →</Link>
           </div>
-          <div className="lp2-4col">
+          {reports.length > 0 ? reports.slice(0, 3).map((r) => (
+            <div key={r.id} className="zetta-report-item">
+              <span className="zetta-type-badge">{r.type}</span>
+              <p style={{ margin: "4px 0 4px", fontSize: "0.82rem", fontWeight: 600, color: "var(--ink)", lineHeight: 1.35 }}>
+                <Link href={`/research/${r.slug}`} style={{ color: "var(--ink)" }}>{r.title}</Link>
+              </p>
+              <p style={{ margin: "0 0 4px", fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>
+                {r.summary.slice(0, 100)}{r.summary.length > 100 ? "…" : ""}
+              </p>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>{fmtDate(r.published_at)}</span>
+            </div>
+          )) : (
+            <p style={{ margin: "12px 0", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
+              Research publishes weekly. No reports yet.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* ── BOTTOM GRID ── */}
+      <div className="zetta-bottom-grid" style={{ maxWidth: 1200, margin: "0 auto" }}>
+        {/* Attribution Coverage */}
+        <div className="zetta-bottom-panel">
+          <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Attribution Coverage</p>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <h3 style={{ margin: 0, fontFamily: "var(--font-mono)", fontSize: "2rem", fontWeight: 700, color: "var(--ink)" }}>
+              {attr ? `${attr.attribution_coverage_pct}%` : "—%"}
+            </h3>
+            <span style={{ fontSize: "0.8rem", color: "var(--muted)" }}>of agents attributed</span>
+          </div>
+
+          {/* Stacked progress bar */}
+          {attr && attr.total_agents > 0 && (() => {
+            const total = attr.total_agents;
+            const mPct  = (attr.status_breakdown.manifest       / total) * 100;
+            const aPct  = (attr.status_breakdown.admin_attributed / total) * 100;
+            const iPct  = (attr.status_breakdown.inferred        / total) * 100;
+            return (
+              <div style={{ height: 6, borderRadius: 3, overflow: "hidden", background: "var(--line)", marginBottom: 14, display: "flex" }}>
+                <div style={{ width: `${mPct}%`, background: "#4AE8A0", transition: "width 0.4s" }} />
+                <div style={{ width: `${aPct}%`, background: "#4AE8A0", opacity: 0.7, transition: "width 0.4s" }} />
+                <div style={{ width: `${iPct}%`, background: "#F4B942", opacity: 0.5, transition: "width 0.4s" }} />
+              </div>
+            );
+          })()}
+
+          {/* Breakdown */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 16px", marginBottom: 16 }}>
             {[
-              { label: "Read-only",            desc: "Zetta never asks for private keys and cannot move funds." },
-              { label: "Attribution-first",    desc: "Discovered wallets are not official until attributed by the agent team." },
-              { label: "Conservative Revenue", desc: "Gross inflow and token activity are not treated as operating revenue by default." },
-              { label: "Confidence-aware",     desc: "Every financial number carries source, period, and confidence level." },
-            ].map((c) => (
-              <div key={c.label} className="lp2-trust-card">
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  background: "rgba(74,232,160,0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: 14,
-                  flexShrink: 0,
-                }}>
-                  <span style={{ color: "#4AE8A0", fontSize: "0.85rem" }}>✓</span>
+              { label: "Manifest",    value: attr?.status_breakdown.manifest ?? 0,        color: "#4AE8A0" },
+              { label: "Admin",       value: attr?.status_breakdown.admin_attributed ?? 0, color: "#4AE8A0" },
+              { label: "Inferred",    value: attr?.status_breakdown.inferred ?? 0,         color: "#F4B942" },
+              { label: "Unattributed",value: attr?.status_breakdown.none ?? 0,             color: "var(--muted)" },
+            ].map((row) => (
+              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: "50%", background: row.color, flexShrink: 0 }} />
+                <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{row.label}</span>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--ink)", fontFamily: "var(--font-mono)", marginLeft: "auto" }}>{row.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/registry/attribution" className="lp-btn-ghost" style={{ fontSize: "0.78rem", height: 32 }}>Full Report →</Link>
+            <Link href="/registry#verify" className="lp-btn-primary" style={{ fontSize: "0.78rem", height: 32 }}>Submit Manifest →</Link>
+          </div>
+        </div>
+
+        {/* What is Zetta */}
+        <div className="zetta-bottom-panel">
+          <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>What is Zetta?</p>
+          <h3 style={{ margin: "0 0 16px", fontFamily: "var(--font-serif)", fontSize: "1.2rem", fontWeight: 700, color: "var(--ink)" }}>Financial infrastructure for autonomous agents.</h3>
+          <div>
+            {[
+              { icon: "◈", title: "Identity Layer", desc: "Wallet manifests, role attribution, ecosystem indexing." },
+              { icon: "◉", title: "Classification Layer", desc: "Revenue, expenses, treasury — from raw on-chain data." },
+              { icon: "◎", title: "Intelligence Layer", desc: "Luca reads attributed books and produces financial summaries." },
+            ].map((f) => (
+              <div key={f.title} className="zetta-feature-pill">
+                <div className="zetta-feature-icon">
+                  <span style={{ fontSize: "0.9rem" }}>{f.icon}</span>
                 </div>
-                <h3 style={{ margin: "0 0 8px", fontSize: "0.85rem", fontWeight: 700, color: "#D0D4E0", fontFamily: "var(--font-sans)" }}>{c.label}</h3>
-                <p style={{ margin: 0, fontSize: "0.76rem", color: "#505870", lineHeight: 1.65, fontFamily: "var(--font-sans)" }}>{c.desc}</p>
+                <div>
+                  <p style={{ margin: "0 0 2px", fontSize: "0.8rem", fontWeight: 700, color: "var(--ink)" }}>{f.title}</p>
+                  <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.5 }}>{f.desc}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* ── 12. FINAL CTA ─────────────────────────────────────────────────────── */}
-      <section style={{
-        background: "radial-gradient(ellipse 60% 80% at 50% 100%, rgba(74,232,160,0.055) 0%, transparent 65%), #111418",
-        borderTop: "1px solid #21262F",
-        padding: "96px 40px",
-        textAlign: "center",
-      }}>
-        <Tag>Get Started</Tag>
-        <h2 style={{
-          margin: "0 0 16px",
-          fontSize: "clamp(1.7rem, 3vw, 2.4rem)",
-          fontWeight: 800,
-          fontFamily: "var(--font-mono)",
-          color: "#D0D4E0",
-          lineHeight: 1.15,
+      {/* ── B20 TOKEN INTELLIGENCE ── (non-Bankr surface, hidden under scope lock) */}
+      {!BANKR_ONLY && (
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
+        <div style={{
+          background: "var(--surface)",
+          border: "1px solid var(--line)",
+          borderLeft: "3px solid #4AE8A0",
+          borderRadius: 10,
+          padding: "24px 28px",
         }}>
-          Make your agent financially readable.
-        </h2>
-        <p style={{ margin: "0 auto 40px", fontSize: "0.95rem", color: "#8B96A8", lineHeight: 1.7, maxWidth: 480, fontFamily: "var(--font-sans)" }}>
-          Submit your wallet manifest, get attributed books, and let Luca explain the financial state of your agent.
-        </p>
-        <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/registry#verify" className="lp-btn-primary lp-btn-lg">Register Agent →</Link>
-          <Link href="/registry" className="lp-btn-ghost lp-btn-lg">Explore Registry</Link>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 20 }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <p style={{ margin: "0 0 4px", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#4AE8A0" }}>Token Intelligence</p>
+              <h3 style={{ margin: "0 0 10px", fontSize: "1.15rem", fontWeight: 700, color: "var(--ink)" }}>B20 Intelligence</h3>
+              <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6, maxWidth: 400 }}>
+                Zetta indexes B20 tokens, links them to agents and issuers, and checks financial readiness.
+                Token transfers are not revenue — but issuer attribution matters for books.
+              </p>
+            </div>
+            {b20Stats && (
+              <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "center" }}>
+                {[
+                  { label: "Tokens Indexed",    value: b20Stats.total,            color: "var(--ink)" },
+                  { label: "Attributed",         value: b20Stats.attributed,       color: "#4AE8A0"    },
+                  { label: "Awaiting Manifest",  value: b20Stats.awaiting_manifest, color: "#F4B942"   },
+                ].map((s) => (
+                  <div key={s.label} style={{ textAlign: "center", minWidth: 72 }}>
+                    <div style={{ fontSize: "1.6rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Link href="/b20" className="lp-btn-ghost" style={{ fontSize: "0.78rem", height: 32, whiteSpace: "nowrap" }}>View B20 Intelligence →</Link>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+      )}
 
-      {/* ── 13. FOOTER ────────────────────────────────────────────────────────── */}
+      {/* ── LIVE SIGNALS (tabbed) ── */}
+      <HomeSignals liveSignals={topAgents.length > 0 ? topAgents.slice(0, 4).map((agent, i) => ({
+        eco: agent.ecosystem,
+        color: ECO_COLORS[agent.ecosystem] ?? "#4AE8A0",
+        text: `${agent.name} attributed ${fmtUSD(agent.revenue_usd)} in operating revenue over 30 days.`,
+        ago: `${(i + 1) * 12}m ago`,
+      })) : undefined} />
+
+      <div style={{ height: 48 }} />
+
+      {/* ── Footer ── */}
       <SiteFooter />
     </div>
   );
