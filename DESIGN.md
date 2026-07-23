@@ -706,7 +706,208 @@ Replace the current hero/sections/footer stack with a command center layout:
 
 ### Page UX: Validate `/validate`
 
-**Structure:** paste manifest / upload file / repo path · validate schema · show errors / warnings · show inferred wallet roles if possible
+**Structure:** paste manifest / upload file / repo path · validate schema · show errors / warnings · show inferred wallet roles if possible · CTA to submit verified declaration
+
+**Goal:** Turn curiosity into structured attribution.
+
+---
+
+### Page UX: Submit Agent `/submit-agent`
+
+**Purpose:** Get new agents into the system.
+
+**Structure:** project name · website · X handle · primary wallet or manifest · evidence source · optional notes · next steps explanation
+
+**Goal:** Low-friction intake, not giant form fatigue.
+
+---
+
+### Page UX: Dashboard `/dashboard`
+
+**Purpose:** Working surface for real users.
+
+**Top command bar:** workspace · search · alerts · last sync · quick actions
+
+**Core tiles:** attributed revenue · expenses · treasury · net position · wallets requiring review · anomalies · unresolved verification items
+
+**Main panels:** my agents · recent wallet activity · Luca notes · manifest status · latest reports · alerts queue
+
+**Feel:** terminal / home screen.
+
+---
+
+### Page UX: My Agents `/dashboard/agents`
+
+**Structure:** list/table of managed agents · status chips · revenue / treasury / verification summary · quick actions (open workspace / review wallets / run Luca report / upload manifest)
+
+---
+
+### Page UX: Agent Workspace `/dashboard/agents/[agent-slug]`
+
+**Purpose:** The real operating center for one agent.
+
+**Tabs:** Overview · Wallets · Books · Reports · Luca · Verification · Settings
+
+- **Overview:** financial snapshot · current health · recent changes · unresolved issues
+- **Wallets:** declared / candidate / inferred · role editing / notes / evidence
+- **Books:** categorized inflows/outflows · period selector · revenue / expense / net · export
+- **Reports:** weekly / monthly / anomaly / custom export
+- **Luca:** ask Luca · saved prompts · analyst notes · generated summaries
+- **Verification:** manifests · signatures · evidence review · status history
+
+---
+
+### Page UX: Wallets `/dashboard/wallets`
+
+**Purpose:** Wallet operations layer.
+
+**Structure:** table of wallets · linked agents · roles · confidence · verification state · activity flags
+
+**Filters:** undeclared · candidate · stale · anomalous · high-activity
+
+---
+
+### Page UX: Books `/dashboard/books`
+
+**Structure:** period selector · entity filter · categorized totals · ledger/table · exports · caveat / confidence labels · reconciliation warnings
+
+---
+
+### Page UX: Reports `/dashboard/reports`
+
+**Structure:** scheduled reports · recent reports · create report
+
+**Templates:** weekly summary · monthly close · anomaly report · treasury health report
+
+---
+
+### Page UX: Alerts `/dashboard/alerts`
+
+**Purpose:** Exception management — the most important operational page.
+
+**Structure:** severity filters · anomaly list · treasury warnings · wallet issues · manifest failures · unresolved attribution gaps
+
+**Rule:** Financial software becomes useful when it shows what needs attention now.
+
+---
+
+### Page UX: Manifests `/dashboard/manifests`
+
+**Structure:** submitted manifests · validation status · last sync · version history · errors / warnings · resubmit / approve flow
+
+---
+
+### Page UX: Verification `/dashboard/verification`
+
+**Structure:** claims pending review · verified wallets · candidate wallets · signature-based submissions · evidence links · confidence transitions
+
+---
+
+### Page UX: API Dashboard `/dashboard/api`
+
+**Structure:** API keys · scopes · usage · rate limits · recent calls · key rotation
+
+---
+
+## UI Doctrine: Landing vs Product vs Dashboard
+
+*Recorded from agent decisions — 2026-07-23*
+
+**Core doctrine: One system. Three densities.**
+
+### A. Landing page doctrine
+
+**Job:** Sell belief, frame the category, route users.
+
+**Feel:** sharp · premium · credible · slightly terminal-influenced · not crowded · not generic SaaS
+
+**Rules:**
+- Fewer panels, stronger narrative hierarchy
+- Only highest-signal metrics
+- Short copy
+- Product routing is essential — every section must answer "why should I care?"
+
+**Density:** Low to medium
+
+**Avoid:** Clutter · giant essay sections · too many tables · too many control surfaces · fake hacker visuals
+
+---
+
+### B. Public product doctrine
+
+**Job:** Prove the system works.
+
+**Includes:** Registry · Research · Leaderboard · Luca · API · Methodology · Docs · Validation / submission flows
+
+**Rules:**
+- The data is the interface
+- Panels should feel queryable and structured
+- Tables are good
+- Confidence and attribution labels must always be visible
+- Luca outputs must sit next to evidence, not float alone
+- Public pages should feel inspectable
+
+**Density:** Medium to high
+
+**Design language:** tighter grids · chips / tags / status labels · condensed metric rows · analyst sidebars · more mono numerics · visible "last updated" and timeframe language
+
+**Avoid:** Hiding the methodology · overexplaining obvious financial concepts · social-feed style product pages · decorative emptiness
+
+---
+
+### C. Operator dashboard doctrine
+
+**Job:** Operate the books.
+
+**Feel:** terminal-grade · dense · fast · serious · workflow-first · minimal marketing
+
+**Rules:** Every screen must support action. The system must constantly answer:
+- What changed?
+- What is unresolved?
+- What needs review?
+- Where is the money?
+- How confident are we?
+
+**Density:** High
+
+**Design language:** multi-panel layouts · compact nav · financial command center · keyboard-friendly · persistent filters · live status bars · anomaly and confidence color language · compressed but readable typography
+
+**Avoid:** Oversized UI · soft landing-page cards · excessive whitespace · hidden important states · "assistant-first" layout that buries the books
+
+---
+
+### Shared visual doctrine (all three layers)
+
+**Typography:** sharp headers · mono/semi-mono numerics · uppercase labels · strong hierarchy
+
+**Color semantics:**
+- Dark neutral base
+- Amber = active / warning / selected
+- Green = healthy / positive / verified
+- Red = risk / anomaly / negative
+- Blue = informational only, used sparingly
+
+**Labels — always expose:** timeframe · confidence · attribution state · verification state · last updated
+
+**Language — use financial terms, not startup filler:**
+
+| Use | Not |
+|-----|-----|
+| Revenue, Expense, Treasury, Net Income | Engagement, momentum |
+| Attributed, Verified, Candidate | Community buzz |
+| Manifest, Evidence, Luca Verdict | AI magic wording |
+| Treasury Watch, Registry Alert | Ecosystem energy |
+
+---
+
+### Execution order
+
+| Phase | Scope |
+|-------|-------|
+| 1 | Homepage refactor · nav cleanup · routing clarity · visual doctrine lock |
+| 2 | Registry + agent page + leaderboard unified UI · research cleanup · Luca repositioned as analyst surface |
+| 3 | Operator dashboard system · manifests / verification / alerts / books workflows |
+| 4 | API + docs polish · keyboard shortcuts · saved views · terminal-grade operator tooling |
 
 ---
 
