@@ -83,12 +83,14 @@ export function StatusBadge({
 // ── VerificationBadge ─────────────────────────────────────────────────────────
 
 const VERIFICATION_MAP: Record<string, { variant: BadgeVariant; label: string }> = {
-  "Verified":           { variant: "verified",          label: "Verified ✓" },
-  "Luca Managed":       { variant: "luca-managed",      label: "Luca Managed ✓" },
-  "Wallets Declared":   { variant: "wallets-declared",  label: "Wallets Declared" },
-  "ERC-8004 Indexed":   { variant: "erc8004",           label: "ERC-8004" },
-  "Claimed":            { variant: "claimed",            label: "Claimed" },
-  "Candidate":          { variant: "candidate",          label: "Candidate" },
+  "Verified":            { variant: "verified",          label: "Verified ✓" },
+  "Luca Managed":        { variant: "luca-managed",      label: "Luca Managed ✓" },
+  "Wallets Declared":    { variant: "wallets-declared",  label: "Wallets Declared" },
+  "ERC-8004 Indexed":    { variant: "erc8004",           label: "ERC-8004" },
+  "Claimed":             { variant: "claimed",            label: "Claimed by Team" },
+  "Candidate":           { variant: "candidate",          label: "Candidate" },
+  "Needs Verification":  { variant: "warning",            label: "Needs Verification" },
+  "Awaiting Manifest":   { variant: "warning",            label: "Awaiting Manifest" },
 };
 
 export function VerificationBadge({ status, style }: { status: string; style?: CSSProperties }) {
