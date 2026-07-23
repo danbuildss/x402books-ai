@@ -231,7 +231,7 @@ function AgentRow({ agent, economics, momentum }: { agent: PublicAgent; economic
         <span
           title={`Verification score ${vs.total}/100`}
           style={{
-            fontSize: "0.66rem", fontWeight: 700, padding: "1px 6px", borderRadius: 3,
+            fontSize: "0.66rem", fontWeight: 700, padding: "1px 6px", borderRadius: 99,
             background: `color-mix(in srgb, ${scoreColor} 10%, transparent)`,
             border: `1px solid color-mix(in srgb, ${scoreColor} 25%, transparent)`,
             color: scoreColor, fontFamily: "var(--font-mono)",
@@ -664,78 +664,50 @@ function VerifyCTA() {
   );
 }
 
-// ── Powered by Luca — terminal-style two-column section ──────────────────────
+// ── Luca Audit Example ────────────────────────────────────────────────────────
 
 function LucaExample() {
   return (
-    <section className="reg-luca-section" id="audit-example">
-      <div className="reg-luca-inner">
-
-        {/* Left: description */}
-        <div className="reg-luca-left">
-          <p className="reg-label" style={{ marginBottom: 12 }}>&gt;_ Powered by Luca</p>
-          <h2 className="reg-h2" style={{ marginBottom: 10 }}>Every agent, read by an AI financial analyst.</h2>
-          <p className="reg-luca-body">
-            Luca reads each agent&apos;s wallet activity — inflows, outflows, settlements, inference spend —
-            and interprets it in plain language. No hallucinated numbers. No invented revenue.
-            Everything Luca writes is tied directly to on-chain evidence.
-          </p>
-          <div className="reg-luca-bullets">
-            {[
-              "Attribution-first: only attributed wallets generate books.",
-              "Cites every transaction — raw blockchain, not estimates.",
-              "Missing data shows as — never fabricated as $0.00.",
-              "Updates automatically as new activity is indexed.",
-            ].map((b) => (
-              <div key={b} className="reg-luca-bullet">
-                <span className="reg-luca-bullet-ico">✓</span>
-                {b}
-              </div>
-            ))}
+    <section className="reg-section" id="audit-example">
+      <div className="reg-section-head">
+        <p className="reg-label">Powered by Luca</p>
+        <h2 className="reg-h2">What an agent audit looks like.</h2>
+        <p className="reg-section-sub">Luca runs the audit, categorizes transactions, scores treasury health, and flags anomalies — instantly.</p>
+      </div>
+      <div className="reg-audit-wrap">
+        <div className="reg-audit-card">
+          <div className="reg-audit-header">
+            <div className="reg-audit-header-left">
+              <span className="reg-audit-tag">Agent Wallet Audit</span>
+              <span className="reg-audit-by">by Luca · Zetta</span>
+            </div>
+            <EcoBadge eco="Base" />
           </div>
-          <Link href="/luca" className="lp-btn-ghost" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.78rem" }}>
-            Learn about Luca →
-          </Link>
-        </div>
-
-        {/* Right: terminal card */}
-        <div className="reg-luca-right">
-          <div className="reg-terminal">
-            <div className="reg-terminal-bar">
-              <div className="reg-terminal-dots">
-                <span className="reg-terminal-dot reg-td-red" />
-                <span className="reg-terminal-dot reg-td-amber" />
-                <span className="reg-terminal-dot reg-td-green" />
-              </div>
-              <span className="reg-terminal-title">luca · financial audit · live</span>
-            </div>
-            <div className="reg-terminal-body">
-              <div><span className="t-prompt">luca@zetta</span><span className="t-dim">:~$</span> <span className="t-cmd">audit --agent luca --period 30d</span></div>
-              <div>&nbsp;</div>
-              <div><span className="t-comment"># Fetching attributed wallet activity...</span></div>
-              <div><span className="t-key">agent</span>{"      "}<span className="t-val">Luca</span>{"  "}<span className="t-key">ecosystem</span>{"  "}<span className="t-val">Bankr</span></div>
-              <div><span className="t-key">wallets</span>{"    "}<span className="t-val">1 declared</span>{"  "}<span className="t-key">status</span>{"  "}<span className="t-val">Luca Managed</span></div>
-              <div>&nbsp;</div>
-              <div><span className="t-sep">── income statement ──────────────────────</span></div>
-              <div><span className="t-key">revenue</span>{"      "}<span className="t-warn">no attributed data</span>{"  "}<span className="t-dim">→ manifest required</span></div>
-              <div><span className="t-key">expenses</span>{"     "}<span className="t-warn">no attributed data</span></div>
-              <div><span className="t-key">net_position</span>{"  "}<span className="t-warn">no attributed data</span></div>
-              <div>&nbsp;</div>
-              <div><span className="t-sep">── luca verdict ─────────────────────────</span></div>
-            </div>
-            <div className="reg-terminal-verdict">
-              <p className="reg-verdict-label">Luca · Financial Verdict</p>
-              <p className="reg-verdict-text">
-                Luca is indexed with 1 declared wallet but no attributed transaction data
-                is yet available. Wallet activity exists on-chain but cannot be attributed
-                without a complete signed manifest. Score: 88 — based on verification tier
-                and ecosystem standing. No books can be generated until the team extends
-                their manifest with treasury and operational wallet proofs.
-              </p>
+          <div className="reg-audit-body">
+            <div className="reg-audit-row"><span>Agent</span><strong>Gitlawb</strong></div>
+            <div className="reg-audit-row"><span>Token</span><strong>$GITLAWB</strong></div>
+            <div className="reg-audit-row"><span>Wallet</span><strong className="reg-mono">0x5F98…3DBa3</strong></div>
+            <div className="reg-audit-row"><span>Status</span><StatusBadge status="Needs Verification" /></div>
+            <div className="reg-audit-divider" />
+            <div className="reg-audit-row"><span>Transactions (30d)</span><strong>48</strong></div>
+            <div className="reg-audit-row"><span>Revenue (30d)</span><strong className="reg-positive">$521.58</strong></div>
+            <div className="reg-audit-row"><span>Net Income (30d)</span><strong className="reg-positive">+$112.44</strong></div>
+            <div className="reg-audit-divider" />
+            <div className="reg-audit-read">
+              <span className="reg-audit-read-label">Luca&apos;s read</span>
+              <p>Token contract with consistent 30-day activity and positive net flow. Strong public attribution on X. Treasury wallet claims exist but no direct wallet proof yet — verification recommended before upgrade to Verified status.</p>
             </div>
           </div>
+          <div className="reg-audit-footer">
+            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer" className="reg-audit-cta">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              </svg>
+              Audit your agent — @AskLucaBot
+            </a>
+            <Link href="/luca" className="reg-audit-learn">Learn about Luca →</Link>
+          </div>
         </div>
-
       </div>
     </section>
   );
@@ -841,52 +813,22 @@ export function RegistryClient({
   return (
     <div className="reg-page">
 
-      {/* ── Header — matches landing page exactly ── */}
-      <header className="reg-nav">
-        <Link href="/" className="reg-nav-brand">
-          <Logo />
-        </Link>
-
-        <nav className="reg-nav-center" aria-label="Main navigation">
-          <div className="reg-nav-dd">
-            <button className="reg-nav-dd-btn">
-              Product
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-            <div className="reg-nav-dd-panel">
-              <Link href="/registry" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Registry</p><p className="reg-nav-dd-desc">Indexed agents with attribution and books status.</p></Link>
-              <Link href="/registry" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Agent Books</p><p className="reg-nav-dd-desc">Attributed wallet activity turned into readable financials.</p></Link>
-              <Link href="/leaderboard" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Leaderboard</p><p className="reg-nav-dd-desc">Revenue and attribution rankings across all agents.</p></Link>
-              <Link href="/luca" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Luca</p><p className="reg-nav-dd-desc">AI financial analyst. Reads books, cites sources, never invents data.</p></Link>
-            </div>
-          </div>
-          <div className="reg-nav-dd">
-            <button className="reg-nav-dd-btn">
-              Solutions
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-            <div className="reg-nav-dd-panel">
-              <Link href="/registry#verify" className="reg-nav-dd-item"><p className="reg-nav-dd-title">For Agent Teams</p><p className="reg-nav-dd-desc">Submit a manifest, get attributed books, share your financial profile.</p></Link>
-              <Link href="/api" className="reg-nav-dd-item"><p className="reg-nav-dd-title">For Developers</p><p className="reg-nav-dd-desc">API access to agent books, registry, revenue, and badge endpoints.</p></Link>
-              <Link href="/research" className="reg-nav-dd-item"><p className="reg-nav-dd-title">For Researchers</p><p className="reg-nav-dd-desc">Analyst-grade reports on agent finance and ecosystem attribution.</p></Link>
-            </div>
-          </div>
-          <div className="reg-nav-dd">
-            <button className="reg-nav-dd-btn">
-              About Us
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-            <div className="reg-nav-dd-panel">
-              <Link href="/about" className="reg-nav-dd-item"><p className="reg-nav-dd-title">What is Zetta</p><p className="reg-nav-dd-desc">Financial intelligence infrastructure for autonomous agents.</p></Link>
-              <Link href="/research" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Methodology</p><p className="reg-nav-dd-desc">How we classify wallets, revenue, and attribution confidence.</p></Link>
-              <Link href="/about" className="reg-nav-dd-item"><p className="reg-nav-dd-title">Contact</p><p className="reg-nav-dd-desc">Get in touch with the Zetta team.</p></Link>
-            </div>
-          </div>
+      {/* ── Header ── */}
+      <header className="lp-header">
+        <Link href="/" className="lp-brand"><Logo /></Link>
+        <nav className="lp-nav" aria-label="Main navigation">
+          <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/adopt">Adopt</Link>
+          <Link href="/research">Research</Link>
+          <Link href="/api">API</Link>
+          <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs ↗</a>
+          <Link href="/luca">Luca</Link>
         </nav>
-
-        <div className="reg-nav-right">
+        <div className="lp-header-right">
           <ThemeToggle />
-          <Link href="/access" className="reg-nav-signin">Sign In</Link>
+          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
+          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
         </div>
       </header>
 

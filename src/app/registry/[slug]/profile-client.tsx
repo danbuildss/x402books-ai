@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { toPng } from "html-to-image";
+import { Logo } from "@/components/logo";
+import { DOCS_URL } from "@/lib/docs-url";
+import { ThemeToggle } from "@/components/effects";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
 import { StatusBadge as UIStatusBadge, CostStatusBadge } from "@/components/ui/badge";
@@ -20,7 +23,6 @@ import type { VerificationScore } from "@/lib/verification-scorer";
 import { TIER_LABELS, TIER_BADGE_CLASS } from "@/lib/verification-scorer";
 import { computeMomentum } from "@/lib/agent-momentum";
 import { SiteFooter } from "@/components/site-footer";
-import { SiteNav } from "@/components/site-nav";
 import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
@@ -62,7 +64,7 @@ function ConfidenceLabelBadge({ slug }: { slug: string }) {
   if (!label) return null;
   const meta = CONFIDENCE_META[label.confidence_level];
   return (
-    <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: "var(--radius-card, 8px)", border: `1px solid ${meta.color}44`, background: `${meta.color}0d` }}>
+    <div style={{ marginBottom: 12, padding: "10px 14px", borderRadius: 8, border: `1px solid ${meta.color}44`, background: `${meta.color}0d` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: label.public_note ? 6 : 0 }}>
         <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: meta.color, flexShrink: 0 }} />
         <span style={{ fontSize: "0.75rem", fontWeight: 700, color: meta.color }}>{meta.label}</span>
@@ -151,7 +153,7 @@ function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; ag
     <section className="prof-section" style={{ borderLeft: "3px solid var(--line)", paddingLeft: 14 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+        <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
           Not attributed
         </span>
       </div>
@@ -280,7 +282,7 @@ function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUn
         <section className="prof-section" style={{ borderLeft: "3px solid var(--muted)", paddingLeft: 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
             <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
-            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3, background: "var(--muted)18", border: "1px solid var(--muted)40", color: "var(--muted)", letterSpacing: "0.02em" }}>
+            <span style={{ fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99, background: "var(--muted)18", border: "1px solid var(--muted)40", color: "var(--muted)", letterSpacing: "0.02em" }}>
               Under Review
             </span>
           </div>
@@ -301,7 +303,7 @@ function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUn
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
         <p className="prof-section-title" style={{ margin: 0 }}>Agent Books</p>
         <span style={{
-          fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 3,
+          fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
           background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)",
           letterSpacing: "0.02em",
         }}>
@@ -761,7 +763,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
               {visiblePatterns.map((p) => (
                 <span key={p} style={{
                   fontSize: "0.62rem", fontWeight: 600, padding: "2px 7px",
-                  borderRadius: 3, background: "rgba(80,70,50,0.07)",
+                  borderRadius: 99, background: "rgba(80,70,50,0.07)",
                   color: "#7a7364", border: "1px solid rgba(80,70,50,0.12)",
                 }}>
                   {CARD_PATTERN_LABEL[p] ?? p}
@@ -834,7 +836,7 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
   const [failed, setFailed] = useState(false);
   if (failed || !agent.xHandle) {
     return (
-      <div className="tla-avatar">
+      <div className="prof-avatar prof-avatar-fallback">
         {agent.name[0]}
       </div>
     );
@@ -844,9 +846,9 @@ function ProfileAvatar({ agent }: { agent: Agent }) {
     <Image
       src={src}
       alt={agent.name}
-      width={56}
-      height={56}
-      className="tla-avatar"
+      width={72}
+      height={72}
+      className="prof-avatar"
       onError={() => setFailed(true)}
       unoptimized
     />
@@ -1039,7 +1041,7 @@ function InferenceTab({
       <section className="prof-section">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <p className="prof-section-title" style={{ margin: 0 }}>Inference · Last {ia.periodDays}d</p>
-          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 3, background: "var(--accent)10", border: "1px solid var(--accent)30", color: "var(--accent)" }}>
+          <span style={{ fontSize: "0.65rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99, background: "var(--accent)10", border: "1px solid var(--accent)30", color: "var(--accent)" }}>
             Surplus Pilot
           </span>
         </div>
@@ -1101,11 +1103,11 @@ function InferenceTab({
         <p className="prof-section-title">Monthly Statement · {month}</p>
         <p style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.65, margin: "0 0 12px" }}>{verdict}</p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
+          <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)" }}>
             {ia.costStatus === "actual" ? "Actual billing" : ia.costStatus === "estimated" ? "Estimated spend" : "Cost data missing"}
           </span>
           {ia.primaryProvider && (
-            <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 3, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)", textTransform: "capitalize" }}>
+            <span style={{ fontSize: "0.72rem", padding: "2px 8px", borderRadius: 99, background: "var(--surface-soft)", border: "1px solid var(--line)", color: "var(--muted)", textTransform: "capitalize" }}>
               via {ia.primaryProvider}
             </span>
           )}
@@ -1257,7 +1259,7 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
     <section className="prof-section">
       <p className="prof-section-title" style={{ display: "flex", alignItems: "center", gap: 6 }}>
         Tool Decisions
-        <span style={{ fontSize: "0.65rem", fontWeight: 500, color: "var(--muted)", background: "var(--surface-soft)", padding: "1px 6px", borderRadius: 3, border: "1px solid var(--line)" }}>
+        <span style={{ fontSize: "0.65rem", fontWeight: 500, color: "var(--muted)", background: "var(--surface-soft)", padding: "1px 6px", borderRadius: 99, border: "1px solid var(--line)" }}>
           via Nipmod
         </span>
       </p>
@@ -1300,7 +1302,7 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
                 <span style={{ fontSize: "0.68rem", color: "var(--muted)", flexShrink: 0 }}>{e.source}</span>
               )}
               <span style={{
-                fontSize: "0.64rem", fontWeight: 600, padding: "2px 6px", borderRadius: 3,
+                fontSize: "0.64rem", fontWeight: 600, padding: "2px 6px", borderRadius: 99,
                 color: rs.color, background: rs.bg, border: `1px solid ${rs.border}`,
                 flexShrink: 0, textTransform: "capitalize",
               }}>
@@ -2007,7 +2009,23 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
   return (
     <div className="prof-page">
       {/* Header */}
-      <SiteNav />
+      <header className="lp-header">
+        <Link href="/" className="lp-brand"><Logo /></Link>
+        <nav className="lp-nav" aria-label="Main navigation">
+          <Link href="/registry" style={{ color: "var(--accent)" }}>Registry</Link>
+          <Link href="/leaderboard">Leaderboard</Link>
+          <Link href="/adopt">Adopt</Link>
+          <Link href="/research">Research</Link>
+          <Link href="/api">API</Link>
+          <a href={DOCS_URL} target="_blank" rel="noreferrer">Docs ↗</a>
+          <Link href="/luca">Luca</Link>
+        </nav>
+        <div className="lp-header-right">
+          <ThemeToggle />
+          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
+          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
+        </div>
+      </header>
 
       <main className="prof-main">
         {/* Back */}
@@ -2023,19 +2041,20 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           Agent Registry
         </button>
 
-        {/* Identity — TL-A grid (no card wrapper) */}
-        <div className="tla-identity">
+        {/* Identity card */}
+        <div className="prof-identity">
           <ProfileAvatar agent={agent} />
-          <div className="tla-identity-info">
-            <div className="tla-name-row">
-              <h1 className="tla-agent-name">{agent.name}</h1>
-              {agent.symbol && <span className="tla-agent-symbol">{agent.symbol}</span>}
-              <span className={`tla-badge tla-b-blue`}>{agent.ecosystem}</span>
+          <div className="prof-identity-info">
+            <div className="prof-name-row">
+              <h1 className="prof-name">{agent.name}</h1>
+              <span className="prof-symbol">{agent.symbol}</span>
+              <span className={`reg-badge reg-eco reg-eco-${agent.ecosystem.toLowerCase()}`}>{agent.ecosystem}</span>
             </div>
-            <p className="tla-agent-bio" style={{ color: agent.bio ? "var(--ink)" : "var(--muted)", fontStyle: agent.bio ? "normal" : "italic" }}>
+            {/* 2 — Bio / one-line description */}
+            <p className="prof-bio" style={{ margin: "4px 0 6px", fontSize: "0.84rem", lineHeight: 1.55, color: agent.bio ? "var(--ink)" : "var(--muted)", fontStyle: agent.bio ? "normal" : "italic" }}>
               {agent.bio ?? "No bio yet — claim this profile to add one."}
             </p>
-            <div className="tla-status-row">
+            <div className="prof-links">
               {agent.xHandle && (
                 <a href={`https://x.com/${agent.xHandle.replace("@","")}`} target="_blank" rel="noreferrer" className="prof-link">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -2057,15 +2076,16 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               )}
             </div>
           </div>
-        </div>
-
-        {/* Actions row */}
-        <div className="tla-actions-row">
-          <button type="button" className="tla-btn" onClick={() => setShowShare(true)}>↗ Share Profile</button>
-          <button type="button" className="tla-btn" onClick={() => setShowEmbed(true)}>⧉ Copy Embed</button>
-          <span style={{ fontSize: "0.74rem", color: "var(--muted)", padding: "7px 0", fontFamily: "var(--font-mono)" }}>
-            zettaai.co/registry/{slug}
-          </span>
+          <div className="prof-share-wrap" style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <button type="button" className="prof-share-btn" onClick={() => setShowEmbed(true)} style={{ opacity: 0.8 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>code</span>
+              Embed
+            </button>
+            <button type="button" className="prof-share-btn" onClick={() => setShowShare(true)}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>share</span>
+              Share
+            </button>
+          </div>
         </div>
 
         {/* Anomaly alerts */}
@@ -2073,11 +2093,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           <div style={{
             display: "flex", flexDirection: "column", gap: 6,
             padding: "10px 14px",
-            background: "color-mix(in srgb, #F4B942 6%, var(--surface))",
-            border: "1px solid color-mix(in srgb, #F4B942 25%, transparent)",
+            background: "color-mix(in srgb, #F4B942 8%, var(--surface))",
+            border: "1px solid color-mix(in srgb, #F4B942 30%, transparent)",
             borderLeft: "3px solid #F4B942",
-            borderRadius: "var(--radius-card, 8px)",
-            marginBottom: 8,
+            borderRadius: 8,
+            marginBottom: 6,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
               <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#F4B942" }}>
@@ -2087,12 +2107,11 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").map((a, i) => (
               <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                 <span style={{
-                  fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
-                  padding: "2px 5px", borderRadius: "var(--radius-sm, 3px)",
+                  fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+                  padding: "2px 5px", borderRadius: 3,
                   background: a.severity === "high" ? "color-mix(in srgb, #F46060 15%, transparent)" : "color-mix(in srgb, #F4B942 15%, transparent)",
                   color: a.severity === "high" ? "#F46060" : "#F4B942",
                   flexShrink: 0, marginTop: 1,
-                  fontFamily: "var(--font-sans, sans-serif)",
                 }}>
                   {a.severity}
                 </span>
@@ -2102,49 +2121,48 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           </div>
         )}
 
-        {/* 3 — Status badges row */}
-        <div className="tla-status-row" style={{ marginBottom: 16 }}>
+        {/* 3 — Exactly three labeled pills: Identity / Books / Data.
+            Wallet status lives in the wallet section; treasury health lives in
+            the metrics; momentum lives in the metrics strip. No badge pile. */}
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center", marginBottom: 6 }}>
           {(() => {
             const dataTruncated = books?.attributed && books.confidence.flags.includes("tx_window_truncated");
             const dataMeta =
               dataTruncated
-                ? { label: "Truncated", tip: "Transaction fetch hit its limit — financial totals may be incomplete.", cls: "tla-b-amber" }
+                ? { label: "Truncated", tip: "Transaction fetch hit its limit — financial totals may be incomplete.", color: "#F59E0B" }
                 : agent.dataStatus === "fresh"
-                  ? { label: "Fresh",   tip: "Registry data checked within the last 7 days.", cls: "tla-b-green" }
+                  ? { label: "Fresh", tip: "Registry data checked within the last 7 days.", color: "#6DB874" }
                   : agent.dataStatus === "stale"
-                    ? { label: "Stale",   tip: "Registry data has not been checked recently.", cls: "tla-b-red" }
-                    : { label: "Partial", tip: "Some registry data has never been checked.", cls: "tla-b-muted" };
+                    ? { label: "Stale", tip: "Registry data has not been checked recently.", color: "#F97316" }
+                    : { label: "Partial", tip: "Some registry data has never been checked.", color: "var(--muted)" };
             const booksMeta = BOOKS_STATUS_META[agent.booksStatus];
-            const booksCls = booksMeta.color === "#4AE8A0" || booksMeta.color === "#6DB874" || booksMeta.color === "#1CB870"
-              ? "tla-b-green" : booksMeta.color === "#F59E0B" || booksMeta.color === "#F4B942"
-              ? "tla-b-amber" : booksMeta.color === "#F46060" || booksMeta.color === "#D43F3F" || booksMeta.color === "#ef4444"
-              ? "tla-b-red" : "tla-b-muted";
-            const idColor = PROFILE_STATUS_META[agent.profileStatus].color;
-            const idCls = idColor === "#4AE8A0" || idColor === "#6DB874" || idColor === "#1CB870"
-              ? "tla-b-green" : idColor === "#F59E0B" || idColor === "#F4B942"
-              ? "tla-b-amber" : idColor === "#F46060" || idColor === "#D43F3F"
-              ? "tla-b-red" : "tla-b-muted";
-            return (
-              <>
-                <span className={`tla-badge ${idCls}`} title={PROFILE_STATUS_META[agent.profileStatus].tip}>
-                  Identity: {STATUS_META[agent.verificationStatus].label}
-                </span>
-                <span className={`tla-badge ${booksCls}`} title={booksMeta.tip}>
-                  Books: {booksMeta.label}
-                </span>
-                <span className={`tla-badge ${dataMeta.cls}`} title={dataMeta.tip}>
-                  Data: {dataMeta.label}
-                </span>
-              </>
-            );
+            const idMeta = STATUS_META[agent.verificationStatus];
+            const pills = [
+              { prefix: "Identity", label: idMeta.label, tip: PROFILE_STATUS_META[agent.profileStatus].tip, color: PROFILE_STATUS_META[agent.profileStatus].color },
+              { prefix: "Books", label: booksMeta.label, tip: booksMeta.tip, color: booksMeta.color },
+              { prefix: "Data", label: dataMeta.label, tip: dataMeta.tip, color: dataMeta.color },
+            ];
+            return pills.map((p) => (
+              <span
+                key={p.prefix}
+                title={p.tip}
+                style={{
+                  fontSize: "0.68rem", fontWeight: 600, padding: "2px 9px", borderRadius: 99,
+                  border: `1px solid color-mix(in srgb, ${p.color} 30%, transparent)`,
+                  background: `color-mix(in srgb, ${p.color} 9%, transparent)`,
+                  color: p.color, whiteSpace: "nowrap",
+                }}
+              >
+                {p.prefix}: {p.label}
+              </span>
+            ));
           })()}
         </div>
 
-        {/* 4 — Financial metrics strip (seamless TL-A grid) */}
+        {/* 4 — Financial metrics strip */}
         <MetricsStrip metrics={profileMetrics} />
 
-        {/* 5 — Luca verdict (terminal style) */}
-        <div className="tla-section-label">Luca Verdict</div>
+        {/* 5 — Luca verdict (right after metrics) */}
         <LucaVerdictBlock
           verdict={operatorVerdict}
           adminNotes={agent.adminNotes}
@@ -2160,276 +2178,83 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
 
         <div className="prof-body">
 
-          {/* ── Agent Books ledger card ── */}
-          <div className="tla-section-label">Agent Books · 30d</div>
-          {books?.attributed ? (() => {
-            const f = books.financials;
-            const usdFmt = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const booksConfColor = (v: string) => v === "high" ? "tla-b-green" : v === "medium" ? "tla-b-amber" : "tla-b-red";
-            return (
-              <div className="ledger-card" style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 20 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Agent Books</span>
-                  <span className="tla-badge tla-b-muted">{books.period}</span>
-                </div>
-                {[
-                  { label: "Revenue",                    value: `+${usdFmt(f.revenue_usd)}`,  cls: "tla-t-pos" },
-                  { label: "Expenses",                   value: `−${usdFmt(f.expenses_usd)}`, cls: "tla-t-neg" },
-                  { label: "Net Income",                 value: f.net_income_usd >= 0 ? `+${usdFmt(f.net_income_usd)}` : `−${usdFmt(f.net_income_usd)}`, cls: f.net_income_usd >= 0 ? "tla-t-pos" : "tla-t-neg" },
-                  { label: "Net Margin",                 value: f.margin_pct !== null ? `${f.margin_pct.toFixed(1)}%` : "—", cls: (f.margin_pct ?? 0) >= 0 ? "tla-t-pos" : "tla-t-neg" },
-                  { label: "Transactions",               value: String(f.tx_count), cls: "" },
-                  { label: "Wallets Analyzed",           value: String(books.wallets.analyzed), cls: "" },
-                  { label: "Internal Transfers Excluded",value: String(books.attribution.internal_transfers_removed), cls: "" },
-                  { label: "Attribution Source",         value: books.attribution.source, cls: "" },
-                ].map(({ label, value, cls }, i, arr) => (
-                  <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
-                    <span style={{ color: "var(--muted)" }}>{label}</span>
-                    <span className={cls} style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", fontWeight: 600, fontVariantNumeric: "tabular-nums", textTransform: "capitalize" }}>{value}</span>
-                  </div>
-                ))}
-                <div style={{ display: "flex", gap: 6, padding: "10px 16px", borderTop: "1px solid var(--line)", flexWrap: "wrap" }}>
-                  {(["revenue","expenses","treasury","overall"] as const).map((k) => (
-                    <span key={k} className={`tla-badge ${booksConfColor(books.confidence[k])}`}>
-                      {k.charAt(0).toUpperCase() + k.slice(1)}: {books.confidence[k].charAt(0).toUpperCase() + books.confidence[k].slice(1)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            );
-          })() : (
-            <AgentBooksBlock books={booksOrFallback}>
-              {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
-            </AgentBooksBlock>
-          )}
+          {/* 6 — Agent Books (P4 header + 11-metric strip; honest unattributed states) */}
+          <AgentBooksBlock books={booksOrFallback}>
+            {books?.attributed && <BooksSummaryStrip metrics={buildBooksMetrics(books)} />}
+          </AgentBooksBlock>
 
-          {/* ── Two-col: Treasury Signals + Score/Health ── */}
-          {books?.attributed && (
-            <div className="tla-two-col">
-              {/* Left — Treasury Signals as ledger card */}
-              <TreasurySignals books={books} />
-
-              {/* Right — Verification score + financial health stacked */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {verificationScore && (
-                  <div className="tla-score-block">
-                    <div className="tla-score-top">
-                      <div>
-                        <div className="tla-score-num">{verificationScore.total}</div>
-                        <div className="tla-score-denom">/100</div>
-                      </div>
-                      <div className="tla-score-info">
-                        <div className="tla-score-title">Verification Score</div>
-                        <span className="tla-score-tier">{TIER_LABELS[verificationScore.tier]}</span>
-                      </div>
-                    </div>
-                    <div className="tla-score-bars">
-                      {[
-                        { label: "Manifest",  val: verificationScore.breakdown.manifest,  max: 30 },
-                        { label: "Wallets",   val: verificationScore.breakdown.wallets,    max: 25 },
-                        { label: "Activity",  val: verificationScore.breakdown.activity,   max: 20 },
-                        { label: "Metadata",  val: verificationScore.breakdown.metadata,   max: 15 },
-                        { label: "Ecosystem", val: verificationScore.breakdown.ecosystem,  max: 10 },
-                      ].map((d) => (
-                        <div key={d.label} className="tla-score-bar-row">
-                          <span className="tla-score-bar-label">{d.label}</span>
-                          <div className="tla-score-bar-track"><div className="tla-score-bar-fill" style={{ width: `${(d.val / d.max) * 100}%` }} /></div>
-                          <span className="tla-score-bar-num">{d.val}/{d.max}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {(() => {
-                  const hs = agentHealthScore(agent);
-                  const gc = gradeColor(hs.grade);
-                  return (
-                    <div className="tla-health-block" style={{ borderLeftColor: gc }}>
-                      <div>
-                        <div className="tla-grade-letter" style={{ color: gc }}>{hs.grade}</div>
-                        <div style={{ fontSize: "0.55rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: 2 }}>{hs.total}/100</div>
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--ink-em, var(--ink))", marginBottom: 8 }}>Financial Health</div>
-                        <div className="tla-score-bars">
-                          {[
-                            { label: "Wallets",      val: hs.wallet_coverage, max: 30 },
-                            { label: "Verification", val: hs.verification,    max: 35 },
-                            { label: "Evidence",     val: hs.evidence,        max: 20 },
-                            { label: "Activity",     val: hs.activity,        max: 15 },
-                          ].map((d) => (
-                            <div key={d.label} className="tla-score-bar-row">
-                              <span className="tla-score-bar-label">{d.label}</span>
-                              <div className="tla-score-bar-track"><div className="tla-score-bar-fill" style={{ width: `${(d.val / d.max) * 100}%`, background: gc }} /></div>
-                              <span className="tla-score-bar-num">{d.val}/{d.max}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          )}
-
-          {/* ── Financial Breakdown — two-col side by side ── */}
-          {books?.attributed ? (() => {
-            const revBuckets = buildRevenueBuckets(books);
-            const expBuckets = mapExpenseCategories(books.breakdown.expenses_by_category);
-            const usdFmt = (n: number) => "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const revSources = books.breakdown.revenue_by_source;
-            const totalRev = books.financials.revenue_usd || 1;
-            return (
-              <>
-                <div className="tla-section-label">Financial Breakdown</div>
-                <div className="tla-two-col">
-                  {/* Revenue by source */}
-                  <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
-                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Revenue by Source</span>
-                      <span className="tla-badge tla-b-green" style={{ fontSize: "0.6rem" }}>{revSources.length} sources</span>
-                    </div>
-                    {revSources.slice(0, 5).map((src, i, arr) => {
-                      const pct = Math.round((src.total_usd / totalRev) * 100);
-                      return (
-                        <div key={src.address} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
-                          <span style={{ color: "var(--muted)", fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>{src.address.slice(0, 6)}…{src.address.slice(-4)}</span>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                            <span style={{ fontFamily: "var(--font-mono)", color: "var(--positive)", fontWeight: 600 }}>{usdFmt(src.total_usd)}</span>
-                            <div style={{ width: 80, height: 3, background: "var(--line)", borderRadius: 2, overflow: "hidden" }}>
-                              <div style={{ height: "100%", width: `${pct}%`, background: i === 0 ? "var(--positive)" : i === 1 ? "var(--blue, #5B9EF4)" : "var(--muted)", borderRadius: 2 }} />
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {revSources.length === 0 && (
-                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "var(--muted)" }}>No revenue sources attributed.</div>
-                    )}
-                    {revBuckets.agentToken > 0 && (
-                      <div style={{ padding: "10px 16px", borderTop: "1px solid var(--line)", fontSize: "0.68rem", color: "var(--muted)" }}>
-                        Agent-token inflows ({usdFmt(revBuckets.agentToken)}) excluded from operating revenue.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Expenses by category */}
-                  <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
-                      <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Expenses by Category</span>
-                      <span className="tla-badge tla-b-red" style={{ fontSize: "0.6rem" }}>{Object.values(expBuckets).filter((b) => "value" in b && b.value > 0).length} categories</span>
-                    </div>
-                    {[
-                      { label: "Inference Compute", bucket: expBuckets.inference },
-                      { label: "Provider Spend",    bucket: expBuckets.provider  },
-                      { label: "External Expenses", bucket: expBuckets.external  },
-                      { label: "Unknown Expenses",  bucket: expBuckets.unknown   },
-                    ].filter(({ bucket }) => "value" in bucket && bucket.value > 0).map(({ label, bucket }, i, arr) => (
-                      <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < arr.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
-                        <span style={{ color: "var(--muted)" }}>{label}</span>
-                        <span style={{ fontFamily: "var(--font-mono)", color: "var(--negative)", fontWeight: 600 }}>−{usdFmt("value" in bucket ? bucket.value : 0)}</span>
-                      </div>
-                    ))}
-                    {Object.values(expBuckets).every((b) => !("value" in b) || b.value === 0) && (
-                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "var(--muted)" }}>No expense categories tracked.</div>
-                    )}
-                  </div>
-                </div>
-              </>
-            );
-          })() : null}
-
-          {/* ── Momentum + sparkline (inline, not in tab) ── */}
-          {books?.attributed && booksHistory && booksHistory.length >= 2 && (() => {
-            const m = computeMomentum(booksHistory, 30);
-            const ordered = [...booksHistory].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime());
-            const oldest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            const newest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            if (!m) return null;
-            const momentumRows = [
-              { label: "Revenue",    metric: m.revenue    },
-              { label: "Net Income", metric: m.net_income },
-              { label: "Expenses",   metric: m.expenses   },
-              { label: "Treasury",   metric: m.treasury   },
-            ].filter((r): r is { label: string; metric: NonNullable<typeof r.metric> } => r.metric !== null);
-            const revVals = ordered.map((s) => s.revenue_usd);
-            const maxRev = Math.max(...revVals) || 1;
-            return (
-              <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", padding: 16, marginBottom: 24 }}>
-                <div style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", marginBottom: 14 }}>
-                  30-Day Momentum · {m.snapshot_count} snapshots
-                </div>
-                <div className="tla-momentum-grid">
-                  {momentumRows.map(({ label, metric }) => {
-                    const icon  = metric.direction === "growing" ? "↑" : metric.direction === "declining" ? "↓" : "→";
-                    const color = metric.direction === "growing" ? "var(--positive)" : metric.direction === "declining" ? "var(--negative)" : "var(--muted)";
-                    const pctLabel = metric.direction === "stable" ? "stable" : `${metric.pct > 0 ? "+" : ""}${metric.pct.toFixed(1)}%`;
-                    return (
-                      <div key={label}>
-                        <div style={{ fontSize: "0.62rem", color: "var(--muted)", marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</div>
-                        <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.9rem", fontWeight: 700, color }}>{icon} {pctLabel}</div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--line)" }}>
-                  <div style={{ fontSize: "0.62rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>
-                    Revenue trend · {oldest} → {newest}
-                  </div>
-                  <div className="tla-sparkline-row">
-                    {revVals.map((v, i) => (
-                      <div key={i} className="tla-spark-bar" style={{ height: `${Math.max(10, (v / maxRev) * 100)}%`, opacity: 0.4 + (i / revVals.length) * 0.6 }} />
-                    ))}
-                  </div>
-                  {m.revenue && m.revenue.direction !== "stable" && (
-                    <div style={{ fontSize: "0.62rem", color: "var(--positive)", fontFamily: "var(--font-mono)", fontWeight: 600, marginTop: 5 }}>
-                      {m.revenue.direction === "growing" ? "↑" : "↓"} {Math.abs(m.revenue.pct).toFixed(1)}%{" "}
-                      <span style={{ color: "var(--muted)", fontWeight: 400 }}>across {m.snapshot_count} snapshots</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* ── Wallet attribution (role groups + source pills) ── */}
+          {/* 7 — Wallet attribution (role groups + source pills) */}
           <WalletAttributionSection
             agent={agent}
             toolDecisionsBlock={toolDecisions && toolDecisions.length > 0 ? <ToolDecisionsBlock events={toolDecisions} /> : undefined}
           />
 
-          {/* ── Data quality + claim CTA ── */}
+          {/* 8 — Treasury */}
+          {books?.attributed && <TreasurySignals books={books} />}
+
+          {/* 9 — Revenue / expenses (P4 breakdowns) */}
+          {books?.attributed ? (
+            <>
+              <RevenueBreakdown buckets={buildRevenueBuckets(books)} />
+              <ExpenseBreakdown buckets={mapExpenseCategories(books.breakdown.expenses_by_category)} />
+            </>
+          ) : (
+            <section className="prof-section">
+              <p className="prof-section-title">Revenue &amp; Expenses</p>
+              <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                No books yet — revenue and expense breakdowns appear once wallets are attributed via manifest.
+              </p>
+            </section>
+          )}
+
+          {/* 10 — Data quality (every profile) + detailed scores, collapsed */}
           <DataQualityBlock dq={dq} />
+          <details className="prof-section" style={{ padding: "12px 16px" }}>
+            <summary style={{ cursor: "pointer", fontSize: "0.78rem", fontWeight: 700, color: "var(--ink)" }}>
+              Verification &amp; health breakdown
+            </summary>
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              <ScoreBreakdownDetails agent={agent} verificationScore={verificationScore} />
+            </div>
+          </details>
+          {economics && <AgentEconomicsBlock economics={economics} />}
+
+          {/* 11 — Claim / submit manifest CTA (hoisted above when no books) */}
           {agent.booksStatus !== "no_books" && (
             <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
           )}
-          {economics && <AgentEconomicsBlock economics={economics} />}
 
-          {/* ── Details tabs — segmented TL-A control ── */}
-          <div className="tla-section-label" style={{ marginTop: 16 }}>Details</div>
-          <div className="tla-tabs-bar">
-            {PROF_TABS.map((t) => (
-              <button
-                key={t.key}
-                type="button"
-                className={`tla-tab-btn${tab === t.key ? " active" : ""}`}
-                onClick={() => setTab(t.key)}
-              >
-                {t.label}
-                {t.key === "inference" && !!inferenceActivity && (
-                  <span style={{
-                    marginLeft: 5, fontSize: "0.6rem", fontWeight: 700,
-                    padding: "1px 5px", borderRadius: 3,
-                    background: "rgba(74,232,160,0.10)", border: "1px solid rgba(74,232,160,0.28)",
-                    color: "var(--accent)", verticalAlign: "middle",
-                    textTransform: "uppercase", letterSpacing: "0.06em",
-                  }}>Live</span>
-                )}
-              </button>
-            ))}
+          {/* Secondary tabs — demoted from the old tab system */}
+          <div className="prof-tabs prof-subtabs" style={{ marginTop: 8 }}>
+            {PROF_TABS.map((t) => {
+              const showBadge = t.key === "inference" && !!inferenceActivity;
+              return (
+                <button
+                  key={t.key}
+                  type="button"
+                  className={`prof-tab${tab === t.key ? " prof-tab-active" : ""}`}
+                  onClick={() => setTab(t.key)}
+                >
+                  {t.label}
+                  {showBadge && (
+                    <span style={{
+                      marginLeft: 5,
+                      fontSize: "0.6rem", fontWeight: 700,
+                      padding: "1px 5px", borderRadius: 99,
+                      background: "var(--accent)18",
+                      border: "1px solid var(--accent)40",
+                      color: "var(--accent)",
+                      verticalAlign: "middle",
+                    }}>
+                      Live
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
-          {/* ── INFERENCE ── */}
+          {/* ── INFERENCE — Surplus pilot full report */}
           {tab === "inference" && (
             <>
               {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
@@ -2437,42 +2262,14 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             </>
           )}
 
-          {/* ── HISTORY — snapshot table + verification timeline ── */}
+          {/* ── HISTORY — snapshots + momentum */}
           {tab === "history" && (
-            books?.attributed && booksHistory && booksHistory.length >= 2 ? (() => {
-              const ordered = [...booksHistory].sort((a, b) => new Date(a.snapshotted_at).getTime() - new Date(b.snapshotted_at).getTime()).reverse();
-              const oldest = new Date(ordered[ordered.length - 1].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-              const newest = new Date(ordered[0].snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-              const usdShort = (n: number | null) => n == null ? "—" : "$" + Math.round(Math.abs(n)).toLocaleString("en-US");
-              return (
-                <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Agent Books · Historical Trend</span>
-                    <span className="tla-badge tla-b-muted">{oldest} → {newest}</span>
-                  </div>
-                  <div style={{ overflowX: "auto" }}>
-                    <div style={{ minWidth: 480 }}>
-                      <div className="tla-snapshot-row" style={{ borderBottom: "1px solid var(--line)" }}>
-                        <div className="tla-snapshot-date tla-snapshot-head">Date</div>
-                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--positive)" }}>Revenue</div>
-                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--negative)" }}>Expenses</div>
-                        <div className="tla-snapshot-cell tla-snapshot-head" style={{ color: "var(--positive)" }}>Net Income</div>
-                        <div className="tla-snapshot-cell tla-snapshot-head">Treasury</div>
-                      </div>
-                      {ordered.map((s) => (
-                        <div key={s.snapshotted_at} className="tla-snapshot-row">
-                          <div className="tla-snapshot-date">{new Date(s.snapshotted_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                          <div className="tla-snapshot-cell" style={{ color: "var(--positive)" }}>{usdShort(s.revenue_usd)}</div>
-                          <div className="tla-snapshot-cell" style={{ color: "var(--negative)" }}>{usdShort(s.expenses_usd)}</div>
-                          <div className="tla-snapshot-cell" style={{ color: (s.net_income_usd ?? 0) >= 0 ? "var(--positive)" : "var(--negative)" }}>{s.net_income_usd != null ? `${s.net_income_usd >= 0 ? "+" : "−"}${usdShort(s.net_income_usd)}` : "—"}</div>
-                          <div className="tla-snapshot-cell">{usdShort(s.treasury_usd)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              );
-            })() : (
+            books?.attributed && booksHistory && booksHistory.length >= 2 ? (
+              <>
+                <AgentBooksTrendSection snapshots={booksHistory} />
+                <MomentumSection history={booksHistory} />
+              </>
+            ) : (
               <section className="prof-section prof-empty-state">
                 <p style={{ margin: "0 0 6px", fontWeight: 700 }}>No history yet.</p>
                 <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--muted)" }}>
@@ -2482,27 +2279,16 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             )
           )}
 
-          {/* ── RESEARCH — published reports ── */}
+          {/* ── RESEARCH — published Luca reports for this agent */}
           {tab === "research" && (
-            <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)" }}>
-              <div className="tla-research-item">
-                <span className="tla-research-tag tla-b-muted">Note</span>
-                <div>
-                  <div className="tla-research-title">Research for {agent.name}</div>
-                  <div className="tla-research-desc">Luca publishes analysis when sufficient attributed data exists. Check the research hub for published reports on this agent.</div>
-                  <div className="tla-research-meta" style={{ marginTop: 8 }}>
-                    <Link href="/research" style={{ color: "var(--accent)", textDecoration: "none" }}>Browse All Research →</Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <section className="prof-section prof-empty-state">
+              <p style={{ margin: "0 0 6px", fontWeight: 700 }}>Research for {agent.name}</p>
+              <p style={{ margin: "0 0 20px", fontSize: "0.82rem", color: "var(--muted)" }}>
+                Luca publishes analysis when sufficient attributed data exists. Check the research hub for published reports.
+              </p>
+              <Link href="/research" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>Browse All Research →</Link>
+            </section>
           )}
-
-          {/* Methodology note */}
-          <p style={{ fontSize: "0.65rem", color: "var(--muted)", lineHeight: 1.65, padding: "0 2px", marginTop: 24, marginBottom: 32 }}>
-            Revenue reflects operating inflows only. Capital injections, bridge transfers, grants, token distributions, and swaps are excluded or quarantined.{" "}
-            <Link href="/methodology" style={{ color: "var(--accent)", textDecoration: "none" }}>Methodology →</Link>
-          </p>
         </div>
       </main>
 
@@ -2521,7 +2307,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           onClick={() => setShowEmbed(false)}
         >
           <div
-            style={{ background: "var(--surface)", borderRadius: "var(--radius-card, 8px)", border: "1px solid var(--line)", padding: "28px 28px 24px", maxWidth: 520, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}
+            style={{ background: "var(--surface)", borderRadius: 16, padding: "28px 28px 24px", maxWidth: 520, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
@@ -2541,7 +2327,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               <button
                 type="button"
                 onClick={copyEmbed}
-                style={{ flex: 1, padding: "9px 0", borderRadius: "var(--radius-md, 6px)", border: "none", background: embedCopied ? "var(--accent)" : "var(--accent-soft)", color: embedCopied ? "#0A0C10" : "var(--accent)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", transition: "background 0.2s", fontFamily: "var(--font-mono, monospace)" }}
+                style={{ flex: 1, padding: "9px 0", borderRadius: 8, border: "none", background: embedCopied ? "var(--accent)" : "var(--accent-soft)", color: embedCopied ? "#fff" : "var(--accent)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer", transition: "background 0.2s" }}
               >
                 {embedCopied ? "Copied!" : "Copy embed code"}
               </button>
@@ -2549,7 +2335,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                 href={`/registry/${slug}/card`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ padding: "9px 16px", borderRadius: "var(--radius-md, 6px)", border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.82rem", textDecoration: "none", display: "flex", alignItems: "center" }}
+                style={{ padding: "9px 16px", borderRadius: 8, border: "1px solid var(--line)", background: "transparent", color: "var(--muted)", fontSize: "0.82rem", textDecoration: "none", display: "flex", alignItems: "center" }}
               >
                 Preview card
               </a>

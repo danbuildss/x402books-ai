@@ -21,20 +21,20 @@ export function MetricCard({
 }) {
   return (
     <div style={{
-      padding: "var(--space-5) var(--space-6)",
+      padding: "14px 16px",
       background: "var(--surface)",
       border: "1px solid var(--line)",
-      borderRadius: "var(--radius-card)",
+      borderRadius: 10,
       ...style,
     }}>
       <p style={{
-        fontSize: "var(--text-eyebrow)", fontWeight: 800, textTransform: "uppercase",
-        letterSpacing: "0.10em", color: "var(--muted)", margin: "0 0 8px",
+        fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase",
+        letterSpacing: "0.1em", color: "var(--muted)", margin: "0 0 8px",
       }}>
         {label}
       </p>
       <p style={{
-        fontFamily: "var(--font-mono)", fontSize: "var(--text-metric)", fontWeight: 700,
+        fontFamily: "var(--font-mono)", fontSize: "1.25rem", fontWeight: 700,
         fontVariantNumeric: "tabular-nums", letterSpacing: "-0.02em",
         color: valueColor ?? "var(--ink)", margin: 0,
         lineHeight: 1.1,
@@ -42,10 +42,10 @@ export function MetricCard({
         {value}
       </p>
       {(trend || sub) && (
-        <div style={{ marginTop: "var(--space-1)", display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ marginTop: 5, display: "flex", alignItems: "center", gap: 6 }}>
           {trend && (
             <span style={{
-              fontSize: "var(--text-body-sm)", fontFamily: "var(--font-mono)", fontWeight: 600,
+              fontSize: "0.72rem", fontFamily: "var(--font-mono)", fontWeight: 600,
               color: trendPositive === undefined ? "var(--muted)"
                    : trendPositive ? "var(--accent)" : "var(--red)",
             }}>
@@ -53,7 +53,7 @@ export function MetricCard({
             </span>
           )}
           {sub && (
-            <span style={{ fontSize: "var(--text-body-sm)", color: "var(--muted)" }}>{sub}</span>
+            <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{sub}</span>
           )}
         </div>
       )}
@@ -76,7 +76,7 @@ export function MetricGrid({
     <div style={{
       display: "grid",
       gridTemplateColumns: `repeat(${cols}, 1fr)`,
-      gap: "var(--space-3)",
+      gap: 10,
       ...style,
     }}>
       {children}
@@ -92,7 +92,7 @@ export function TrendIndicator({ value, suffix = "%" }: { value: number; suffix?
   const color = isPos ? "var(--accent)" : isNeg ? "var(--red)" : "var(--muted)";
   const arrow = isPos ? "▲" : isNeg ? "▼" : "—";
   return (
-    <span style={{ color, fontFamily: "var(--font-mono)", fontSize: "var(--text-label)", fontWeight: 600 }}>
+    <span style={{ color, fontFamily: "var(--font-mono)", fontSize: "0.75rem", fontWeight: 600 }}>
       {arrow} {Math.abs(value).toFixed(1)}{suffix}
     </span>
   );

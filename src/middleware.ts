@@ -15,16 +15,6 @@ function isProtectedPath(pathname: string) {
   return protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-// Paths that always pass through maintenance mode
-function isMaintenanceBypass(pathname: string) {
-  return (
-    pathname === "/maintenance" ||
-    pathname.startsWith("/api/") ||
-    pathname.startsWith("/dashboard") ||
-    pathname === "/access"
-  );
-}
-
 async function getSignature(payload: string, secret: string) {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -62,13 +52,6 @@ async function hasValidAccessCookie(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-
-  // Maintenance mode — redirect everything public to /maintenance
-  if (process.env.MAINTENANCE_MODE === "true" && !isMaintenanceBypass(pathname)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/maintenance";
-    return NextResponse.redirect(url);
-  }
 
   if (!isProtectedPath(pathname)) {
     return NextResponse.next();
