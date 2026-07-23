@@ -23,29 +23,35 @@ export function LedgerRow({
   last?: boolean;
   style?: CSSProperties;
 }) {
+  const radius = "var(--radius-card)";
+  const borderRadius = first && last ? radius
+    : first ? `${radius} ${radius} 0 0`
+    : last  ? `0 0 ${radius} ${radius}`
+    : 0;
+
   return (
     <div style={{
       display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "9px 14px",
+      padding: "10px 14px",
       background: "var(--surface)",
       border: "1px solid var(--line)",
-      borderRadius: first && last ? 8 : first ? "8px 8px 0 0" : last ? "0 0 8px 8px" : 0,
+      borderRadius,
       borderBottomWidth: last ? 1 : 0,
       gap: 12,
       ...style,
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-        <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--ink)", ...labelStyle }}>
+        <span style={{ fontSize: "var(--text-label)", fontWeight: 600, color: "var(--ink)", ...labelStyle }}>
           {label}
         </span>
         {badge}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
         {detail && (
-          <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{detail}</span>
+          <span style={{ fontSize: "var(--text-label)", color: "var(--muted)" }}>{detail}</span>
         )}
         <span style={{
-          fontSize: "0.82rem", fontFamily: "var(--font-mono)", fontWeight: 600,
+          fontSize: "var(--text-data)", fontFamily: "var(--font-mono)", fontWeight: 600,
           fontVariantNumeric: "tabular-nums", color: "var(--ink)",
           ...valueStyle,
         }}>
@@ -72,17 +78,17 @@ export function LedgerCard({
   style?: CSSProperties;
 }) {
   return (
-    <div style={{ marginBottom: 24, ...style }}>
+    <div style={{ marginBottom: "var(--space-6)", ...style }}>
       {(title || eyebrow || action) && (
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginBottom: 10,
+          marginBottom: "var(--space-3)",
         }}>
           <div>
             {eyebrow && (
               <p style={{
-                fontSize: "0.66rem", fontWeight: 700, textTransform: "uppercase",
-                letterSpacing: "0.1em", color: "var(--muted)", margin: "0 0 3px",
+                fontSize: "var(--text-eyebrow)", fontWeight: 800, textTransform: "uppercase",
+                letterSpacing: "0.10em", color: "var(--muted)", margin: "0 0 3px",
               }}>
                 {eyebrow}
               </p>
@@ -106,8 +112,8 @@ export function LedgerCard({
 export function SectionLabel({ children, style }: { children: ReactNode; style?: CSSProperties }) {
   return (
     <p style={{
-      fontSize: "0.66rem", fontWeight: 700, textTransform: "uppercase",
-      letterSpacing: "0.1em", color: "var(--muted)", margin: "0 0 10px",
+      fontSize: "var(--text-eyebrow)", fontWeight: 800, textTransform: "uppercase",
+      letterSpacing: "0.10em", color: "var(--muted)", margin: "0 0 10px",
       ...style,
     }}>
       {children}

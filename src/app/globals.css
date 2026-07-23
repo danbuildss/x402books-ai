@@ -3230,10 +3230,10 @@ iframe[src*="privy"] { display: none !important; }
   --st-blue:           #5B9EF4;
   --st-red:            #B85450;
   /* ---- Polish additions ---- */
-  --st-mono:           var(--font-mono), 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+  --st-mono:           var(--font-mono), ui-monospace, monospace;
   --st-serif:          var(--font-serif), 'Libre Baskerville', Georgia, serif;
-  --st-radius-sm:      4px;
-  --st-radius-md:      10px;
+  --st-radius-sm:      var(--radius-sm);
+  --st-radius-md:      var(--radius-card);
   --st-shadow-card:    0 1px 3px rgba(0,0,0,0.45), 0 4px 16px rgba(0,0,0,0.3);
   --st-shadow-hover:   0 2px 8px rgba(0,0,0,0.55), 0 8px 24px rgba(0,0,0,0.35);
   --st-glow:           0 0 0 1px rgba(74,232,160,0.20), 0 0 16px rgba(74,232,160,0.25);
@@ -12205,7 +12205,7 @@ html, body {
   align-items: center;
   gap: 9px;
   padding: 7px 10px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   font-size: 0.84rem;
   font-weight: 500;
   color: var(--muted);
@@ -12429,7 +12429,7 @@ html, body {
   align-items: center;
   gap: 6px;
   padding: 7px 14px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   font-size: 0.79rem;
   font-weight: 600;
   cursor: pointer;
@@ -12482,7 +12482,7 @@ html, body {
 .op-input {
   width: 100%;
   padding: 9px 12px;
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--line);
   background: var(--surface-soft);
   color: var(--ink);
