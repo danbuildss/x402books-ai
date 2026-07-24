@@ -27,6 +27,12 @@
   --warning:      #C9920A;
   --warning-soft: rgba(201, 146, 10, 0.10);
 
+  /* JSON syntax highlight — light */
+  --json-key: #0550AE;
+  --json-str: #0A6640;
+  --json-num: #9A3412;
+  --json-bool: #1CB870;
+
   /* Legacy aliases */
   --money: #1CB870;
   --blue:  #3B6EA8;
@@ -135,6 +141,12 @@
 
   --shadow: 0 8px 28px rgba(0, 0, 0, 0.50);
 
+  /* JSON syntax highlight — dark */
+  --json-key:  #79C0FF;
+  --json-str:  #A5D6A7;
+  --json-num:  #F8A97C;
+  --json-bool: #4AE8A0;
+
   /* Dark overrides for new tokens */
   --ink-mid:        #8B96A8;
   --ink-hi:         #E8EAED;
@@ -176,6 +188,10 @@
     --ink-hi:        #E8EAED;
     --ink-em:        #F4F5F7;
     --surface-hover: rgba(255,255,255,0.025);
+    --json-key:  #79C0FF;
+    --json-str:  #A5D6A7;
+    --json-num:  #F8A97C;
+    --json-bool: #4AE8A0;
   }
 }
 
