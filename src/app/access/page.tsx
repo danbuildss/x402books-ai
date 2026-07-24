@@ -3,7 +3,7 @@
 import { usePrivy } from "@privy-io/react-auth";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Logo } from "@/components/logo";
+import { LogoMark } from "@/components/logo";
 import { SectionLabel } from "@/components/ui/ledger";
 
 function AccessForm() {
@@ -56,7 +56,7 @@ function AccessForm() {
     <main className="access-page" data-theme="dark">
       <section className="access-card">
         <div className="access-brand">
-          <Logo />
+          <LogoMark size={20} />
         </div>
 
         {showSpinner && (

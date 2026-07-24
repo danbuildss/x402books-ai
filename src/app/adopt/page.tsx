@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { getAttributionMetrics } from "@/lib/attribution-health";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
@@ -76,7 +76,7 @@ export default async function AdoptPage() {
 
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       {/* Hero */}
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "48px 40px 32px" }}>
