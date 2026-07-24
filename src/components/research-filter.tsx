@@ -53,12 +53,12 @@ export function ResearchFilter({ reports }: { reports: ResearchReport[] }) {
       )}
 
       {/* Tab switcher */}
-      <div className="rf-tabs">
+      <div className="tla-tabs-bar" style={{ marginBottom: 16 }}>
         {TABS.map((t) => (
           <button
             key={t}
             type="button"
-            className={`rf-tab${tab === t ? " rf-tab-active" : ""}`}
+            className={`tla-tab-btn${tab === t ? " active" : ""}`}
             onClick={() => setTab(t)}
           >
             {t}

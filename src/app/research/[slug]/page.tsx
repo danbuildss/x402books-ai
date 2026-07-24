@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { getReportBySlug, listReports } from "@/lib/research-db";
 import { INAUGURAL_REPORT } from "@/lib/inaugural-report";
 
@@ -78,9 +79,9 @@ export default async function ReportPage({
 
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
-      <article style={{ maxWidth: 720, margin: "0 auto", padding: "4rem 24px 6rem" }}>
+      <article style={{ maxWidth: 720, margin: "0 auto", padding: "3rem 24px 6rem" }}>
 
         {/* Breadcrumb */}
         <nav style={{ marginBottom: 32, fontSize: "0.78rem", color: "var(--muted)" }}>
@@ -93,7 +94,7 @@ export default async function ReportPage({
 
         {/* Type badge */}
         <div style={{ marginBottom: 16 }}>
-          <span style={{ fontSize: "0.67rem", fontWeight: 600, padding: "3px 10px", borderRadius: 99, border: "1px solid var(--line)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          <span style={{ fontSize: "0.67rem", fontWeight: 600, padding: "3px 10px", borderRadius: 4, border: "1px solid var(--line)", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", fontFamily: "var(--font-mono)" }}>
             {report.type} report
           </span>
         </div>
@@ -162,6 +163,7 @@ export default async function ReportPage({
           <Link href="/registry" className="lp-btn-primary">Browse Agent Books →</Link>
         </div>
       </article>
+      <SiteFooter />
     </div>
   );
 }
