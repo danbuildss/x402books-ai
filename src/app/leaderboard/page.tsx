@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
-import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
-import { EcoBadge, StatusBadge } from "@/components/ui/badge";
+import { EcoBadge } from "@/components/ui/badge";
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { getGDPHistory } from "@/lib/gdp-history";
 import { getRegistryAgents } from "@/lib/registry-db";
@@ -268,67 +267,49 @@ export default async function LeaderboardPage() {
         {/* Indexed agents awaiting manifest declaration */}
         {awaitingManifest.length > 0 && (
           <div style={{ marginTop: 40 }}>
-            <LedgerCard
-              eyebrow="Indexed — Revenue Locked"
-              action={
-                <Link href="/api#manifest" style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none", whiteSpace: "nowrap" }}>
+            <div className="tla-section-label" style={{ marginBottom: 12 }}>Indexed — Revenue Locked</div>
+            <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 28 }}>
+              {/* Header row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", borderBottom: "1px solid var(--line)", background: "var(--surface-hi)" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                  {awaitingManifest.length} agent{awaitingManifest.length !== 1 ? "s" : ""} · ERC-8004 indexed
+                </span>
+                <Link href="/registry#verify" style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--accent)", textDecoration: "none" }}>
                   Submit manifest →
                 </Link>
-              }
-            >
-              <p style={{ margin: "0 0 12px", fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>
-                {awaitingManifest.length} agent{awaitingManifest.length !== 1 ? "s" : ""} indexed
-                {(gdp?.erc8004_agents ?? 0) > 0 && <> — {gdp!.erc8004_agents} via ERC-8004</>}.
-                {" "}Revenue attribution unlocks when they declare a wallet manifest.
-              </p>
-              {awaitingManifest.map((a: AwaitingManifestEntry, i: number) => {
-                const vs = vscoreMap.get(a.slug);
-                const scoreColor = vs
-                  ? vs.total >= 75 ? "#4AE8A0" : vs.total >= 50 ? "#5B9EF4" : vs.total >= 25 ? "#F4B942" : "var(--muted)"
-                  : "var(--muted)";
-                return (
-                  <LedgerRow
-                    key={a.slug}
-                    first={i === 0}
-                    last={i === awaitingManifest.length - 1}
-                    label={
-                      <Link href={`/registry/${a.slug}`} style={{ color: "var(--ink)", textDecoration: "none", fontWeight: 700 }}>
-                        {a.name}
-                      </Link>
-                    }
-                    badge={
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        {a.isErc8004 && <StatusBadge variant="erc8004">ERC-8004</StatusBadge>}
-                        <EcoBadge ecosystem={a.ecosystem} />
-                        <StatusBadge variant="neutral">{a.verificationStatus}</StatusBadge>
-                      </span>
-                    }
-                    value={
-                      <Link href={`/registry/${a.slug}#claim`} style={{
-                        fontSize: "0.72rem", fontWeight: 600,
-                        color: "var(--accent)", textDecoration: "none",
-                        padding: "4px 10px", borderRadius: 6,
-                        border: "1px solid rgba(74,232,160,0.3)",
-                        background: "var(--accent-soft)",
-                      }}>Declare →</Link>
-                    }
-                    detail={
-                      vs ? (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <span style={{
-                            fontSize: "0.62rem", fontWeight: 700, padding: "1px 6px", borderRadius: 3,
-                            background: `color-mix(in srgb, ${scoreColor} 12%, transparent)`,
-                            border: `1px solid color-mix(in srgb, ${scoreColor} 28%, transparent)`,
-                            color: scoreColor, fontFamily: "var(--font-mono)",
-                          }}>{vs.total}</span>
-                          <span style={{ fontSize: "0.62rem", color: "var(--muted)" }}>{vs.tier}</span>
-                        </span>
-                      ) : <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>—</span>
-                    }
-                  />
-                );
-              })}
-            </LedgerCard>
+              </div>
+              {/* Description */}
+              <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>
+                Revenue attribution unlocks when they declare a wallet manifest.
+              </div>
+              {/* Agent rows */}
+              {awaitingManifest.map((a: AwaitingManifestEntry, i: number) => (
+                <div
+                  key={a.slug}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto auto",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "11px 16px",
+                    borderBottom: i === awaitingManifest.length - 1 ? "none" : "1px solid var(--line)",
+                  }}
+                >
+                  <Link href={`/registry/${a.slug}`} style={{ color: "var(--ink)", textDecoration: "none", fontWeight: 700, fontSize: "0.85rem" }}>
+                    {a.name}
+                  </Link>
+                  <EcoBadge ecosystem={a.ecosystem} />
+                  <Link href={`/registry/${a.slug}#claim`} style={{
+                    fontSize: "0.72rem", fontWeight: 600,
+                    color: "var(--accent)", textDecoration: "none",
+                    padding: "4px 10px", borderRadius: 6,
+                    border: "1px solid rgba(74,232,160,0.3)",
+                    background: "rgba(74,232,160,0.06)",
+                    whiteSpace: "nowrap",
+                  }}>Declare →</Link>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
