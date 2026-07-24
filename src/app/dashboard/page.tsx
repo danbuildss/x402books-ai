@@ -25,7 +25,6 @@ type RegistryResponse = {
   agents: Agent[];
 };
 
-// Subset of the AgentBooks JSON the overview binds to (public books route).
 type BooksLite = {
   attributed: boolean;
   reason?: string;
@@ -54,6 +53,12 @@ function fmtUsd(n: number): string {
   return "$" + Math.abs(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function fmtUsdCompact(n: number): string {
+  if (Math.abs(n) >= 1_000_000) return "$" + (Math.abs(n) / 1_000_000).toFixed(1) + "M";
+  if (Math.abs(n) >= 1_000) return "$" + (Math.abs(n) / 1_000).toFixed(1) + "K";
+  return fmtUsd(n);
+}
+
 function greeting(): string {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -71,6 +76,45 @@ function verificationVariant(status: string): "verified" | "luca-managed" | "wal
   return "neutral";
 }
 
+// SVG cash-flow bar chart showing revenue vs expenses for the period
+function CashFlowChart({ revenue, expenses }: { revenue: number; expenses: number }) {
+  const W = 100;
+  const H = 48;
+  const maxVal = Math.max(revenue, expenses, 1);
+  const revH = Math.round((revenue / maxVal) * (H - 8));
+  const expH = Math.round((expenses / maxVal) * (H - 8));
+  const barW = 14;
+  const gap = 8;
+  const startX = (W - (barW * 2 + gap)) / 2;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: "block" }}>
+      {/* Baseline */}
+      <line x1={0} y1={H - 4} x2={W} y2={H - 4} stroke="var(--line)" strokeWidth={0.5} />
+      {/* Revenue bar */}
+      <rect
+        x={startX}
+        y={H - 4 - revH}
+        width={barW}
+        height={revH}
+        fill="#4AE8A0"
+        fillOpacity={0.85}
+        rx={2}
+      />
+      {/* Expenses bar */}
+      <rect
+        x={startX + barW + gap}
+        y={H - 4 - expH}
+        width={barW}
+        height={expH}
+        fill="#F46060"
+        fillOpacity={0.7}
+        rx={2}
+      />
+    </svg>
+  );
+}
+
 export default function OverviewPage() {
   const [wallet, setWallet] = useState<string | null>(null);
   const [myAgents, setMyAgents] = useState<Agent[]>([]);
@@ -80,7 +124,6 @@ export default function OverviewPage() {
   const [booksSlug, setBooksSlug] = useState<string>("");
   const [period, setPeriod] = useState<"7d" | "30d" | "90d">("30d");
 
-  // Books for the operator's first linked agent — public registry books route.
   useEffect(() => {
     if (!booksSlug) return;
     let alive = true;
@@ -114,7 +157,6 @@ export default function OverviewPage() {
           setMyAgents(matched);
           if (matched.length > 0) setBooksSlug(toSlug(matched[0].name));
 
-          // Fetch anomalies for each linked agent in parallel
           const slugs = matched.map((a) => toSlug(a.name));
           const anomalyResults = await Promise.all(
             slugs.map((s) =>
@@ -146,8 +188,14 @@ export default function OverviewPage() {
     );
   }
 
+  const fin = books?.attributed ? books.financials : null;
+  const hasActivity = (fin?.tx_count ?? 0) > 0;
+  const expenseCategories = books?.breakdown?.expenses_by_category ?? [];
+  const totalExpenses = expenseCategories.reduce((s, c) => s + c.total_usd, 0);
+
   return (
     <div className="op-page">
+      {/* ── Header ── */}
       <div className="op-page-header" style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
           <h1 className="op-page-title">
@@ -168,6 +216,7 @@ export default function OverviewPage() {
                     fontSize: "0.72rem", fontWeight: 600, fontFamily: "var(--font-mono)",
                     background: period === p ? "var(--surface-soft)" : "transparent",
                     color: period === p ? "var(--accent)" : "var(--muted)",
+                    transition: "color 0.15s, background 0.15s",
                   }}
                 >
                   {p}
@@ -181,50 +230,146 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* ── Financials for the linked agent (books-driven, honest states) ── */}
-      {booksSlug && books?.attributed && books.financials && (
+      {/* ── Financial hero (attributed books only) ── */}
+      {booksSlug && books?.attributed && fin && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1.2fr) repeat(3, 1fr)", gap: 12, marginBottom: 6 }}>
-            {/* Treasury hero */}
-            <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)" }}>
-              <p style={{ margin: "0 0 6px", fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>Treasury (stables)</p>
-              <p style={{ margin: 0, fontSize: "1.6rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)" }}>
-                {books.financials.treasury_balance_usd != null ? fmtUsd(books.financials.treasury_balance_usd) : "—"}
+          {/* 4-tile row: treasury hero + 3 stats */}
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 1.3fr) repeat(3, 1fr)", gap: 12, marginBottom: 6 }}>
+            {/* Treasury — accent left border + large mono */}
+            <div style={{
+              padding: "20px 20px",
+              border: "1px solid var(--line)",
+              borderLeft: "3px solid var(--accent)",
+              borderRadius: "var(--radius-card)",
+              background: "var(--surface)",
+            }}>
+              <p style={{ margin: "0 0 8px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Treasury</p>
+              <p style={{ margin: 0, fontSize: "1.8rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: "var(--ink)", lineHeight: 1.1 }}>
+                {fin.treasury_balance_usd != null ? fmtUsd(fin.treasury_balance_usd) : "—"}
               </p>
-              <p style={{ margin: "6px 0 0", fontSize: "0.68rem", color: "var(--muted)" }}>
-                across {books.wallets?.analyzed ?? 0} declared wallet{(books.wallets?.analyzed ?? 0) === 1 ? "" : "s"}
+              <p style={{ margin: "8px 0 0", fontSize: "0.66rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                {books.wallets?.analyzed ?? 0} wallet{(books.wallets?.analyzed ?? 0) === 1 ? "" : "s"} · stables only
               </p>
             </div>
-            {/* Stat tiles — zeros only when measured */}
-            {([
-              { label: `Revenue ${period}`, v: books.financials.revenue_usd, color: "#4AE8A0", sign: "" },
-              { label: `Expenses ${period}`, v: books.financials.expenses_usd, color: "#F46060", sign: "−" },
-              { label: `Net ${period}`, v: books.financials.net_income_usd, color: books.financials.net_income_usd >= 0 ? "#4AE8A0" : "#F46060", sign: books.financials.net_income_usd >= 0 ? "+" : "−" },
-            ] as const).map((t) => (
-              <div key={t.label} style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)" }}>
-                <p style={{ margin: "0 0 6px", fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)" }}>{t.label}</p>
-                <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: books.financials!.tx_count > 0 ? t.color : "var(--muted)" }}>
-                  {books.financials!.tx_count > 0 ? `${t.sign}${fmtUsd(t.v)}` : "—"}
-                </p>
-                <p style={{ margin: "6px 0 0", fontSize: "0.66rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-                  confidence: {books.confidence?.overall ?? "n/a"}
-                  {books.confidence?.flags.includes("tx_window_truncated") ? " · truncated" : ""}
-                </p>
-              </div>
-            ))}
+
+            {/* Revenue */}
+            <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
+              <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Revenue · {period}</p>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "#4AE8A0" : "var(--muted)" }}>
+                {hasActivity ? fmtUsd(fin.revenue_usd) : "—"}
+              </p>
+              {hasActivity && (
+                <div style={{ marginTop: 10 }}>
+                  <CashFlowChart revenue={fin.revenue_usd} expenses={0} />
+                </div>
+              )}
+            </div>
+
+            {/* Expenses */}
+            <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
+              <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Expenses · {period}</p>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "#F46060" : "var(--muted)" }}>
+                {hasActivity ? `−${fmtUsd(fin.expenses_usd)}` : "—"}
+              </p>
+              <p style={{ margin: "6px 0 0", fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                conf: {books.confidence?.overall ?? "n/a"}
+                {books.confidence?.flags.includes("tx_window_truncated") ? " · truncated" : ""}
+              </p>
+            </div>
+
+            {/* Net */}
+            <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
+              <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Net · {period}</p>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? (fin.net_income_usd >= 0 ? "#4AE8A0" : "#F46060") : "var(--muted)" }}>
+                {hasActivity ? `${fin.net_income_usd >= 0 ? "+" : "−"}${fmtUsd(fin.net_income_usd)}` : "—"}
+              </p>
+              <p style={{ margin: "6px 0 0", fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+                {fin.tx_count} tx in window
+              </p>
+            </div>
           </div>
-          <p style={{ margin: "0 0 16px", fontSize: "0.66rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-            {booksSlug} · {period} window{books.generated_at ? ` · as of ${new Date(books.generated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}
+
+          {/* Timestamp row */}
+          <p style={{ margin: "0 0 20px", fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
+            {booksSlug} · {period} window
+            {books.generated_at ? ` · as of ${new Date(books.generated_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}
           </p>
 
-          {/* Needs attention — quarantined inflows awaiting classification */}
-          {(books.classification?.quarantined_events?.length ?? 0) > 0 && (
+          {/* ── Two-column: expense breakdown + quarantined ── */}
+          {(expenseCategories.length > 0 || (books.classification?.quarantined_events?.length ?? 0) > 0) && (
+            <div style={{ display: "grid", gridTemplateColumns: expenseCategories.length > 0 && (books.classification?.quarantined_events?.length ?? 0) > 0 ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 20 }}>
+
+              {/* Expense breakdown */}
+              {expenseCategories.length > 0 && (
+                <LedgerCard eyebrow="Period breakdown" title="Expenses by category">
+                  {expenseCategories.slice(0, 5).map((cat, i, arr) => {
+                    const pct = totalExpenses > 0 ? Math.round((cat.total_usd / totalExpenses) * 100) : 0;
+                    return (
+                      <LedgerRow
+                        key={cat.category}
+                        first={i === 0}
+                        last={i === arr.length - 1}
+                        label={
+                          <div>
+                            <div style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4 }}>{cat.label}</div>
+                            {/* Mini bar */}
+                            <div style={{ height: 3, width: "100%", background: "var(--line)", borderRadius: 2, maxWidth: 140 }}>
+                              <div style={{ height: "100%", width: `${pct}%`, background: "#F46060", borderRadius: 2, opacity: 0.8 }} />
+                            </div>
+                          </div>
+                        }
+                        detail={`${cat.tx_count} tx`}
+                        value={
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "#F46060" }}>{fmtUsdCompact(cat.total_usd)}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.64rem", color: "var(--muted)" }}>{pct}%</div>
+                          </div>
+                        }
+                        style={{ alignItems: "flex-start", paddingTop: 12, paddingBottom: 12 }}
+                      />
+                    );
+                  })}
+                </LedgerCard>
+              )}
+
+              {/* Quarantined inflows */}
+              {(books.classification?.quarantined_events?.length ?? 0) > 0 && (
+                <LedgerCard
+                  eyebrow="Needs attention"
+                  title={`Quarantined inflows · ${fmtUsd(books.classification!.quarantined_inflows_usd)}`}
+                  action={
+                    <Link href={`/dashboard/luca?agent=${booksSlug}`} className="op-btn op-btn-ghost" style={{ fontSize: "0.72rem" }}>Ask Luca →</Link>
+                  }
+                >
+                  {books.classification!.quarantined_events.slice(0, 5).map((q, i, arr) => (
+                    <LedgerRow
+                      key={`${q.txHash}-${i}`}
+                      first={i === 0}
+                      last={i === arr.length - 1}
+                      label={
+                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>
+                          {q.txHash.slice(0, 10)}…{" "}
+                          <span style={{ color: "#F4B942" }}>{q.reason.replace(/_/g, " ")}</span>
+                        </span>
+                      }
+                      detail={new Date(q.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      value={<span style={{ fontFamily: "var(--font-mono)", color: "#F4B942" }}>{fmtUsd(q.amount_usd)}</span>}
+                    />
+                  ))}
+                </LedgerCard>
+              )}
+            </div>
+          )}
+
+          {/* Single quarantined card (no expense breakdown) */}
+          {expenseCategories.length === 0 && (books.classification?.quarantined_events?.length ?? 0) > 0 && (
             <LedgerCard
               eyebrow="Needs attention"
               title={`Quarantined inflows · ${fmtUsd(books.classification!.quarantined_inflows_usd)}`}
               action={
-                <Link href={`/dashboard/luca?agent=${booksSlug}`} className="op-btn op-btn-ghost" style={{ fontSize: "0.72rem" }}>Ask Luca why →</Link>
+                <Link href={`/dashboard/luca?agent=${booksSlug}`} className="op-btn op-btn-ghost" style={{ fontSize: "0.72rem" }}>Ask Luca →</Link>
               }
+              style={{ marginBottom: 20 }}
             >
               {books.classification!.quarantined_events.slice(0, 5).map((q, i, arr) => (
                 <LedgerRow
@@ -246,7 +391,7 @@ export default function OverviewPage() {
         </>
       )}
 
-      {/* Books exist but agent is unattributed — honest state, no numbers */}
+      {/* Books unattributed */}
       {booksSlug && books && !books.attributed && (
         <div className="op-alert op-alert-info">
           <span style={{ fontSize: "1rem" }}>ℹ</span>
@@ -258,7 +403,7 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* Attention items */}
+      {/* Attention alerts */}
       {!wallet && (
         <div className="op-alert op-alert-warn">
           <span style={{ fontSize: "1rem" }}>⚠</span>
@@ -273,12 +418,12 @@ export default function OverviewPage() {
         <div className="op-alert op-alert-info">
           <span style={{ fontSize: "1rem" }}>ℹ</span>
           <div>
-            No agents linked to your wallet yet. <Link href="/dashboard/attribution" style={{ color: "var(--accent)" }}>Submit or claim your agent →</Link>
+            No agents linked to your wallet yet.{" "}
+            <Link href="/dashboard/attribution" style={{ color: "var(--accent)" }}>Submit or claim your agent →</Link>
           </div>
         </div>
       )}
 
-      {/* Anomaly alert banner */}
       {totalAnomalies > 0 && (
         <div className="op-alert" style={{
           background: "color-mix(in srgb, #F4B942 8%, var(--surface))",
@@ -300,8 +445,8 @@ export default function OverviewPage() {
         </div>
       )}
 
-      {/* Stats */}
-      <MetricGrid cols={4}>
+      {/* ── Metric tiles (3-col, no Quick Links) ── */}
+      <MetricGrid cols={3}>
         <MetricCard
           label="My Agents"
           value={myAgents.length}
@@ -310,7 +455,7 @@ export default function OverviewPage() {
         <MetricCard
           label="Attribution"
           value={myAgents.filter((a) => a.verificationStatus === "Verified" || a.verificationStatus === "Luca Managed").length}
-          sub={`of ${myAgents.length} agents`}
+          sub={`of ${myAgents.length} agent${myAgents.length === 1 ? "" : "s"} verified`}
           trend={myAgents.filter((a) => a.verificationStatus === "Verified" || a.verificationStatus === "Luca Managed").length > 0 ? "verified" : undefined}
           trendPositive
         />
@@ -320,18 +465,9 @@ export default function OverviewPage() {
           sub={totalAnomalies > 0 ? "require attention" : "all clear"}
           valueColor={totalAnomalies > 0 ? "#F4B942" : undefined}
         />
-        <MetricCard
-          label="Quick Links"
-          value={
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, marginTop: 4 }}>
-              <Link href="/dashboard/keys" style={{ fontSize: "0.8rem", color: "var(--accent)", fontFamily: "var(--font-sans)", fontWeight: 600 }}>API Keys →</Link>
-              <Link href="/dashboard/luca" style={{ fontSize: "0.8rem", color: "var(--accent)", fontFamily: "var(--font-sans)", fontWeight: 600 }}>Ask Luca →</Link>
-            </div>
-          }
-        />
       </MetricGrid>
 
-      {/* My Agents summary */}
+      {/* ── My Agents summary ── */}
       {myAgents.length > 0 && (
         <LedgerCard
           eyebrow="Workspace"
@@ -345,13 +481,11 @@ export default function OverviewPage() {
             const agentAnomalies = (anomalyMap[slug] ?? []).filter(
               (a) => a.severity === "high" || a.severity === "medium"
             );
-            const isFirst = i === 0;
-            const isLast = i === Math.min(myAgents.length, 5) - 1;
             return (
               <LedgerRow
                 key={agent.name}
-                first={isFirst}
-                last={isLast}
+                first={i === 0}
+                last={i === Math.min(myAgents.length, 5) - 1}
                 label={agent.name}
                 badge={<StatusBadge variant={verificationVariant(agent.verificationStatus)}>{agent.verificationStatus}</StatusBadge>}
                 detail={agent.ecosystem}
@@ -369,7 +503,7 @@ export default function OverviewPage() {
         </LedgerCard>
       )}
 
-      {/* Getting started */}
+      {/* ── Onboarding (no agents yet) ── */}
       {myAgents.length === 0 && (
         <LedgerCard eyebrow="Onboarding" title="Get started">
           {[
