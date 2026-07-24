@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
@@ -285,7 +285,7 @@ export default function LucaSkillsDocsPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
-      <HomeHeader />
+      <SiteNav />
 
       {/* Page header */}
       <div style={{ borderBottom: "1px solid var(--line)", padding: "32px 24px 28px" }}>

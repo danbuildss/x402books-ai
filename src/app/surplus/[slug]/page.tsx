@@ -8,6 +8,8 @@ import { getInferenceEvents, summarizeInferenceEvents, generateMonthlyStatement 
 import { getAgentGDP } from "@/lib/agent-gdp";
 import { toSlug } from "@/app/registry/[slug]/slug";
 import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { StatusBadge, CostStatusBadge, EcoBadge } from "@/components/ui/badge";
 import { MetricCard, MetricGrid } from "@/components/ui/metric";
 
@@ -101,6 +103,8 @@ export default async function SurplusAgentPage({
     : null;
 
   return (
+    <div className="lp-root">
+    <SiteNav />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 80px" }}>
 
       {/* ── Header bar ──────────────────────────────────────────────────────── */}
@@ -390,5 +394,7 @@ export default async function SurplusAgentPage({
       </div>
 
     </main>
+    <SiteFooter />
+    </div>
   );
 }

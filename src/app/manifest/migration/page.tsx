@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ const muted = { color: "var(--muted)" } as const;
 export default function ManifestMigrationPage() {
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <article style={{ maxWidth: 720, margin: "0 auto", padding: "3.5rem 24px 6rem" }}>
 

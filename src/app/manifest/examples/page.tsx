@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, SectionLabel } from "@/components/ui/ledger";
 
@@ -27,7 +27,7 @@ function CodeBlock({ filename, children }: { filename: string; children: string 
 export default function ManifestExamplesPage() {
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <article style={{ maxWidth: 760, margin: "0 auto", padding: "3.5rem 24px 6rem" }}>
 

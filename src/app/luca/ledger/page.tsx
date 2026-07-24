@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { LedgerRow, LedgerCard } from "@/components/ui/ledger";
 import { CostStatusBadge } from "@/components/ui/badge";
 import {
@@ -284,29 +286,8 @@ export default async function LucaLedgerPage({
   const statement = generateMonthlyStatement("luca", summary, month);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
-      {/* Header */}
-      <header style={{
-        borderBottom: "1px solid var(--line)", padding: "14px 24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        background: "var(--surface)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/luca" style={{ fontSize: "0.8rem", color: "var(--muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>
-            ← Luca
-          </Link>
-          <span style={{ color: "var(--line)" }}>·</span>
-          <Link href="/registry/luca" style={{ fontSize: "0.8rem", color: "var(--muted)", textDecoration: "none" }}>
-            Registry Profile
-          </Link>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: events.length > 0 ? "var(--accent)" : "var(--muted)", display: "inline-block" }} />
-          <span style={{ fontSize: "0.72rem", color: "var(--muted)" }}>
-            {events.length > 0 ? "Live data" : "No data yet"}
-          </span>
-        </div>
-      </header>
+    <div className="lp-root">
+      <SiteNav />
 
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "32px 24px" }}>
         {/* Page title */}
@@ -346,6 +327,7 @@ export default async function LucaLedgerPage({
           </p>
         </div>
       </main>
+      <SiteFooter />
     </div>
   );
 }
