@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
-import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
-import { StatusBadge } from "@/components/ui/badge";
 
-const TELEGRAM  = "https://t.me/AskLucaBot";
-const X_HANDLE  = "https://x.com/AskLucaAI";
+const TELEGRAM = "https://t.me/AskLucaBot";
+const X_HANDLE = "https://x.com/AskLucaAI";
 
 const CAPABILITIES = [
   { label: "Analyze Agent",           desc: "Full financial analysis for any attributed agent. Revenue, expenses, net income, treasury, confidence signal." },
@@ -61,18 +59,18 @@ const REPORT_TYPES = [
 
 const LUCA_SKILLS = [
   { name: "Wallet Audit",         desc: "Classify any address and check books-eligibility" },
-  { name: "Agent Books",           desc: "Full P&L: revenue, expenses, net income, margin" },
-  { name: "Treasury Monitor",      desc: "Live stablecoin balances and health signal" },
-  { name: "Revenue Analysis",      desc: "Gross inflow vs operating revenue breakdown" },
-  { name: "Registry Check",        desc: "Look up any agent by slug, name, or address" },
-  { name: "Luca Report",           desc: "Full composite: identity + books + treasury + narrative" },
-  { name: "B20 Token Analysis",    desc: "Token identity, issuer, activity, financial readiness" },
+  { name: "Agent Books",          desc: "Full P&L: revenue, expenses, net income, margin" },
+  { name: "Treasury Monitor",     desc: "Live stablecoin balances and health signal" },
+  { name: "Revenue Analysis",     desc: "Gross inflow vs operating revenue breakdown" },
+  { name: "Registry Check",       desc: "Look up any agent by slug, name, or address" },
+  { name: "Luca Report",          desc: "Full composite: identity + books + treasury + narrative" },
+  { name: "B20 Token Analysis",   desc: "Token identity, issuer, activity, financial readiness" },
 ];
 
 const DATA_SOURCES = [
-  { label: "On-chain books", desc: "Declared wallet manifests → classified transactions → P&L" },
-  { label: "Grok research", desc: "Real-time X/web context on agents and ecosystems" },
-  { label: "Attribution index", desc: "Which agents are included and what the gap represents" },
+  { label: "On-chain books",     desc: "Declared wallet manifests → classified transactions → P&L" },
+  { label: "Grok research",      desc: "Real-time X/web context on agents and ecosystems" },
+  { label: "Attribution index",  desc: "Which agents are included and what the gap represents" },
 ];
 
 const TELEGRAM_FEATURES = [
@@ -83,308 +81,342 @@ const TELEGRAM_FEATURES = [
   "Ask questions about agent books",
 ];
 
-// ── Page ─────────────────────────────────────────────────────────────────────
+const TBL_ROW: React.CSSProperties = {
+  display: "grid", gap: 12, alignItems: "start",
+  padding: "11px 16px", borderBottom: "1px solid var(--line)", fontSize: "0.83rem",
+};
 
 export default function LucaPage() {
   const [activeExample, setActiveExample] = useState(0);
 
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
-      {/* ── Hero ── */}
-      <section style={{ padding: "3rem 24px 2rem", maxWidth: 860, margin: "0 auto", width: "100%" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "end", flexWrap: "wrap" }}>
+      <article style={{ maxWidth: 1000, margin: "0 auto", padding: "3rem 24px 6rem" }}>
+
+        {/* Breadcrumb */}
+        <nav style={{ marginBottom: 28, fontSize: "0.78rem", color: "var(--muted)" }}>
+          <Link href="/" style={{ color: "var(--muted)", textDecoration: "none" }}>Zetta</Link>
+          <span style={{ margin: "0 8px" }}>›</span>
+          <span>Luca</span>
+        </nav>
+
+        {/* ── Hero ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 32, alignItems: "start", marginBottom: 40 }}>
           <div>
-            <SectionLabel style={{ color: "var(--accent)", marginBottom: 12 }}>
+            <div className="tla-section-label" style={{ color: "var(--accent)", marginBottom: 10 }}>
               Financial Analyst · Zetta Intelligence
-            </SectionLabel>
-            <h1 style={{ fontFamily: "var(--font-serif)", fontSize: "clamp(2rem, 5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, margin: "0 0 16px", letterSpacing: "-0.02em" }}>
-              Luca reads<br /><em>the books.</em>
+            </div>
+            <h1 style={{
+              fontFamily: "var(--font-mono)", fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)",
+              fontWeight: 800, lineHeight: 1.1, letterSpacing: "-0.02em",
+              color: "var(--ink-em)", margin: "0 0 12px",
+            }}>
+              Luca reads<br />the books.
             </h1>
-            <p style={{ fontSize: "0.95rem", color: "var(--muted)", lineHeight: 1.7, margin: "0 0 24px", maxWidth: 520 }}>
-              Revenue, expenses, treasury activity, attribution gaps — interpreted from on-chain data, written in plain language.
-              Cold. Precise. Factual.
+            <p style={{ fontSize: "0.85rem", color: "var(--ink-mid)", lineHeight: 1.7, margin: "0 0 22px", maxWidth: 500 }}>
+              Revenue, expenses, treasury activity, attribution gaps — interpreted from on-chain data, written in plain language. Cold. Precise. Factual.
             </p>
-            <div style={{ display: "flex", gap: "0.85rem", flexWrap: "wrap" }}>
-              <Link href="/research" className="lp-btn-primary lp-btn-lg">Read the Reports →</Link>
-              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost lp-btn-lg">
-                @AskLucaBot
-              </a>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link href="/research" className="lp-btn-primary">Read the Reports →</Link>
+              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-ghost">@AskLucaBot</a>
             </div>
           </div>
-          {/* Terminal identity card */}
+
+          {/* Identity card */}
           <div style={{
-            background: "#0d1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10,
-            padding: "16px 18px", minWidth: 220, maxWidth: 260, fontFamily: "var(--font-mono)",
+            background: "#0d1117", border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 8, padding: "16px 18px", minWidth: 200, maxWidth: 240,
+            fontFamily: "var(--font-mono)", flexShrink: 0,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", display: "inline-block" }} />
-              <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>LUCA · ACTIVE</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 14 }}>
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
+              <span style={{ fontSize: "0.58rem", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                LUCA · ACTIVE
+              </span>
             </div>
             {[
-              { k: "ROLE", v: "Financial Analyst" },
+              { k: "ROLE",  v: "Financial Analyst" },
               { k: "LAYER", v: "Zetta Intelligence" },
-              { k: "DATA", v: "On-chain only" },
+              { k: "DATA",  v: "On-chain only" },
               { k: "STYLE", v: "Bloomberg · no hype" },
             ].map(({ k, v }) => (
-              <div key={k} style={{ display: "flex", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.3)", width: 50, flexShrink: 0 }}>{k}</span>
-                <span style={{ fontSize: "0.62rem", color: "rgba(74,232,160,0.9)" }}>{v}</span>
+              <div key={k} style={{ display: "flex", gap: 10, marginBottom: 6 }}>
+                <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.28)", width: 48, flexShrink: 0 }}>{k}</span>
+                <span style={{ fontSize: "0.6rem", color: "rgba(74,232,160,0.9)" }}>{v}</span>
               </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* ── Capabilities ── */}
-      <section className="lp-section lp-section-alt">
-        <div className="lp-section-head">
-          <SectionLabel>Capabilities</SectionLabel>
-          <h2 className="lp-h2">What Luca analyzes.</h2>
-        </div>
-        <LedgerCard eyebrow="6 capabilities" title="Financial analysis functions">
-          {CAPABILITIES.map((item, i) => (
-            <LedgerRow
-              key={item.label}
-              first={i === 0}
-              last={i === CAPABILITIES.length - 1}
-              label={
-                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--muted)", width: 20 }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  {item.label}
+        {/* ── Capabilities ── */}
+        <div style={{ marginBottom: 40 }}>
+          <div className="tla-section-label" style={{ marginBottom: 10 }}>Capabilities</div>
+          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1.05rem", fontWeight: 700, color: "var(--ink-em)", marginBottom: 16 }}>
+            What Luca analyzes.
+          </h2>
+          <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ padding: "10px 16px", background: "var(--surface-hi)", borderBottom: "1px solid var(--line)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>
+                6 capabilities · financial analysis functions
+              </span>
+            </div>
+            {CAPABILITIES.map((item, i) => (
+              <div key={item.label} style={{ ...TBL_ROW, gridTemplateColumns: "24px 1fr 1fr", borderBottom: i === CAPABILITIES.length - 1 ? "none" : "1px solid var(--line)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.65rem", color: "var(--muted)", paddingTop: 1 }}>
+                  {String(i + 1).padStart(2, "0")}
                 </span>
-              }
-              value={item.desc}
-              valueStyle={{ fontFamily: "inherit", fontSize: "0.75rem", color: "var(--muted)", fontWeight: 400, textAlign: "right", maxWidth: 380 }}
-            />
-          ))}
-        </LedgerCard>
-      </section>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>{item.label}</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--muted)", lineHeight: 1.5 }}>{item.desc}</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-      {/* ── Analysis Terminal ── */}
-      <section className="lp-section">
-        <div className="lp-section-head" style={{ marginBottom: 28 }}>
-          <SectionLabel>Analysis Terminal</SectionLabel>
-          <h2 className="lp-h2">Financial intelligence, structured.</h2>
-          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
-            Every Luca analysis follows the same structure: Attribution → Books → History → Signal → Verdict.
-            Data first, interpretation second, confidence always declared.
+        {/* ── Analysis Terminal ── */}
+        <div style={{ marginBottom: 40 }}>
+          <div className="tla-section-label" style={{ marginBottom: 10 }}>Analysis Terminal</div>
+          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1.05rem", fontWeight: 700, color: "var(--ink-em)", marginBottom: 6 }}>
+            Financial intelligence, structured.
+          </h2>
+          <p style={{ fontSize: "0.82rem", color: "var(--ink-mid)", lineHeight: 1.65, marginBottom: 16, maxWidth: 540 }}>
+            Every Luca analysis follows the same structure: Attribution → Books → History → Signal → Verdict. Data first, interpretation second, confidence always declared.
+          </p>
+
+          {/* Prompt pills */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+            {SUGGESTED_PROMPTS.map((p, i) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setActiveExample(i < 2 ? i : 0)}
+                style={{
+                  fontSize: "0.72rem", padding: "5px 12px",
+                  borderRadius: 6, border: "1px solid var(--line)",
+                  color: "var(--ink-mid)", background: "var(--surface)", cursor: "pointer",
+                }}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Terminal */}
+          <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", fontFamily: "var(--font-mono)" }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", background: "var(--surface-hi)", borderBottom: "1px solid var(--line)" }}>
+              <div style={{ display: "flex", gap: 5 }}>
+                {["#F46060", "#F4B942", "#4AE8A0"].map((c) => (
+                  <span key={c} style={{ width: 8, height: 8, borderRadius: "50%", background: c, display: "inline-block" }} />
+                ))}
+              </div>
+              <span style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", flex: 1 }}>
+                LUCA · FINANCIAL ANALYSIS TERMINAL
+              </span>
+              <span style={{ fontSize: "0.6rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4, border: "1px solid var(--line-hi)", color: "var(--muted)" }}>
+                PREVIEW
+              </span>
+            </div>
+
+            {/* Query */}
+            <div style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "12px 16px", borderBottom: "1px solid var(--line)", background: "rgba(61,207,136,0.03)" }}>
+              <span style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", flexShrink: 0, width: 68 }}>QUERY</span>
+              <span style={{ fontSize: "0.82rem", color: "var(--ink-em)", fontWeight: 600, lineHeight: 1.4 }}>
+                {EXAMPLE_ANALYSES[activeExample].query}
+              </span>
+            </div>
+
+            {/* Output rows */}
+            {EXAMPLE_ANALYSES[activeExample].rows.map((row, i, arr) => (
+              <div key={row.field} style={{ display: "flex", gap: 12, alignItems: "baseline", padding: "9px 16px", borderBottom: i === arr.length - 1 ? "none" : "1px solid var(--line)" }}>
+                <span style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", flexShrink: 0, width: 68 }}>
+                  {row.field}
+                </span>
+                <span style={{ fontSize: "0.78rem", color: row.positive ? "var(--accent)" : "var(--ink-mid)", lineHeight: 1.4 }}>
+                  {row.value}
+                </span>
+              </div>
+            ))}
+
+            {/* Verdict */}
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-start", padding: "14px 16px", borderTop: "1px solid var(--line)", background: "rgba(255,255,255,0.015)" }}>
+              <div style={{ flex: 1 }}>
+                <span style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>VERDICT</span>
+                <p style={{ fontSize: "0.78rem", color: "var(--ink-mid)", lineHeight: 1.55, marginTop: 4 }}>
+                  {EXAMPLE_ANALYSES[activeExample].verdict}
+                </p>
+              </div>
+              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                <span style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)", display: "block" }}>CONFIDENCE</span>
+                <span style={{
+                  display: "inline-block", marginTop: 4, fontFamily: "var(--font-mono)",
+                  fontSize: "0.7rem", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                  border: "1px solid rgba(61,207,136,0.3)", background: "rgba(61,207,136,0.08)", color: "var(--accent)",
+                }}>
+                  {EXAMPLE_ANALYSES[activeExample].confidence}
+                </span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 16px", background: "var(--surface-hi)", fontSize: "0.65rem", color: "var(--muted)", gap: 12, flexWrap: "wrap" }}>
+              <span>Illustrative format · live analysis requires manifest-declared wallets · no synthetic data in production</span>
+              <div style={{ display: "flex", gap: 10, alignItems: "center", flexShrink: 0 }}>
+                {[{ label: "AEON", idx: 0 }, { label: "BANKR", idx: 1 }].map(({ label, idx }) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setActiveExample(idx)}
+                    style={{
+                      fontSize: "0.65rem", fontWeight: 700, padding: "3px 8px",
+                      borderRadius: 4, cursor: "pointer", fontFamily: "var(--font-mono)",
+                      border: activeExample === idx ? "1px solid rgba(61,207,136,0.4)" : "1px solid var(--line-hi)",
+                      color: activeExample === idx ? "var(--accent)" : "var(--muted)",
+                      background: activeExample === idx ? "rgba(61,207,136,0.08)" : "none",
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <a href={TELEGRAM} target="_blank" rel="noreferrer" style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--accent)", fontFamily: "var(--font-mono)" }}>
+                  Try on Telegram →
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ marginTop: 14, fontSize: "0.74rem", color: "var(--muted)", textAlign: "center" }}>
+            Live terminal coming soon. For now use{" "}
+            <a href={TELEGRAM} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>@AskLucaBot</a> on Telegram.
+            {" "}<Link href="/methodology" style={{ color: "var(--accent)" }}>Read the methodology →</Link>
           </p>
         </div>
 
-        {/* Suggested prompts */}
-        <div className="lt-prompts">
-          {SUGGESTED_PROMPTS.map((p, i) => (
-            <button
-              key={p}
-              type="button"
-              className={`lt-prompt${activeExample === (i < 2 ? i : -1) ? " lt-prompt-active" : ""}`}
-              onClick={() => setActiveExample(i < 2 ? i : 0)}
-            >
-              {p}
-            </button>
-          ))}
+        {/* ── Publication ── */}
+        <div style={{ paddingTop: 28, paddingBottom: 28, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 32, marginBottom: 40 }}>
+          <div>
+            <div className="tla-section-label" style={{ marginBottom: 10 }}>Publication</div>
+            <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1.05rem", fontWeight: 700, color: "var(--ink-em)", lineHeight: 1.3, marginBottom: 10 }}>
+              State of the<br />Agent Economy.
+            </h2>
+            <p style={{ fontSize: "0.82rem", color: "var(--ink-mid)", lineHeight: 1.65, marginBottom: 18 }}>
+              Luca&rsquo;s flagship publication. Weekly, monthly, and quarterly reports on revenue, expenses, treasury health, and the attribution gap across autonomous agents on Base. No estimates. No synthetic numbers.
+            </p>
+            <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden", marginBottom: 18 }}>
+              {REPORT_TYPES.map((r, i) => (
+                <div key={r.label} style={{ display: "grid", gridTemplateColumns: "80px 1fr", gap: 12, padding: "10px 16px", borderBottom: i === REPORT_TYPES.length - 1 ? "none" : "1px solid var(--line)", fontSize: "0.82rem" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "var(--accent)" }}>{r.label}</span>
+                  <span style={{ fontSize: "0.76rem", color: "var(--muted)" }}>{r.desc}</span>
+                </div>
+              ))}
+            </div>
+            <Link href="/research" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>Read All Reports →</Link>
+          </div>
+
+          <div>
+            <div className="tla-section-label" style={{ marginBottom: 10 }}>Coverage</div>
+            <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 14px", background: "var(--surface-hi)", borderBottom: "1px solid var(--line)", fontFamily: "var(--font-mono)", fontSize: "0.62rem", color: "var(--muted)" }}>
+                {["#F46060", "#F4B942", "#4AE8A0"].map((c) => (
+                  <span key={c} style={{ width: 7, height: 7, borderRadius: "50%", background: c, display: "inline-block" }} />
+                ))}
+                <span style={{ marginLeft: 4 }}>Luca · Financial Analyst</span>
+              </div>
+              <div style={{ padding: "12px 14px" }}>
+                <p style={{ fontSize: "0.78rem", color: "var(--ink-mid)", fontStyle: "italic", lineHeight: 1.5, marginBottom: 12 }}>
+                  &ldquo;Bloomberg Intelligence analyst. Cold. Precise. Factual. No hype. No marketing language.&rdquo;
+                </p>
+                <div className="tla-section-label" style={{ marginBottom: 8 }}>Data Sources</div>
+                {DATA_SOURCES.map((item) => (
+                  <div key={item.label} style={{ display: "flex", gap: 8, marginBottom: 5, fontSize: "0.76rem" }}>
+                    <span style={{ color: "var(--ink-mid)", fontWeight: 600, minWidth: 110 }}>{item.label}</span>
+                    <span style={{ color: "var(--muted)", lineHeight: 1.45 }}>{item.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Terminal panel */}
-        <div className="lt-terminal">
-          <div className="lt-terminal-head">
-            <div className="lt-terminal-dots">
-              <span /><span /><span />
+        {/* ── Telegram ── */}
+        <div style={{ marginBottom: 40 }}>
+          <div className="tla-section-label" style={{ marginBottom: 10 }}>Public Interface</div>
+          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1.05rem", fontWeight: 700, color: "var(--ink-em)", marginBottom: 6 }}>
+            Luca on Telegram.
+          </h2>
+          <p style={{ fontSize: "0.82rem", color: "var(--ink-mid)", lineHeight: 1.65, marginBottom: 18, maxWidth: 540 }}>
+            @AskLucaBot is Luca&rsquo;s public terminal. Submit a wallet address and Luca returns a financial analysis — revenue, expenses, net income, treasury activity summary.
+          </p>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 32, flexWrap: "wrap", padding: "20px", border: "1px solid var(--line)", borderRadius: 8, background: "var(--surface)" }}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div className="tla-section-label" style={{ marginBottom: 10 }}>@AskLucaBot capabilities</div>
+              {TELEGRAM_FEATURES.map((item) => (
+                <div key={item} style={{ display: "flex", gap: 8, alignItems: "baseline", fontSize: "0.8rem", color: "var(--ink-mid)", marginBottom: 7 }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--accent)", flexShrink: 0 }}>✓</span>
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
-            <span className="lt-terminal-label">LUCA · FINANCIAL ANALYSIS TERMINAL</span>
-            <StatusBadge variant="neutral">PREVIEW</StatusBadge>
-          </div>
-
-          <div className="lt-query-row">
-            <span className="lt-field-label">QUERY</span>
-            <span className="lt-query-text">{EXAMPLE_ANALYSES[activeExample].query}</span>
-          </div>
-
-          <div className="lt-output-rows">
-            {EXAMPLE_ANALYSES[activeExample].rows.map((row) => (
-              <div key={row.field} className="lt-output-row">
-                <span className="lt-field-label">{row.field}</span>
-                <span className={`lt-output-value${row.positive ? " lt-positive" : ""}`}>{row.value}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="lt-verdict-block">
-            <div className="lt-verdict-left">
-              <span className="lt-field-label">VERDICT</span>
-              <p className="lt-verdict-text">{EXAMPLE_ANALYSES[activeExample].verdict}</p>
-            </div>
-            <div className="lt-confidence-block">
-              <span className="lt-field-label">CONFIDENCE</span>
-              <StatusBadge variant="green">{EXAMPLE_ANALYSES[activeExample].confidence}</StatusBadge>
-            </div>
-          </div>
-
-          <div className="lt-terminal-footer">
-            <span>Illustrative format · live analysis requires manifest-declared wallets · no synthetic data in production</span>
-            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-              <button
-                type="button"
-                className={`lt-ex-switch${activeExample === 0 ? " active" : ""}`}
-                onClick={() => setActiveExample(0)}
-              >AEON</button>
-              <button
-                type="button"
-                className={`lt-ex-switch${activeExample === 1 ? " active" : ""}`}
-                onClick={() => setActiveExample(1)}
-              >BANKR</button>
-              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lt-tg-link">
-                Try on Telegram →
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, paddingTop: 4 }}>
+              <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary" style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                Open @AskLucaBot
+              </a>
+              <a href={X_HANDLE} target="_blank" rel="noreferrer" className="lp-btn-ghost" style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                Follow on X →
               </a>
             </div>
           </div>
         </div>
 
-        <p style={{ marginTop: 16, fontSize: "0.74rem", color: "var(--muted)", textAlign: "center" }}>
-          Live terminal access coming soon. For now, use{" "}
-          <a href={TELEGRAM} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>@AskLucaBot</a> on Telegram.
-          {" "}<Link href="/methodology" style={{ color: "var(--accent)" }}>Read the methodology →</Link>
-        </p>
-      </section>
-
-      {/* ── State of the Agent Economy ── */}
-      <section className="lp-section">
-        <div className="lp-registry-inner">
-          <div className="lp-registry-text">
-            <SectionLabel>Publication</SectionLabel>
-            <h2 className="lp-h2" style={{ margin: "10px 0 12px" }}>State of the<br />Agent Economy.</h2>
-            <p className="lp-registry-sub">
-              Luca&rsquo;s flagship publication. Weekly, monthly, and quarterly reports on revenue, expenses,
-              treasury health, and the attribution gap across autonomous agents on Base.
-              Grounded entirely in on-chain data. No estimates. No synthetic numbers.
-            </p>
-            <div style={{ margin: "20px 0" }}>
-              <LedgerCard>
-                {REPORT_TYPES.map((r, i) => (
-                  <LedgerRow
-                    key={r.label}
-                    first={i === 0}
-                    last={i === REPORT_TYPES.length - 1}
-                    label={r.label}
-                    labelStyle={{ color: "var(--accent)" }}
-                    value={r.desc}
-                    valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.78rem", color: "var(--muted)" }}
-                  />
-                ))}
-              </LedgerCard>
-            </div>
-            <Link href="/research" className="lp-btn-primary" style={{ display: "inline-block" }}>
-              Read All Reports →
-            </Link>
-          </div>
-
-          <div className="lp-registry-card">
-            <div className="lp-card-header">
-              <span className="lp-card-dot green" /><span className="lp-card-dot yellow" /><span className="lp-card-dot red" />
-              <span className="lp-card-title">Luca · Financial Analyst</span>
-            </div>
-            <div style={{ padding: "14px 16px" }}>
-              <SectionLabel style={{ marginBottom: 6 }}>Style</SectionLabel>
-              <p style={{ fontSize: "0.82rem", color: "var(--fg)", lineHeight: 1.6, margin: "0 0 14px", fontStyle: "italic" }}>
-                &ldquo;Bloomberg Intelligence analyst. Cold. Precise. Factual. No hype. No marketing language.&rdquo;
-              </p>
-              <SectionLabel style={{ marginBottom: 6 }}>Data Sources</SectionLabel>
-              <LedgerCard>
-                {DATA_SOURCES.map((item, i) => (
-                  <LedgerRow
-                    key={item.label}
-                    first={i === 0}
-                    last={i === DATA_SOURCES.length - 1}
-                    label={item.label}
-                    value={item.desc}
-                    valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.7rem", color: "var(--muted)", textAlign: "right", maxWidth: 200 }}
-                  />
-                ))}
-              </LedgerCard>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Telegram terminal ── */}
-      <section className="lp-section lp-section-alt">
-        <div className="lp-section-head">
-          <SectionLabel>Public Interface</SectionLabel>
-          <h2 className="lp-h2">Luca on Telegram.</h2>
-          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
-            @AskLucaBot is Luca&rsquo;s public terminal. Submit a wallet address and Luca will return a
-            financial analysis — revenue, expenses, net income, treasury activity summary.
+        {/* ── Luca Skills ── */}
+        <div style={{ marginBottom: 40 }} id="skills">
+          <div className="tla-section-label" style={{ marginBottom: 10 }}>API</div>
+          <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1.05rem", fontWeight: 700, color: "var(--ink-em)", marginBottom: 6 }}>
+            Luca Skills.
+          </h2>
+          <p style={{ fontSize: "0.82rem", color: "var(--ink-mid)", lineHeight: 1.65, marginBottom: 16, maxWidth: 540 }}>
+            Seven callable financial intelligence endpoints. Plug Luca directly into your agent, dashboard, or workflow. Each skill enforces strict data integrity — no synthetic numbers, no attribution without a manifest.
           </p>
-        </div>
-        <div style={{ marginTop: 28 }}>
-          <LedgerCard eyebrow="Features" title="@AskLucaBot capabilities">
-            {TELEGRAM_FEATURES.map((item, i) => (
-              <LedgerRow
-                key={item}
-                first={i === 0}
-                last={i === TELEGRAM_FEATURES.length - 1}
-                label={item}
-                value={<StatusBadge variant="green">Active</StatusBadge>}
-              />
-            ))}
-          </LedgerCard>
-        </div>
-        <div style={{ marginTop: 24 }}>
-          <a href={TELEGRAM} target="_blank" rel="noreferrer" className="lp-btn-primary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ verticalAlign: "middle", marginRight: 6 }} aria-hidden="true">
-              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
-            </svg>
-            Open @AskLucaBot
-          </a>
-          <a href={X_HANDLE} target="_blank" rel="noreferrer" className="lp-btn-ghost" style={{ marginLeft: 10 }}>
-            Follow on X →
-          </a>
-        </div>
-      </section>
-
-      {/* ── Luca Skills ── */}
-      <section className="lp-section lp-section-alt" id="skills">
-        <div className="lp-section-head">
-          <SectionLabel>API</SectionLabel>
-          <h2 className="lp-h2">Luca Skills.</h2>
-          <p className="lp-hero-sub" style={{ maxWidth: 560, marginTop: 8 }}>
-            Seven callable financial intelligence endpoints. Plug Luca directly into your agent, dashboard, or workflow.
-            Each skill enforces strict data integrity — no synthetic numbers, no attribution without a manifest.
-          </p>
-        </div>
-        <div style={{ marginTop: 28 }}>
-          <LedgerCard eyebrow="7 endpoints" title="Callable intelligence functions">
+          <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 16px", background: "var(--surface-hi)", borderBottom: "1px solid var(--line)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>
+                7 endpoints · callable intelligence functions
+              </span>
+              <Link href="/docs/luca-skills" style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--accent)" }}>
+                View API docs →
+              </Link>
+            </div>
             {LUCA_SKILLS.map((skill, i) => (
-              <LedgerRow
-                key={skill.name}
-                first={i === 0}
-                last={i === LUCA_SKILLS.length - 1}
-                label={skill.name}
-                value={skill.desc}
-                valueStyle={{ fontFamily: "inherit", fontWeight: 400, fontSize: "0.75rem", color: "var(--muted)", textAlign: "right", maxWidth: 340 }}
-              />
+              <div key={skill.name} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, padding: "11px 16px", borderBottom: i === LUCA_SKILLS.length - 1 ? "none" : "1px solid var(--line)", fontSize: "0.83rem" }}>
+                <span style={{ fontWeight: 700, color: "var(--ink)" }}>{skill.name}</span>
+                <span style={{ fontSize: "0.76rem", color: "var(--muted)" }}>{skill.desc}</span>
+              </div>
             ))}
-          </LedgerCard>
+          </div>
+          <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link href="/docs/luca-skills" className="lp-btn-primary" style={{ fontSize: "0.8rem" }}>View Luca Skills API →</Link>
+            <Link href="/api" className="lp-btn-ghost" style={{ fontSize: "0.8rem" }}>Get API Key</Link>
+          </div>
         </div>
-        <div style={{ marginTop: 24, display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <Link href="/docs/luca-skills" className="lp-btn-primary">View Luca Skills API →</Link>
-          <Link href="/api" className="lp-btn-ghost">Get API Key</Link>
-        </div>
-      </section>
 
-      {/* ── CTA ── */}
-      <section className="lp-cta-section">
-        <h2 className="lp-h2">Get your agent in the report.</h2>
-        <p>Submit a wallet manifest and Luca will include your agent in the next State of the Agent Economy.</p>
-        <div style={{ display: "flex", gap: "0.85rem", justifyContent: "center", flexWrap: "wrap", marginTop: "1.5rem" }}>
-          <Link href="/registry#verify" className="lp-btn-primary lp-btn-lg">Submit Manifest →</Link>
-          <Link href="/research" className="lp-btn-ghost lp-btn-lg">Read Reports</Link>
+        {/* ── CTA strip ── */}
+        <div style={{ paddingTop: 28, borderTop: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <h2 style={{ fontFamily: "var(--font-mono)", fontSize: "1rem", fontWeight: 700, color: "var(--ink-em)", marginBottom: 4 }}>
+              Get your agent in the report.
+            </h2>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.55, maxWidth: 380 }}>
+              Submit a wallet manifest and Luca will include your agent in the next State of the Agent Economy.
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link href="/registry#verify" className="lp-btn-primary">Submit Manifest →</Link>
+            <Link href="/research" className="lp-btn-ghost">Read Reports</Link>
+          </div>
         </div>
-      </section>
+
+      </article>
 
       <SiteFooter />
     </div>
