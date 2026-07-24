@@ -270,4 +270,4 @@ Open [http://localhost:3000](http://localhost:3000).
 - Zetta on X: [@zettaaidotco](https://x.com/zettaaidotco)
 - Luca on X: [@asklucaai](https://x.com/asklucaai)
 - Telegram: [t.me/asklucaai](https://t.me/asklucaai)
-- Contact: [contact@zettaai.co](mailto:contact@zettaai.co)
+- Contact: [contact@zettaai.co](mailto:dan@zettaai.co)
