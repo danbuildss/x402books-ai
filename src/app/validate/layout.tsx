@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Validate Agent Wallet Manifest | Zetta",
@@ -22,5 +24,11 @@ export const metadata: Metadata = {
 };
 
 export default function ValidateLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <div className="lp-root">
+      <SiteNav />
+      {children}
+      <SiteFooter />
+    </div>
+  );
 }

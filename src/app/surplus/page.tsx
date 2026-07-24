@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { CostStatusBadge } from "@/components/ui/badge";
 
@@ -10,12 +12,9 @@ export const metadata: Metadata = {
 
 export default function SurplusPilotPage() {
   return (
+    <div className="lp-root">
+    <SiteNav />
     <main style={{ maxWidth: 720, margin: "0 auto", padding: "48px 24px 80px" }}>
-
-      {/* Nav */}
-      <div style={{ marginBottom: 36 }}>
-        <Link href="/" style={{ fontSize: "0.78rem", color: "var(--muted)", textDecoration: "none" }}>← Zetta</Link>
-      </div>
 
       {/* Hero */}
       <div style={{ marginBottom: 48 }}>
@@ -235,5 +234,7 @@ export default function SurplusPilotPage() {
         </p>
       </section>
     </main>
+    <SiteFooter />
+    </div>
   );
 }

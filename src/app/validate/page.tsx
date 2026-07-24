@@ -2,8 +2,6 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/effects";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
 import "./validate.css";
@@ -310,21 +308,6 @@ export default function ValidatePage() {
 
   return (
     <div className="val-page">
-      <header className="lp-header">
-        <Link href="/" className="lp-brand"><Logo /></Link>
-        <nav className="lp-nav" aria-label="Main navigation">
-          <Link href="/registry">Registry</Link>
-          <Link href="/luca">Luca</Link>
-          <Link href="/docs#api">API</Link>
-          <Link href="/docs">Docs</Link>
-        </nav>
-        <div className="lp-header-right">
-          <ThemeToggle />
-          <Link href="/access" className="lp-btn-ghost lp-signin-desktop">Sign In</Link>
-          <Link href="/dashboard" className="lp-btn-primary">Open App</Link>
-        </div>
-      </header>
-
       <section className="val-hero">
         <SectionLabel>Agent Wallet Manifest</SectionLabel>
         <h1 className="val-h1">Validate your manifest.</h1>
@@ -463,29 +446,6 @@ export default function ValidatePage() {
         </div>
       </section>
 
-      <footer className="lp-footer">
-        <div className="lp-footer-inner">
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Product</p>
-            <Link href="/dashboard">App</Link>
-            <Link href="/registry">Registry</Link>
-            <Link href="/luca">Luca</Link>
-            <Link href="/api">API Reference</Link>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Docs</p>
-            <Link href="/docs#api">API Reference</Link>
-            <Link href="/docs#agent">Agent Guide</Link>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">@AskLucaBot</a>
-          </div>
-          <div className="lp-footer-col">
-            <p className="lp-footer-heading">Community</p>
-            <a href="https://x.com/Zetta" target="_blank" rel="noreferrer">X / Twitter</a>
-            <a href="https://t.me/AskLucaBot" target="_blank" rel="noreferrer">Telegram</a>
-          </div>
-        </div>
-        <p className="lp-footer-copy">&copy; 2026 Zetta AI. Not financial advice.</p>
-      </footer>
     </div>
   );
 }

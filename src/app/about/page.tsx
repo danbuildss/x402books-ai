@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HomeHeader } from "../home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { DOCS_URL } from "@/lib/docs-url";
 
@@ -46,7 +46,7 @@ const LAYERS = [
 export default function AboutPage() {
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <main style={{ maxWidth: 880, margin: "0 auto", padding: "48px 40px 0" }}>
         {/* ── Mission ── */}

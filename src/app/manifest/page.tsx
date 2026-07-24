@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerRow, LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ function clsBadgeVariant(cls: string): "green" | "blue" | "red" | "neutral" | "a
 export default function ManifestPage() {
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <article style={{ maxWidth: 720, margin: "0 auto", padding: "3.5rem 24px 6rem" }}>
 

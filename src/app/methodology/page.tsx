@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { HomeHeader } from "@/app/home-header";
+import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ export const metadata = {
 export default function MethodologyPage() {
   return (
     <div className="lp-root">
-      <HomeHeader />
+      <SiteNav />
 
       <article style={{ maxWidth: 720, margin: "0 auto", padding: "3rem 24px 6rem" }}>
 
