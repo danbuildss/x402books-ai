@@ -2,9 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { LogoMark } from "@/components/logo";
-import { ThemeToggle } from "@/components/effects";
-import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
 
@@ -136,23 +133,6 @@ export function RegisterClient() {
 
   return (
     <>
-      <header style={{
-        position: "sticky", top: 0, zIndex: 100,
-        background: "var(--bg)", borderBottom: "1px solid var(--line)",
-        padding: "0 24px", height: 52,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        maxWidth: "100%",
-      }}>
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <LogoMark size={22} />
-          <span style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--fg)", letterSpacing: "-0.01em" }}>Zetta</span>
-        </Link>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Link href="/registry" style={{ fontSize: "0.82rem", color: "var(--muted)", textDecoration: "none" }}>Registry</Link>
-          <ThemeToggle />
-        </div>
-      </header>
-
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px" }}>
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
@@ -514,8 +494,6 @@ export function RegisterClient() {
           </div>
         </LedgerCard>
       </main>
-
-      <SiteFooter />
     </>
   );
 }
