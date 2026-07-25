@@ -271,6 +271,62 @@ export async function getAllRegistryWalletAddresses(): Promise<string[]> {
   return [...new Set((data ?? []).map((row) => row.address.toLowerCase()))];
 }
 
+export async function getAgentFinancialSummary(agentSlug: string): Promise<{
+  wallet_count: number;
+  chains: string[];
+  best_evidence_status: string | null;
+  books_eligible: boolean;
+  manifest_submitted: boolean;
+  manifest_submitted_at: string | null;
+  revenue_event_count: number;
+  revenue_candidate_count: number;
+  revenue_candidate_usd: number | null;
+  unresolved_inflow_count: number;
+  last_indexed_at: string | null;
+} | null> {
+  const sb = getSupabaseAdminClient();
+
+  const [walletData, eventData, manifestData] = await Promise.all([
+    sb.from("registry_wallet_claims").select("chain,evidence_status,books_eligible").eq("agent_slug", agentSlug).eq("wallet_status", "active"),
+    sb.from("revenue_classification_events").select("classification,amount_usd,observed_at").eq("agent_slug", agentSlug).order("observed_at", { ascending: false }),
+    sb.from("registry_manifest_submissions").select("created_at").eq("agent_slug", agentSlug).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+
+  if (walletData.error) throw new Error(`getAgentFinancialSummary wallets: ${walletData.error.message}`);
+  if (eventData.error)  throw new Error(`getAgentFinancialSummary events: ${eventData.error.message}`);
+
+  const wallets = walletData.data ?? [];
+  if (wallets.length === 0 && (manifestData.data == null)) return null;
+
+  const chains = [...new Set(wallets.map((w) => w.chain as string))].sort();
+  const EVIDENCE_RANK: Record<string, number> = { speculative: 0, inferred: 1, attributed: 2, observed: 3, verified: 4 };
+  const bestStatus = wallets.reduce<string | null>((best, w) => {
+    const s = w.evidence_status as string ?? "attributed";
+    if (!best || (EVIDENCE_RANK[s] ?? 0) > (EVIDENCE_RANK[best] ?? 0)) return s;
+    return best;
+  }, null);
+
+  const events = eventData.data ?? [];
+  const candidates = events.filter((e) => e.classification === "revenue_candidate");
+  const unresolved = events.filter((e) => e.classification === "unresolved_inflow");
+  const lastIndexed = events.length > 0 ? (events[0].observed_at as string) : null;
+  const candidateUsd = candidates.reduce((sum, e) => sum + (Number(e.amount_usd) || 0), 0);
+
+  return {
+    wallet_count:            wallets.length,
+    chains,
+    best_evidence_status:    bestStatus,
+    books_eligible:          wallets.some((w) => w.books_eligible === true),
+    manifest_submitted:      manifestData.data != null,
+    manifest_submitted_at:   (manifestData.data?.created_at as string) ?? null,
+    revenue_event_count:     events.length,
+    revenue_candidate_count: candidates.length,
+    revenue_candidate_usd:   candidateUsd > 0 ? candidateUsd : null,
+    unresolved_inflow_count: unresolved.length,
+    last_indexed_at:         lastIndexed,
+  };
+}
+
 export async function upgradeWalletEvidenceStatus(agentSlug: string, address: string, chain: string, newStatus: string) {
   // Observed chain activity may upgrade attribution to observed, but this path
   // can never grant verified control or verified revenue.
