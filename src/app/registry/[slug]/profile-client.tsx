@@ -79,6 +79,108 @@ function ConfidenceLabelBadge({ slug }: { slug: string }) {
   );
 }
 
+// ── Financial Truth Section (fetched client-side from truth engine) ───────────
+
+type FinancialSummary = {
+  wallet_count: number;
+  chains: string[];
+  best_evidence_status: string | null;
+  books_eligible: boolean;
+  manifest_submitted: boolean;
+  manifest_submitted_at: string | null;
+  revenue_event_count: number;
+  revenue_candidate_count: number;
+  revenue_candidate_usd: number | null;
+  unresolved_inflow_count: number;
+  last_indexed_at: string | null;
+};
+
+const EVIDENCE_COLOR: Record<string, string> = {
+  verified:   "#4AE8A0",
+  observed:   "#5B9EF4",
+  attributed: "#F4B942",
+  inferred:   "#F4B942",
+  speculative: "var(--muted)",
+};
+
+function FinancialTruthSection({ slug }: { slug: string }) {
+  const [summary, setSummary] = useState<FinancialSummary | null>(null);
+  const [loaded, setLoaded]   = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/v1/agent/${encodeURIComponent(slug)}/financial-summary`)
+      .then((r) => r.json())
+      .then((d: { summary?: FinancialSummary | null }) => { setSummary(d.summary ?? null); setLoaded(true); })
+      .catch(() => setLoaded(true));
+  }, [slug]);
+
+  if (!loaded || !summary) return null;
+
+  const evidenceColor = EVIDENCE_COLOR[summary.best_evidence_status ?? ""] ?? "var(--muted)";
+  const usdFmt = (n: number) => {
+    if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+    if (n >= 1_000)     return `$${(n / 1_000).toFixed(1)}K`;
+    return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
+  const rows = [
+    summary.wallet_count > 0 && {
+      label: "Wallets Declared",
+      value: `${summary.wallet_count} wallet${summary.wallet_count !== 1 ? "s" : ""} · ${summary.chains.join(", ")}`,
+    },
+    summary.best_evidence_status && {
+      label: "Evidence Status",
+      value: (
+        <span style={{ color: evidenceColor, fontWeight: 700, textTransform: "capitalize" }}>
+          ● {summary.best_evidence_status}
+        </span>
+      ),
+    },
+    summary.revenue_event_count > 0 && {
+      label: "Classified Events",
+      value: summary.revenue_event_count.toLocaleString(),
+    },
+    summary.revenue_candidate_count > 0 && {
+      label: "Revenue Candidates",
+      value: summary.revenue_candidate_usd != null
+        ? `${summary.revenue_candidate_count} · ${usdFmt(summary.revenue_candidate_usd)}`
+        : String(summary.revenue_candidate_count),
+    },
+    summary.unresolved_inflow_count > 0 && {
+      label: "Unresolved Inflows",
+      value: String(summary.unresolved_inflow_count),
+    },
+    {
+      label: "Books Eligible",
+      value: summary.books_eligible
+        ? <span style={{ color: "#4AE8A0", fontWeight: 700 }}>Yes</span>
+        : <span style={{ color: "var(--muted)" }}>No</span>,
+    },
+  ].filter(Boolean) as { label: string; value: React.ReactNode }[];
+
+  return (
+    <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 16px", borderBottom: "1px solid var(--line)" }}>
+        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Financial Intelligence</span>
+        {summary.last_indexed_at && (
+          <span className="tla-badge tla-b-muted" style={{ fontSize: "0.6rem" }}>
+            Indexed {new Date(summary.last_indexed_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </span>
+        )}
+      </div>
+      {rows.map(({ label, value }, i) => (
+        <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "9px 16px", borderBottom: i < rows.length - 1 ? "1px solid var(--line)" : "none", fontSize: "0.8rem" }}>
+          <span style={{ color: "var(--muted)" }}>{label}</span>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        </div>
+      ))}
+      <div style={{ padding: "8px 16px", borderTop: "1px solid var(--line)", fontSize: "0.65rem", color: "var(--muted)", lineHeight: 1.55 }}>
+        On-chain classification only. Revenue candidates require delivery and commercial evidence to be recognized.
+      </div>
+    </div>
+  );
+}
+
 // ── Attribution onboarding ────────────────────────────────────────────────────
 
 function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; agentSlug: string }) {
@@ -2397,6 +2499,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             agent={agent}
             toolDecisionsBlock={toolDecisions && toolDecisions.length > 0 ? <ToolDecisionsBlock events={toolDecisions} /> : undefined}
           />
+
+          {/* ── Financial Intelligence (truth engine data, client-side) ── */}
+          <FinancialTruthSection slug={slug} />
 
           {/* ── Data quality + claim CTA ── */}
           <DataQualityBlock dq={dq} />
