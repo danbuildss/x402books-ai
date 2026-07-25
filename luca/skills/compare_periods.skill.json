@@ -1,0 +1,30 @@
+{
+  "name": "compare_periods",
+  "description": "Compare two published snapshot periods for the same agent. Returns both periods' metrics AND server-computed deltas — never compute differences yourself.",
+  "version": "1.0.0",
+  "auth": "public",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/v1/financial-intelligence/{agent_slug}/compare?from={period_a_start}&to={period_b_end}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "agent_slug": { "type": "string" },
+      "period_a_start": { "type": "string", "description": "Earlier period start, ISO date" },
+      "period_b_end": { "type": "string", "description": "Later period end, ISO date" }
+    },
+    "required": ["agent_slug", "period_a_start", "period_b_end"]
+  },
+  "returns": {
+    "period_a": { "period_start": "date", "period_end": "date", "metrics": "object", "evidence_coverage": "number" },
+    "period_b": { "period_start": "date", "period_end": "date", "metrics": "object", "evidence_coverage": "number" },
+    "deltas": {
+      "recognized_revenue_usd_change": "number (server-computed)",
+      "recognized_revenue_pct_change": "number | null (null if period A was 0)",
+      "gross_profit_usd_change": "number",
+      "evidence_coverage_change": "number"
+    },
+    "comparable": "boolean — false if the two periods use different accounting bases or boundaries; if false, do NOT compare"
+  },
+  "rule": "If comparable is false, say the periods are not comparable and stop. If a pct_change is null, describe the change in absolute dollars only.",
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }."
+}

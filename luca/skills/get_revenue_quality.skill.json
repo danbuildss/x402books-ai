@@ -1,0 +1,28 @@
+{
+  "name": "get_revenue_quality",
+  "description": "Fetch the evidence-grade breakdown of an agent's revenue for a period: verified (A/B), supported (C), inferred, claimed, and unresolved totals. Use this whenever the user asks how trustworthy an agent's numbers are.",
+  "version": "1.0.0",
+  "auth": "internal",
+  "auth_header": "Authorization: Bearer ${ZETTA_INTERNAL_SECRET}",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/admin/financial-intelligence/revenue-quality?agent_slug={agent_slug}&period_start={period_start}&period_end={period_end}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "agent_slug": { "type": "string" },
+      "period_start": { "type": "string", "description": "ISO date YYYY-MM-DD" },
+      "period_end": { "type": "string", "description": "ISO date YYYY-MM-DD" }
+    },
+    "required": ["agent_slug", "period_start", "period_end"]
+  },
+  "returns": {
+    "verified_usd": "number (evidence grades A-B)",
+    "supported_usd": "number (grade C)",
+    "inferred_usd": "number",
+    "claimed_usd": "number (operator claim, limited independent support)",
+    "unresolved_usd": "number (grade U)",
+    "grade_counts": { "A": "int", "B": "int", "C": "int", "D": "int", "U": "int" }
+  },
+  "access_rule": "Invoke ONLY when the requester is the agent's operator or an authenticated Zetta admin. For public users, use evidence_coverage from get_agent_snapshot instead and state that grade-level detail is operator-only.",
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }. Never fabricate a breakdown."
+}

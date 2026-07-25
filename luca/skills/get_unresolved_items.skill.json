@@ -1,0 +1,33 @@
+{
+  "name": "get_unresolved_items",
+  "description": "List an agent's top unresolved economic actions (payments received that Zetta cannot yet tie to commercial work). Shows amount, date, counterparty type, and reason codes. Never includes private commercial payloads.",
+  "version": "1.0.0",
+  "auth": "internal",
+  "auth_header": "Authorization: Bearer ${ZETTA_INTERNAL_SECRET}",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/admin/financial-intelligence/unresolved?agent_slug={agent_slug}&limit={limit}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "agent_slug": { "type": "string" },
+      "limit": { "type": "integer", "default": 10, "maximum": 50 }
+    },
+    "required": ["agent_slug"]
+  },
+  "returns": {
+    "items": [
+      {
+        "action_id": "uuid",
+        "occurred_at": "timestamp",
+        "gross_amount_usd": "number",
+        "chain": "string",
+        "counterparty_type": "wallet | protocol | exchange | unknown",
+        "reason_codes": ["string"],
+        "what_would_resolve_it": "string — e.g. 'an invoice or task record linked to tx 0x…'"
+      }
+    ],
+    "total_unresolved_usd": "number"
+  },
+  "access_rule": "Operator/admin only. Public users get the aggregate unresolved_inflows_usd from get_agent_snapshot, never this itemized list.",
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }."
+}
