@@ -1,0 +1,42 @@
+{
+  "name": "get_leaderboard",
+  "description": "Fetch a published Zetta leaderboard ranked by a chosen metric, with proof coverage per row. Use for ecosystem questions and agent comparisons.",
+  "version": "1.0.0",
+  "auth": "public",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/v1/financial-intelligence/leaderboard?metric={metric}&period_end={period_end}&min_evidence={min_evidence}&limit={limit}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "metric": {
+        "type": "string",
+        "enum": ["recognized_revenue", "collected_revenue", "gross_profit", "operating_profit", "payment_volume", "evidence_coverage"],
+        "default": "recognized_revenue"
+      },
+      "period_end": { "type": "string", "description": "ISO date; selects the period cohort" },
+      "min_evidence": { "type": "string", "enum": ["A", "B", "C", "D"], "default": "C" },
+      "limit": { "type": "integer", "default": 25, "maximum": 100 }
+    },
+    "required": ["period_end"]
+  },
+  "returns": {
+    "rows": [
+      {
+        "rank": "int",
+        "agent_slug": "string",
+        "metric_value_usd": "number",
+        "evidence_coverage": "number",
+        "accounting_basis": "string",
+        "snapshot_id": "uuid"
+      }
+    ],
+    "metric": "string",
+    "period_end": "date"
+  },
+  "rules": [
+    "Always name the metric and period when citing a rank — 'ranked #3 by recognized revenue in July', never just 'ranked #3'.",
+    "Always mention proof coverage when citing a rank. A high rank with low evidence coverage must be flagged.",
+    "Never rank agents by payment volume without saying it is volume, not earnings."
+  ],
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }."
+}
