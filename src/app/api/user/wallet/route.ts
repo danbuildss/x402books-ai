@@ -42,3 +42,16 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export async function DELETE() {
+  const codeId = await getCodeId();
+  if (!codeId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const supabase = getSupabaseAdminClient();
+  await supabase
+    .from("access_codes")
+    .update({ wallet: null })
+    .eq("id", codeId);
+
+  return NextResponse.json({ ok: true });
+}
