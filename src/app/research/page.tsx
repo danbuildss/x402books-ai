@@ -278,9 +278,9 @@ export default async function ResearchPage() {
             <div className="tla-section-label" style={{ marginBottom: 10 }}>Coverage</div>
             <div style={{ border: "1px solid var(--line)", borderRadius: 8, overflow: "hidden" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", background: "var(--surface-hi)", borderBottom: "1px solid var(--line)", fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F46060", display: "inline-block" }} />
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#F4B942", display: "inline-block" }} />
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", display: "inline-block" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--negative)", display: "inline-block" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--warning)", display: "inline-block" }} />
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", display: "inline-block" }} />
                 <span style={{ marginLeft: 4 }}>Luca · Financial Analyst</span>
               </div>
               {[

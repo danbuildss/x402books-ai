@@ -216,7 +216,7 @@ function AttributionOnboarding({ agentName, agentSlug }: { agentName: string; ag
               style={{ width: "100%", fontSize: "0.8rem" }}
             />
           </div>
-          {error && <p style={{ margin: 0, fontSize: "0.75rem", color: "#F46060" }}>{error}</p>}
+          {error && <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--negative)" }}>{error}</p>}
           <div style={{ display: "flex", gap: 8 }}>
             <button
               className="op-btn op-btn-primary"
@@ -327,7 +327,7 @@ function AgentBooksBlock({ books, children }: { books: AgentBooks | AgentBooksUn
         {f.margin_pct !== null && (
           <span>
             Margin{" "}
-            <strong style={{ color: f.margin_pct >= 0 ? "var(--ink)" : "#F46060" }}>
+            <strong style={{ color: f.margin_pct >= 0 ? "var(--ink)" : "var(--negative)" }}>
               {f.margin_pct.toFixed(1)}%
             </strong>
           </span>
@@ -396,7 +396,7 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
   const isInactive = f.tx_count === 0;
 
   const verdictLabel = isInactive ? "Inactive" : isProfitable ? "Generating" : isBreakEven ? "Break-even" : "Cash burn";
-  const verdictColor = isInactive ? "var(--muted)" : isProfitable ? "#4AE8A0" : isBreakEven ? "#F4B942" : "#F46060";
+  const verdictColor = isInactive ? "var(--muted)" : isProfitable ? "var(--accent)" : isBreakEven ? "var(--warning)" : "var(--negative)";
 
   const coverageRatio = f.expenses_usd > 0 ? Math.min(2, f.revenue_usd / f.expenses_usd) : null;
   const coveragePct = coverageRatio !== null ? Math.round(coverageRatio * 50) : null;
@@ -441,7 +441,7 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, minWidth: 120 }}>
                 <span style={{ fontSize: "0.82rem", color: verdictColor, fontWeight: 600, fontFamily: "var(--font-mono)" }}>{coverageLabel}</span>
                 <div style={{ height: 4, width: 100, background: "var(--line)", borderRadius: 99, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${Math.min(100, coveragePct)}%`, background: isProfitable ? "#4AE8A0" : "#F46060", borderRadius: 99 }} />
+                  <div style={{ height: "100%", width: `${Math.min(100, coveragePct)}%`, background: isProfitable ? "var(--accent)" : "var(--negative)", borderRadius: 99 }} />
                 </div>
               </div>
             }
@@ -455,7 +455,7 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
             last={rowIndex++ === rowCount - 1}
             label="30d Burn Rate"
             value={`−${usd(f.expenses_usd)}`}
-            valueStyle={{ color: "#F46060" }}
+            valueStyle={{ color: "var(--negative)" }}
           />
         )}
 
@@ -466,7 +466,7 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
             last={rowIndex++ === rowCount - 1}
             label="Net Margin"
             value={`${f.margin_pct.toFixed(1)}%`}
-            valueStyle={{ color: f.margin_pct >= 0 ? "#4AE8A0" : "#F46060" }}
+            valueStyle={{ color: f.margin_pct >= 0 ? "var(--accent)" : "var(--negative)" }}
           />
         )}
 
@@ -485,7 +485,7 @@ function TreasurySignals({ books }: { books: AgentBooks }) {
             last={!topSource || topSourcePct === null}
             label="Runway"
             value={f.runway_months < 1 ? "< 1 mo" : `${f.runway_months.toFixed(1)} mo`}
-            valueStyle={{ color: f.runway_months >= 3 ? "#4AE8A0" : f.runway_months >= 1 ? "#F4B942" : "#F46060" }}
+            valueStyle={{ color: f.runway_months >= 3 ? "var(--accent)" : f.runway_months >= 1 ? "var(--warning)" : "var(--negative)" }}
           />
         )}
 
@@ -614,7 +614,7 @@ function cardStatusLabel(agent: Agent): string {
 
 function cardStatusColor(agent: Agent): string {
   const s = agent.verificationStatus;
-  if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "#4AE8A0";
+  if (s === "Verified" || s === "Luca Managed" || s === "Claimed") return "var(--accent)";
   if (s === "Wallets Declared") return "#5B9EF4";
   return "var(--muted)";
 }
@@ -636,7 +636,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
 
   const verifyColor =
     agent.verificationStatus === "Verified" || agent.verificationStatus === "Luca Managed" || agent.verificationStatus === "Claimed"
-      ? "#4AE8A0"
+      ? "var(--accent)"
       : agent.verificationStatus === "Wallets Declared" ? "#5B9EF4" : "var(--muted)";
 
   const visiblePatterns = (classification?.patterns ?? [])
@@ -784,7 +784,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
               flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
               padding: "10px 16px", borderRadius: 10,
               border: "1px solid rgba(74,232,160,0.3)",
-              background: "rgba(74,232,160,0.1)", color: "#4AE8A0",
+              background: "rgba(74,232,160,0.1)", color: "var(--accent)",
               fontSize: "0.82rem", fontWeight: 700, cursor: downloading ? "not-allowed" : "pointer",
               opacity: downloading ? 0.6 : 1,
             }}
@@ -872,9 +872,9 @@ interface RawInferenceEvent {
 
 function CostStatusBanner({ status }: { status: import("@/lib/inference-events").CostSource }) {
   const cfg = {
-    actual:    { color: "#4AE8A0", bg: "#4AE8A010", border: "#4AE8A030", label: "Actual cost data", detail: "Provider billing metadata confirmed. Spend figures are accurate." },
-    estimated: { color: "#F4B942", bg: "#F4B94210", border: "#F4B94230", label: "Estimated cost",   detail: "Spend calculated from model price × token counts. Actual billing may differ slightly." },
-    missing:   { color: "#F46060", bg: "#F4606010", border: "#F4606030", label: "Cost data missing", detail: "Provider does not return billing metadata. Token counts and spend cannot be calculated until cost metadata is active." },
+    actual:    { color: "var(--accent)", bg: "#4AE8A010", border: "#4AE8A030", label: "Actual cost data", detail: "Provider billing metadata confirmed. Spend figures are accurate." },
+    estimated: { color: "var(--warning)", bg: "#F4B94210", border: "#F4B94230", label: "Estimated cost",   detail: "Spend calculated from model price × token counts. Actual billing may differ slightly." },
+    missing:   { color: "var(--negative)", bg: "#F4606010", border: "#F4606030", label: "Cost data missing", detail: "Provider does not return billing metadata. Token counts and spend cannot be calculated until cost metadata is active." },
   }[status];
 
   return (
@@ -910,7 +910,7 @@ function InferenceEventFeed({ slug }: { slug: string }) {
       {events.slice(0, 15).map((e, i, arr) => {
         const hasActual    = e.cost_source === "actual";
         const hasEstimated = e.cost_source === "estimated";
-        const costColor    = hasActual ? "var(--ink)" : hasEstimated ? "#F4B942" : "var(--muted)";
+        const costColor    = hasActual ? "var(--ink)" : hasEstimated ? "var(--warning)" : "var(--muted)";
         const costStr      = e.cost_usd != null ? `$${e.cost_usd.toFixed(5)}` : "—";
         const radius       = i === 0 ? "8px 8px 0 0" : i === arr.length - 1 ? "0 0 8px 8px" : "0";
         const ago          = (() => {
@@ -1048,7 +1048,7 @@ function InferenceTab({
         {/* Stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8, marginBottom: 14 }}>
           {([
-            { label: "Total Spend",       value: ia.hasCostData ? usd(ia.totalCostUsd) : "—", mono: true, color: ia.hasCostData && ia.totalCostUsd > 0 ? "#F46060" : "var(--muted)" },
+            { label: "Total Spend",       value: ia.hasCostData ? usd(ia.totalCostUsd) : "—", mono: true, color: ia.hasCostData && ia.totalCostUsd > 0 ? "var(--negative)" : "var(--muted)" },
             { label: "Requests",          value: ia.requestCount.toLocaleString(), mono: true, color: "var(--ink)" },
             { label: "Primary Provider",  value: ia.primaryProvider ? ia.primaryProvider.charAt(0).toUpperCase() + ia.primaryProvider.slice(1) : "—", mono: false, color: "var(--ink)" },
             { label: "Avg Cost / Request",value: ia.hasCostData ? usd(ia.avgCostPerRequest) : "—", mono: true, color: "var(--muted)" },
@@ -1090,8 +1090,8 @@ function InferenceTab({
           <p className="prof-section-title">Revenue vs Inference Cost</p>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <LedgerRow first label="Operating Revenue" value={revenue != null ? `+${usd(revenue)}` : "—"} valueStyle={{ color: revenue && revenue > 0 ? "var(--accent)" : "var(--muted)" }} />
-            <LedgerRow       label="Inference Spend"   value={ia.hasCostData ? `−${usd(spend)}` : "—"}   valueStyle={{ color: ia.hasCostData && spend > 0 ? "#F46060" : "var(--muted)" }} />
-            <LedgerRow last  label="Net Position"      value={net >= 0 ? `+${usd(net)}` : `−${usd(Math.abs(net))}`} valueStyle={{ color: net >= 0 ? "var(--accent)" : "#F46060", fontWeight: 700 }} />
+            <LedgerRow       label="Inference Spend"   value={ia.hasCostData ? `−${usd(spend)}` : "—"}   valueStyle={{ color: ia.hasCostData && spend > 0 ? "var(--negative)" : "var(--muted)" }} />
+            <LedgerRow last  label="Net Position"      value={net >= 0 ? `+${usd(net)}` : `−${usd(Math.abs(net))}`} valueStyle={{ color: net >= 0 ? "var(--accent)" : "var(--negative)", fontWeight: 700 }} />
           </div>
         </section>
       )}
@@ -1129,7 +1129,7 @@ function InferenceTab({
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {checklist.map(({ label, ok }) => (
             <div key={label} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.8rem" }}>
-              <span style={{ color: ok ? "#4AE8A0" : "#F46060", fontSize: "0.8rem" }}>{ok ? "✓" : "✗"}</span>
+              <span style={{ color: ok ? "var(--accent)" : "var(--negative)", fontSize: "0.8rem" }}>{ok ? "✓" : "✗"}</span>
               <span style={{ color: ok ? "var(--ink)" : "var(--muted)" }}>{label}</span>
             </div>
           ))}
@@ -1178,7 +1178,7 @@ function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
         )}
       </p>
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <LedgerRow first label="30d Spend"        value={spendDisplay} valueStyle={{ color: ia.hasCostData && ia.totalCostUsd > 0 ? "#F46060" : "var(--muted)" }} badge={<CostStatusBadge status={ia.costStatus} />} />
+        <LedgerRow first label="30d Spend"        value={spendDisplay} valueStyle={{ color: ia.hasCostData && ia.totalCostUsd > 0 ? "var(--negative)" : "var(--muted)" }} badge={<CostStatusBadge status={ia.costStatus} />} />
         <LedgerRow       label="Requests"         value={ia.requestCount.toLocaleString()} />
         <LedgerRow       label="Primary Provider" value={ia.primaryProvider ?? "—"} valueStyle={{ textTransform: "capitalize", fontFamily: "inherit" }} />
         {ia.providerBreakdown.length > 1 && (
@@ -1194,7 +1194,7 @@ function InferenceActivityBlock({ ia }: { ia: InferenceSummary }) {
 
 function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary }) {
   const s = economics;
-  const netColor = s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "#F46060" : "var(--ink)";
+  const netColor = s.netAgentPosition > 0.01 ? "#4ade80" : s.netAgentPosition < -0.01 ? "var(--negative)" : "var(--ink)";
   const usd = (n: number) => `$${Math.abs(n).toFixed(2)}`;
 
   return (
@@ -1202,7 +1202,7 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
       <p className="prof-section-title">Agent Economics · Last {s.periodDays}d</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {[
-          ["Inference Spend",   `-${usd(s.totalInferenceSpend)}`,   s.totalInferenceSpend  > 0 ? "#F46060" : undefined],
+          ["Inference Spend",   `-${usd(s.totalInferenceSpend)}`,   s.totalInferenceSpend  > 0 ? "var(--negative)" : undefined],
           ["Inference Revenue", `+${usd(s.totalInferenceRevenue)}`, s.totalInferenceRevenue > 0 ? "#4ade80" : undefined],
           ["Provider Spend",    `-${usd(s.providerSpend)}`,         undefined, s.topProvider ?? undefined],
           ["Fallback Usage",    `-${usd(s.fallbackProviderSpend)}`, undefined, s.fallbackUsageCount > 0 ? `${s.fallbackUsageCount} call${s.fallbackUsageCount === 1 ? "" : "s"}` : undefined],
@@ -1234,8 +1234,8 @@ function AgentEconomicsBlock({ economics }: { economics: AgentEconomicSummary })
 
 const RISK_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   low:     { color: "var(--accent)", bg: "rgba(74,232,160,0.08)", border: "rgba(74,232,160,0.18)" },
-  medium:  { color: "#F4B942",       bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.18)"  },
-  high:    { color: "#F46060",       bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.18)" },
+  medium:  { color: "var(--warning)",       bg: "rgba(245,158,11,0.08)",  border: "rgba(245,158,11,0.18)"  },
+  high:    { color: "var(--negative)",       bg: "rgba(248,113,113,0.08)", border: "rgba(248,113,113,0.18)" },
   unknown: { color: "var(--muted)",  bg: "rgba(125,130,141,0.06)", border: "rgba(125,130,141,0.14)" },
 };
 
@@ -1266,8 +1266,8 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
         {[
           { label: "Installed", value: installs, color: "var(--accent)" },
-          { label: "Rejected",  value: rejects,  color: "#F46060" },
-          { label: "High Risk", value: highRisk,  color: "#F4B942" },
+          { label: "Rejected",  value: rejects,  color: "var(--negative)" },
+          { label: "High Risk", value: highRisk,  color: "var(--warning)" },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <span style={{ fontSize: "1rem", fontWeight: 700, color, lineHeight: 1 }}>{value}</span>
@@ -1288,7 +1288,7 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
             }}>
               <span className="material-symbols-outlined" style={{
                 fontSize: 14,
-                color: e.decision === "install" ? "var(--accent)" : e.decision === "reject" ? "#F46060" : "var(--muted)",
+                color: e.decision === "install" ? "var(--accent)" : e.decision === "reject" ? "var(--negative)" : "var(--muted)",
                 flexShrink: 0,
               }}>
                 {DECISION_ICON[e.decision] ?? "help"}
@@ -1471,7 +1471,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
     const title   = tab === "manifest"
       ? "Manifest queued for verification"
       : isProven ? "Ownership proven — claim under review" : isMatch ? "Wallet matched — claim under review" : "Claim submitted for review";
-    const color   = (tab === "manifest" || isMatch) ? "var(--accent)" : "#F4B942";
+    const color   = (tab === "manifest" || isMatch) ? "var(--accent)" : "var(--warning)";
     const icon    = (tab === "manifest" || isMatch) ? "check_circle" : "info";
     const nextStep = (!isMatch && tab === "wallet")
       ? "Our team reviews claims within 24–48 hours. Questions? Message @zettatracker on X."
@@ -1557,7 +1557,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: isUnclaimed ? 6 : 12 }}>
         <span className="material-symbols-outlined" style={{ fontSize: isUnclaimed ? 20 : 16, color: "var(--accent)", marginTop: 1, flexShrink: 0 }}>handshake</span>
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: (isUnclaimed || needsAttention) ? "0.97rem" : "0.85rem", fontWeight: 700, color: needsAttention ? "#F4B942" : "var(--ink)", margin: 0 }}>
+          <p style={{ fontSize: (isUnclaimed || needsAttention) ? "0.97rem" : "0.85rem", fontWeight: 700, color: needsAttention ? "var(--warning)" : "var(--ink)", margin: 0 }}>
             {bannerHeading}
           </p>
           {isUnclaimed && (
@@ -1642,7 +1642,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
                 : "Connect wallet →"}
           </button>
           {walletState === "error" && (
-            <p style={{ fontSize: "0.78rem", color: "#F46060", margin: "8px 0 0" }}>{walletMsg}</p>
+            <p style={{ fontSize: "0.78rem", color: "var(--negative)", margin: "8px 0 0" }}>{walletMsg}</p>
           )}
         </>
       )}
@@ -1687,7 +1687,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
               {mfState === "loading" ? "Fetching…" : "Submit Manifest →"}
             </button>
             {mfState === "error" && (
-              <p style={{ width: "100%", fontSize: "0.78rem", color: "#F46060", margin: "4px 0 0" }}>{mfMsg}</p>
+              <p style={{ width: "100%", fontSize: "0.78rem", color: "var(--negative)", margin: "4px 0 0" }}>{mfMsg}</p>
             )}
           </form>
         </>
@@ -1761,7 +1761,7 @@ function AgentBooksSparkline({
         />
       </svg>
       {first !== 0 && (
-        <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "#4AE8A0" : "#F46060", fontFamily: "monospace", fontWeight: 600 }}>
+        <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "var(--accent)" : "var(--negative)", fontFamily: "monospace", fontWeight: 600 }}>
           {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
           <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
             across {validSnapshots.length} snapshots
@@ -1797,7 +1797,7 @@ function MomentumSection({ history }: { history: AgentBooksSnapshot[] }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
         {rows.map(({ label, metric, note }) => {
           const icon  = metric.direction === "growing" ? "↑" : metric.direction === "declining" ? "↓" : "→";
-          const color = metric.direction === "growing" ? "#4AE8A0" : metric.direction === "declining" ? "#F46060" : "var(--muted)";
+          const color = metric.direction === "growing" ? "var(--accent)" : metric.direction === "declining" ? "var(--negative)" : "var(--muted)";
           const pctLabel = metric.direction === "stable"
             ? "stable"
             : `${metric.pct > 0 ? "+" : ""}${metric.pct.toFixed(1)}%`;
@@ -1837,8 +1837,8 @@ function AgentBooksTrendSection({ snapshots }: { snapshots: AgentBooksSnapshot[]
   const latest = ordered[ordered.length - 1];
 
   const cols: Array<{ label: string; field: BooksTrendField; color: string; value: number | null }> = [
-    { label: "Revenue",    field: "revenue_usd",    color: "#4AE8A0", value: latest.revenue_usd },
-    { label: "Expenses",   field: "expenses_usd",   color: "#F46060", value: latest.expenses_usd },
+    { label: "Revenue",    field: "revenue_usd",    color: "var(--accent)", value: latest.revenue_usd },
+    { label: "Expenses",   field: "expenses_usd",   color: "var(--negative)", value: latest.expenses_usd },
     { label: "Net Income", field: "net_income_usd", color: "#5B9EF4", value: latest.net_income_usd },
   ];
 
@@ -2080,7 +2080,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
             marginBottom: 8,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-              <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#F4B942" }}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--warning)" }}>
                 {anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length} Active Signal{anomalies.filter((a) => a.severity === "high" || a.severity === "medium").length > 1 ? "s" : ""}
               </span>
             </div>
@@ -2090,7 +2090,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                   fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em",
                   padding: "2px 5px", borderRadius: "var(--radius-sm, 3px)",
                   background: a.severity === "high" ? "color-mix(in srgb, #F46060 15%, transparent)" : "color-mix(in srgb, #F4B942 15%, transparent)",
-                  color: a.severity === "high" ? "#F46060" : "#F4B942",
+                  color: a.severity === "high" ? "var(--negative)" : "var(--warning)",
                   flexShrink: 0, marginTop: 1,
                   fontFamily: "var(--font-sans, sans-serif)",
                 }}>
@@ -2115,14 +2115,14 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
                     ? { label: "Stale",   tip: "Registry data has not been checked recently.", cls: "tla-b-red" }
                     : { label: "Partial", tip: "Some registry data has never been checked.", cls: "tla-b-muted" };
             const booksMeta = BOOKS_STATUS_META[agent.booksStatus];
-            const booksCls = booksMeta.color === "#4AE8A0" || booksMeta.color === "#6DB874" || booksMeta.color === "#1CB870"
-              ? "tla-b-green" : booksMeta.color === "#F59E0B" || booksMeta.color === "#F4B942"
-              ? "tla-b-amber" : booksMeta.color === "#F46060" || booksMeta.color === "#D43F3F" || booksMeta.color === "#ef4444"
+            const booksCls = booksMeta.color === "var(--accent)" || booksMeta.color === "#6DB874" || booksMeta.color === "#1CB870"
+              ? "tla-b-green" : booksMeta.color === "#F59E0B" || booksMeta.color === "var(--warning)"
+              ? "tla-b-amber" : booksMeta.color === "var(--negative)" || booksMeta.color === "#D43F3F" || booksMeta.color === "#ef4444"
               ? "tla-b-red" : "tla-b-muted";
             const idColor = PROFILE_STATUS_META[agent.profileStatus].color;
-            const idCls = idColor === "#4AE8A0" || idColor === "#6DB874" || idColor === "#1CB870"
-              ? "tla-b-green" : idColor === "#F59E0B" || idColor === "#F4B942"
-              ? "tla-b-amber" : idColor === "#F46060" || idColor === "#D43F3F"
+            const idCls = idColor === "var(--accent)" || idColor === "#6DB874" || idColor === "#1CB870"
+              ? "tla-b-green" : idColor === "#F59E0B" || idColor === "var(--warning)"
+              ? "tla-b-amber" : idColor === "var(--negative)" || idColor === "#D43F3F"
               ? "tla-b-red" : "tla-b-muted";
             return (
               <>
@@ -2555,7 +2555,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
               </a>
             </div>
             {embedError && (
-              <p style={{ margin: "10px 0 0", fontSize: "0.75rem", color: "#F46060", lineHeight: 1.5 }}>
+              <p style={{ margin: "10px 0 0", fontSize: "0.75rem", color: "var(--negative)", lineHeight: 1.5 }}>
                 Clipboard unavailable. Select the code above and copy manually.
               </p>
             )}

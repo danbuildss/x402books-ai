@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
 
@@ -133,6 +135,7 @@ export function RegisterClient() {
 
   return (
     <>
+      <SiteNav />
       <main style={{ maxWidth: 760, margin: "0 auto", padding: "48px 24px 80px" }}>
         {/* Header */}
         <div style={{ marginBottom: 40 }}>
@@ -303,7 +306,7 @@ export function RegisterClient() {
                   </p>
                 </div>
                 {repoState === "error" && (
-                  <p style={{ color: "#F46060", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
+                  <p style={{ color: "var(--negative)", fontSize: "0.78rem", marginBottom: 12 }}>{repoMsg}</p>
                 )}
                 <button
                   type="submit"
@@ -415,7 +418,7 @@ export function RegisterClient() {
                 </label>
 
                 {manualState === "error" && (
-                  <p style={{ color: "#F46060", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
+                  <p style={{ color: "var(--negative)", fontSize: "0.78rem", margin: 0 }}>{manualMsg}</p>
                 )}
                 <button
                   type="submit"
@@ -494,6 +497,7 @@ export function RegisterClient() {
           </div>
         </LedgerCard>
       </main>
+      <SiteFooter />
     </>
   );
 }

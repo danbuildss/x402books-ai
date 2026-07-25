@@ -53,7 +53,7 @@ export default function AboutPage() {
         <p className="lp-eyebrow">About Zetta</p>
         <h1 className="lp-h1" style={{ fontSize: "clamp(1.6rem, 3vw, 2.5rem)", maxWidth: 720 }}>
           Autonomous agents move real money.{" "}
-          <em style={{ fontStyle: "italic", color: "#4AE8A0" }}>Someone has to keep the books.</em>
+          <em style={{ fontStyle: "italic", color: "var(--accent)" }}>Someone has to keep the books.</em>
         </h1>
         <p className="lp-hero-sub" style={{ maxWidth: 680 }}>
           Thousands of AI agents now earn, spend, and hold capital on-chain — but their finances are
@@ -69,7 +69,7 @@ export default function AboutPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14, marginTop: 16 }}>
             {LAYERS.map((l, i) => (
               <div key={l.name} className="zetta-bottom-panel" style={{ margin: 0 }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "#4AE8A0" }}>{String(i + 1).padStart(2, "0")}</span>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--accent)" }}>{String(i + 1).padStart(2, "0")}</span>
                 <h3 style={{ margin: "6px 0 8px", fontSize: "1rem", fontWeight: 700, color: "var(--ink)" }}>{l.name}</h3>
                 <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6 }}>{l.desc}</p>
               </div>
