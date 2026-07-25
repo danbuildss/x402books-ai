@@ -92,7 +92,7 @@ export default function MyAgentsPage() {
           <h1 className="op-page-title">My Agents</h1>
           <p className="op-page-sub">Agents attributed to your linked wallet.</p>
         </div>
-        <Link href="/dashboard/attribution" className="op-btn op-btn-primary">+ Submit Agent</Link>
+        <Link href="/register" className="op-btn op-btn-primary">+ Register Agent</Link>
       </div>
 
       {!wallet && !loading && (
@@ -118,9 +118,9 @@ export default function MyAgentsPage() {
           </div>
           <p style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--ink)", margin: "0 0 6px" }}>No agents linked</p>
           <p style={{ fontSize: "0.78rem", color: "var(--muted)", maxWidth: 360, margin: "0 auto 20px", lineHeight: 1.6 }}>
-            Submit your agent or declare your wallet address in an existing agent&apos;s manifest to see it here.
+            Register your agent with a wallet manifest to see it here. Verification completes in 24–48 hours.
           </p>
-          <Link href="/dashboard/attribution" className="op-btn op-btn-primary">Declare Attribution →</Link>
+          <Link href="/register" className="op-btn op-btn-primary">Register your agent →</Link>
         </div>
       ) : (
         <>

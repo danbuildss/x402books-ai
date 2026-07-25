@@ -282,6 +282,19 @@ export function RegisterClient() {
                 <p style={{ margin: "14px 0 0", fontSize: "0.72rem", color: "var(--muted)", lineHeight: 1.6 }}>
                   Verification typically completes within 24–48 hours. Once approved, books are generated automatically.
                 </p>
+                <div style={{ marginTop: 16 }}>
+                  <Link
+                    href="/access?next=/dashboard/agents"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "8px 16px", background: "var(--accent)", color: "#fff",
+                      borderRadius: "var(--radius-md)", fontWeight: 700, fontSize: "0.8rem",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Sign in to track your submission →
+                  </Link>
+                </div>
               </div>
             ) : (
               <form onSubmit={submitRepo}>
@@ -364,6 +377,19 @@ export function RegisterClient() {
                 <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 12, lineHeight: 1.6 }}>
                   Verification typically completes within 24–48 hours.{submittedRef && " Keep your reference ID to track this submission."}
                 </p>
+                <div style={{ marginTop: 16 }}>
+                  <Link
+                    href="/access?next=/dashboard/agents"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: 6,
+                      padding: "8px 16px", background: "var(--accent)", color: "#fff",
+                      borderRadius: "var(--radius-md)", fontWeight: 700, fontSize: "0.8rem",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Sign in to track your submission →
+                  </Link>
+                </div>
               </div>
             ) : (
               <form onSubmit={submitManual} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -491,7 +517,7 @@ export function RegisterClient() {
         <LedgerCard style={{ marginTop: 32 }}>
           <div style={{ padding: "4px 0" }}>
             <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>
-              Questions? Message <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>@zettatracker</a> on X. Already registered?{" "}
+              Questions? Message <a href="https://x.com/zettaaidotco" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>@zettaaidotco</a> on X. Already registered?{" "}
               <Link href="/registry" style={{ color: "var(--accent)", textDecoration: "none" }}>Browse the registry →</Link>
             </p>
           </div>
