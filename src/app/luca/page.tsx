@@ -5,8 +5,8 @@ import Link from "next/link";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 
-const TELEGRAM = "https://t.me/AskLucaBot";
-const X_HANDLE = "https://x.com/AskLucaAI";
+const TELEGRAM = "https://t.me/asklucaai";
+const X_HANDLE = "https://x.com/zettaaidotco";
 
 const CAPABILITIES = [
   { label: "Analyze Agent",           desc: "Full financial analysis for any attributed agent. Revenue, expenses, net income, treasury, confidence signal." },
