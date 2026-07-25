@@ -23,8 +23,13 @@ export async function POST(request: Request) {
     try {
       const supabase = getSupabaseAdminClient();
       await supabase.from("users").upsert(
-        { privy_id: userId, email: body.email || null, x_handle: body.xHandle || null, last_seen_at: new Date().toISOString() },
-        { onConflict: "privy_id", ignoreDuplicates: false },
+        {
+          id:           `privy:${userId}`,
+          email:        body.email    || null,
+          x_handle:     body.xHandle || null,
+          last_seen_at: new Date().toISOString(),
+        },
+        { onConflict: "id", ignoreDuplicates: false },
       );
     } catch { /* non-fatal */ }
 

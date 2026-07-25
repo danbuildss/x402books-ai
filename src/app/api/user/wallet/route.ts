@@ -9,17 +9,30 @@ async function getCodeId(): Promise<string | null> {
   return verifyAccessToken(token);
 }
 
+function isPrivyUser(codeId: string) {
+  return codeId.startsWith("privy:");
+}
+
 export async function GET() {
   const codeId = await getCodeId();
   if (!codeId) return NextResponse.json({ wallet: null });
 
   const supabase = getSupabaseAdminClient();
+
+  if (isPrivyUser(codeId)) {
+    const { data } = await supabase
+      .from("users")
+      .select("wallet")
+      .eq("id", codeId)
+      .maybeSingle();
+    return NextResponse.json({ wallet: data?.wallet ?? null });
+  }
+
   const { data } = await supabase
     .from("access_codes")
     .select("wallet")
     .eq("id", codeId)
     .maybeSingle();
-
   return NextResponse.json({ wallet: data?.wallet ?? null });
 }
 
@@ -35,10 +48,12 @@ export async function POST(request: Request) {
   }
 
   const supabase = getSupabaseAdminClient();
-  await supabase
-    .from("access_codes")
-    .update({ wallet })
-    .eq("id", codeId);
+
+  if (isPrivyUser(codeId)) {
+    await supabase.from("users").update({ wallet }).eq("id", codeId);
+  } else {
+    await supabase.from("access_codes").update({ wallet }).eq("id", codeId);
+  }
 
   return NextResponse.json({ ok: true });
 }
@@ -48,10 +63,12 @@ export async function DELETE() {
   if (!codeId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const supabase = getSupabaseAdminClient();
-  await supabase
-    .from("access_codes")
-    .update({ wallet: null })
-    .eq("id", codeId);
+
+  if (isPrivyUser(codeId)) {
+    await supabase.from("users").update({ wallet: null }).eq("id", codeId);
+  } else {
+    await supabase.from("access_codes").update({ wallet: null }).eq("id", codeId);
+  }
 
   return NextResponse.json({ ok: true });
 }
