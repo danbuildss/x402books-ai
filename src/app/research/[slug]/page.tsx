@@ -127,7 +127,7 @@ export default async function ReportPage({
           }}>
             <div>
               <p style={{ margin: "0 0 4px", fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 600 }}>Agent GDP (30d)</p>
-              <p style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, fontFamily: "monospace", color: "#4AE8A0" }}>{fmtUSD(report.agent_gdp_usd)}</p>
+              <p style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, fontFamily: "monospace", color: "var(--accent)" }}>{fmtUSD(report.agent_gdp_usd)}</p>
             </div>
             {report.attributed_agents != null && (
               <div>

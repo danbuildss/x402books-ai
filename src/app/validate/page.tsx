@@ -2,6 +2,8 @@
 
 import { useState, useCallback } from "react";
 import Link from "next/link";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 import { LedgerCard, LedgerRow, SectionLabel } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
 import "./validate.css";
@@ -216,7 +218,7 @@ function ErrorResult({ errors }: { errors: ValidationError[] }) {
   return (
     <div className="val-result val-result-err">
       <div className="val-result-header">
-        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "#F46060" }}>cancel</span>
+        <span className="material-symbols-outlined" style={{ fontSize: 22, color: "var(--negative)" }}>cancel</span>
         <div>
           <p className="val-result-title">Validation Failed</p>
           <p className="val-result-sub">{errors.length} error{errors.length !== 1 ? "s" : ""} found</p>
@@ -307,6 +309,8 @@ export default function ValidatePage() {
   }
 
   return (
+    <>
+    <SiteNav />
     <div className="val-page">
       <section className="val-hero">
         <SectionLabel>Agent Wallet Manifest</SectionLabel>
@@ -447,5 +451,7 @@ export default function ValidatePage() {
       </section>
 
     </div>
+    <SiteFooter />
+    </>
   );
 }

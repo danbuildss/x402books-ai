@@ -23,8 +23,8 @@ function fmtUSD(n: number): string {
 }
 
 function netColor(n: number): string {
-  if (n > 0) return "#4AE8A0";
-  if (n < 0) return "#F46060";
+  if (n > 0) return "var(--accent)";
+  if (n < 0) return "var(--negative)";
   return "var(--muted)";
 }
 
@@ -84,7 +84,7 @@ function GDPSparkline({
           fill={color}
         />
       </svg>
-      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "var(--accent)" : "#F46060", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+      <p style={{ margin: "4px 0 0", fontSize: "0.65rem", color: isUp ? "var(--accent)" : "var(--negative)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
         {isUp ? "↑" : "↓"} {Math.abs(pctChange).toFixed(1)}%
         <span style={{ color: "var(--muted)", fontWeight: 400, marginLeft: 4 }}>
           across {snapshots.length} snapshots
@@ -115,8 +115,8 @@ function GDPTrendSection({ snapshots }: { snapshots: GDPSnapshot[] }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 20 }}>
         {([
-          { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "#4AE8A0" },
-          { label: "Expenses",   field: "total_expenses_usd"   as TrendField, color: "#F46060" },
+          { label: "Revenue",    field: "total_revenue_usd"    as TrendField, color: "var(--accent)" },
+          { label: "Expenses",   field: "total_expenses_usd"   as TrendField, color: "var(--negative)" },
           { label: "Net Income", field: "total_net_income_usd" as TrendField, color: "#5B9EF4" },
         ]).map(({ label, field, color }) => (
           <div key={label}>

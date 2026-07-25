@@ -11,20 +11,20 @@ function fmtUSD(n: number): string {
 }
 
 function netColor(n: number): string {
-  if (n > 0) return "#4AE8A0";
-  if (n < 0) return "#F46060";
+  if (n > 0) return "var(--accent)";
+  if (n < 0) return "var(--negative)";
   return "var(--muted)";
 }
 
 function scoreColor(s: number): string {
-  if (s >= 75) return "#4AE8A0";
+  if (s >= 75) return "var(--accent)";
   if (s >= 50) return "#5B9EF4";
-  if (s >= 25) return "#F4B942";
+  if (s >= 25) return "var(--warning)";
   return "var(--muted)";
 }
 
 const top3: Record<number, { bg: string; color: string }> = {
-  1: { bg: "rgba(244,185,66,0.18)",  color: "#F4B942" },
+  1: { bg: "rgba(244,185,66,0.18)",  color: "var(--warning)" },
   2: { bg: "rgba(209,213,219,0.12)", color: "#C0C8D8" },
   3: { bg: "rgba(180,120,80,0.15)",  color: "#D4956A" },
 };
@@ -185,7 +185,7 @@ export function LeaderboardTable({
                   </div>
                 </div>
 
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 700, color: "#4AE8A0", textAlign: "right" }}>
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", fontWeight: 700, color: "var(--accent)", textAlign: "right" }}>
                   {fmtUSD(agent.revenue_usd)}
                 </div>
 
