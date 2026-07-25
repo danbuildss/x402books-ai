@@ -2,6 +2,7 @@ import { buildLedgerScan } from "@/lib/ledger-service";
 import { isValidWalletAddress, type TimeRange } from "@/lib/ledger";
 import { executeTool, type ToolName } from "@/lib/luca-tools";
 import { routeModel } from "@/lib/model-router";
+import { LUCA_TELEGRAM_PROMPT } from "@/lib/luca-core-prompt";
 import OpenAI from "openai";
 
 const APP_URL = "https://www.zettaai.co";
@@ -380,10 +381,8 @@ async function handleInlineQuery(inlineQuery: InlineQuery) {
 
 // ── Luca command ─────────────────────────────────────────────────────────────
 
-const LUCA_SYSTEM = `You are Luca — Zetta's financial analyst for the autonomous agent economy.
-You have access to live financial data via tools. Call tools before answering questions about agent finances.
-Style: terse, accounting-focused, no hype. Numbers in USD with 2 decimal places.
-Fast Read (default): Signal + Verdict. Max 5 sentences. No markdown — plain text only (Telegram HTML mode).
+const LUCA_SYSTEM = LUCA_TELEGRAM_PROMPT + `
+Fast Read (default): Signal + Verdict. Max 5 sentences.
 Use <b>bold</b> for key numbers only.`;
 
 const LUCA_OAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
