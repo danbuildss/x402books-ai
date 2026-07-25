@@ -2,6 +2,7 @@ import { getRegistryAgents } from "@/lib/registry-db";
 import { buildAgentBooks } from "@/lib/agent-books";
 import { toSlug } from "@/app/registry/[slug]/slug";
 import { isBooksEligibleWallet } from "@/lib/wallet-eligibility";
+import { getRecentGDPSnapshot, saveGDPSnapshot } from "@/lib/gdp-history";
 
 export type AgentGDPEntry = {
   name: string;
@@ -46,6 +47,17 @@ export function invalidateGdpCache(): void {
 
 export async function getAgentGDP(): Promise<AgentGDP> {
   if (_cache && _cache.expires > Date.now()) return _cache.data;
+
+  // L2: DB cache — shared across all Vercel instances (4h TTL, same as books)
+  try {
+    const snapshot = await getRecentGDPSnapshot();
+    if (snapshot) {
+      _cache = { data: snapshot, expires: Date.now() + GDP_CACHE_TTL };
+      return snapshot;
+    }
+  } catch {
+    // DB unavailable — fall through to live computation
+  }
 
   const { agents } = await getRegistryAgents();
 
@@ -118,5 +130,9 @@ export async function getAgentGDP(): Promise<AgentGDP> {
   };
 
   _cache = { data, expires: Date.now() + GDP_CACHE_TTL };
+
+  // Persist to DB so other Vercel instances can use this computation
+  saveGDPSnapshot(data).catch(() => {});
+
   return data;
 }

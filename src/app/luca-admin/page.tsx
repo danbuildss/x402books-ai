@@ -581,13 +581,22 @@ function RegistrySection({ secret }: { secret: string }) {
   const [verdictMsg, setVerdictMsg]       = useState("");
   const [verdictPreview, setVerdictPreview] = useState("");
 
-  const [editName,    setEditName]    = useState("");
-  const [editHandle,  setEditHandle]  = useState("");
-  const [editWebsite, setEditWebsite] = useState("");
-  const [editSymbol,  setEditSymbol]  = useState("");
-  const [editBio,     setEditBio]     = useState("");
-  const [editSaving,  setEditSaving]  = useState(false);
-  const [editMsg,     setEditMsg]     = useState("");
+  const [editName,             setEditName]             = useState("");
+  const [editHandle,           setEditHandle]           = useState("");
+  const [editWebsite,          setEditWebsite]          = useState("");
+  const [editSymbol,           setEditSymbol]           = useState("");
+  const [editBio,              setEditBio]              = useState("");
+  const [editEcosystem,        setEditEcosystem]        = useState("");
+  const [editVerificationStatus, setEditVerificationStatus] = useState("");
+  const [editTreasuryHealth,   setEditTreasuryHealth]   = useState("");
+  const [editPriority,         setEditPriority]         = useState("");
+  const [editPfp,              setEditPfp]              = useState("");
+  const [editGitlawbRepo,      setEditGitlawbRepo]      = useState("");
+  const [editEvidenceSources,  setEditEvidenceSources]  = useState("");
+  const [editAdminNotes,       setEditAdminNotes]       = useState("");
+  const [editLoading,          setEditLoading]          = useState(false);
+  const [editSaving,           setEditSaving]           = useState(false);
+  const [editMsg,              setEditMsg]              = useState("");
 
   type RegistryStats = {
     total: number;
@@ -1147,8 +1156,55 @@ function RegistrySection({ secret }: { secret: string }) {
       <div className={styles.card} style={{ marginTop: 16 }}>
         <p className={styles.cardTitle}>Edit Agent Profile</p>
         <p style={{ margin: "0 0 10px", fontSize: "0.78rem", color: "var(--muted)" }}>
-          Update X handle, website URL, and ticker symbol directly in the DB. Enter the exact agent name as it appears in the registry.
+          Load an agent to pre-fill all fields, edit what you need, then save. Changes write directly to Supabase and flow to the UI on next cache refresh.
         </p>
+
+        {/* Load row */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder="Exact agent name, e.g. AEON"
+            className={styles.formInput}
+            style={{ flex: "2 1 180px" }}
+          />
+          <button
+            type="button"
+            disabled={editLoading || !editName.trim()}
+            onClick={async () => {
+              setEditLoading(true);
+              setEditMsg("");
+              try {
+                const res = await fetch("/api/admin/registry/agents", { headers });
+                const d = await res.json() as { ok: boolean; agents?: Array<Record<string, unknown>> };
+                if (!d.ok || !d.agents) { setEditMsg("✗ Could not load agents"); return; }
+                const agent = d.agents.find((a) => (a.name as string)?.toLowerCase() === editName.trim().toLowerCase());
+                if (!agent) { setEditMsg(`✗ Agent "${editName.trim()}" not found`); return; }
+                setEditHandle((agent.xHandle as string) ?? "");
+                setEditWebsite((agent.website as string) ?? "");
+                setEditSymbol((agent.symbol as string) ?? "");
+                setEditBio((agent.bio as string) ?? "");
+                setEditEcosystem((agent.ecosystem as string) ?? "");
+                setEditVerificationStatus((agent.verificationStatus as string) ?? "");
+                setEditTreasuryHealth((agent.treasuryHealth as string) ?? "");
+                setEditPriority(agent.priority != null ? String(agent.priority) : "");
+                setEditPfp((agent.pfp as string) ?? "");
+                setEditGitlawbRepo((agent.gitlawbRepo as string) ?? "");
+                setEditEvidenceSources(Array.isArray(agent.evidenceSources) ? (agent.evidenceSources as string[]).join(", ") : "");
+                setEditAdminNotes((agent.adminNotes as string) ?? "");
+                setEditMsg(`✓ Loaded "${agent.name}"`);
+              } catch {
+                setEditMsg("✗ Network error");
+              } finally {
+                setEditLoading(false);
+              }
+            }}
+            style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid var(--line)", background: "var(--surface-soft)", color: "var(--ink)", fontSize: "0.8rem", fontWeight: 700, cursor: editLoading || !editName.trim() ? "not-allowed" : "pointer", opacity: editLoading || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}
+          >
+            {editLoading ? "Loading…" : "Load →"}
+          </button>
+        </div>
+
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -1156,11 +1212,20 @@ function RegistrySection({ secret }: { secret: string }) {
             setEditSaving(true);
             setEditMsg("");
             try {
-              const body: Record<string, string> = { name: editName.trim() };
-              if (editHandle.trim() !== "") body.xHandle = editHandle.trim();
-              if (editWebsite.trim() !== "") body.website = editWebsite.trim();
-              if (editSymbol.trim() !== "") body.symbol = editSymbol.trim();
-              if (editBio.trim() !== "") body.bio = editBio.trim();
+              const body: Record<string, unknown> = { name: editName.trim() };
+              body.xHandle           = editHandle.trim() || null;
+              body.website           = editWebsite.trim() || null;
+              body.symbol            = editSymbol.trim() || null;
+              body.bio               = editBio.trim() || null;
+              body.ecosystem         = editEcosystem || null;
+              body.verificationStatus = editVerificationStatus || null;
+              body.treasuryHealth    = editTreasuryHealth || null;
+              body.pfp               = editPfp.trim() || null;
+              body.gitlawbRepo       = editGitlawbRepo.trim() || null;
+              body.adminNotes        = editAdminNotes.trim() || null;
+              if (editPriority.trim() !== "") body.priority = parseInt(editPriority, 10);
+              body.evidenceSources   = editEvidenceSources.split(",").map((s) => s.trim()).filter(Boolean);
+
               const res = await fetch("/api/admin/registry/update-agent", {
                 method: "PATCH",
                 headers,
@@ -1168,8 +1233,7 @@ function RegistrySection({ secret }: { secret: string }) {
               });
               const d = await res.json() as { ok: boolean; name?: string; error?: string };
               if (d.ok) {
-                setEditMsg(`✓ Updated "${d.name}"`);
-                setEditHandle(""); setEditWebsite(""); setEditSymbol(""); setEditBio("");
+                setEditMsg(`✓ Saved "${d.name}"`);
               } else {
                 setEditMsg(`✗ ${d.error}`);
               }
@@ -1181,28 +1245,77 @@ function RegistrySection({ secret }: { secret: string }) {
           }}
           style={{ display: "flex", flexDirection: "column", gap: 8 }}
         >
+          {/* Row: X handle + website */}
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Exact agent name, e.g. AEON" className={styles.formInput} style={{ flex: "2 1 160px" }} required />
-            <input value={editHandle} onChange={(e) => setEditHandle(e.target.value)} placeholder="X handle, e.g. @aeon_agent (leave blank to skip)" className={styles.formInput} style={{ flex: "2 1 180px" }} />
+            <input value={editHandle} onChange={(e) => setEditHandle(e.target.value)} placeholder="X handle, e.g. @aeon_agent" className={styles.formInput} style={{ flex: "1 1 180px" }} />
+            <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL" className={styles.formInput} style={{ flex: "2 1 220px" }} />
           </div>
+
+          {/* Row: symbol + ecosystem + priority */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON" className={styles.formInput} style={{ flex: "1 1 100px" }} />
+            <select value={editEcosystem} onChange={(e) => setEditEcosystem(e.target.value)} className={styles.formInput} style={{ flex: "1 1 120px" }}>
+              <option value="">— Ecosystem —</option>
+              {["BANKR", "Virtuals", "Base", "AEON", "EigenCloud"].map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+            <input value={editPriority} onChange={(e) => setEditPriority(e.target.value)} placeholder="Priority 0–100" type="number" min={0} max={100} className={styles.formInput} style={{ flex: "0 1 110px" }} />
+          </div>
+
+          {/* Row: verification status + treasury health */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <select value={editVerificationStatus} onChange={(e) => setEditVerificationStatus(e.target.value)} className={styles.formInput} style={{ flex: "1 1 180px" }}>
+              <option value="">— Verification Status —</option>
+              {["Candidate","Needs Verification","Wallets Declared","Claimed","Verified","Luca Managed","ERC-8004 Indexed","Awaiting Manifest"].map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+            <select value={editTreasuryHealth} onChange={(e) => setEditTreasuryHealth(e.target.value)} className={styles.formInput} style={{ flex: "1 1 140px" }}>
+              <option value="">— Treasury Health —</option>
+              {["Active","Inactive","Unverified","Pending","Stable"].map((v) => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </div>
+
+          {/* Row: PFP + gitlawb repo */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <input value={editPfp} onChange={(e) => setEditPfp(e.target.value)} placeholder="PFP URL (profile picture)" className={styles.formInput} style={{ flex: "1 1 200px" }} />
+            <input value={editGitlawbRepo} onChange={(e) => setEditGitlawbRepo(e.target.value)} placeholder="GitHub repo, e.g. org/repo" className={styles.formInput} style={{ flex: "1 1 180px" }} />
+          </div>
+
+          {/* Bio */}
           <textarea
             value={editBio}
             onChange={(e) => setEditBio(e.target.value)}
-            placeholder="Public one-line bio shown at the top of the profile (leave blank to skip; max 500 chars)"
+            placeholder="Public bio shown on profile (max 500 chars)"
             className={styles.formInput}
             maxLength={500}
             rows={2}
             style={{ resize: "vertical", fontFamily: "inherit" }}
           />
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <input value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="Website URL (leave blank to skip)" className={styles.formInput} style={{ flex: "3 1 200px" }} />
-            <input value={editSymbol} onChange={(e) => setEditSymbol(e.target.value)} placeholder="Ticker, e.g. $AEON (leave blank to skip)" className={styles.formInput} style={{ flex: "1 1 120px" }} />
+
+          {/* Evidence sources */}
+          <input
+            value={editEvidenceSources}
+            onChange={(e) => setEditEvidenceSources(e.target.value)}
+            placeholder="Evidence sources — comma separated, e.g. manifest, x_handle, on_chain"
+            className={styles.formInput}
+          />
+
+          {/* Admin notes (Luca verdict lives here) */}
+          <textarea
+            value={editAdminNotes}
+            onChange={(e) => setEditAdminNotes(e.target.value)}
+            placeholder="Admin notes / Luca verdict (internal only — shown as profile verdict)"
+            className={styles.formInput}
+            rows={3}
+            style={{ resize: "vertical", fontFamily: "inherit" }}
+          />
+
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
             <button type="submit" disabled={editSaving || !editName.trim()}
-              style={{ padding: "6px 14px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
-              {editSaving ? "Saving…" : "Save →"}
+              style={{ padding: "6px 18px", borderRadius: 7, border: "1px solid rgba(74,232,160,0.3)", background: "var(--accent-soft)", color: "var(--accent)", fontSize: "0.8rem", fontWeight: 700, cursor: editSaving || !editName.trim() ? "not-allowed" : "pointer", opacity: editSaving || !editName.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+              {editSaving ? "Saving…" : "Save all →"}
             </button>
           </div>
         </form>
+
         {editMsg && (
           <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: editMsg.startsWith("✓") ? "var(--accent)" : "#F46060" }}>
             {editMsg}
