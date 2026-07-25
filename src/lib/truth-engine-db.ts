@@ -292,8 +292,9 @@ export async function getAgentFinancialSummary(agentSlug: string): Promise<{
     sb.from("registry_manifest_submissions").select("created_at").eq("agent_slug", agentSlug).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
 
-  if (walletData.error) throw new Error(`getAgentFinancialSummary wallets: ${walletData.error.message}`);
-  if (eventData.error)  throw new Error(`getAgentFinancialSummary events: ${eventData.error.message}`);
+  if (walletData.error)  throw new Error(`getAgentFinancialSummary wallets: ${walletData.error.message}`);
+  if (eventData.error)   throw new Error(`getAgentFinancialSummary events: ${eventData.error.message}`);
+  if (manifestData.error) throw new Error(`getAgentFinancialSummary manifest: ${manifestData.error.message}`);
 
   const wallets = walletData.data ?? [];
   if (wallets.length === 0 && (manifestData.data == null)) return null;

@@ -114,7 +114,14 @@ function FinancialTruthSection({ slug }: { slug: string }) {
       .catch(() => setLoaded(true));
   }, [slug]);
 
-  if (!loaded || !summary) return null;
+  if (!loaded) {
+    return (
+      <div style={{ border: "1px solid var(--line)", borderRadius: "var(--radius-card)", overflow: "hidden", background: "var(--surface)", marginBottom: 20, padding: "11px 16px" }}>
+        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--ink-em, var(--ink))" }}>Financial Intelligence</span>
+      </div>
+    );
+  }
+  if (!summary) return null;
 
   const evidenceColor = EVIDENCE_COLOR[summary.best_evidence_status ?? ""] ?? "var(--muted)";
   const usdFmt = (n: number) => {

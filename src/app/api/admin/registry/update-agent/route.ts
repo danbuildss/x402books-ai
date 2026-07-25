@@ -10,13 +10,23 @@ import {
   type MetadataStatus,
 } from "@/app/registry/types";
 
+const ECOSYSTEMS = ["BANKR", "Virtuals", "Base", "AEON", "EigenCloud"] as const;
+const VERIFICATION_STATUSES = [
+  "Candidate", "Needs Verification", "Wallets Declared", "Claimed",
+  "Verified", "Luca Managed", "ERC-8004 Indexed", "Awaiting Manifest",
+] as const;
+const TREASURY_HEALTH_VALUES = ["Active", "Inactive", "Unverified", "Pending", "Stable"] as const;
+
 // PATCH /api/admin/registry/update-agent
 // Body: { name: string; xHandle?: string; website?: string; symbol?: string;
+//         bio?: string | null; ecosystem?: string; verificationStatus?: string;
+//         treasuryHealth?: string; priority?: number; pfp?: string | null;
+//         gitlawbRepo?: string | null; evidenceSources?: string[];
+//         adminNotes?: string | null;
 //         focusStatus?: string | null; bankrPriority?: string | null;
 //         metadataStatus?: string | null }
-// Updates profile metadata + admin-edited P0 tags for an agent.
 // wallet_status / profile_status are trigger-owned and outreach_status has
-// its own endpoint — none of them are accepted here.
+// its own endpoint — neither are accepted here.
 // Admin-authenticated only.
 export async function PATCH(req: NextRequest) {
   if (!authOk(req)) {
@@ -29,6 +39,9 @@ export async function PATCH(req: NextRequest) {
 
   let body: {
     name?: string; xHandle?: string; website?: string; symbol?: string; bio?: string | null;
+    ecosystem?: string; verificationStatus?: string; treasuryHealth?: string;
+    priority?: number; pfp?: string | null; gitlawbRepo?: string | null;
+    evidenceSources?: string[]; adminNotes?: string | null;
     focusStatus?: string | null; bankrPriority?: string | null; metadataStatus?: string | null;
   };
   try {
@@ -42,15 +55,53 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "name is required" }, { status: 400 });
   }
 
-  const updates: Record<string, string | null> = {
+  const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
 
   if ("xHandle" in body) updates.x_handle = body.xHandle?.trim() || null;
   if ("website" in body) updates.website = body.website?.trim() || null;
   if ("symbol" in body) updates.symbol = body.symbol?.trim() || null;
-  // Public one-liner (P3); soft clamp keeps it a bio, not an essay.
   if ("bio" in body) updates.bio = body.bio?.trim().slice(0, 500) || null;
+  if ("pfp" in body) updates.pfp = body.pfp?.trim() || null;
+  if ("gitlawbRepo" in body) updates.gitlawb_repo = body.gitlawbRepo?.trim() || null;
+  if ("adminNotes" in body) updates.admin_notes = body.adminNotes?.trim() || null;
+
+  if ("ecosystem" in body) {
+    if (body.ecosystem != null && !(ECOSYSTEMS as readonly string[]).includes(body.ecosystem)) {
+      return NextResponse.json({ ok: false, error: `ecosystem must be one of: ${ECOSYSTEMS.join(", ")}` }, { status: 400 });
+    }
+    updates.ecosystem = body.ecosystem ?? null;
+  }
+
+  if ("verificationStatus" in body) {
+    if (body.verificationStatus != null && !(VERIFICATION_STATUSES as readonly string[]).includes(body.verificationStatus)) {
+      return NextResponse.json({ ok: false, error: `verificationStatus must be one of: ${VERIFICATION_STATUSES.join(", ")}` }, { status: 400 });
+    }
+    updates.verification_status = body.verificationStatus ?? null;
+  }
+
+  if ("treasuryHealth" in body) {
+    if (body.treasuryHealth != null && !(TREASURY_HEALTH_VALUES as readonly string[]).includes(body.treasuryHealth)) {
+      return NextResponse.json({ ok: false, error: `treasuryHealth must be one of: ${TREASURY_HEALTH_VALUES.join(", ")}` }, { status: 400 });
+    }
+    updates.treasury_health = body.treasuryHealth ?? null;
+  }
+
+  if ("priority" in body && body.priority != null) {
+    const p = Number(body.priority);
+    if (!Number.isInteger(p) || p < 0 || p > 100) {
+      return NextResponse.json({ ok: false, error: "priority must be an integer 0–100" }, { status: 400 });
+    }
+    updates.priority = p;
+  }
+
+  if ("evidenceSources" in body) {
+    if (!Array.isArray(body.evidenceSources)) {
+      return NextResponse.json({ ok: false, error: "evidenceSources must be an array" }, { status: 400 });
+    }
+    updates.evidence_sources = body.evidenceSources.map((s) => String(s).trim()).filter(Boolean);
+  }
 
   // P0 tag fields: null clears the tag; non-null values must be in-vocabulary
   // (the DB CHECK constraints would reject them anyway — fail fast with a 400).
