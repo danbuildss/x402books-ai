@@ -227,8 +227,8 @@ export default function SurplusPilotPage() {
         </div>
         <p style={{ fontSize: "0.72rem", color: "var(--muted)", marginTop: 12 }}>
           Questions?{" "}
-          <a href="https://x.com/zettatracker" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
-            @zettatracker
+          <a href="https://x.com/zettaaidotco" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", textDecoration: "none" }}>
+            @zettaaidotco
           </a>{" "}
           on X.
         </p>
