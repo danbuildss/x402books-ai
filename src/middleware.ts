@@ -1,21 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// New canonical name. Legacy kept for dual-read during migration.
 const ACCESS_COOKIE_NAME = "zetta_access";
 const ACCESS_COOKIE_NAME_LEGACY = "x402books_access";
 
-const protectedRoutes = [
-  "/dashboard",
-  "/api",
-  "/settings",
-];
+const protectedRoutes = ["/dashboard", "/settings"];
 
 function isProtectedPath(pathname: string) {
-  if (pathname.startsWith("/api/")) return false;
   return protectedRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 }
 
-// Paths that always pass through maintenance mode
 function isMaintenanceBypass(pathname: string) {
   return (
     pathname === "/maintenance" ||
@@ -27,61 +20,44 @@ function isMaintenanceBypass(pathname: string) {
 
 async function getSignature(payload: string, secret: string) {
   const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
-
-  return Array.from(new Uint8Array(signature))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
+  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function hasValidAccessCookie(request: NextRequest) {
-  // Accept both new and legacy cookie names during migration
-  const token =
-    request.cookies.get(ACCESS_COOKIE_NAME)?.value ??
-    request.cookies.get(ACCESS_COOKIE_NAME_LEGACY)?.value;
+async function hasValidSession(request: NextRequest) {
+  const token = request.cookies.get(ACCESS_COOKIE_NAME)?.value ?? request.cookies.get(ACCESS_COOKIE_NAME_LEGACY)?.value;
   const secret = (process.env.ACCESS_SESSION_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
-
   if (!token || !secret) return false;
 
-  const [codeId, expiresAt, signature] = token.split(".");
-  if (!codeId || !expiresAt || !signature) return false;
+  const parts = token.split(".");
+  if (parts.length < 3) return false;
 
-  const expires = Number(expiresAt);
-  if (!Number.isFinite(expires) || expires < Date.now()) return false;
+  const signature = parts[parts.length - 1];
+  const expiresAt = Number(parts[parts.length - 2]);
+  const userId = parts.slice(0, -2).join(".");
 
-  const expected = await getSignature(`${codeId}.${expiresAt}`, secret);
+  if (!userId || !Number.isFinite(expiresAt) || expiresAt < Date.now()) return false;
+
+  const expected = await getSignature(`${userId}.${expiresAt}`, secret);
   return signature === expected;
 }
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
-  // Maintenance mode — redirect everything public to /maintenance
   if (process.env.MAINTENANCE_MODE === "true" && !isMaintenanceBypass(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = "/maintenance";
     return NextResponse.redirect(url);
   }
 
-  if (!isProtectedPath(pathname)) {
-    return NextResponse.next();
-  }
-
-  if (await hasValidAccessCookie(request)) {
-    return NextResponse.next();
-  }
+  if (!isProtectedPath(pathname)) return NextResponse.next();
+  if (await hasValidSession(request)) return NextResponse.next();
 
   const url = request.nextUrl.clone();
   url.pathname = "/access";
   url.searchParams.set("next", `${pathname}${search}`);
-
   return NextResponse.redirect(url);
 }
 

@@ -8,7 +8,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId="cmox5mu2p000e0cjp2stcldpu"
       config={{
-        loginMethods: ["email", "google", "twitter", "wallet"],
+        loginMethods: ["google", "twitter"],
         appearance: {
           theme: "dark",
           accentColor: "#4AE8A0",
