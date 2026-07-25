@@ -1,0 +1,33 @@
+{
+  "name": "get_anomalies",
+  "description": "List open financial anomalies flagged on an agent (related-party payments, material unresolved flows, refund patterns). Use for risk sections and operator briefings.",
+  "version": "1.0.0",
+  "auth": "internal",
+  "auth_header": "Authorization: Bearer ${ZETTA_INTERNAL_SECRET}",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/admin/financial-intelligence/anomalies?agent_slug={agent_slug}&status={status}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "agent_slug": { "type": "string" },
+      "status": { "type": "string", "enum": ["open", "reviewed", "dismissed", "confirmed"], "default": "open" }
+    },
+    "required": ["agent_slug"]
+  },
+  "returns": {
+    "items": [
+      {
+        "anomaly_id": "uuid",
+        "anomaly_type": "string",
+        "severity": "low | medium | high | critical",
+        "reason_codes": ["string"],
+        "created_at": "timestamp"
+      }
+    ],
+    "open_count": "int",
+    "highest_severity": "string | null"
+  },
+  "framing_rule": "An anomaly is a flag for review, NOT an accusation of fraud. Always phrase it as 'flagged for review', never 'caught cheating'.",
+  "access_rule": "Operator/admin only. In public answers, mention only that open review flags exist if they are material — never list specifics.",
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }."
+}
