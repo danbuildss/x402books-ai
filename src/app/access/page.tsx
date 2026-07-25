@@ -15,16 +15,15 @@ function AccessForm() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!ready) return;
-    if (!authenticated || !user) return;
+    if (!ready || !authenticated || !user) return;
 
     const email =
-      user.email?.address ||
-      (user.linkedAccounts.find((a) => a.type === "email") as { address?: string } | undefined)?.address ||
+      (user as { email?: { address?: string } }).email?.address ??
+      (user.linkedAccounts?.find((a) => a.type === "email") as { address?: string } | undefined)?.address ??
       null;
 
     const xHandle =
-      (user.linkedAccounts.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username ||
+      (user.linkedAccounts?.find((a) => a.type === "twitter_oauth") as { username?: string } | undefined)?.username ??
       null;
 
     setIsLoading(true);
@@ -33,10 +32,10 @@ function AccessForm() {
     fetch("/api/access", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ privy: true, userId: user.id, email, xHandle }),
+      body: JSON.stringify({ userId: user.id, email, xHandle }),
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { ok?: boolean; error?: string }) => {
         if (data.ok) {
           window.location.assign(nextPath.startsWith("/") ? nextPath : "/dashboard");
         } else {
@@ -82,7 +81,7 @@ function AccessForm() {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <button className="access-privy-btn" onClick={login} disabled={!ready}>
                 <img src="/logo.svg" alt="" width={20} height={20} style={{ borderRadius: "5px" }} />
-                Continue with Email or X
+                Continue with Google or X
               </button>
             </div>
             {error && <p className="access-error">{error}</p>}
@@ -99,7 +98,7 @@ function AccessForm() {
               <h1>Something went wrong</h1>
               <p>{error}</p>
             </div>
-            <button className="access-privy-btn" onClick={() => { logout(); setError(""); }}>
+            <button className="access-privy-btn" onClick={() => { void logout(); setError(""); }}>
               Try a different account
             </button>
           </>
