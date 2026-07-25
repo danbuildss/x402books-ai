@@ -286,7 +286,7 @@ async function cmdReport(chatId: number, walletArg: string) {
 }
 
 // ── Inline mode ───────────────────────────────────────────────────────────────
-// Users type @asklucaai 0x... in any chat to get a shareable result card
+// Users type @AskLucaBot 0x... in any chat to get a shareable result card
 
 type InlineQuery = {
   id: string;
@@ -459,7 +459,7 @@ type TelegramUpdate = {
 };
 
 export async function handleUpdate(update: TelegramUpdate) {
-  // Handle inline queries (@asklucaai in any chat)
+  // Handle inline queries (@AskLucaBot in any chat)
   if (update.inline_query) {
     return handleInlineQuery(update.inline_query);
   }
@@ -471,7 +471,7 @@ export async function handleUpdate(update: TelegramUpdate) {
   const isGroup = msg.chat.type === "group" || msg.chat.type === "supergroup";
   const text = msg.text.trim();
 
-  // Strip bot username suffix from commands (e.g. /scan@asklucaai → /scan)
+  // Strip bot username suffix from commands (e.g. /scan@AskLucaBot → /scan)
   const [rawCmd, ...args] = text.split(/\s+/);
   const cmdPart = rawCmd.split("@");
   const cmd = cmdPart[0].toLowerCase();
