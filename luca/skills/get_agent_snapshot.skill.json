@@ -1,0 +1,58 @@
+{
+  "name": "get_agent_snapshot",
+  "description": "Fetch the latest published financial snapshot for an agent from Zetta. Returns metrics (recognized revenue, collected revenue, payment volume, unresolved inflows, costs, profit), evidence coverage, data completeness, accounting basis, and integrity hash. Only published snapshots are returned.",
+  "version": "1.0.0",
+  "auth": "public",
+  "method": "GET",
+  "endpoint_template": "{ZETTA_BASE_URL}/api/v1/financial-intelligence/{agent_slug}",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "agent_slug": {
+        "type": "string",
+        "description": "The agent's slug on the Zetta registry (lowercase, hyphenated)."
+      },
+      "period_start": {
+        "type": "string",
+        "description": "Optional ISO date (YYYY-MM-DD). If omitted, the latest published snapshot is returned."
+      },
+      "period_end": {
+        "type": "string",
+        "description": "Optional ISO date (YYYY-MM-DD). Used with period_start to select a specific period."
+      }
+    },
+    "required": ["agent_slug"]
+  },
+  "returns": {
+    "snapshot_id": "uuid — cite this in every answer",
+    "agent_slug": "string",
+    "period_start": "date",
+    "period_end": "date",
+    "accounting_basis": "cash | accrual",
+    "status": "published",
+    "metrics": {
+      "gross_payment_volume_usd": "number",
+      "recognized_revenue_usd": "number",
+      "collected_revenue_usd": "number",
+      "deferred_revenue_usd": "number",
+      "unresolved_inflows_usd": "number",
+      "refunds_usd": "number",
+      "direct_costs_usd": "number",
+      "gross_profit_usd": "number",
+      "operating_expenses_usd": "number",
+      "operating_profit_usd": "number",
+      "other_income_usd": "number"
+    },
+    "evidence_coverage": "0-1 fraction",
+    "data_completeness": "0-1 fraction",
+    "integrity_hash": "sha256 hex",
+    "published_at": "timestamp"
+  },
+  "on_error": "Return { \"error\": \"<message>\", \"data_available\": false }. Luca MUST report this to the user and MUST NOT retry more than once or fabricate values.",
+  "examples": [
+    {
+      "call": { "agent_slug": "luca" },
+      "note": "Returns Luca's own latest published snapshot."
+    }
+  ]
+}
