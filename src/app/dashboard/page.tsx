@@ -255,7 +255,7 @@ export default function OverviewPage() {
             {/* Revenue */}
             <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
               <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Revenue · {period}</p>
-              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "#4AE8A0" : "var(--muted)" }}>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "var(--accent)" : "var(--muted)" }}>
                 {hasActivity ? fmtUsd(fin.revenue_usd) : "—"}
               </p>
               {hasActivity && (
@@ -268,7 +268,7 @@ export default function OverviewPage() {
             {/* Expenses */}
             <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
               <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Expenses · {period}</p>
-              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "#F46060" : "var(--muted)" }}>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? "var(--negative)" : "var(--muted)" }}>
                 {hasActivity ? `−${fmtUsd(fin.expenses_usd)}` : "—"}
               </p>
               <p style={{ margin: "6px 0 0", fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
@@ -280,7 +280,7 @@ export default function OverviewPage() {
             {/* Net */}
             <div style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)" }}>
               <p style={{ margin: "0 0 6px", fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--muted)" }}>Net · {period}</p>
-              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? (fin.net_income_usd >= 0 ? "#4AE8A0" : "#F46060") : "var(--muted)" }}>
+              <p style={{ margin: 0, fontSize: "1.25rem", fontWeight: 700, fontFamily: "var(--font-mono)", color: hasActivity ? (fin.net_income_usd >= 0 ? "var(--accent)" : "var(--negative)") : "var(--muted)" }}>
                 {hasActivity ? `${fin.net_income_usd >= 0 ? "+" : "−"}${fmtUsd(fin.net_income_usd)}` : "—"}
               </p>
               <p style={{ margin: "6px 0 0", fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
@@ -314,14 +314,14 @@ export default function OverviewPage() {
                             <div style={{ fontSize: "0.8rem", fontWeight: 600, marginBottom: 4 }}>{cat.label}</div>
                             {/* Mini bar */}
                             <div style={{ height: 3, width: "100%", background: "var(--line)", borderRadius: 2, maxWidth: 140 }}>
-                              <div style={{ height: "100%", width: `${pct}%`, background: "#F46060", borderRadius: 2, opacity: 0.8 }} />
+                              <div style={{ height: "100%", width: `${pct}%`, background: "var(--negative)", borderRadius: 2, opacity: 0.8 }} />
                             </div>
                           </div>
                         }
                         detail={`${cat.tx_count} tx`}
                         value={
                           <div style={{ textAlign: "right" }}>
-                            <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "#F46060" }}>{fmtUsdCompact(cat.total_usd)}</div>
+                            <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--negative)" }}>{fmtUsdCompact(cat.total_usd)}</div>
                             <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.64rem", color: "var(--muted)" }}>{pct}%</div>
                           </div>
                         }
@@ -349,11 +349,11 @@ export default function OverviewPage() {
                       label={
                         <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>
                           {q.txHash.slice(0, 10)}…{" "}
-                          <span style={{ color: "#F4B942" }}>{q.reason.replace(/_/g, " ")}</span>
+                          <span style={{ color: "var(--warning)" }}>{q.reason.replace(/_/g, " ")}</span>
                         </span>
                       }
                       detail={new Date(q.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      value={<span style={{ fontFamily: "var(--font-mono)", color: "#F4B942" }}>{fmtUsd(q.amount_usd)}</span>}
+                      value={<span style={{ fontFamily: "var(--font-mono)", color: "var(--warning)" }}>{fmtUsd(q.amount_usd)}</span>}
                     />
                   ))}
                 </LedgerCard>
@@ -379,11 +379,11 @@ export default function OverviewPage() {
                   label={
                     <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.74rem" }}>
                       {q.txHash.slice(0, 10)}…{" "}
-                      <span style={{ color: "#F4B942" }}>{q.reason.replace(/_/g, " ")}</span>
+                      <span style={{ color: "var(--warning)" }}>{q.reason.replace(/_/g, " ")}</span>
                     </span>
                   }
                   detail={new Date(q.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  value={<span style={{ fontFamily: "var(--font-mono)", color: "#F4B942" }}>{fmtUsd(q.amount_usd)}</span>}
+                  value={<span style={{ fontFamily: "var(--font-mono)", color: "var(--warning)" }}>{fmtUsd(q.amount_usd)}</span>}
                 />
               ))}
             </LedgerCard>
@@ -431,7 +431,7 @@ export default function OverviewPage() {
           borderLeft: "3px solid #F4B942",
           color: "var(--ink)",
         }}>
-          <span style={{ fontSize: "1rem", color: "#F4B942" }}>⚠</span>
+          <span style={{ fontSize: "1rem", color: "var(--warning)" }}>⚠</span>
           <div>
             <strong>{totalAnomalies} active signal{totalAnomalies > 1 ? "s" : ""} detected</strong> across your agents.{" "}
             {Object.entries(anomalyMap)
@@ -463,7 +463,7 @@ export default function OverviewPage() {
           label="Active Signals"
           value={totalAnomalies}
           sub={totalAnomalies > 0 ? "require attention" : "all clear"}
-          valueColor={totalAnomalies > 0 ? "#F4B942" : undefined}
+          valueColor={totalAnomalies > 0 ? "var(--warning)" : undefined}
         />
       </MetricGrid>
 

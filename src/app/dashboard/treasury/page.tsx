@@ -185,7 +185,7 @@ export default function TreasuryPage() {
               label="Critical Agents"
               value={entries.filter((e) => e.status === "critical").length}
               sub="runway < 14 days"
-              valueColor={entries.filter((e) => e.status === "critical").length > 0 ? "#F46060" : undefined}
+              valueColor={entries.filter((e) => e.status === "critical").length > 0 ? "var(--negative)" : undefined}
             />
           </MetricGrid>
 
@@ -214,7 +214,7 @@ export default function TreasuryPage() {
                     <span style={{
                       fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem",
                       color: e.loading ? "var(--muted)"
-                        : e.netDaily !== null ? (e.netDaily >= 0 ? "#4AE8A0" : "#F46060")
+                        : e.netDaily !== null ? (e.netDaily >= 0 ? "var(--accent)" : "var(--negative)")
                         : "var(--muted)",
                     }}>
                       {e.loading ? "…"

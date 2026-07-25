@@ -13,6 +13,9 @@
   /* Border */
   --line:         rgba(15, 15, 17, 0.10);
   --line-strong:  rgba(15, 15, 17, 0.18);
+  --line-hi:      rgba(15, 15, 17, 0.12);
+  --surface-hi:   #EAECF0;
+  --nav-bg:       rgba(247, 247, 248, 0.92);
 
   /* Brand accent — TL-A electric green, toned for light backgrounds */
   --accent:       #1CB870;
@@ -115,6 +118,9 @@
   /* Borders */
   --line:          #21262F;
   --line-strong:   #2E3440;
+  --line-hi:       rgba(255, 255, 255, 0.10);
+  --surface-hi:    #1E2330;
+  --nav-bg:        rgba(12, 13, 16, 0.92);
 
   /* Accent — electric green */
   --accent:        #4AE8A0;
@@ -166,6 +172,9 @@
     --faint:         #2E3440;
     --line:          #21262F;
     --line-strong:   #2E3440;
+    --line-hi:       rgba(255, 255, 255, 0.10);
+    --surface-hi:    #1E2330;
+    --nav-bg:        rgba(12, 13, 16, 0.92);
     --accent:        #4AE8A0;
     --accent-dark:   #3ACC8A;
     --accent-soft:   rgba(74, 232, 160, 0.10);

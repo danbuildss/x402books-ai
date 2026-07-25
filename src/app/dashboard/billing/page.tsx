@@ -23,15 +23,22 @@ const TIER_FEATURES: Record<LucaTier, string[]> = {
 
 export default function BillingPage() {
   const [wallet, setWallet] = useState<string | null>(null);
-  const [tier] = useState<LucaTier>("free");
+  const [tier, setTier] = useState<LucaTier>("free");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch("/api/user/wallet");
-        const data = await res.json() as { wallet: string | null };
-        setWallet(data.wallet);
+        const [walletRes, tierRes] = await Promise.all([
+          fetch("/api/user/wallet"),
+          fetch("/api/developer/tier"),
+        ]);
+        const walletData = await walletRes.json() as { wallet: string | null };
+        setWallet(walletData.wallet);
+        if (tierRes.ok) {
+          const tierData = await tierRes.json() as { tier: LucaTier };
+          if (tierData.tier) setTier(tierData.tier);
+        }
       } catch { /* unavailable */ }
       finally { setLoading(false); }
     }
@@ -46,11 +53,17 @@ export default function BillingPage() {
       </div>
 
       {/* Current plan stats */}
-      <MetricGrid cols={3} style={{ marginBottom: 24 }}>
+      <MetricGrid cols={4} style={{ marginBottom: 24 }}>
         <MetricCard
           label="Daily Limit"
           value={TIER_LIMITS[tier].toLocaleString()}
           sub="requests / day"
+          style={{ borderLeft: "3px solid var(--accent)" }}
+        />
+        <MetricCard
+          label="Current Plan"
+          value={TIER_LABELS[tier]}
+          sub="no $LUCA required"
           valueColor={TIER_COLORS[tier]}
         />
         <MetricCard
