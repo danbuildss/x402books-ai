@@ -87,9 +87,10 @@ export function SiteNav() {
           { title: "Luca",        desc: "AI financial analyst. Reads books, cites sources, never invents data.", href: "/luca" },
         ]} />
         <NavDropdown label="Solutions" items={[
-          { title: "For Agent Teams", desc: "Submit a manifest, get attributed books, share your financial profile.", href: "/registry#verify" },
-          { title: "For Developers",  desc: "API access to agent books, registry, revenue, and badge endpoints.", href: "/api" },
-          { title: "For Researchers", desc: "Analyst-grade reports on agent finance and ecosystem attribution.", href: "/research" },
+          { title: "For Agent Teams",    desc: "Submit a manifest, get attributed books, share your financial profile.", href: "/registry#verify" },
+          { title: "Surplus × Zetta",    desc: "Financial visibility for agents routing inference through Surplus.", href: "/surplus" },
+          { title: "For Developers",     desc: "API access to agent books, registry, revenue, and badge endpoints.", href: "/api" },
+          { title: "For Researchers",    desc: "Analyst-grade reports on agent finance and ecosystem attribution.", href: "/research" },
         ]} />
         <NavDropdown label="About Us" items={[
           { title: "What is Zetta", desc: "Financial intelligence infrastructure for autonomous agents.", href: "/about" },

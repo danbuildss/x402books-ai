@@ -2538,6 +2538,22 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {tab === "inference" && (
             <>
               {inferenceActivity && <InferenceActivityBlock ia={inferenceActivity} />}
+              {inferenceActivity && (
+                <a
+                  href={`/surplus/${slug}`}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "10px 14px", marginBottom: 12,
+                    background: "rgba(74,232,160,0.05)", border: "1px solid rgba(74,232,160,0.22)",
+                    borderRadius: "var(--radius-md)", textDecoration: "none",
+                  }}
+                >
+                  <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--ink)" }}>
+                    Surplus × Zetta · Full inference economics report
+                  </span>
+                  <span style={{ fontSize: "0.72rem", color: "var(--accent)", fontWeight: 700 }}>View →</span>
+                </a>
+              )}
               <InferenceTab ia={inferenceActivity} slug={slug} books={books} />
             </>
           )}
