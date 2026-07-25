@@ -165,7 +165,7 @@ function LucaChat() {
   }
 
   const showEmpty = messages.length === 0;
-  const isReady = Boolean(selectedSlug || wallet);
+  const isReady = true;
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -280,8 +280,7 @@ function LucaChat() {
             What should I read for you today?
           </p>
           <p style={{ fontSize: "0.8rem", color: "var(--muted)", maxWidth: 400, lineHeight: 1.6, margin: "0 0 32px" }}>
-            Luca answers from your agent&apos;s attributed books only — every figure carries its period and confidence, and missing data is called missing.
-            {!isReady && " Link your wallet or select an agent to get started."}
+            Luca answers from attributed books only — every figure carries its period and confidence, and missing data is called missing.
           </p>
 
           {/* Capability grid — 3-col, 6px radius (no pills) */}
@@ -434,8 +433,8 @@ function LucaChat() {
           <textarea
             ref={textareaRef}
             className="op-chat-input"
-            placeholder={isReady ? "Ask Luca about your agent's finances…" : "Link your wallet or select an agent to start"}
-            disabled={!isReady || sending}
+            placeholder={selectedSlug ? `Ask Luca about ${selectedSlug}'s finances…` : "Ask Luca anything about agent finance…"}
+            disabled={sending}
             rows={1}
             value={input}
             onChange={handleInputChange}
