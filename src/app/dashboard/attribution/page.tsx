@@ -13,7 +13,7 @@ function roleColor(role: string): string {
   if (role === "treasury" || role === "revenue") return "var(--accent)";
   if (role === "fee") return "#5B9EF4";
   if (role === "deployer") return "#8B7CF6";
-  if (role === "operator") return "#F4B942";
+  if (role === "operator") return "var(--warning)";
   return "var(--muted)";
 }
 
@@ -59,7 +59,7 @@ function JsonPreview({ value }: { value: string }) {
           return (
             <span key={i}>
               {indent}<span style={{ color: "#5B9EF4" }}>&quot;{key}&quot;</span>:{" "}
-              <span style={{ color: "#F4B942" }}>{val}</span>{comma}{"\n"}
+              <span style={{ color: "var(--warning)" }}>{val}</span>{comma}{"\n"}
             </span>
           );
         }
@@ -128,7 +128,7 @@ function FetchTab() {
               {fetching ? "Fetching…" : "Fetch"}
             </button>
           </div>
-          {error && <p style={{ color: "#F46060", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
+          {error && <p style={{ color: "var(--negative)", fontSize: "0.78rem", marginTop: 8 }}>{error}</p>}
         </div>
       </div>
 
@@ -307,7 +307,7 @@ function BuildTab() {
                   />
                 </div>
                 {w.address && !/^0x[0-9a-fA-F]{40}$/.test(w.address.trim()) && (
-                  <p style={{ fontSize: "0.72rem", color: "#F46060", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
+                  <p style={{ fontSize: "0.72rem", color: "var(--negative)", marginTop: 4, paddingLeft: 28 }}>Invalid address format</p>
                 )}
               </div>
             ))}
@@ -398,7 +398,7 @@ function ClaimTab() {
             <label className="op-label">Wallet address</label>
             <input className="op-input" placeholder="0x…" value={walletAddr} onChange={(e) => setWalletAddr(e.target.value)} />
             {walletAddr && !/^0x[0-9a-fA-F]{40}$/.test(walletAddr.trim()) && (
-              <p style={{ fontSize: "0.72rem", color: "#F46060", marginTop: 4 }}>Invalid address format</p>
+              <p style={{ fontSize: "0.72rem", color: "var(--negative)", marginTop: 4 }}>Invalid address format</p>
             )}
           </div>
           <div className="op-field">

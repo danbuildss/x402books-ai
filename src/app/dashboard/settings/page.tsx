@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { LedgerCard, LedgerRow } from "@/components/ui/ledger";
 import { StatusBadge } from "@/components/ui/badge";
 
@@ -92,7 +93,7 @@ export default function SettingsPage() {
         <nav className="op-settings-nav" aria-label="Settings sections">
           {SECTIONS.map((s) =>
             s.href ? (
-              <a key={s.id} href={s.href} className="op-settings-nav-item">{s.label} →</a>
+              <Link key={s.id} href={s.href} className="op-settings-nav-item">{s.label} →</Link>
             ) : (
               <a key={s.id} href={`#${s.id}`} className="op-settings-nav-item">{s.label}</a>
             ),
@@ -126,7 +127,7 @@ export default function SettingsPage() {
           </p>
           {wallet && (
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "var(--surface-soft)", borderRadius: 7, border: "1px solid var(--line)" }}>
-              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4AE8A0", flexShrink: 0 }} />
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
               <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.82rem", color: "var(--ink)", flex: 1 }}>{wallet}</span>
               <button
                 className="op-btn op-btn-danger"
@@ -158,7 +159,7 @@ export default function SettingsPage() {
             </div>
           </div>
           {saveMsg && (
-            <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "#4AE8A0" : "#F46060", marginTop: 8 }}>
+            <p style={{ fontSize: "0.78rem", color: saveMsg.includes("success") || saveMsg.includes("Wallet linked") ? "var(--accent)" : "var(--negative)", marginTop: 8 }}>
               {saveMsg}
             </p>
           )}

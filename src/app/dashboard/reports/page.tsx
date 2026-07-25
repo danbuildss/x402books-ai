@@ -21,7 +21,7 @@ export default function ReportsPage() {
           { title: "Treasury Snapshot", desc: "Current stablecoin balances across declared wallets, with runway.", q: "What's my treasury health and runway?" },
           { title: "Revenue Quality Audit", desc: "Settlement vs token revenue, quarantined inflows, and unknowns.", q: "Audit my revenue quality: what's settlement revenue vs quarantined or unknown?" },
         ].map((c) => (
-          <div key={c.title} style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div key={c.title} style={{ padding: "16px 18px", border: "1px solid var(--line)", borderRadius: "var(--radius-card)", background: "var(--surface)", display: "flex", flexDirection: "column", gap: 8 }}>
             <p style={{ margin: 0, fontSize: "0.86rem", fontWeight: 700, color: "var(--ink)" }}>{c.title}</p>
             <p style={{ margin: 0, fontSize: "0.74rem", color: "var(--muted)", lineHeight: 1.55, flex: 1 }}>{c.desc}</p>
             <Link href={`/dashboard/luca?q=${encodeURIComponent(c.q)}`} className="op-btn" style={{ fontSize: "0.75rem", alignSelf: "flex-start" }}>

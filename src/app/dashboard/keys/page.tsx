@@ -91,7 +91,7 @@ function WalletLinker({ keyId, currentTier, onLinked }: {
         Sign with your wallet to check $LUCA balance and unlock a higher tier. The signature is free — no transaction.
       </p>
       <button className="op-btn" onClick={handleLink} disabled={loading}>{loading ? stepLabel : "Connect & Sign"}</button>
-      {error && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 6 }}>{error}</p>}
+      {error && <p style={{ color: "var(--negative)", fontSize: "0.75rem", marginTop: 6 }}>{error}</p>}
       {result && (
         <p style={{ fontSize: "0.75rem", color: "var(--accent)", marginTop: 6 }}>
           ✓ Wallet verified — {TIER_LABELS[result.tier]} tier ({TIER_LIMITS[result.tier].toLocaleString()} req/day)
@@ -114,6 +114,7 @@ export default function ApiKeysPage() {
   const [newKey, setNewKey] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [createError, setCreateError] = useState("");
   const [copied, setCopied] = useState(false);
   const [expandedWallet, setExpandedWallet] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -149,10 +150,10 @@ export default function ApiKeysPage() {
         body: JSON.stringify({ name: newName.trim() }),
       });
       const data = await res.json() as { key?: string; record?: ApiKeyRecord; error?: string };
-      if (!res.ok || !data.key || !data.record) { alert(data.error ?? "Could not create API key."); if (res.status === 401) setSignedOut(true); return; }
+      if (!res.ok || !data.key || !data.record) { setCreateError(data.error ?? "Could not create API key."); if (res.status === 401) setSignedOut(true); return; }
       setNewKey(data.key);
       setKeys((prev) => [data.record!, ...prev]);
-      setShowForm(false); setNewName("");
+      setShowForm(false); setNewName(""); setCreateError("");
     } finally { setCreating(false); }
   }
 
@@ -266,13 +267,14 @@ export default function ApiKeysPage() {
                 className="op-input"
                 placeholder="Key name (e.g. Production, My Agent)"
                 value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") setShowForm(false); }}
+                onChange={(e) => { setNewName(e.target.value); setCreateError(""); }}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); if (e.key === "Escape") { setShowForm(false); setCreateError(""); } }}
                 maxLength={64}
               />
               <button className="op-btn op-btn-primary" onClick={handleCreate} disabled={creating || !newName.trim()}>{creating ? "Creating…" : "Create"}</button>
-              <button className="op-btn op-btn-ghost" onClick={() => setShowForm(false)}>Cancel</button>
+              <button className="op-btn op-btn-ghost" onClick={() => { setShowForm(false); setCreateError(""); }}>Cancel</button>
             </div>
+            {createError && <p style={{ color: "var(--negative)", fontSize: "0.76rem", marginTop: 8 }}>{createError}</p>}
           </div>
         )}
 
@@ -321,7 +323,7 @@ export default function ApiKeysPage() {
                       <div className="op-usage-bar-track">
                         <div className="op-usage-bar-fill" style={{
                           width: `${Math.min(100, (key.requests_today / key.rate_limit_per_day) * 100)}%`,
-                          background: key.requests_today >= key.rate_limit_per_day ? "#F46060" : TIER_COLORS[key.tier ?? "free"],
+                          background: key.requests_today >= key.rate_limit_per_day ? "var(--negative)" : TIER_COLORS[key.tier ?? "free"],
                         }} />
                       </div>
                     </div>
@@ -409,7 +411,7 @@ export default function ApiKeysPage() {
                 </button>
                 <button className="op-btn op-btn-ghost" onClick={() => setShowAgentForm(false)}>Cancel</button>
               </div>
-              {agentKeyError && <p style={{ color: "#F46060", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
+              {agentKeyError && <p style={{ color: "var(--negative)", fontSize: "0.75rem", marginTop: 8 }}>{agentKeyError}</p>}
             </div>
           ) : (
             <button

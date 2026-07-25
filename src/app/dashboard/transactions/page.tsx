@@ -102,7 +102,7 @@ export default function TransactionsPage() {
           {conf && (
             <span style={{ fontSize: "0.68rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
               conf:{" "}
-              <span style={{ color: conf === "high" ? "var(--accent)" : conf === "medium" ? "#F4B942" : "#F46060" }}>
+              <span style={{ color: conf === "high" ? "var(--accent)" : conf === "medium" ? "var(--warning)" : "var(--negative)" }}>
                 {conf}
               </span>
             </span>
@@ -159,12 +159,12 @@ export default function TransactionsPage() {
             {[
               { label: "Transactions", value: String(f.tx_count), sub: `in ${period} window`, accent: true },
               { label: "Inflow", value: f.tx_count > 0 ? `+${fmtUsd(f.revenue_usd)}` : "—", sub: "operating revenue", color: f.tx_count > 0 ? "var(--accent)" : undefined },
-              { label: "Outflow", value: f.tx_count > 0 ? `−${fmtUsd(f.expenses_usd)}` : "—", sub: "classified expenses", color: f.tx_count > 0 ? "#F46060" : undefined },
+              { label: "Outflow", value: f.tx_count > 0 ? `−${fmtUsd(f.expenses_usd)}` : "—", sub: "classified expenses", color: f.tx_count > 0 ? "var(--negative)" : undefined },
               {
                 label: "Net",
                 value: f.tx_count > 0 ? `${f.net_income_usd >= 0 ? "+" : "−"}${fmtUsd(f.net_income_usd)}` : "—",
                 sub: `${period} net income`,
-                color: f.tx_count > 0 ? (f.net_income_usd >= 0 ? "var(--accent)" : "#F46060") : undefined,
+                color: f.tx_count > 0 ? (f.net_income_usd >= 0 ? "var(--accent)" : "var(--negative)") : undefined,
               },
             ].map((t) => (
               <div key={t.label} style={{
@@ -241,8 +241,8 @@ export default function TransactionsPage() {
                     <div style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--ink)" }}>{e.label}</div>
                     <div style={{ fontSize: "0.68rem", color: "var(--muted)", marginTop: 2, fontFamily: "var(--font-mono)" }}>{e.tx_count} tx{e.tx_count === 1 ? "" : "s"}</div>
                   </div>
-                  <Chip color="#F46060" label={e.category === "unknown" ? "unknown" : "expense"} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "#F46060", whiteSpace: "nowrap" }}>−{fmtUsd(e.total_usd)}</span>
+                  <Chip color="var(--negative)" label={e.category === "unknown" ? "unknown" : "expense"} />
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "var(--negative)", whiteSpace: "nowrap" }}>−{fmtUsd(e.total_usd)}</span>
                 </div>
               ))}
             </div>
@@ -291,8 +291,8 @@ export default function TransactionsPage() {
                       {new Date(q.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                     </div>
                   </div>
-                  <Chip color="#F4B942" label={q.reason.replace(/_/g, " ")} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "#F4B942", whiteSpace: "nowrap" }}>{fmtUsd(q.amount_usd)}</span>
+                  <Chip color="var(--warning)" label={q.reason.replace(/_/g, " ")} />
+                  <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: "0.82rem", color: "var(--warning)", whiteSpace: "nowrap" }}>{fmtUsd(q.amount_usd)}</span>
                 </div>
               ))}
               <div style={{ padding: "10px 16px", borderTop: "1px solid var(--line)", fontSize: "0.69rem", color: "var(--muted)", lineHeight: 1.6 }}>
