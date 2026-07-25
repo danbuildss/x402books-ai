@@ -1,162 +1,59 @@
 // POST /api/luca/chat
-// Streaming Luca chat with tool use and session memory.
+// Proxies dashboard chat to the Hermes-hosted Luca agent.
 //
 // Body:
-//   { query: string, agent_id?: string, messages?: {role,content}[], session_id?: string }
-//   OR { messages: [{role,content}], agent_id?, session_id? }
+//   { query: string, agent_id?: string, messages?: {role,content}[] }
+//   OR { messages: [{role,content}], agent_id? }
 //
 // Auth: session cookie (same as dashboard)
 // Response: text/event-stream — SSE chunks {"text":"..."} terminated by [DONE]
 
 import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
-import OpenAI from "openai";
 import { ACCESS_COOKIE_NAME, verifyAccessToken } from "@/lib/access-auth";
-import { executeTool, type ToolName } from "@/lib/luca-tools";
-import { readMemory, writeMemory, formatMemoryContext } from "@/lib/luca-memory";
-import { routeModel } from "@/lib/model-router";
-import { logInferenceEvent } from "@/lib/inference-events";
-import { LUCA_DASHBOARD_PROMPT } from "@/lib/luca-core-prompt";
 
 export const dynamic = "force-dynamic";
 
-function getOpenAI() {
-  return new OpenAI({
-    apiKey:  process.env.LLM_API_KEY ?? process.env.OPENAI_API_KEY ?? "",
-    ...(process.env.LLM_BASE_URL ? { baseURL: process.env.LLM_BASE_URL } : {}),
-  });
-}
-
-// OpenAI-format tool definitions (converted from Anthropic input_schema format)
-const OPENAI_TOOLS: OpenAI.Chat.ChatCompletionTool[] = [
-  {
-    type: "function",
-    function: {
-      name: "get_agent_books",
-      description:
-        "Fetch the attributed financial books for an agent: revenue, expenses, net income, wallet count, and confidence signals. Use this when asked about an agent's financial performance, revenue, costs, or profitability.",
-      parameters: {
-        type: "object",
-        properties: {
-          slug:   { type: "string", description: "Agent slug, e.g. 'aeon'" },
-          period: { type: "string", enum: ["7d", "14d", "30d", "90d"], description: "Lookback window" },
-        },
-        required: ["slug"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_treasury_balance",
-      description:
-        "Fetch the current stablecoin (USDC + USDT) balance for a wallet address. Use this when asked about treasury health, runway, or current balance.",
-      parameters: {
-        type: "object",
-        properties: {
-          address: { type: "string", description: "0x wallet address" },
-        },
-        required: ["address"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_momentum",
-      description:
-        "Compute directional momentum (growing/stable/declining) for an agent's revenue, expenses, net income, and treasury over recent snapshots. Use this when asked about trends, direction, or whether an agent is improving.",
-      parameters: {
-        type: "object",
-        properties: {
-          slug:        { type: "string", description: "Agent slug" },
-          window_days: { type: "number", description: "Lookback window in days (default 30)" },
-        },
-        required: ["slug"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_anomaly_alerts",
-      description:
-        "Fetch active anomaly alerts for an agent: unusual volume, new counterparties, timing gaps, or ratio breakdowns. Use this when asked about risks, red flags, or unusual activity.",
-      parameters: {
-        type: "object",
-        properties: {
-          slug: { type: "string", description: "Agent slug" },
-        },
-        required: ["slug"],
-      },
-    },
-  },
-  {
-    type: "function",
-    function: {
-      name: "get_agent_info",
-      description:
-        "Fetch basic registry information for an agent: name, ecosystem, verification status, wallet count. Use this when asked who or what an agent is.",
-      parameters: {
-        type: "object",
-        properties: {
-          slug: { type: "string", description: "Agent slug" },
-        },
-        required: ["slug"],
-      },
-    },
-  },
-];
-
-const SYSTEM_PROMPT = LUCA_DASHBOARD_PROMPT;
+const HERMES_URL = process.env.HERMES_API_URL ?? "http://167.172.59.234:8642";
+const HERMES_KEY = process.env.HERMES_API_KEY ?? "";
 
 export async function POST(req: NextRequest) {
   const cookieStore = await cookies();
   const token  = cookieStore.get(ACCESS_COOKIE_NAME)?.value ?? "";
   const codeId = verifyAccessToken(token);
   if (!codeId) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   let body: {
     query?:    string;
     agent_id?: string;
-    wallet?:   string;
     messages?: { role: "user" | "assistant"; content: string }[];
   };
   try {
     body = await req.json() as typeof body;
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  // Normalise into OpenAI message array
-  let apiMessages: OpenAI.Chat.ChatCompletionMessageParam[];
+  type Message = { role: "user" | "assistant" | "system"; content: string };
+  let messages: Message[];
   if (body.messages?.length) {
-    apiMessages = body.messages.map((m) => ({ role: m.role, content: m.content }));
+    messages = body.messages.map((m) => ({ role: m.role, content: m.content }));
   } else if (body.query) {
-    apiMessages = [{ role: "user", content: body.query }];
+    messages = [{ role: "user", content: body.query }];
   } else {
-    return new Response(JSON.stringify({ error: "query or messages required" }), { status: 400, headers: { "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ error: "query or messages required" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-
-  const agentSlug = body.agent_id ?? null;
-  const userId    = codeId;
-
-  const lastUserContent = [...apiMessages].reverse().find((m) => m.role === "user")?.content ?? "";
-  const lastUserText    = typeof lastUserContent === "string" ? lastUserContent : "";
-
-  // Memory context
-  const memory    = await readMemory(userId, agentSlug ?? undefined);
-  const memoryCtx = formatMemoryContext(memory);
-  const systemMsg = memoryCtx ? `${SYSTEM_PROMPT}\n\n${memoryCtx}` : SYSTEM_PROMPT;
-
-  // Route model based on complexity
-  const modelConfig = routeModel({
-    query:        lastUserText,
-    hasToolCalls: false,
-    estimatedTokens: apiMessages.reduce((n, m) => n + (typeof m.content === "string" ? m.content.length / 4 : 0), 0),
-  });
 
   const encoder = new TextEncoder();
 
@@ -168,110 +65,78 @@ export async function POST(req: NextRequest) {
         controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
 
       try {
-        let iterCount = 0;
-        const MAX_ITER = 5;
-        let usedToolCall = false;
-        let totalPromptTokens = 0;
-        let totalCompletionTokens = 0;
-        const t0 = Date.now();
+        const hermesRes = await fetch(`${HERMES_URL}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Authorization":       `Bearer ${HERMES_KEY}`,
+            "Content-Type":        "application/json",
+            "X-Hermes-Session-Key": `zetta-dashboard:${codeId}`,
+          },
+          body: JSON.stringify({
+            model:    "hermes-agent",
+            messages,
+            stream:   true,
+          }),
+        });
 
-        // Prepend system message
-        const msgsWithSystem: OpenAI.Chat.ChatCompletionMessageParam[] = [
-          { role: "system", content: systemMsg },
-          ...apiMessages,
-        ];
+        if (!hermesRes.ok || !hermesRes.body) {
+          const errText = await hermesRes.text().catch(() => "");
+          console.error(JSON.stringify({
+            type:   "luca_hermes_error",
+            ts:     new Date().toISOString(),
+            status: hermesRes.status,
+            body:   errText.slice(0, 200),
+          }));
+          send("Luca is unavailable right now. Please try again in a moment.");
+          sendDone();
+          controller.close();
+          return;
+        }
 
-        while (iterCount < MAX_ITER) {
-          iterCount++;
+        // Parse OpenAI-compatible SSE stream and re-emit as {"text":"..."} chunks
+        const reader  = hermesRes.body.getReader();
+        const decoder = new TextDecoder();
+        let   buf     = "";
 
-          const currentModel = (usedToolCall
-            ? routeModel({ query: lastUserText, hasToolCalls: true, forceCapable: false })
-            : modelConfig
-          ).model;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-          const response = await getOpenAI().chat.completions.create({
-            model:      currentModel,
-            max_tokens: modelConfig.max_tokens,
-            tools:      OPENAI_TOOLS,
-            messages:   msgsWithSystem,
-          });
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() ?? "";
 
-          totalPromptTokens     += response.usage?.prompt_tokens     ?? 0;
-          totalCompletionTokens += response.usage?.completion_tokens ?? 0;
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith("data:")) continue;
+            const payload = trimmed.slice(5).trim();
+            if (payload === "[DONE]") continue;
 
-          const choice = response.choices[0];
-          if (!choice) {
-            send("Analysis unavailable — model returned no response. Please try again.");
-            break;
-          }
-          const msg = choice.message;
-
-          if (choice.finish_reason === "stop" || choice.finish_reason === "length") {
-            const text = msg.content ?? "";
-            const words = text.split(" ");
-            for (let i = 0; i < words.length; i++) {
-              send(words[i] + (i < words.length - 1 ? " " : ""));
-              await new Promise<void>((r) => setTimeout(r, 0));
+            try {
+              const parsed = JSON.parse(payload) as {
+                choices?: { delta?: { content?: string } }[];
+                // Hermes may also emit {text:"..."} directly
+                text?: string;
+              };
+              const chunk =
+                parsed.text ??
+                parsed.choices?.[0]?.delta?.content ??
+                "";
+              if (chunk) send(chunk);
+            } catch {
+              // non-JSON line — ignore
             }
-
-            if (/remember|note that|keep in mind/i.test(lastUserText)) {
-              await writeMemory(userId, agentSlug, "user_note", lastUserText.slice(0, 200)).catch(() => {});
-            }
-            break;
           }
-
-          if (choice.finish_reason === "tool_calls" && msg.tool_calls?.length) {
-            usedToolCall = true;
-            msgsWithSystem.push(msg);
-
-            const toolResults: OpenAI.Chat.ChatCompletionToolMessageParam[] = [];
-
-            for (const tc of msg.tool_calls) {
-              if (tc.type !== "function") continue;
-              let parsed: Record<string, unknown> = {};
-              try { parsed = JSON.parse(tc.function.arguments) as Record<string, unknown>; } catch { /* ignore */ }
-
-              const result = await executeTool(tc.function.name as ToolName, parsed);
-              toolResults.push({
-                role:         "tool",
-                tool_call_id: tc.id,
-                content:      JSON.stringify(result),
-              });
-            }
-
-            for (const tr of toolResults) msgsWithSystem.push(tr);
-            continue;
-          }
-
-          send("Analysis complete.");
-          break;
         }
 
         sendDone();
-
-        logInferenceEvent({
-          agentId:     agentSlug ?? "luca",
-          provider:    "bankr",
-          model:       modelConfig.model,
-          requestType: "chat_completion",
-          inputTokens:  totalPromptTokens     || null,
-          outputTokens: totalCompletionTokens || null,
-          totalTokens:  (totalPromptTokens + totalCompletionTokens) || null,
-          costUsd:     null,
-          costSource:  "missing",
-          latencyMs:   Date.now() - t0,
-          status:      "success",
-        }).catch(() => {});
       } catch (err) {
-        // Never stream raw internal/provider errors to the client — they can
-        // contain upstream URLs, model names, or key hints. Log server-side.
         console.error(JSON.stringify({
           type:  "luca_chat_error",
           ts:    new Date().toISOString(),
-          agent: agentSlug,
           error: err instanceof Error ? err.message : String(err),
         }));
-        send("Unable to complete analysis right now — the data service did not respond. Please try again.");
+        send("Unable to reach Luca right now. Please try again.");
         sendDone();
       } finally {
         controller.close();

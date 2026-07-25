@@ -229,7 +229,7 @@ function LucaChat() {
         {/* Right: Telegram link + freshness */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <a
-            href="https://t.me/asklucaai"
+            href="https://t.me/AskLucaBot"
             target="_blank"
             rel="noreferrer"
             style={{ fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
@@ -237,7 +237,7 @@ function LucaChat() {
             <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.6 }}>
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.8 13.333l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.834.947z" />
             </svg>
-            @asklucaai
+            @AskLucaBot
           </a>
           {selectedSlug && (
             <span style={{ fontSize: "0.64rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>
