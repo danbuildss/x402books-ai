@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
 type Message = { role: "user" | "luca"; content: string; loading?: boolean };
-type Agent = { name: string; slug?: string; wallets: { address: string }[] };
+type Agent = { name: string; slug: string; wallets: { address: string }[] };
 
 function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -60,7 +60,7 @@ function LucaChat() {
           );
           setMyAgents(matched);
           if (!selectedSlug && matched.length > 0) {
-            setSelectedSlug(toSlug(matched[0].name));
+            setSelectedSlug(matched[0].slug || toSlug(matched[0].name));
           }
         }
       } catch { /* unavailable */ }
