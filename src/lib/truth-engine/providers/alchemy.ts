@@ -1,4 +1,5 @@
 import type { FetchParams, NormalizedTransaction } from "../chain-fetcher";
+import { stablecoinUsd } from "../usd-pricer";
 
 const CHAIN_ENDPOINTS: Record<string, string> = {
   base:      "https://base-mainnet.g.alchemy.com/v2",
@@ -104,6 +105,9 @@ export async function fetchAlchemy(params: FetchParams): Promise<NormalizedTrans
 
       const decStr  = t.rawContract?.decimal;
       const rawVal  = t.rawContract?.value ?? "0x0";
+      const assetAddress = t.rawContract?.address?.toLowerCase() ?? undefined;
+      const decimals = decStr != null ? parseInt(decStr, 10) : undefined;
+      const valueUsd = stablecoinUsd(assetAddress, params.chain, rawVal, decimals);
 
       results.push({
         txHash:       t.hash.toLowerCase(),
@@ -113,14 +117,12 @@ export async function fetchAlchemy(params: FetchParams): Promise<NormalizedTrans
         from:         t.from.toLowerCase(),
         to:           t.to.toLowerCase(),
         assetSymbol:  t.asset ?? "UNKNOWN",
-        assetAddress: t.rawContract?.address?.toLowerCase() ?? undefined,
+        assetAddress,
         rawValue:     rawVal,
-        valueUsd:     undefined,  // Alchemy transfers API does not include USD
+        valueUsd,
         isERC20:      t.category === "erc20",
         chain:        params.chain,
       });
-
-      void decStr; // captured for future USD conversion
     }
   };
 
