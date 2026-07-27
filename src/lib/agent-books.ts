@@ -14,6 +14,7 @@
 import { getRegistryAgents } from "@/lib/registry-db";
 import { buildLedgerScan } from "@/lib/ledger-service";
 import { getWalletStableBalance } from "@/lib/treasury-balance";
+import { logPipelineFailure } from "@/lib/pipeline-observability";
 import { toSlug } from "@/app/registry/[slug]/slug";
 import {
   isValidWalletAddress,
@@ -269,11 +270,35 @@ async function computeAgentBooks(
 
   const ownAddresses = new Set(declared.map((w) => w.address.toLowerCase()));
 
-  const scans = await Promise.all(
+  // Per-wallet isolation: one wallet's scan failure must NOT zero the whole
+  // agent's books. Log each failure and keep the wallets that succeeded
+  // (partial books beat no books). If EVERY wallet fails, throw so the agent
+  // is marked failed upstream (P5).
+  const scanResults = await Promise.allSettled(
     scannable.map((w) =>
       buildLedgerScan({ wallet: w.address, range: period, persist: false }),
     ),
   );
+  const scans: Awaited<ReturnType<typeof buildLedgerScan>>[] = [];
+  scanResults.forEach((r, i) => {
+    if (r.status === "fulfilled") {
+      scans.push(r.value);
+    } else {
+      void logPipelineFailure({
+        stage: "transactions_fetched",
+        agentSlug: slug,
+        agentName: agent.name,
+        walletAddress: scannable[i]?.address,
+        chain: scannable[i]?.chain ?? "base",
+        error: r.reason instanceof Error ? r.reason.message : String(r.reason),
+      });
+    }
+  });
+  if (scans.length === 0) {
+    throw new Error(
+      `All ${scannable.length} wallet scan(s) failed for ${agent.name} — no transaction data available.`,
+    );
+  }
 
   // Merge transactions across wallets; deduplicate legs that appear in two
   // scans when a transfer occurs between two of the agent's own wallets.
@@ -472,13 +497,31 @@ async function computeAgentBooks(
   }
 
   // ── Treasury ──────────────────────────────────────────────────────────────
+  // A failed balance lookup returns null (not 0). If any treasury wallet
+  // couldn't be fetched, the whole treasury figure is null ("unavailable")
+  // rather than a fake sum — and the failure is logged (P5: no silent $0).
   const treasuryWallets = declared.filter((w) => w.role === "treasury" && isValidWalletAddress(w.address));
   const treasuryBalances = await Promise.all(
-    treasuryWallets.map((w) => getWalletStableBalance(w.address).catch(() => 0)),
+    treasuryWallets.map((w) => getWalletStableBalance(w.address).catch(() => null)),
   );
-  const treasuryBalance = treasuryBalances.length > 0
-    ? round(treasuryBalances.reduce((s, b) => s + b, 0))
-    : null;
+  let treasuryBalance: number | null;
+  if (treasuryWallets.length === 0) {
+    treasuryBalance = null;
+  } else if (treasuryBalances.some((b) => b === null)) {
+    treasuryBalance = null;
+    const failedIdx = treasuryBalances.findIndex((b) => b === null);
+    void logPipelineFailure({
+      stage: "transactions_fetched",
+      agentSlug: slug,
+      agentName: agent.name,
+      walletAddress: treasuryWallets[failedIdx]?.address,
+      chain: "base",
+      provider: "alchemy",
+      error: "Treasury stablecoin balance lookup failed — treasury reported as unavailable, not $0.",
+    });
+  } else {
+    treasuryBalance = round((treasuryBalances as number[]).reduce((s, b) => s + b, 0));
+  }
   const runwayMonths = treasuryBalance !== null && expenses > 0
     ? round(treasuryBalance / expenses)
     : null;

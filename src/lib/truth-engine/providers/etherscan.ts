@@ -31,6 +31,25 @@ interface EtherscanResponse {
   result: EtherscanRow[] | string;
 }
 
+// Distinguish a genuinely-empty result from an API error/rate-limit.
+// Etherscan returns status "0" for BOTH "no transactions" and errors —
+// only the message tells them apart. Empty → [] is honest; an error must
+// throw so chain-fetcher records it (P5: rate-limit ≠ empty success).
+type EtherscanParse =
+  | { kind: "ok" }
+  | { kind: "empty" }
+  | { kind: "error"; message: string };
+
+export function parseEtherscanStatus(status: string, message: string): EtherscanParse {
+  if (status === "1") return { kind: "ok" };
+  const msg = (message ?? "").toLowerCase();
+  // Known "legitimately empty" signals.
+  if (msg.includes("no transactions found") || msg.includes("no records found")) {
+    return { kind: "empty" };
+  }
+  return { kind: "error", message: message || "Etherscan returned status 0" };
+}
+
 async function callEtherscan(
   apiUrl:  string,
   action:  string,
@@ -54,8 +73,10 @@ async function callEtherscan(
   try {
     const res = await fetch(`${apiUrl}?${qs}`, { signal: controller.signal });
     if (!res.ok) throw new Error(`Etherscan HTTP ${res.status}`);
-    const json = await res.json() as EtherscanResponse;
-    if (json.status !== "1") return [];
+    const json = await res.json() as EtherscanResponse & { message?: string };
+    const parsed = parseEtherscanStatus(json.status, json.message ?? (typeof json.result === "string" ? json.result : ""));
+    if (parsed.kind === "error") throw new Error(`Etherscan ${action}: ${parsed.message}`);
+    if (parsed.kind === "empty") return [];
     return Array.isArray(json.result) ? json.result : [];
   } finally {
     clearTimeout(timer);

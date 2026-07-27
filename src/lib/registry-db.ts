@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "./supabase-admin";
 import { AGENTS } from "@/app/registry/data";
 import { deriveBooksStatus, deriveDataStatus } from "./status-tags";
+import { getActiveFailureSlugs } from "./pipeline-observability";
 import { toSlug } from "@/app/registry/[slug]/slug";
 import type {
   Agent, AgentWallet, WalletLabel, Ecosystem, Health, VerificationStatus, OutreachStatus,
@@ -27,6 +28,7 @@ interface RegistryAgentRow {
   partnership_fit_score: number | null;
   outreach_status: string | null;
   last_checked: string | null;
+  last_indexed_at: string | null; // pipeline freshness marker (P5)
   admin_notes: string | null;
   priority: number | null;
   pfp: string | null;
@@ -108,6 +110,7 @@ function rowToAgent(
   wallets: AgentWallet[],
   commIdentities?: CommunicationIdentity[],
   booksComputedAt?: string | null,
+  hasActiveFailure = false,
 ): Agent {
   const eligibleWalletCount = (wallets ?? []).filter((w) => w.booksEligible).length;
   return {
@@ -131,7 +134,9 @@ function rowToAgent(
     walletStatus: (row.wallet_status as WalletStatus) ?? "none",
     profileStatus: (row.profile_status as ProfileStatus) ?? "candidate",
     booksStatus: deriveBooksStatus(eligibleWalletCount, booksComputedAt ?? null),
-    dataStatus: deriveDataStatus(row.last_checked),
+    // Freshness reads the pipeline's last_indexed_at (falls back to last_checked);
+    // an unresolved pipeline failure overrides both → "failed" (P5).
+    dataStatus: deriveDataStatus(row.last_indexed_at ?? row.last_checked, Date.now(), hasActiveFailure),
     lastChecked: row.last_checked,
     adminNotes: row.admin_notes,
     priority: row.priority ?? 50,
@@ -143,12 +148,11 @@ function rowToAgent(
 
 // ── Agent → DB row mapper ─────────────────────────────────────────────────────
 
-// wallet_status and profile_status are intentionally absent: they are
-// trigger-owned in the DB, so writes from app code would be overwritten
-// (and seeds must not fight the triggers).
+// wallet_status and profile_status are trigger-owned; last_indexed_at is
+// pipeline-owned (stamped by markAgentIndexed). None are written from seeds.
 function agentToRow(
   agent: Agent,
-): Omit<RegistryAgentRow, "id" | "wallet_status" | "profile_status"> {
+): Omit<RegistryAgentRow, "id" | "wallet_status" | "profile_status" | "last_indexed_at"> {
   return {
     name: agent.name,
     slug: agent.slug,
@@ -190,7 +194,7 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
   try {
     const sb = getSupabaseAdminClient();
 
-    const [agentsResult, walletsResult, commResult, booksCacheResult] = await Promise.all([
+    const [agentsResult, walletsResult, commResult, booksCacheResult, activeFailures] = await Promise.all([
       sb
         .from("registry_agents")
         .select("*")
@@ -198,6 +202,8 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
       sb.from("registry_agent_wallets").select("*"),
       sb.from("registry_agent_comm_identities").select("*"),
       sb.from("agent_books_cache").select("agent_slug, computed_at").eq("period", "30d"),
+      // Unresolved pipeline failures → data_status overlay (P5). Non-fatal.
+      getActiveFailureSlugs(),
     ]);
 
     if (agentsResult.error) throw agentsResult.error;
@@ -242,14 +248,16 @@ export async function getRegistryAgents(): Promise<{ agents: Agent[]; fromSupaba
       commByAgent[c.agent_name].push(rowToCommIdentity(c));
     }
 
-    const agents = agentRows.map((row) =>
-      rowToAgent(
+    const agents = agentRows.map((row) => {
+      const slug = row.slug ?? toSlug(row.name);
+      return rowToAgent(
         row,
         walletsByAgent[row.name] ?? [],
         commByAgent[row.name] ?? [],
-        booksComputedAtBySlug[row.slug ?? toSlug(row.name)] ?? null,
-      )
-    );
+        booksComputedAtBySlug[slug] ?? null,
+        activeFailures.has(slug),
+      );
+    });
 
     return { agents, fromSupabase: true };
   } catch (err) {
