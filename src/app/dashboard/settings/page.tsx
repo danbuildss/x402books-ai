@@ -184,7 +184,7 @@ export default function SettingsPage() {
           label="Access code"
           value="Managed by Zetta team"
           valueStyle={{ color: "var(--muted)", fontFamily: "inherit", fontWeight: 400 }}
-          detail="Contact us to rotate"
+          detail={<a href="mailto:dan@zettaai.co" style={{ color: "var(--accent)" }}>dan@zettaai.co to rotate</a>}
         />
       </LedgerCard>
         </div>

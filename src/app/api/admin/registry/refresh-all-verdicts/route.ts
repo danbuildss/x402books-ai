@@ -19,6 +19,23 @@ function toSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+function deriveTreasuryHealth(
+  economics: AgentEconomicSummary | null,
+  classification: SettlementClassification,
+): string {
+  if (!economics || economics.walletInflows === 0 && economics.walletOutflows === 0) {
+    return "Pending";
+  }
+  if (classification.patterns.includes("dormant")) return "Inactive";
+  const ratio = economics.walletOutflows > 0
+    ? economics.walletInflows / economics.walletOutflows
+    : 99;
+  if (ratio >= 0.8)                                          return "Stable";
+  if (ratio >= 0.3 && economics.walletInflows > 0)          return "Active";
+  if (economics.walletInflows > 0)                          return "Unverified";
+  return "Inactive";
+}
+
 function buildVerdict(
   agent: Agent,
   classification: SettlementClassification,
@@ -118,11 +135,12 @@ export async function POST(req: NextRequest) {
       });
 
       const verdict = buildVerdict(agent, classification, economics, inference);
+      const treasuryHealth = deriveTreasuryHealth(economics, classification);
 
       if (!dryRun) {
         const { error } = await sb
           .from("registry_agents")
-          .update({ admin_notes: verdict, last_checked: today })
+          .update({ admin_notes: verdict, treasury_health: treasuryHealth, last_checked: today })
           .eq("name", agent.name);
 
         if (error) {

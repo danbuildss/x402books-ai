@@ -261,7 +261,7 @@ export default function Erc8004Client() {
           padding: "14px 18px", overflowX: "auto", margin: 0,
           border: "1px solid var(--line)",
         }}>
-          <code>{`curl -X POST https://zetta.finance/api/validate-manifest \\
+          <code>{`curl -X POST https://zettaai.co/api/validate-manifest \\
   -H "Content-Type: application/json" \\
   -d @.agent/wallets.json`}</code>
         </pre>

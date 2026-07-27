@@ -17,6 +17,8 @@
 // Processes wallets sequentially to respect provider rate limits.
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 300; // Vercel Pro — allow up to 5 min for sequential wallet indexing
 import { internalAuth } from "@/lib/internal-auth";
 import { logPipelineFailure } from "@/lib/pipeline-observability";
 import { fetchWalletTransactions } from "@/lib/truth-engine/chain-fetcher";
@@ -33,8 +35,8 @@ import { hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import type { EvidencePacket } from "@/lib/truth-engine/evidence";
 import type { ClassifiedEvent } from "@/lib/truth-engine/revenue-classifier";
 
-const TX_LIMIT_PER_WALLET = 200;
-const MAX_WALLETS_PER_RUN = 50;
+const TX_LIMIT_PER_WALLET = 100;
+const MAX_WALLETS_PER_RUN = 10;
 const VALID_CHAINS = ["base", "ethereum", "arbitrum", "optimism", "polygon"];
 
 async function notifyTelegram(text: string): Promise<void> {

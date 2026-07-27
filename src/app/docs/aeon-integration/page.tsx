@@ -82,7 +82,7 @@ mkdir -p .agent
             },
             {
               n: "2", title: "Submit your manifest to Zetta",
-              body: "Go to zetta.finance/register and paste your repo URL. Zetta fetches, validates, and indexes your manifest automatically.",
+              body: "Go to zettaai.co/register and paste your repo URL. Zetta fetches, validates, and indexes your manifest automatically.",
               code: null,
             },
             {
@@ -93,13 +93,13 @@ mkdir -p .agent
             {
               n: "4", title: "Embed the verification badge",
               body: "Add a live badge to your README. It shows your current verification tier and auto-updates.",
-              code: `![Zetta](https://zetta.finance/api/badge/your-agent-slug)`,
+              code: `![Zetta](https://zettaai.co/api/badge/your-agent-slug)`,
             },
             {
               n: "5", title: "Use the API for operational intelligence",
               body: "Query Luca reports, pull settlement patterns, read treasury health — all via the v1 API.",
               code: `curl -H "X-API-Key: YOUR_KEY" \\
-  https://zetta.finance/api/v1/registry/agents/your-agent`,
+  https://zettaai.co/api/v1/registry/agents/your-agent`,
             },
           ].map((s, i, arr) => (
             <div key={s.n} style={{ display: "flex", gap: 0 }}>

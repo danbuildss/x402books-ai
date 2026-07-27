@@ -8,7 +8,7 @@ import type { Agent } from "@/app/registry/types";
 export const revalidate = 300;
 
 // /registry/[slug]/embed — self-contained iframe widget.
-// Usage: <iframe src="https://zetta.finance/registry/my-agent/embed"
+// Usage: <iframe src="https://zettaai.co/registry/my-agent/embed"
 //          width="340" height="140" frameborder="0" />
 
 async function getAgent(slug: string): Promise<Agent | null> {
@@ -56,7 +56,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
       </head>
       <body>
         <a
-          href={`https://zetta.finance/registry/${slug}`}
+          href={`https://zettaai.co/registry/${slug}`}
           target="_blank"
           rel="noreferrer"
           style={{
@@ -126,7 +126,7 @@ export default async function EmbedPage({ params }: { params: Promise<{ slug: st
               </div>
             ))}
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center" }}>
-              <span style={{ fontSize: "0.65rem", color: "#4AE8A0", fontWeight: 600 }}>zetta.finance →</span>
+              <span style={{ fontSize: "0.65rem", color: "#4AE8A0", fontWeight: 600 }}>zettaai.co →</span>
             </div>
           </div>
         </a>

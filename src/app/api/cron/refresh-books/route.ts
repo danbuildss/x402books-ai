@@ -11,6 +11,8 @@
 // Sends a Telegram summary to LUCA_ADMIN_CHAT_ID after each run if the bot token is configured.
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 300;
 import { getRegistryAgents } from "@/lib/registry-db";
 import { buildAgentBooks, invalidateBooksCache } from "@/lib/agent-books";
 import { saveAgentBooksSnapshot } from "@/lib/agent-books-history";

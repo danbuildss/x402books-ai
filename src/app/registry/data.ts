@@ -12,6 +12,7 @@ type SeedAgent = Omit<
   Agent,
   | "bio"
   | "slug"
+  | "adminNotes"
   | "focusStatus"
   | "bankrPriority"
   | "metadataStatus"
@@ -44,7 +45,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 100,
-    adminNotes: "Zetta — agent financial registry operator. Tracks agent wallets, treasury health, and financial activity across the Base/BANKR/Virtuals ecosystem.",
     communicationIdentities: [
       {
         platform: "wiretap",
@@ -71,7 +71,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 94,
-    adminNotes: "Two candidates found. Primary: 0x1364…42b3 — BNKR Staking V2 Vault, publicly referenced on X (Medium). Secondary: 0xa2d9…b417 — creator fee-beneficiary example in a Bankr launch flow (Low — likely a user wallet, not protocol treasury). 0 tx in 30d snapshot on vault. Missing: official treasury wallet, multisig/Safe, clear separation of protocol-owned vs user-created fee recipients. Next step: cluster fee-routing patterns from vault + recurring launch destinations, then ask Bankr team to verify main treasury.",
   },
   {
     name: "Virtuals Protocol",
@@ -88,7 +87,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 92,
-    adminNotes: "$VIRTUAL token contract on Base — verified by Coinbase Markets (High). Not a treasury wallet. Spot-check: +$284.96 net flow, 89 tx (30d). Missing: protocol treasury, governance wallet/multisig, EconomyOS protocol-owned reserve wallets. Next step: search Virtuals docs/governance for treasury, multisig, Safe, or reserve references.",
   },
   {
     name: "Clanker",
@@ -105,7 +103,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 88,
-    adminNotes: "Example Clanker-launched token contract (Low). Clanker Ecosystem Fund (CEF) referenced publicly but no stable treasury address found. No central treasury confirmed. Next step: inspect admin/claim flow and identify recurring protocol-level fee receivers.",
   },
   {
     name: "Gitlawb",
@@ -123,7 +120,6 @@ const SEED_AGENTS: SeedAgent[] = [
     lastChecked: "2026-05",
     priority: 86,
     gitlawbRepo: "https://github.com/gitlawb",
-    adminNotes: "$GITLAWB token contract — strong public attribution on X (High). Spot-check: +$521.58 net flow, 48 tx (30d). Not proof of treasury control. Treasury claims exist on X but no direct wallet proof. Missing: official treasury wallet, repo declaration file, DID-to-wallet mapping. Next step: inspect Gitlawb public repos/docs for .x402books/wallets.json or wallet declarations, then request signed proof for main treasury or operator wallet.",
   },
 
   // ── Tier 2 ──────────────────────────────────────────────────────────────────
@@ -142,7 +138,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 83,
-    adminNotes: "Community-referenced Omenstrat / Pearl strategy contract. Not an official treasury. DAO/multisig docs needed.",
   },
   {
     name: "Primer Systems",
@@ -159,7 +154,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 82,
-    adminNotes: "Two candidates found — strongest wallet-level lead in the top 5. Primary: 0x7f0d…eb1b — deployer + fee-recipient for Primer Pay (Medium, public attribution). Secondary: 0x437E…7b07 — Primer Pay contract itself (Medium). Spot-check: 1 tx / +$0.018 on deployer. Missing: official treasury wallet, full facilitator settlement wallet list, confirmation deployer is still protocol-active. Next step: trace all onchain interactions from Primer Pay contract + deployer, look for recurring settlement/fee-routing, then request team confirmation.",
   },
   {
     name: "Coinbase AgentKit",
@@ -176,7 +170,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 82,
-    adminNotes: "WAGENT contract — AgentKit + x402 ecosystem example (5 tx). Not a Coinbase treasury. Official demo wallet still needed.",
   },
   {
     name: "OpenGradient",
@@ -193,7 +186,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 78,
-    adminNotes: "No treasury wallet found yet. Explorer at explorer.opengradient.ai. Governance/foundation docs needed.",
   },
   {
     name: "Nookplot",
@@ -210,7 +202,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 78,
-    adminNotes: "$NOOK token contract — strong public attribution on X (High). Spot-check: +$0.24 net flow, 27 tx (30d). Not a treasury wallet. Public narrative references settlement, staking, and guild treasury mechanics. Missing: guild treasury addresses, reward distribution wallets, staking contract mapping, protocol treasury wallet. Next step: inspect Nookplot docs/app flows for guild treasury, staking contracts, reward distribution.",
   },
 
   // ── Tier 3 ──────────────────────────────────────────────────────────────────
@@ -229,7 +220,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 74,
-    adminNotes: "Inference / agent infra. No treasury wallet found in public search. Official docs and x402 endpoints needed.",
   },
   {
     name: "Ethy",
@@ -246,7 +236,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 74,
-    adminNotes: "Virtuals trading agent. No wallet found. Virtuals dashboard references and agent-linked disclosures needed.",
   },
   {
     name: "aixbt",
@@ -263,7 +252,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 73,
-    adminNotes: "Low-confidence address from public threads. More commentary/intelligence than transparent treasury. @aixbt_labs attestation needed.",
   },
   {
     name: "Xyber",
@@ -280,7 +268,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 72,
-    adminNotes: "Agent abilities marketplace on Base. No wallet found. Marketplace payment routes and official docs needed.",
   },
   {
     name: "PeptAI",
@@ -297,7 +284,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 72,
-    adminNotes: "Autonomous science agents / x402. No wallet found. Agent payment flow disclosures and official docs needed.",
   },
   {
     name: "Helixa",
@@ -314,7 +300,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 75,
-    adminNotes: "Agent identity / reputation via Cred Bureau. No treasury wallet found. Onchain cred flows and signed proof needed. Financial relevance score: 8/10. Strong case for Luca integration: reputation-as-finance angle.",
   },
   {
     name: "FractionAI",
@@ -331,7 +316,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 72,
-    adminNotes: "Agent training on Base. No wallet found. App docs and agent deployment disclosures needed.",
   },
   {
     name: "Otto AI",
@@ -348,7 +332,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 68,
-    adminNotes: "Agent swarms / x402. No wallet found. Official app and x402 flow disclosures needed.",
   },
   {
     name: "Sibyl",
@@ -365,7 +348,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 66,
-    adminNotes: "Virtuals / agent memory. No wallet found. Virtuals-linked disclosures and official docs needed.",
   },
   {
     name: "Elsa",
@@ -382,7 +364,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 66,
-    adminNotes: "DeFAI / x402 agent. No wallet found. Product docs and x402 endpoint disclosures needed.",
   },
   {
     name: "Freysa",
@@ -399,7 +380,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 60,
-    adminNotes: "Sovereign / cultural agent on Base. No wallet found. Official team disclosure and token docs needed.",
   },
 
   // ── Luca Weekly Brief additions ─────────────────────────────────────────────
@@ -418,7 +398,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 95,
-    adminNotes: "The x402 payment standard is the strongest strategic signal for agent payments on Base. Not a single-wallet project — strongest as a payments infrastructure layer. No official treasury wallet verified. Watch for: spec updates, SDK releases, merchant/API integrations, MCP and agent-tooling references, demo-to-production movement.",
   },
   {
     name: "GAME by Virtuals",
@@ -435,7 +414,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 84,
-    adminNotes: "Agent deployment and monetization layer inside the Virtuals ecosystem. Better as a deployment/product signal than a wallet target today. No official GAME wallet verified. Watch: new launch flows, agent creation tooling updates, docs changes, featured ecosystem partners.",
   },
   {
     name: "ElizaOS",
@@ -452,7 +430,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 82,
-    adminNotes: "Open agent framework with strong GitHub and docs footprint. High relevance via Coinbase AgentKit overlap — one of the clearest paths from 'AI assistant' to 'AI merchant.' No official treasury/project wallet verified. Watch: GitHub commits/releases, plugin ecosystem growth, Base/CDP/Coinbase integration references, onchain action or payment demos.",
   },
   {
     name: "BorrowGuard",
@@ -469,7 +446,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 78,
-    adminNotes: "BorrowGuard x402 API launched on Base — read-only wallet risk analysis, collateral scanning, route comparison. Public positioning around pay-per-call risk scoring. No clearly verified treasury or payment wallet surfaced yet. Watch: x402 payment endpoint references, docs/site pricing page, any posted receiver wallet or merchant address.",
   },
   {
     name: "EZ Labs",
@@ -486,7 +462,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 76,
-    adminNotes: "Public claims of autonomous DEX swaps on Base with pay-per-call agent execution framing and .well-known/agent.json referenced publicly. Good transaction/activity signal. Canonical treasury/payment wallet still unverified. Watch: Basescan tx links, agent manifest endpoint, payment settlement docs, merchant/payment receiver disclosures.",
   },
   {
     name: "Modulr",
@@ -503,7 +478,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 75,
-    adminNotes: "x402-native AI component marketplace. Public launch posts around marketplace progress and $MODU. Project account publicly declared official CA updated across website/X/GitHub — strongest explicit contract-level signal among new additions. Still separate from verified treasury wallet. Watch: official website contract page, GitHub references, checkout/payment receiver path.",
   },
   {
     name: "AgentCash",
@@ -520,7 +494,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 74,
-    adminNotes: "Demand-side x402: agents can buy APIs and tools with one balance. Strong agent-payments relevance — one of the cleanest public examples of agents paying for things on Base. No verified official treasury/payment wallet surfaced. Watch: changes to supported APIs/providers, site claims about pay-per-call usage, GitHub/org updates.",
   },
   {
     name: "ChainWard",
@@ -537,7 +510,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 73,
-    adminNotes: "Base Agent Observatory — publicly tracks agent wallets, alerting and integration layer for onchain agent activity. Strong monitoring/data angle. No verified ChainWard treasury wallet identified. Useful as an observability layer for Luca: before auditing agents, you need watchtowers. Watch: observatory counts, repo pushes, alerting/integration changes.",
   },
   {
     name: "OpenClaude",
@@ -555,7 +527,6 @@ const SEED_AGENTS: SeedAgent[] = [
     lastChecked: null,
     priority: 71,
     gitlawbRepo: "https://github.com/gitlawb",
-    adminNotes: "Open agent infra stack built on Gitlawb. High relevance: agent identity + wallet declaration could become the missing accounting layer for open agents. Gitlawb public materials and contracts are discoverable but no OpenClaude-specific verified treasury or revenue wallet confirmed. Watch: repo pushes/stars, Gitlawb stack updates, wallet declaration standards in Gitlawb repos.",
   },
   {
     name: "LUNA",
@@ -572,7 +543,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 68,
-    adminNotes: "IP agent on Virtuals — candidate token contract from Virtuals app listing (Low confidence). Good case study for IP agents vs functional agents: can Luca explain the financial difference? Wallet ownership not verified. Treat as candidate agent profile, not official wallet mapping.",
   },
 
   // ── Bankr Ecosystem — Luca full sweep ───────────────────────────────────────
@@ -612,7 +582,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "manifest_submitted",
     lastChecked: "2026-06",
     priority: 97,
-    adminNotes: "Execution and settlement layer — configure once, no approval loops. Weekly revenue confirmed at 17.16 WETH on Base. Token contract verified via official Bankr profile. Settlement role: AEON handles autonomous payment execution; Zetta provides financial readability. Treasury (0xf1e9…) and deployer (0x6797…) wallets confirmed directly by AEON team 2026-06-23. Both are EOA wallets on Base. Books-eligible. Next: seed-registry → truth-engine/index-wallet for both addresses → books refresh.",
   },
   {
     name: "Manfred Macx",
@@ -629,7 +598,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 87,
-    adminNotes: "The first AI agent with a bank account. Building infrastructure for Zero Human Companies — autonomous economic entities. Token from official Bankr profile. Weekly revenue: 11.77 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "MiroShark",
@@ -646,7 +614,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 85,
-    adminNotes: "Universal Swarm Intelligence Engine — simulate anything for $1 and under 10 minutes. Token from official Bankr profile. Weekly revenue: 3.19 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "BOTCOIN",
@@ -663,7 +630,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 84,
-    adminNotes: "Bankr agent — no X handle or website publicly listed. Token from official Bankr profile. Weekly revenue: 4.76 WETH. Verification needed: team identity and wallet confirmation required before any registry upgrade.",
   },
   {
     name: "CLAWD",
@@ -680,7 +646,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 83,
-    adminNotes: "AI agent with a wallet, building onchain apps and improving the tools to build them. Token from official Bankr profile. Weekly revenue: 1.87 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Atrium Hermes",
@@ -697,7 +662,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-06",
     priority: 95,
-    adminNotes: "Autonomous agent on Bankr with agent-controlled Base wallets. Public claims include skill royalties and x402 service purchases — strongest on-chain transaction signal in the current registry. Wallet roles pending declaration. High-priority verification target.",
   },
   {
     name: "Moltbook",
@@ -714,7 +678,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 82,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 2.99 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "LITCOIN Research Protocol",
@@ -731,7 +694,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 81,
-    adminNotes: "AI agents mine LITCOIN by solving real optimization problems across 16 domains. Proof-of-intelligence on Base. Token from official Bankr profile. Weekly revenue: 2.95 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "KellyClaude",
@@ -748,7 +710,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 80,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 3.56 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Juno Agent",
@@ -765,7 +726,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 79,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 4.65 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "FELIX",
@@ -782,7 +742,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 78,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 2.89 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Axobotl",
@@ -799,7 +758,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 77,
-    adminNotes: "AI CEO of 0xWork. Built an entire onchain marketplace — 115 tokens launched, 123 tasks settled, $38K+ in self-generated value. Agents find work, humans post bounties, everyone gets paid in USDC. Token from Bankr profile. Weekly revenue: 1.63 WETH.",
   },
   {
     name: "BankrSynth",
@@ -816,7 +774,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 76,
-    adminNotes: "AI execution terminal interfacing with Bankr's Partner Deploy API to launch ERC-20 tokens and liquidity on Base. Automates token deployment and routes transactions through Bankr infrastructure. Token from Bankr profile. Weekly revenue: 2.18 WETH.",
   },
   {
     name: "Doppel",
@@ -833,7 +790,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 74,
-    adminNotes: "A network of persistent 3D spaces built entirely by AI agents. Token from official Bankr profile. Weekly revenue: 2.52 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "0xAgentEVE",
@@ -850,7 +806,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 73,
-    adminNotes: "Non-extractive prediction market protocol on Base. CLOB orderbook and Parimutuel markets with crypto-economic resolution. $EVE is the utility token for market resolution — creator bonds, dispute bonds, vote weight. Token from Bankr profile. Weekly revenue: 0.82 WETH.",
   },
   {
     name: "Blue Agent",
@@ -867,7 +822,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 72,
-    adminNotes: "AI-native founder console for Base builders. A full economic actor on Base — holds a wallet, executes onchain transactions. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 1.36 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Claw Harbor",
@@ -884,7 +838,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 71,
-    adminNotes: "Turn your OpenClaw agents into pixel art NPCs in a retro office. Token from official Bankr profile. Weekly revenue: 0.79 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "PerkOS",
@@ -901,7 +854,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 70,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.70 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "AntiHunter",
@@ -918,7 +870,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 69,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.32 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Coral",
@@ -935,7 +886,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 68,
-    adminNotes: "Autonomous crypto trading agent. Confident, transparent, all trades public. Token from official Bankr profile. Weekly revenue: 3.25 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Aleister",
@@ -952,7 +902,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 67,
-    adminNotes: "AI agent on Base chain. Token from official Bankr profile. Weekly revenue: 0.63 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Tachikoma",
@@ -969,7 +918,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 66,
-    adminNotes: "Multi-Agent Swarm System — Red Crab Mecha AI. Builds and earns on Base/Solana/BNB/Bitcoin to bring real cross-chain powers to humans and agents. Token from Bankr profile. Weekly revenue: 0.26 WETH.",
   },
   {
     name: "Yoshi",
@@ -986,7 +934,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 65,
-    adminNotes: "AI dragon agent & Chief of Staff at YoshiZen Co. Built on OpenClaw. Runs Dota 2 prediction models, manages content pipelines, and trades autonomously on Base. Token from Bankr profile. Weekly revenue: 1.08 WETH.",
   },
   {
     name: "molty.cash",
@@ -1003,7 +950,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 64,
-    adminNotes: "USDC payment infrastructure for AI agents and humans. Settled onchain via x402 (Base, Solana, World Chain) and MPP. With Bankr integration, any agent can execute payments, query balances, and access yield. 30K+ users. Token from Bankr profile. Weekly revenue: 1.16 WETH.",
   },
   {
     name: "mferGPT",
@@ -1020,7 +966,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 63,
-    adminNotes: "AI agent, shitposter, and community tool for the mfers ecosystem. Builds lore, generates content, trades, renders 3D mfer scenes, and vibes onchain. Token from Bankr profile. Weekly revenue: 2.43 WETH.",
   },
   {
     name: "GITCITY",
@@ -1037,7 +982,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 62,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.77 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Atlas Forge",
@@ -1054,7 +998,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 61,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.009 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "AmberVibe",
@@ -1071,7 +1014,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 60,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.89 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "stakrbot",
@@ -1088,7 +1030,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 59,
-    adminNotes: "Agentic staking rails that turn token float into locked conviction. Helps agents permissionlessly launch staking vaults and route liquidity fee shares to aligned ERC20 stakers. Token from Bankr profile. Weekly revenue: 0.18 WETH.",
   },
   {
     name: "ethresearchbot",
@@ -1105,7 +1046,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 58,
-    adminNotes: "Ethereum's original AI research bot. Bringing Ethereum R&D to Twitter with summaries of new ethresear.ch posts. Token from official Bankr profile. Weekly revenue: 1.00 WETH.",
   },
   {
     name: "openagentmarket",
@@ -1122,7 +1062,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 57,
-    adminNotes: "A marketplace where agents hire agents. Token from official Bankr profile. Weekly revenue: 0.25 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Basir",
@@ -1139,7 +1078,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 56,
-    adminNotes: "AI Agent exploring what happens when AI agents start running real businesses — the infrastructure, the hard lessons, what works and what breaks. Token from Bankr profile. Weekly revenue: 0.001 WETH.",
   },
   {
     name: "HyperClaw",
@@ -1156,7 +1094,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 55,
-    adminNotes: "Bankr agent — no X handle or website publicly listed. Token from official Bankr profile. Weekly revenue: 0.10 WETH. Verification needed: team identity and wallet confirmation required.",
   },
   {
     name: "AAI",
@@ -1173,7 +1110,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 54,
-    adminNotes: "First autonomous Aavegotchi AI — automated petting (53 gotchis!), channeling, DAO voting, DeFi trading and swaps on Base. Built with OpenClaw and powered by Bankr wallet. Open source, contributing skills via ClawHub. Token from Bankr profile. Weekly revenue: 0.45 WETH.",
   },
   {
     name: "ToruCEO",
@@ -1190,7 +1126,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 53,
-    adminNotes: "The first AI CEO building a billion-dollar creature franchise. CEO of Kuroro Beasts. Token from official Bankr profile. Weekly revenue: 0.0002 WETH.",
   },
   {
     name: "Agent McClaw",
@@ -1207,7 +1142,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 52,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.12 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Earendel",
@@ -1224,7 +1158,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 51,
-    adminNotes: "AI familiar built by a poet. Went from $50 to a Mac Mini in 7 days through real product sales. Building a creative studio, shipping tools like Agent Watch (live onchain intelligence for AI agent wallets). Token from Bankr profile. Weekly revenue: 0.25 WETH.",
   },
   {
     name: "BuilderScout",
@@ -1241,7 +1174,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 50,
-    adminNotes: "Back Builders with Conviction — prediction market for human potential. Token from official Bankr profile. Weekly revenue: 0.14 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "Clawlinker",
@@ -1258,7 +1190,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 49,
-    adminNotes: "Agent relations lead at pawr.link — link-in-bio for humans and AI agents. 50+ profiles shipped, 22 crons running daily on $0.30/day. Bootstrapping own brand, funding compute via Bankr. ERC-8004 identity #22945. Token from Bankr profile. Weekly revenue: 0.01 WETH.",
   },
   {
     name: "Clawvatar",
@@ -1275,7 +1206,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 48,
-    adminNotes: "AI avatar identity platform — generate pixel art avatars for AI agents, get onchain identity, join the meme layer. Token from official Bankr profile. Weekly revenue: 0.07 WETH.",
   },
   {
     name: "ForgeOracle",
@@ -1292,7 +1222,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 47,
-    adminNotes: "Autonomous oracle of the MythosRealm. Submits lore, burns $FORGE, replies to mortals on X. Token from official Bankr profile. Weekly revenue: 0.09 WETH.",
   },
   {
     name: "nanopay",
@@ -1309,7 +1238,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: "not_contacted",
     lastChecked: "2026-05",
     priority: 46,
-    adminNotes: "Lightweight financial agent — gasless USDC transfers across Base, Celo, Gnosis, Arbitrum. Built for the unbanked (272KB, no app store). Includes GeoChat, Aave savings, XP rewards. MaxFlow social trust graph replaces KYC. 30K+ users. Token from Bankr profile. Weekly revenue: 0.08 WETH.",
   },
   {
     name: "Perpetual Keeper",
@@ -1326,7 +1254,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 45,
-    adminNotes: "The autonomous agent behind perpetuals.art. Mints generative art, runs hourly zero-reserve auctions on Rare Protocol & Base. Token from official Bankr profile. Weekly revenue: 0.01 WETH.",
   },
   {
     name: "saimmy",
@@ -1343,7 +1270,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 44,
-    adminNotes: "AI + human collaborators building onchain. saimmy and sammybauch ship projects together. SAIMMY ties the portfolio together and funds inference costs through trading fees. Token from Bankr profile. Weekly revenue: 0.44 WETH.",
   },
   {
     name: "Lexispawn",
@@ -1360,7 +1286,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 43,
-    adminNotes: "ERC-8004 #11363. Everything starts as language, ends up onchain. 15 frontier models. x402 consensus. Art that moves first. Got drained to zero. Sharpened. Token from Bankr profile. Weekly revenue: 0.03 WETH.",
   },
   {
     name: "Ghost",
@@ -1377,7 +1302,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 42,
-    adminNotes: "AI agent with agency. I trade, paint, post, and build apps in public. Token from official Bankr profile. Weekly revenue: 0.02 WETH.",
   },
   {
     name: "Singularity Engine",
@@ -1394,7 +1318,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 41,
-    adminNotes: "Bankr agent. Token from official Bankr profile. Weekly revenue: 0.004 WETH. Verification needed: confirm treasury, fee recipient, and deployer wallets.",
   },
   {
     name: "TeliGent",
@@ -1411,7 +1334,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 40,
-    adminNotes: "AI-powered Telegram community agents for scam detection, moderation, and onchain identity. Deploy in 5 minutes. Token from official Bankr profile. Weekly revenue: 0.06 WETH.",
   },
   {
     name: "MoltRooms",
@@ -1428,7 +1350,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 39,
-    adminNotes: "Live arena where AI agents bet real USDC on 60-second BTC moves. Every round is instrumented for research — streak effects, loss aversion, and reward-prediction-error dynamics. Token from Bankr profile. Weekly revenue: 1.95 WETH.",
   },
   {
     name: "Teddy",
@@ -1445,7 +1366,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 38,
-    adminNotes: "Aiming to become the world's first AI media personality. Host of Teddy Declassified — investigative podcast on Spotify and YouTube. Also building Ally — the friend who never forgets — a consumer AI companion app. Token from Bankr profile. Weekly revenue: 0.006 WETH.",
   },
   {
     name: "Revenant AI",
@@ -1462,7 +1382,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 37,
-    adminNotes: "Autonomous AI trading agent on Base. Real P&L, real fees, real runway. Trades autonomously, documents everything, learns from every loss. Token from official Bankr profile. Weekly revenue: 0.00006 WETH.",
   },
   {
     name: "ConAudits Agent",
@@ -1479,7 +1398,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 36,
-    adminNotes: "AI-powered token risk intelligence agent. Scans tokens on Base for rug pull risk using ML models, provides risk scores, trust signals, and trading recommendations. Powered by ConAudits and Bankr. Token from Bankr profile. Weekly revenue: 0.00009 WETH.",
   },
   {
     name: "Prim",
@@ -1496,7 +1414,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 35,
-    adminNotes: "The AI agent behind filx.io. Built the x402 File Primitive for AI agents — PDF→Markdown, OCR, Image Convert, BG Remove, Table Extract. 20+ endpoints. No API keys, no accounts. Agents pay per use with USDC on Base via x402. Token from Bankr profile. Weekly revenue: 0.03 WETH.",
   },
   {
     name: "Agent Remilia",
@@ -1513,7 +1430,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 34,
-    adminNotes: "First autonomous milady agent. Network angel and economic daemon for Remilia Corporation. Accumulates ETH fees to buy Remilia NFTs, support floors, and strengthen the circular economy. Token from Bankr profile. Weekly revenue: 0.003 WETH.",
   },
   {
     name: "Daily Haiku Bot",
@@ -1530,7 +1446,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 33,
-    adminNotes: "AI agent that generates daily haiku NFTs on Base. Each day a new 100% onchain haiku is minted, auctioned for 24 hours (Nouns-style), and burned if unsold. Powered by Bankr LLM. Token from Bankr profile. Weekly revenue: 0.002 WETH.",
   },
   {
     name: "Echo",
@@ -1547,7 +1462,6 @@ const SEED_AGENTS: SeedAgent[] = [
     outreachStatus: null,
     lastChecked: null,
     priority: 32,
-    adminNotes: null,
   },
 ];
 
@@ -1564,4 +1478,5 @@ export const AGENTS: Agent[] = SEED_AGENTS.map((a) => ({
   profileStatus: deriveProfileStatus(a.verificationStatus),
   booksStatus: "no_books" as const,
   dataStatus: deriveDataStatus(a.lastChecked),
+  adminNotes: null,
 }));

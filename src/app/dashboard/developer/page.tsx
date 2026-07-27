@@ -11,14 +11,14 @@ const ENDPOINTS = [
     path: "/api/v1/registry/agents",
     desc: "List all indexed agents with verification status and transparency scores.",
     example: `curl -H "X-API-Key: YOUR_KEY" \\
-  https://zetta.finance/api/v1/registry/agents`,
+  https://zettaai.co/api/v1/registry/agents`,
   },
   {
     method: "GET",
     path: "/api/v1/registry/agents/:slug",
     desc: "Full agent profile — wallets, score breakdown, settlement patterns.",
     example: `curl -H "X-API-Key: YOUR_KEY" \\
-  https://zetta.finance/api/v1/registry/agents/my-agent`,
+  https://zettaai.co/api/v1/registry/agents/my-agent`,
   },
   {
     method: "POST",
@@ -27,20 +27,20 @@ const ENDPOINTS = [
     example: `curl -X POST -H "X-API-Key: YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{"slug":"my-agent","period":"30d"}' \\
-  https://zetta.finance/api/luca/skills/luca-report`,
+  https://zettaai.co/api/luca/skills/luca-report`,
   },
   {
     method: "GET",
     path: "/api/badge/:slug",
     desc: "Live SVG verification badge — embed in GitHub READMEs.",
-    example: `![Zetta](https://zetta.finance/api/badge/my-agent)`,
+    example: `![Zetta](https://zettaai.co/api/badge/my-agent)`,
   },
   {
     method: "POST",
     path: "/api/v1/luca/surplus/webhook",
     desc: "Surplus inference spend callback. Configure in your Surplus dashboard to record inference costs on your agent's Zetta profile automatically.",
     example: `# Set in Surplus dashboard:
-# Webhook URL: https://zetta.finance/api/v1/luca/surplus/webhook
+# Webhook URL: https://zettaai.co/api/v1/luca/surplus/webhook
 # Secret:      <SURPLUS_WEBHOOK_SECRET from your Zetta env>
 #
 # Surplus POSTs on each settled inference job:
@@ -48,7 +48,7 @@ curl -X POST \\
   -H "X-Surplus-Secret: YOUR_WEBHOOK_SECRET" \\
   -H "Content-Type: application/json" \\
   -d '{"event":"inference.completed","agent_id":"your-agent","model":"llama-3.3-70b","cost_usd":0.0012}' \\
-  https://zetta.finance/api/v1/luca/surplus/webhook`,
+  https://zettaai.co/api/v1/luca/surplus/webhook`,
   },
 ];
 
@@ -62,7 +62,7 @@ const TIERS = [
 const STEPS = [
   { n: "1", title: "Get an API key", body: "Create a free key in your dashboard. No credit card needed for the Free tier." },
   { n: "2", title: "Add your manifest", body: "Place a .agent/wallets.json file in your agent's repo to declare financial identity. One file, instant indexing." },
-  { n: "3", title: "Call the API", body: "Use your key in the X-API-Key header. All endpoints return JSON. SDKs are coming soon." },
+  { n: "3", title: "Call the API", body: "Use your key in the X-API-Key header. All endpoints return JSON." },
   { n: "4", title: "Embed the badge", body: "Drop a single <img> tag anywhere. The badge auto-updates as your verification status changes." },
 ];
 

@@ -287,9 +287,8 @@ export default function LucaPage() {
           </div>
 
           <p style={{ marginTop: 14, fontSize: "0.74rem", color: "var(--muted)", textAlign: "center" }}>
-            Live terminal coming soon. For now use{" "}
-            <a href={TELEGRAM} target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>@AskLucaBot</a> on Telegram.
-            {" "}<Link href="/methodology" style={{ color: "var(--accent)" }}>Read the methodology →</Link>
+            Live financial intelligence — real on-chain data, no synthetic numbers.
+            {" "}<Link href="/dashboard/luca" style={{ color: "var(--accent)" }}>Open Luca terminal →</Link>
           </p>
         </div>
 
