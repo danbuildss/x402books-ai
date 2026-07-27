@@ -61,7 +61,7 @@ export default function ReportsPage() {
       </LedgerCard>
 
       <div style={{ padding: "10px 14px", background: "var(--surface-soft)", borderRadius: 8, border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", marginBottom: 24 }}>
-        On-demand agent report generation is available to verified operators. Contact the Zetta team to enable for your workspace, or call{" "}
+        On-demand agent report generation is available to verified operators. <a href="mailto:dan@zettaai.co" style={{ color: "var(--accent)" }}>Contact the Zetta team</a> to enable for your workspace, or call{" "}
         <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.72rem" }}>POST /api/v1/luca/analyze {`{ "agent_id": "your-agent" }`}</code>
       </div>
 

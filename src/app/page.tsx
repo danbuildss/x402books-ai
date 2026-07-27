@@ -276,7 +276,7 @@ function Nav({ onSignIn }: { onSignIn: () => void }) {
       {/* Nav dropdowns */}
       <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
         <NavDropdown label="Product" items={[
-          { title: "Registry",     desc: "143 indexed agents with attribution and books status.", href: "/registry" },
+          { title: "Registry",     desc: "Indexed agents with attribution, books, and verification status.", href: "/registry" },
           { title: "Agent Books",  desc: "Attributed wallet activity turned into readable financials.", href: "/registry" },
           { title: "Leaderboard",  desc: "Revenue and attribution rankings across all agents.", href: "/leaderboard" },
           { title: "Luca",         desc: "AI financial analyst. Reads books, cites sources, never invents data.", href: "/luca" },
@@ -654,15 +654,15 @@ function LandingPage({ data }: { data: PageData }) {
 // ── Data fetcher + root export ─────────────────────────────────────────────────
 export default function HomePage() {
   const [data, setData] = useState<PageData>({
-    totalAgents: 143,
-    attributed: 1,
-    coveragePct: 1,
-    manifestFiled: 1,
+    totalAgents: 0,
+    attributed: 0,
+    coveragePct: 0,
+    manifestFiled: 0,
     topAgents: [],
     gdp: null,
     expenses: null,
     netIncome: null,
-    statusBreakdown: { manifest: 1, inferred: 7, none: 135 },
+    statusBreakdown: { manifest: 0, inferred: 0, none: 0 },
   });
 
   useEffect(() => {

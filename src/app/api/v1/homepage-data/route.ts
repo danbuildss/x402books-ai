@@ -3,23 +3,35 @@
 
 import { NextResponse } from "next/server";
 import { getAttributionMetrics } from "@/lib/attribution-health";
+import { latestPublishedSnapshot } from "@/lib/financial-intelligence-db";
+import { getAgentGDP } from "@/lib/agent-gdp";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
   try {
-    const metrics = await getAttributionMetrics();
+    const [metrics, gdpData] = await Promise.all([
+      getAttributionMetrics(),
+      getAgentGDP().catch(() => null),
+    ]);
 
-    const topAgents = metrics.agents
+    const topAgentsBase = metrics.agents
       .filter((a) => a.attribution_tier === "manifest_attributed")
-      .slice(0, 5)
-      .map((a) => ({
-        name: a.name,
-        slug: a.slug,
-        revenue_usd: 0,
-        ecosystem: a.ecosystem,
-      }));
+      .slice(0, 5);
+
+    const topAgents = await Promise.all(
+      topAgentsBase.map(async (a) => {
+        const snapshot = await latestPublishedSnapshot(a.slug).catch(() => null);
+        const revenue = snapshot?.metrics?.recognizedRevenueUsd ?? null;
+        return {
+          name: a.name,
+          slug: a.slug,
+          revenue_usd: revenue,
+          ecosystem: a.ecosystem,
+        };
+      }),
+    );
 
     return NextResponse.json({
       totalAgents: metrics.total_agents,
@@ -27,9 +39,9 @@ export async function GET() {
       coveragePct: metrics.attribution_coverage_pct,
       manifestFiled: metrics.manifest_agents,
       topAgents,
-      gdp: null,
-      expenses: null,
-      netIncome: null,
+      gdp: gdpData?.total_gdp_usd ?? null,
+      expenses: gdpData?.total_expenses_usd ?? null,
+      netIncome: gdpData?.net_income_usd ?? null,
       statusBreakdown: {
         manifest: metrics.status_breakdown.manifest,
         inferred: metrics.status_breakdown.inferred,
