@@ -117,3 +117,58 @@ Only 2 test files exist: `src/__tests__/security.test.ts`, `wallet-eligibility.t
 - **PublicAgent** now includes `slug` and `treasuryHealth`; still excludes all CRM tags. `/api/registry/agents` no longer leaks `outreachStatus`/`adminNotes`/`priority`.
 - **Agent type** gained required `slug` + the eight tag fields; `rowToAgent`/`agentToRow`/static `data.ts` handle them. `approvePendingUpdate` deliberately does NOT accept tag fields.
 - Tests: `src/__tests__/status-tags.test.ts` (bun harness still absent locally/CI — see §9.6).
+
+---
+
+## 11. Sprint completion (2026-07-27) — P0–P9 all code-complete
+
+All phases merged to `main` (`7dda29b`). DoD green: typecheck 0 · lint 0 · **181 tests** · build clean (both flag states). CI runs the full gate on every PR.
+
+| Phase | Delivered | Key files |
+|---|---|---|
+| P0 | Scope lock + tag system + 2 migrations | `focus.ts`, `20260715*` migrations |
+| P1 | Data-quality audit route/script/skill | `bankr-audit.ts`, `scripts/bankr-data-audit.sh` |
+| P2 | Registry financial terminal | `registry-client.tsx`, `filters.ts` |
+| P3+P4 | Single-scroll profile + operator books | `books-presenter.ts`, `books-sections.tsx` |
+| P5 | Pipeline observability, fail-loud | `pipeline-observability.ts`, `20260717*` migration |
+| P6 | Bankr Queue (6 admin views) | luca-admin `BankrQueueSection` |
+| P7 | Claim/outreach CTAs + pending states | profile `ProfileCtas`, `ClaimBanner` |
+| P8 | Agent-scoped keys + isolation tests + docs | `v1-auth.ts`, `agent-scope.test.ts`, `docs/API_BANKR.md` |
+| P9 | Messaging rules enforced in CI | `messaging-rules.test.ts` |
+
+## 12. QA checklist run (3 Bankr agents: bankr, helixa, botcoin)
+
+Spec named **Luca** as a test agent — Luca is ecosystem `Base` and intentionally 404s under the P0 scope lock (verified). Substituted a third Bankr agent.
+
+| Check | Result | How verified |
+|---|---|---|
+| P3 layout order, bio before scores | ✅ | HTML marker positions: bio→status→metrics→verdict→books→attribution→data-quality. One documented deviation: for `no_books` agents the claim CTA renders directly after Books ("the CTA IS the next action") instead of position 11 — deliberate merged design. |
+| Metrics real or explicitly missing, never fake zeros | ✅ | 0 occurrences of `$0.00` on all 3 profiles; unattributed metrics render "—" with reason |
+| Luca verdict right after metrics, reflects known/missing | ✅ | verdict section immediately follows metrics; missing list populated (e.g. "Wallet attribution (no books-eligible manifest wallet)") |
+| Wallet attribution shows source provenance | ✅ | source pills + legend (manifest/admin/inferred/candidate) render; bankr shows `candidate` |
+| Token activity ≠ operating revenue | ✅ (by test) | presenter invariant tests; agent-token is its own row — no attributed agent exists in local fallback data to eyeball; re-verify once on prod |
+| Books status / freshness / last-indexed / next-action populate | ✅ | Data Quality block fully rendered on all 3, concrete next action each |
+| Registry row matches profile | ✅ | API `needs_verification/no_books/partial` == profile badges "Needs Verification/No Books/Partial" (bankr; spot-checked others) |
+| Pipeline failure visible, no silent empty state | ✅ (by test) | data_status=failed overlay + admin section unit-tested; needs prod `pipeline_failures` table for a live example |
+| Copy follows P9 rules | ✅ | `messaging-rules.test.ts` scans every public tsx in CI |
+| Scoped key returns own data, denied for others | ✅ (by test) | `agent-scope.test.ts` security-property tests; live-key check needs a prod-issued `agent:{slug}` key |
+
+**Caveat:** local data is the static fallback (no Supabase env), so "✅ (by test)" rows are enforced by the unit suite rather than observed live. One prod pass over a live-books agent completes these visually.
+
+## 13. P0/P1 backlog — Bankr reliability (CTO deliverable #7)
+
+**P0 (blocking full value of shipped work):**
+1. Apply `supabase/migrations/20260717000001_pipeline_failures.sql` in prod (P5 has no table until then).
+2. Run the first production data audit (`scripts/bankr-data-audit.sh` with prod secret); commit `reports/` artifact — this is the real P1 deliverable's numbers.
+3. Add Hermes schedules: weekly `bankr-data-audit` (Mon 06:00 UTC).
+4. Issue `agent:{slug}` keys to pilot Bankr teams; verify one live 403 cross-agent denial.
+5. Fill bios for top Bankr agents (admin Edit Agent Profile) — every profile currently shows the empty state.
+
+**P1 (reliability debt, next sprint):**
+6. Tracked migrations for hand-created prod tables (`registry_manifest_submissions`, `luca_subagent_runs`, `registry_claims`) — schema currently not reproducible.
+7. `outreach_status_legacy` cleanup migration once the new vocabulary is confirmed in practice.
+8. Wallet-level v1 endpoints (`ledger-summary`, `full-report`, `scan`) are unscoped by design (public chain data) — consider verifying wallet-belongs-to-agent for scoped keys.
+9. Gas tracking (no ledger category exists — expense breakdown honestly shows "not tracked").
+10. `valueUsd` pricing for provider-normalized transactions (currently honest-blank).
+11. Sync `docs/API_BANKR.md` into the GitBook (`DOCS_URL`).
+12. Visual QA pass on a live-books agent post-deploy (attributed rendering was test-verified only).

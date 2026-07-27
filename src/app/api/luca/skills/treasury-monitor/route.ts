@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 
 const ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/;
 
-function healthSignal(balance: number): "healthy" | "low" | "critical" {
+function healthSignal(balance: number | null): "healthy" | "low" | "critical" | "unknown" {
+  if (balance === null) return "unknown"; // lookup failed — not $0 (P5)
   if (balance >= 10_000) return "healthy";
   if (balance >= 1_000) return "low";
   return "critical";
@@ -99,8 +100,10 @@ export async function POST(req: NextRequest) {
 
     let total = 0;
     const walletRows = targetWallets.map((w, i) => {
-      const balance = balances[i].status === "fulfilled" ? balances[i].value : 0;
-      total += balance;
+      const result = balances[i];
+      const balance = result.status === "fulfilled" ? result.value : null;
+      // null = lookup failed; don't fold it into the total as a fake $0.
+      if (balance !== null) total += balance;
       const elig = isBooksEligibleWallet(w, agent.tokenAddress);
       return {
         address: w.address.toLowerCase(),

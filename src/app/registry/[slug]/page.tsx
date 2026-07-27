@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getRegistryAgents } from "@/lib/registry-db";
+import { getPendingUpdates, getRegistryAgents } from "@/lib/registry-db";
+import { getSupabaseAdminClient, hasSupabaseAdminEnv } from "@/lib/supabase-admin";
 import { AGENTS } from "@/app/registry/data";
 import type { Agent } from "@/app/registry/types";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
@@ -58,6 +59,28 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description: desc,
     },
   };
+}
+
+// P7: pending claim (registry_claims, keyed by agent_name) or manifest
+// submission (registry_pending_updates) awaiting admin review for this agent.
+async function hasPendingSubmission(agentName: string): Promise<boolean> {
+  try {
+    const updates = await getPendingUpdates();
+    if (updates.some((u) => u.agent_name === agentName && u.status === "pending")) return true;
+    if (hasSupabaseAdminEnv()) {
+      const sb = getSupabaseAdminClient();
+      const { data } = await sb
+        .from("registry_claims")
+        .select("id")
+        .eq("agent_name", agentName)
+        .eq("status", "pending")
+        .limit(1);
+      if ((data ?? []).length > 0) return true;
+    }
+  } catch {
+    // non-fatal — absence of the banner is the safe default
+  }
+  return false;
 }
 
 async function getLucaEconomics(): Promise<AgentEconomicSummary | undefined> {
@@ -118,6 +141,10 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
     books.attributed ? books.financials.tx_count : 0,
   );
 
+  // P7: does this agent have a claim or manifest submission waiting on review?
+  // Non-fatal — a lookup failure just means no pending banner.
+  const pendingReview = await hasPendingSubmission(agent.name);
+
   // ProfileClient serializes this object into public page HTML — blank the
   // internal CRM fields (adminNotes stays: the profile renders it as the
   // public Luca verdict, same as PublicAgent.lucaVerdict).
@@ -142,6 +169,7 @@ export default async function AgentProfilePage({ params }: { params: Promise<{ s
       booksHistory={booksHistory}
       anomalies={anomalies}
       verificationScore={verificationScore}
+      pendingReview={pendingReview}
     />
   );
 }

@@ -10,13 +10,17 @@ const ALCHEMY_BASE = "https://base-mainnet.g.alchemy.com/v2";
 const _cache = new Map<string, { balance: number; expires: number }>();
 const TTL = 10 * 60 * 1000; // 10 minutes
 
-export async function getWalletStableBalance(walletAddress: string): Promise<number> {
+// Returns the stablecoin balance, or null when the balance could NOT be
+// fetched (no API key, network/HTTP error, timeout). null ≠ 0: a genuine
+// empty wallet returns 0, a failed lookup returns null so callers render
+// "unavailable" instead of a fake $0. (P5 — no silent empty states.)
+export async function getWalletStableBalance(walletAddress: string): Promise<number | null> {
   const addr = walletAddress.toLowerCase();
   const cached = _cache.get(addr);
   if (cached && cached.expires > Date.now()) return cached.balance;
 
   const apiKey = process.env.ALCHEMY_API_KEY;
-  if (!apiKey) return 0;
+  if (!apiKey) return null;
 
   try {
     const res = await fetch(`${ALCHEMY_BASE}/${apiKey}`, {
@@ -31,7 +35,7 @@ export async function getWalletStableBalance(walletAddress: string): Promise<num
       signal: AbortSignal.timeout(6_000),
     });
 
-    if (!res.ok) return 0;
+    if (!res.ok) return null;
 
     type AlchemyBalanceResult = {
       result?: { tokenBalances?: Array<{ tokenBalance?: string }> };
@@ -51,6 +55,6 @@ export async function getWalletStableBalance(walletAddress: string): Promise<num
     _cache.set(addr, { balance, expires: Date.now() + TTL });
     return balance;
   } catch {
-    return 0;
+    return null;
   }
 }

@@ -18,6 +18,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { internalAuth } from "@/lib/internal-auth";
+import { logPipelineFailure } from "@/lib/pipeline-observability";
 import { fetchWalletTransactions } from "@/lib/truth-engine/chain-fetcher";
 import { classifyTransaction, computeEvidenceUpgrade } from "@/lib/truth-engine/revenue-classifier";
 import {
@@ -110,7 +111,20 @@ export async function GET(req: NextRequest) {
       limit:   TX_LIMIT_PER_WALLET,
     });
 
-    if (fetchResult.provider === "none") { skipped++; continue; }
+    if (fetchResult.provider === "none") {
+      skipped++;
+      // Both providers failed — record it (rate-limit/API error is not "empty").
+      await logPipelineFailure({
+        stage: "transactions_fetched",
+        agentSlug: wallet.agent_slug,
+        walletAddress: addr,
+        chain,
+        provider: "none",
+        error: fetchResult.error ?? "Both providers failed (Alchemy + Etherscan).",
+        recordsFetched: 0,
+      });
+      continue;
+    }
 
     const ownWallets = await getOwnWallets(wallet.agent_slug);
     const classified: ClassifiedEvent[] = fetchResult.transactions.map((tx) =>
@@ -119,13 +133,29 @@ export async function GET(req: NextRequest) {
 
     totalEvents += classified.length;
 
+    let walletInsertErrors = 0;
+    let walletWritten = 0;
     for (const event of classified) {
       try {
         await insertRevenueClassificationEvent(wallet.agent_slug, event);
+        walletWritten++;
       } catch (e) {
         insertErrors++;
+        walletInsertErrors++;
         if (insertErrors <= 3) errorLines.push(`insert ${wallet.agent_slug}/${addr.slice(0,8)}: ${String(e)}`);
       }
+    }
+    if (walletInsertErrors > 0) {
+      await logPipelineFailure({
+        stage: "transactions_classified",
+        agentSlug: wallet.agent_slug,
+        walletAddress: addr,
+        chain,
+        provider: fetchResult.provider,
+        error: `${walletInsertErrors} of ${classified.length} classification event(s) failed to persist.`,
+        recordsFetched: fetchResult.transactions.length,
+        recordsWritten: walletWritten,
+      });
     }
 
     // Evidence upgrade — only if signals are strong enough

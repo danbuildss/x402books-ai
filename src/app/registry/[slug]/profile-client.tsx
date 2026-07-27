@@ -23,6 +23,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteNav } from "@/components/site-nav";
 import { agentHealthScore, gradeColor } from "@/lib/agent-health-score";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { DOCS_URL } from "@/lib/docs-url";
 import type { AgentConfidenceLabel } from "@/lib/revenue-confidence";
 import { CONFIDENCE_META } from "@/lib/revenue-confidence";
 import {
@@ -1433,7 +1434,51 @@ function ToolDecisionsBlock({ events }: { events: ToolDecisionEvent[] }) {
 type ClaimTab = "wallet" | "manifest";
 type ClaimState = "idle" | "loading" | "done" | "error";
 
-function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: string; status: string }) {
+// ── P7: profile CTA row — every unverified profile has a clear next step ─────
+
+function ProfileCtas({ status, pendingReview }: { status: string; pendingReview: boolean }) {
+  const verified = status === "Verified" || status === "Luca Managed";
+  const claimed = status === "Claimed";
+
+  const base: React.CSSProperties = {
+    display: "inline-flex", alignItems: "center", gap: 5,
+    padding: "6px 12px", borderRadius: 6, fontSize: "0.72rem", fontWeight: 600,
+    textDecoration: "none", border: "1px solid var(--line)",
+    color: "var(--ink)", background: "var(--surface)",
+    fontFamily: "var(--font-mono)",
+  };
+  const primary: React.CSSProperties = {
+    ...base,
+    background: "var(--accent)", color: "#fff", border: "1px solid transparent",
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 16 }}>
+      {pendingReview && (
+        <span style={{
+          ...base, cursor: "default",
+          color: "var(--warning, #F4B942)", borderColor: "color-mix(in srgb, #F4B942 35%, transparent)",
+          background: "color-mix(in srgb, #F4B942 8%, transparent)",
+        }}>
+          ⏳ Submission pending review
+        </span>
+      )}
+      {!verified && !claimed && !pendingReview && (
+        <a href="#claim" style={primary}>Claim this agent</a>
+      )}
+      {!verified && (
+        <>
+          <Link href="/register" style={pendingReview ? base : { ...base }}>Submit wallet manifest</Link>
+          <a href="#claim" style={base}>Declare wallet</a>
+        </>
+      )}
+      <a href="https://t.me/asklucaai" target="_blank" rel="noreferrer" style={base}>Contact Zetta</a>
+      <a href={DOCS_URL} target="_blank" rel="noreferrer" style={base}>View API docs</a>
+    </div>
+  );
+}
+
+function ClaimBanner({ slug, agentName, status, pendingReview = false }: { slug: string; agentName: string; status: string; pendingReview?: boolean }) {
   // Start expanded for unclaimed/unverified profiles — the CTA is the primary action
   const isUnclaimed = status === "Candidate" || status === "Awaiting Manifest";
   const needsAttention = status === "Needs Verification";
@@ -1459,7 +1504,35 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   const { wallets } = useWallets();
   const connectedWallet = useMemo(() => wallets.find((w) => w.walletClientType !== "privy"), [wallets]);
 
-  if (status === "Verified" || status === "Luca Managed" || status === "Claimed") return null;
+  if (status === "Verified" || status === "Luca Managed") return null;
+
+  // P7: claimed profiles and in-flight submissions show review status instead
+  // of the claim form — the submitter should see where things stand.
+  if (status === "Claimed" || pendingReview) {
+    const heading = status === "Claimed"
+      ? `${agentName} is claimed — verification in review`
+      : "Submission received — pending admin review";
+    const detail = status === "Claimed"
+      ? "The team's claim was accepted. Wallet verification and books attribution are being finalized."
+      : "A claim or wallet manifest for this agent is waiting on admin review (typically 24–48 hours). Questions? Message @zettatracker on X.";
+    return (
+      <div id="claim" style={{
+        borderRadius: 12,
+        border: "1px solid color-mix(in srgb, #F4B942 30%, transparent)",
+        borderLeft: "3px solid #F4B942",
+        background: "color-mix(in srgb, #F4B942 6%, var(--surface))",
+        padding: "14px 18px", marginBottom: 20,
+      }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 17, color: "var(--warning, #F4B942)", marginTop: 1, flexShrink: 0 }}>hourglass_top</span>
+          <div>
+            <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--ink)", margin: 0 }}>{heading}</p>
+            <p style={{ fontSize: "0.76rem", color: "var(--muted)", margin: "3px 0 0", lineHeight: 1.5 }}>{detail}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const bannerHeading = needsAttention
     ? `Action needed: ${agentName}`
@@ -1586,7 +1659,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
       ? "Our team reviews claims within 24–48 hours. Questions? Message @zettatracker on X."
       : null;
     return (
-      <div style={bannerStyle}>
+      <div id="claim" style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 18, color, marginTop: 1, flexShrink: 0 }}>{icon}</span>
           <div style={{ flex: 1 }}>
@@ -1615,7 +1688,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
   // ── Collapsed state ───────────────────────────────────────────────────────
   if (!expanded) {
     return (
-      <div style={bannerStyle}>
+      <div id="claim" style={bannerStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <span className="material-symbols-outlined" style={{ fontSize: 16, color: "var(--accent)", flexShrink: 0 }}>handshake</span>
@@ -1661,7 +1734,7 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
 
   // ── Expanded state ────────────────────────────────────────────────────────
   return (
-    <div style={bannerStyle}>
+    <div id="claim" style={bannerStyle}>
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: isUnclaimed ? 6 : 12 }}>
         <span className="material-symbols-outlined" style={{ fontSize: isUnclaimed ? 20 : 16, color: "var(--accent)", marginTop: 1, flexShrink: 0 }}>handshake</span>
@@ -1799,6 +1872,12 @@ function ClaimBanner({ slug, agentName, status }: { slug: string; agentName: str
               <p style={{ width: "100%", fontSize: "0.78rem", color: "var(--negative)", margin: "4px 0 0" }}>{mfMsg}</p>
             )}
           </form>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted)", margin: "10px 0 0" }}>
+            Prefer a guided flow?{" "}
+            <Link href="/register" style={{ color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+              Register your agent step-by-step →
+            </Link>
+          </p>
         </>
       )}
     </div>
@@ -2082,7 +2161,7 @@ const PROF_TABS: { key: ProfileTab; label: string; badge?: string }[] = [
   { key: "research",  label: "Research"  },
 ];
 
-export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory, anomalies = [], verificationScore }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[]; anomalies?: Anomaly[]; verificationScore?: VerificationScore }) {
+export function ProfileClient({ agent, slug, economics, inferenceActivity, classification, toolDecisions, books, booksHistory, anomalies = [], verificationScore, pendingReview = false }: { agent: Agent; slug: string; economics?: AgentEconomicSummary; inferenceActivity?: InferenceSummary; classification?: SettlementClassification; toolDecisions?: ToolDecisionEvent[]; books?: AgentBooks | AgentBooksUnattributed; booksHistory?: AgentBooksSnapshot[]; anomalies?: Anomaly[]; verificationScore?: VerificationScore; pendingReview?: boolean }) {
   const router = useRouter();
   const [showShare, setShowShare] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
@@ -2249,6 +2328,9 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           })()}
         </div>
 
+        {/* P7 — CTA row: every unverified profile has a clear next step */}
+        <ProfileCtas status={agent.verificationStatus} pendingReview={pendingReview} />
+
         {/* 4 — Financial metrics strip (seamless TL-A grid) */}
         <MetricsStrip metrics={profileMetrics} />
 
@@ -2264,7 +2346,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         {/* When there are no books, the manifest/claim CTA IS the next action —
             surface it here instead of burying it below empty sections. */}
         {agent.booksStatus === "no_books" && (
-          <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+          <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} pendingReview={pendingReview} />
         )}
 
         <div className="prof-body">
@@ -2513,7 +2595,7 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
           {/* ── Data quality + claim CTA ── */}
           <DataQualityBlock dq={dq} />
           {agent.booksStatus !== "no_books" && (
-            <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} />
+            <ClaimBanner slug={slug} agentName={agent.name} status={agent.verificationStatus} pendingReview={pendingReview} />
           )}
           {economics && <AgentEconomicsBlock economics={economics} />}
 

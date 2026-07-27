@@ -74,6 +74,8 @@ export function renderBankrAuditMarkdown(audit: BankrDataAudit): string {
     ["Books ready (already generated)", audit.action_buckets.books_ready],
     ["Needs manifest", audit.action_buckets.needs_manifest],
     ["Needs metadata cleanup", audit.action_buckets.needs_metadata_cleanup],
+    ["Ready for outreach (DM targets)", audit.action_buckets.ready_for_outreach],
+    ["Ready to verify (approval queue)", audit.action_buckets.ready_to_verify],
   ];
   for (const [title, slugs] of buckets) {
     lines.push(`### ${title} (${slugs.length})`);

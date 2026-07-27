@@ -16,6 +16,7 @@ import { buildAgentBooks, invalidateBooksCache } from "@/lib/agent-books";
 import { saveAgentBooksSnapshot } from "@/lib/agent-books-history";
 import { internalAuth } from "@/lib/internal-auth";
 import { toSlug } from "@/app/registry/[slug]/slug";
+import { logPipelineFailure, markAgentIndexed } from "@/lib/pipeline-observability";
 
 async function notifyTelegram(text: string): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -50,13 +51,29 @@ export async function GET(req: NextRequest) {
       const books = await buildAgentBooks(agent, "30d");
       if (books.attributed) {
         await saveAgentBooksSnapshot(books).catch(() => {});
+        // Success: stamp freshness and clear any prior failures for this agent.
+        await markAgentIndexed(slug, agent.name);
       } else {
         unattributedAgents.push(`${agent.name} (${books.reason})`);
+        // Declared wallets but no books — record so it's queryable, not silent.
+        await logPipelineFailure({
+          stage: "books_generated",
+          agentSlug: slug,
+          agentName: agent.name,
+          error: `Unattributed despite declared wallets: ${books.reason}`,
+        });
       }
       refreshed++;
     } catch (err) {
       errors++;
-      errorAgents.push(`${agent.name}: ${err instanceof Error ? err.message : "unknown"}`);
+      const msg = err instanceof Error ? err.message : "unknown";
+      errorAgents.push(`${agent.name}: ${msg}`);
+      await logPipelineFailure({
+        stage: "books_generated",
+        agentSlug: slug,
+        agentName: agent.name,
+        error: msg,
+      });
     }
   }
 

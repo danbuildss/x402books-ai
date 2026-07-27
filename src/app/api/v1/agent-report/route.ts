@@ -2,18 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { v1Auth } from "@/lib/v1-auth";
 import { getAgentEvents, summarizeEvents } from "@/lib/agent-events";
 import { generateAgentReport } from "@/lib/agent-report";
+import { toSlug } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
 // GET /api/v1/agent-report?agentName=X&days=7
 // Returns a structured plain-language financial report for an agent.
 export async function GET(req: NextRequest) {
-  const auth = await v1Auth(req);
-  if (!auth.ok) return auth.response;
-
   const { searchParams } = req.nextUrl;
   const agentName = searchParams.get("agentName");
   const days = Math.min(90, parseInt(searchParams.get("days") ?? "7", 10));
+
+  // Scope enforcement (P8): agent:{slug} keys may only read their own report.
+  const auth = await v1Auth(req, agentName ? { agentSlug: toSlug(agentName) } : undefined);
+  if (!auth.ok) return auth.response;
 
   if (!agentName) {
     return NextResponse.json({ error: "agentName is required" }, { status: 400 });

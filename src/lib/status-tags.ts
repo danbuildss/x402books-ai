@@ -42,8 +42,12 @@ export function deriveBooksStatus(
 export function deriveDataStatus(
   lastChecked: string | null | undefined,
   now: number = Date.now(),
+  hasActiveFailure = false,
 ): DataStatus {
-  // "failed" is reserved: no refresh-error marker exists in the schema yet.
+  // An unresolved pipeline failure wins over freshness (P5). The failure
+  // signal is passed in from getRegistryAgents (a read of pipeline_failures) —
+  // this stays a pure function.
+  if (hasActiveFailure) return "failed";
   if (!lastChecked) return "partial";
   const age = now - new Date(lastChecked).getTime();
   if (Number.isNaN(age)) return "partial";
