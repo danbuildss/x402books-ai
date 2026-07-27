@@ -6,6 +6,7 @@
 
 import { describe, expect, test } from "bun:test";
 import {
+  buildActionBuckets,
   buildAuditRow,
   buildCounts,
   buildDuplicateGroups,
@@ -181,5 +182,81 @@ describe("buildAuditRow", () => {
     const row = buildAuditRow(makeAgent(), {}, { "test-agent": ["token_address", "x_handle"] });
     expect(row.is_duplicate).toBe(true);
     expect(row.duplicate_reasons).toEqual(["token_address", "x_handle"]);
+  });
+});
+
+// ── P6 queue buckets ──────────────────────────────────────────────────────────
+
+describe("buildActionBuckets P6 views", () => {
+  const completeMeta = {
+    xHandle: "@dm-me",
+    website: "https://x.yz",
+    symbol: "$OK",
+    tokenAddress: "0x2222222222222222222222222222222222222222",
+  };
+
+  test("ready_for_outreach: complete metadata + no manifest + never contacted", () => {
+    const target = buildAuditRow(makeAgent({ ...completeMeta, slug: "dm-target", outreachStatus: null }), {}, {});
+    const contacted = buildAuditRow(
+      makeAgent({ ...completeMeta, slug: "already-dmed", outreachStatus: "dm_sent" }),
+      {}, {},
+    );
+    const incompleteMeta = buildAuditRow(
+      makeAgent({ slug: "no-website", website: null, outreachStatus: null }),
+      {}, {},
+    );
+    const hasManifest = buildAuditRow(
+      makeAgent({
+        ...completeMeta,
+        slug: "has-manifest",
+        outreachStatus: null,
+        wallets: [makeWallet({ evidenceSource: "manifest" })],
+      }),
+      {}, {},
+    );
+    const buckets = buildActionBuckets([target, contacted, incompleteMeta, hasManifest]);
+    expect(buckets.ready_for_outreach).toEqual(["dm-target"]);
+  });
+
+  test("ready_for_outreach also includes explicit not_contacted", () => {
+    const row = buildAuditRow(
+      makeAgent({ ...completeMeta, slug: "explicit", outreachStatus: "not_contacted" }),
+      {}, {},
+    );
+    expect(buildActionBuckets([row]).ready_for_outreach).toEqual(["explicit"]);
+  });
+
+  test("ready_to_verify: manifest wallets + needs_verification profile", () => {
+    const ready = buildAuditRow(
+      makeAgent({
+        slug: "verify-me",
+        profileStatus: "needs_verification",
+        wallets: [makeWallet({ evidenceSource: "manifest" })],
+      }),
+      {}, {},
+    );
+    const alreadyVerified = buildAuditRow(
+      makeAgent({
+        slug: "done",
+        profileStatus: "verified",
+        wallets: [makeWallet({ evidenceSource: "manifest" })],
+      }),
+      {}, {},
+    );
+    const noManifest = buildAuditRow(
+      makeAgent({ slug: "no-manifest", profileStatus: "needs_verification" }),
+      {}, {},
+    );
+    const buckets = buildActionBuckets([ready, alreadyVerified, noManifest]);
+    expect(buckets.ready_to_verify).toEqual(["verify-me"]);
+  });
+
+  test("outreach/priority CRM fields flow onto the audit row", () => {
+    const row = buildAuditRow(
+      makeAgent({ outreachStatus: "replied", bankrPriority: "high" }),
+      {}, {},
+    );
+    expect(row.outreach_status).toBe("replied");
+    expect(row.bankr_priority).toBe("high");
   });
 });

@@ -52,6 +52,9 @@ export type BankrAgentAuditRow = {
   needs_review: boolean;
   is_duplicate: boolean;
   duplicate_reasons: string[]; // subset of ["token_address","x_handle","wallet_address"]
+  // CRM fields for the admin queue (P6) — this audit is admin-only, never public.
+  outreach_status: string | null;
+  bankr_priority: string | null;
 };
 
 export type DuplicateGroup = {
@@ -94,6 +97,9 @@ export type BankrDataAudit = {
     needs_manifest: string[]; // not_submitted with known wallets
     books_ready: string[]; // books already generated (live or stale)
     usable: string[]; // strict metadata + ≥1 eligible wallet — books can generate now
+    // P6 queue views:
+    ready_for_outreach: string[]; // complete metadata, no manifest, not yet contacted — DM targets
+    ready_to_verify: string[]; // manifest wallets on file, awaiting verification — Dan's approval queue
   };
 };
 
@@ -191,6 +197,8 @@ export function buildAuditRow(
     needs_review: agent.metadataStatus === "needs_review",
     is_duplicate: duplicateReasons.length > 0,
     duplicate_reasons: duplicateReasons,
+    outreach_status: agent.outreachStatus,
+    bankr_priority: agent.bankrPriority,
   };
 }
 
@@ -226,6 +234,21 @@ export function buildActionBuckets(rows: BankrAgentAuditRow[]): BankrDataAudit["
       .map((r) => r.slug),
     usable: rows
       .filter((r) => r.metadata_complete_strict && r.eligible_wallet_count > 0)
+      .map((r) => r.slug),
+    // Growth's DM list: profile is presentable (metadata complete) but has no
+    // manifest yet, and nobody has reached out.
+    ready_for_outreach: rows
+      .filter(
+        (r) =>
+          r.metadata_complete_strict &&
+          r.manifest_status === "not_submitted" &&
+          r.manifest_wallet_count === 0 &&
+          (r.outreach_status === null || r.outreach_status === "not_contacted"),
+      )
+      .map((r) => r.slug),
+    // Dan's approval queue: manifest wallets on file, verification not final.
+    ready_to_verify: rows
+      .filter((r) => r.manifest_wallet_count > 0 && r.profile_status === "needs_verification")
       .map((r) => r.slug),
   };
 }

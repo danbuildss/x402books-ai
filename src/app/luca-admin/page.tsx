@@ -16,7 +16,7 @@ import type { AddressType } from "@/lib/address-classifier";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "settings" | "subagent-runs" | "pipeline-failures" | "truth-engine" | "pending-updates" | "attribution-health" | "address-classification" | "erc8004" | "revenue-audit" | "accuracy-report" | "confidence-labels";
+type Section = "overview" | "bankr-queue" | "registry" | "attribution" | "economics" | "growth" | "reports" | "settings" | "subagent-runs" | "pipeline-failures" | "truth-engine" | "pending-updates" | "attribution-health" | "address-classification" | "erc8004" | "revenue-audit" | "accuracy-report" | "confidence-labels";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -142,6 +142,7 @@ const POLICIES = [
 
 const NAV: { section: Section; label: string; group: string }[] = [
   { section: "overview",   label: "Overview",    group: "main" },
+  { section: "bankr-queue",       label: "Bankr Queue",       group: "main" },
   { section: "registry",          label: "Registry",          group: "registry-ops" },
   { section: "pending-updates",   label: "Pending Updates",   group: "registry-ops" },
   { section: "attribution",       label: "Attribution",       group: "registry-ops" },
@@ -3378,6 +3379,185 @@ function SubagentRunsSection({ secret }: { secret: string }) {
   );
 }
 
+// ── Bankr Queue (P6) — one Bankr-only admin queue ────────────────────────────
+
+type QueueAuditRow = {
+  name: string;
+  slug: string;
+  x_handle: string | null;
+  website: string | null;
+  token_ticker: string | null;
+  token_address: string | null;
+  known_wallets: number;
+  manifest_wallet_count: number;
+  manifest_status: string;
+  wallet_status: string;
+  profile_status: string;
+  books_status: string;
+  data_status: string;
+  metadata_complete_strict: boolean;
+  outreach_status: string | null;
+  bankr_priority: string | null;
+};
+
+type QueueAudit = {
+  ok: boolean;
+  from_supabase: boolean;
+  agents: QueueAuditRow[];
+  action_buckets: {
+    needs_metadata_cleanup: string[];
+    needs_manifest: string[];
+    ready_for_outreach: string[];
+    ready_to_verify: string[];
+  };
+};
+
+type QueueView = "need_metadata" | "need_manifest" | "stale_books" | "failed_indexing" | "ready_outreach" | "ready_verify";
+
+const QUEUE_VIEWS: { key: QueueView; label: string; who: string }[] = [
+  { key: "need_metadata",  label: "Need Metadata",      who: "profile gaps to fill" },
+  { key: "need_manifest",  label: "Need Manifest",      who: "wallets not declared" },
+  { key: "stale_books",    label: "Stale Books",        who: "books cache out of date" },
+  { key: "failed_indexing", label: "Failed Indexing",   who: "pipeline failures — CTO" },
+  { key: "ready_outreach", label: "Ready for Outreach", who: "DM targets — growth" },
+  { key: "ready_verify",   label: "Ready to Verify",    who: "approval queue — Dan" },
+];
+
+function queueFilter(rows: QueueAuditRow[], buckets: QueueAudit["action_buckets"], view: QueueView): QueueAuditRow[] {
+  const inBucket = (b: string[]) => rows.filter((r) => b.includes(r.slug));
+  switch (view) {
+    case "need_metadata":  return rows.filter((r) => !r.metadata_complete_strict);
+    case "need_manifest":  return inBucket(buckets.needs_manifest);
+    case "stale_books":    return rows.filter((r) => r.books_status === "stale");
+    case "failed_indexing": return rows.filter((r) => r.data_status === "failed");
+    case "ready_outreach": return inBucket(buckets.ready_for_outreach);
+    case "ready_verify":   return inBucket(buckets.ready_to_verify);
+  }
+}
+
+function missingMetadataFields(r: QueueAuditRow): string[] {
+  const missing: string[] = [];
+  if (!r.x_handle) missing.push("X handle");
+  if (!r.website) missing.push("website");
+  if (!r.token_ticker) missing.push("ticker");
+  if (!r.token_address) missing.push("token address");
+  return missing;
+}
+
+function BankrQueueSection({ secret }: { secret: string }) {
+  const [audit, setAudit]   = useState<QueueAudit | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState("");
+  const [view, setView]     = useState<QueueView>("need_manifest");
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/admin/registry/data-audit", { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: QueueAudit & { error?: string }) => {
+        if (d.ok) setAudit(d);
+        else setError(d.error ?? "Failed to load audit");
+      })
+      .catch(() => setError("Network error"))
+      .finally(() => setLoading(false));
+  }, [secret]);
+
+  const rows = audit ? queueFilter(audit.agents, audit.action_buckets, view) : [];
+  const activeMeta = QUEUE_VIEWS.find((v) => v.key === view);
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Bankr Focus</p>
+        <h2>Bankr Queue</h2>
+        <p>One queue for every Bankr agent that needs action — metadata, manifests, broken data, outreach, verification.</p>
+      </div>
+
+      {/* View tabs with live counts */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 6, flexWrap: "wrap" }}>
+        {QUEUE_VIEWS.map((v) => {
+          const n = audit ? queueFilter(audit.agents, audit.action_buckets, v.key).length : 0;
+          const active = view === v.key;
+          return (
+            <button key={v.key} type="button" onClick={() => setView(v.key)} style={{
+              padding: "5px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
+              background: active ? "var(--accent)" : "var(--surface)",
+              color: active ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600,
+            }}>
+              {v.label}{audit ? ` (${n})` : ""}
+            </button>
+          );
+        })}
+      </div>
+      <p style={{ margin: "0 0 14px", fontSize: "0.72rem", color: "var(--muted)" }}>
+        {activeMeta?.who}
+        {view === "failed_indexing" && <> · error detail lives in the Pipeline Failures section</>}
+        {audit && !audit.from_supabase && (
+          <span style={{ color: "#F4B942" }}> · static fallback data — NOT live</span>
+        )}
+      </p>
+
+      {loading ? (
+        <div className={styles.stateBox}>Loading Bankr queue…</div>
+      ) : error ? (
+        <div className={styles.stateBox}>{error}</div>
+      ) : rows.length === 0 ? (
+        <div className={styles.stateBox}>Nothing in this queue — no Bankr agents match &quot;{activeMeta?.label}&quot; right now.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {rows.map((r) => (
+            <div key={r.slug} className={styles.card} style={{ padding: "11px 14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <a href={`/registry/${r.slug}`} target="_blank" rel="noreferrer" style={{ fontWeight: 600, fontSize: "0.88rem", color: "var(--ink)", textDecoration: "none" }}>
+                  {r.name}
+                </a>
+                {r.bankr_priority && (
+                  <span style={{
+                    fontSize: "0.64rem", fontWeight: 700, padding: "1px 7px", borderRadius: 99,
+                    color: r.bankr_priority === "high" ? "#F46060" : r.bankr_priority === "medium" ? "#F4B942" : "var(--muted)",
+                    border: "1px solid var(--line)",
+                  }}>
+                    {r.bankr_priority}
+                  </span>
+                )}
+                <span style={{ fontSize: "0.68rem", color: "var(--muted)" }}>
+                  wallets {r.known_wallets} · manifest {r.manifest_wallet_count} · books {r.books_status} · data {r.data_status}
+                </span>
+                <span style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+                  {view === "ready_outreach" && r.x_handle && (
+                    <a href={`https://x.com/${r.x_handle.replace("@", "")}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "var(--accent)", textDecoration: "none", fontWeight: 600 }}>
+                      DM {r.x_handle} ↗
+                    </a>
+                  )}
+                  <a href={`/registry/${r.slug}`} target="_blank" rel="noreferrer" style={{ fontSize: "0.72rem", color: "var(--muted)", textDecoration: "none" }}>
+                    profile ↗
+                  </a>
+                </span>
+              </div>
+              {/* Per-view detail line */}
+              {view === "need_metadata" && (
+                <p style={{ fontSize: "0.72rem", color: "#F4B942", margin: "5px 0 0" }}>
+                  missing: {missingMetadataFields(r).join(", ") || "—"}
+                </p>
+              )}
+              {view === "ready_verify" && (
+                <p style={{ fontSize: "0.72rem", color: "var(--muted)", margin: "5px 0 0" }}>
+                  manifest {r.manifest_status} · profile {r.profile_status} · wallet {r.wallet_status} — review submissions in Registry → Manifest Submissions / Claims
+                </p>
+              )}
+              {view === "failed_indexing" && (
+                <p style={{ fontSize: "0.72rem", color: "#F46060", margin: "5px 0 0" }}>
+                  data_status: failed — unresolved pipeline failure; see the Pipeline Failures section for the error record
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Pipeline Failures (P5) ────────────────────────────────────────────────────
 
 type PipelineFailure = {
@@ -3664,6 +3844,7 @@ export default function LucaAdminPage() {
         {/* Workspace */}
         <main className={styles.workspace}>
           {section === "overview"  && <SectionErrorBoundary name="Overview"><OverviewSection health={health} today={todayMetrics} /></SectionErrorBoundary>}
+          {section === "bankr-queue" && <SectionErrorBoundary name="Bankr Queue"><BankrQueueSection secret={secret} /></SectionErrorBoundary>}
           {section === "registry"    && <SectionErrorBoundary name="Registry"><RegistrySection secret={secret} /></SectionErrorBoundary>}
           {section === "attribution" && <SectionErrorBoundary name="Attribution"><AttributionSection secret={secret} /></SectionErrorBoundary>}
           {section === "economics"   && <SectionErrorBoundary name="Economics"><EconomicsSection /></SectionErrorBoundary>}
