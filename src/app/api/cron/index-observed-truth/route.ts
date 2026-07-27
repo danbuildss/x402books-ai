@@ -17,6 +17,8 @@
 // Processes wallets sequentially to respect provider rate limits.
 
 import { NextRequest, NextResponse } from "next/server";
+
+export const maxDuration = 300; // Vercel Pro — allow up to 5 min for sequential wallet indexing
 import { internalAuth } from "@/lib/internal-auth";
 import { fetchWalletTransactions } from "@/lib/truth-engine/chain-fetcher";
 import { classifyTransaction, computeEvidenceUpgrade } from "@/lib/truth-engine/revenue-classifier";
