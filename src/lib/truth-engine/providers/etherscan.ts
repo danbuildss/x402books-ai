@@ -1,4 +1,5 @@
 import type { FetchParams, NormalizedTransaction } from "../chain-fetcher";
+import { stablecoinUsd } from "../usd-pricer";
 
 const CHAIN_APIS: Record<string, string> = {
   base:      "https://api.basescan.org/api",
@@ -88,6 +89,10 @@ export async function fetchEtherscan(params: FetchParams): Promise<NormalizedTra
       if (seen.has(key)) continue;
       seen.add(key);
 
+      const assetAddress = tx.contractAddress?.toLowerCase() ?? undefined;
+      const decimals = tx.tokenDecimal != null ? parseInt(tx.tokenDecimal, 10) : undefined;
+      const valueUsd = stablecoinUsd(assetAddress, params.chain, tx.value, decimals);
+
       results.push({
         txHash:       tx.hash.toLowerCase(),
         blockNumber:  parseInt(tx.blockNumber, 10),
@@ -96,9 +101,9 @@ export async function fetchEtherscan(params: FetchParams): Promise<NormalizedTra
         from:         tx.from.toLowerCase(),
         to:           tx.to.toLowerCase(),
         assetSymbol:  tx.tokenSymbol ?? "ETH",
-        assetAddress: tx.contractAddress?.toLowerCase() ?? undefined,
+        assetAddress,
         rawValue:     tx.value,
-        valueUsd:     undefined,
+        valueUsd,
         isERC20,
         chain:        params.chain,
       });
