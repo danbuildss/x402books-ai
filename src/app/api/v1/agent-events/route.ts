@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { v1Auth } from "@/lib/v1-auth";
 import { logAgentEvent, getAgentEvents } from "@/lib/agent-events";
 import type { AgentEventType, AgentEventDirection } from "@/lib/agent-events";
+import { toSlug } from "@/lib/slug";
 
 export const dynamic = "force-dynamic";
 
@@ -9,17 +10,25 @@ export const dynamic = "force-dynamic";
 // Log a new economic event for an agent.
 // Body: { agentName, eventType, amountUsd?, provider?, token?, direction?, txHash?, metadata? }
 export async function POST(req: NextRequest) {
-  const auth = await v1Auth(req);
-  if (!auth.ok) return auth.response;
-
   let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
+    // Auth still runs first so a bad key gets 401 before a body error.
+    const auth = await v1Auth(req);
+    if (!auth.ok) return auth.response;
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
   const { agentName, eventType, amount, provider, token, direction, txHash, walletAddress, metadata } = body;
+
+  // Scope enforcement (P8): agent:{slug} keys may only WRITE their own
+  // events — a scoped key must never log activity under another agent.
+  const auth = await v1Auth(
+    req,
+    typeof agentName === "string" && agentName ? { agentSlug: toSlug(agentName) } : undefined,
+  );
+  if (!auth.ok) return auth.response;
 
   if (!agentName || typeof agentName !== "string") {
     return NextResponse.json({ error: "agentName is required" }, { status: 400 });
@@ -48,13 +57,14 @@ export async function POST(req: NextRequest) {
 // GET /api/v1/agent-events?agentName=X&days=7&limit=100
 // Fetch recent events for an agent.
 export async function GET(req: NextRequest) {
-  const auth = await v1Auth(req);
-  if (!auth.ok) return auth.response;
-
   const { searchParams } = req.nextUrl;
   const agentName = searchParams.get("agentName");
   const days   = Math.min(90, parseInt(searchParams.get("days") ?? "7", 10));
   const limit  = Math.min(500, parseInt(searchParams.get("limit") ?? "100", 10));
+
+  // Scope enforcement (P8): agent:{slug} keys read their own events only.
+  const auth = await v1Auth(req, agentName ? { agentSlug: toSlug(agentName) } : undefined);
+  if (!auth.ok) return auth.response;
 
   if (!agentName) {
     return NextResponse.json({ error: "agentName is required" }, { status: 400 });
