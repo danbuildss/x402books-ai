@@ -16,7 +16,7 @@ import type { AddressType } from "@/lib/address-classifier";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "settings" | "subagent-runs" | "truth-engine" | "pending-updates" | "attribution-health" | "address-classification" | "erc8004" | "revenue-audit" | "accuracy-report" | "confidence-labels";
+type Section = "overview" | "registry" | "attribution" | "economics" | "growth" | "reports" | "settings" | "subagent-runs" | "pipeline-failures" | "truth-engine" | "pending-updates" | "attribution-health" | "address-classification" | "erc8004" | "revenue-audit" | "accuracy-report" | "confidence-labels";
 type EcoPeriod = "7d" | "30d";
 
 type HealthData = {
@@ -156,6 +156,7 @@ const NAV: { section: Section; label: string; group: string }[] = [
   { section: "growth",            label: "Growth OS",         group: "growth" },
   { section: "reports",           label: "Reports",           group: "growth" },
   { section: "subagent-runs",     label: "Subagent Runs",     group: "system" },
+  { section: "pipeline-failures", label: "Pipeline Failures", group: "system" },
   { section: "settings",          label: "Settings",          group: "system" },
 ];
 
@@ -3377,19 +3378,133 @@ function SubagentRunsSection({ secret }: { secret: string }) {
   );
 }
 
-// ── Pending Replies ───────────────────────────────────────────────────────────
+// ── Pipeline Failures (P5) ────────────────────────────────────────────────────
 
-const RISK_COLOR: Record<string, string> = {
-  low:    "var(--accent)",
-  medium: "#F4B942",
-  high:   "#F46060",
+type PipelineFailure = {
+  id: string;
+  agent_slug: string | null;
+  agent_name: string | null;
+  wallet_address: string | null;
+  chain: string | null;
+  provider: string | null;
+  stage: string;
+  error: string | null;
+  records_fetched: number;
+  records_written: number;
+  retry_count: number;
+  resolved: boolean;
+  created_at: string;
 };
 
-const STATUS_BG: Record<string, string> = {
-  approved: "var(--accent)",
-  rejected: "#F46060",
-  posted:   "#4AE8A0",
+const PIPELINE_STAGE_LABELS: Record<string, string> = {
+  agent_indexed: "Agent Indexed",
+  metadata_complete: "Metadata Complete",
+  wallet_declared: "Wallet Declared",
+  wallet_eligible: "Wallet Eligible",
+  transactions_fetched: "Transactions Fetched",
+  transactions_normalized: "Transactions Normalized",
+  transactions_classified: "Transactions Classified",
+  books_generated: "Books Generated",
+  profile_updated: "Profile Updated",
+  luca_report_generated: "Luca Report Generated",
 };
+
+function PipelineFailuresSection({ secret }: { secret: string }) {
+  const [failures, setFailures] = useState<PipelineFailure[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [resolvedView, setResolvedView] = useState<"unresolved" | "all">("unresolved");
+
+  useEffect(() => {
+    setLoading(true);
+    const q = resolvedView === "unresolved" ? "?resolved=false" : "";
+    fetch(`/api/admin/pipeline-failures${q}`, { headers: { Authorization: `Bearer ${secret}` } })
+      .then((r) => r.json())
+      .then((d: { ok: boolean; failures?: PipelineFailure[] }) => { setFailures(d.failures ?? []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [secret, resolvedView]);
+
+  const byStage: Record<string, number> = {};
+  for (const f of failures) if (!f.resolved) byStage[f.stage] = (byStage[f.stage] ?? 0) + 1;
+
+  return (
+    <div>
+      <div className={styles.sectionHead}>
+        <p className={styles.kicker}>Data Reliability</p>
+        <h2>Pipeline Failures</h2>
+        <p>Every stage failure in the Bankr data pipeline — agent, wallet, chain, provider, stage, error. Fail loud: nothing here is a silent empty state.</p>
+      </div>
+
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+        {(["unresolved", "all"] as const).map((f) => (
+          <button key={f} type="button" onClick={() => setResolvedView(f)} style={{
+            padding: "4px 12px", borderRadius: 6, border: "1px solid var(--line)", cursor: "pointer",
+            background: resolvedView === f ? "var(--accent)" : "var(--surface)",
+            color: resolvedView === f ? "#fff" : "var(--muted)", fontSize: 12, fontWeight: 600,
+          }}>
+            {f === "unresolved" ? "Unresolved" : "All"}
+          </button>
+        ))}
+        {Object.keys(byStage).length > 0 && (
+          <span style={{ display: "flex", gap: 6, flexWrap: "wrap", marginLeft: 8 }}>
+            {Object.entries(byStage).sort((a, b) => b[1] - a[1]).map(([stage, n]) => (
+              <span key={stage} style={{ fontSize: "0.66rem", padding: "2px 8px", borderRadius: 99, background: "color-mix(in srgb, #f87171 10%, transparent)", border: "1px solid color-mix(in srgb, #f87171 28%, transparent)", color: "#f87171", fontWeight: 600 }}>
+                {PIPELINE_STAGE_LABELS[stage] ?? stage}: {n}
+              </span>
+            ))}
+          </span>
+        )}
+        <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--muted)" }}>
+          {failures.length} failure{failures.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {loading ? (
+        <div className={styles.stateBox}>Loading failures…</div>
+      ) : failures.length === 0 ? (
+        <div className={styles.stateBox}>
+          {resolvedView === "unresolved"
+            ? "No unresolved pipeline failures. Every stage that has run recently succeeded."
+            : "No pipeline failures recorded yet."}
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+          {failures.map((f) => (
+            <div key={f.id} className={styles.card} style={{ padding: "11px 14px", opacity: f.resolved ? 0.55 : 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: f.resolved ? "var(--accent)" : "#f87171" }} />
+                <span style={{ fontSize: "0.68rem", fontWeight: 700, padding: "2px 8px", borderRadius: 99, border: "1px solid var(--line)", color: "var(--ink)" }}>
+                  {PIPELINE_STAGE_LABELS[f.stage] ?? f.stage}
+                </span>
+                <span style={{ fontWeight: 600, fontSize: "0.86rem", color: "var(--ink)" }}>
+                  {f.agent_name ?? f.agent_slug ?? "—"}
+                </span>
+                {f.resolved && (
+                  <span style={{ fontSize: "0.64rem", color: "var(--accent)", fontWeight: 600 }}>resolved</span>
+                )}
+                <span style={{ marginLeft: "auto", fontSize: "0.72rem", color: "var(--muted)", flexShrink: 0 }}>
+                  {new Date(f.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                </span>
+              </div>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap", margin: "5px 0 0", paddingLeft: 18, fontSize: "0.7rem", color: "var(--muted)" }}>
+                {f.wallet_address && <span>wallet <code>{f.wallet_address.slice(0, 8)}…{f.wallet_address.slice(-4)}</code></span>}
+                {f.chain && <span>chain <strong style={{ color: "var(--ink)" }}>{f.chain}</strong></span>}
+                {f.provider && <span>provider <strong style={{ color: "var(--ink)" }}>{f.provider}</strong></span>}
+                <span>fetched <strong style={{ color: "var(--ink)" }}>{f.records_fetched}</strong></span>
+                <span>written <strong style={{ color: "var(--ink)" }}>{f.records_written}</strong></span>
+                {f.retry_count > 0 && <span>retries <strong style={{ color: "var(--ink)" }}>{f.retry_count}</strong></span>}
+              </div>
+              {f.error && (
+                <p style={{ fontSize: "0.75rem", color: "#f87171", margin: "4px 0 0", paddingLeft: 18, fontFamily: "monospace", wordBreak: "break-word" }}>
+                  {f.error}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 
@@ -3556,6 +3671,7 @@ export default function LucaAdminPage() {
           {section === "growth"    && <SectionErrorBoundary name="Growth"><GrowthSection secret={secret} /></SectionErrorBoundary>}
           {section === "reports"   && <SectionErrorBoundary name="Reports"><ReportsSection secret={secret} /></SectionErrorBoundary>}
           {section === "subagent-runs"   && <SectionErrorBoundary name="Subagent Runs"><SubagentRunsSection secret={secret} /></SectionErrorBoundary>}
+          {section === "pipeline-failures" && <SectionErrorBoundary name="Pipeline Failures"><PipelineFailuresSection secret={secret} /></SectionErrorBoundary>}
           {section === "pending-updates"        && <SectionErrorBoundary name="Pending Updates"><PendingUpdatesSection secret={secret} /></SectionErrorBoundary>}
           {section === "attribution-health"     && <SectionErrorBoundary name="Attribution Health"><AttributionHealthSection /></SectionErrorBoundary>}
           {section === "address-classification" && <SectionErrorBoundary name="Address Classification"><AddressClassificationSection secret={secret} /></SectionErrorBoundary>}
