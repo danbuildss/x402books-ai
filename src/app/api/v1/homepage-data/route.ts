@@ -39,9 +39,9 @@ export async function GET() {
       coveragePct: metrics.attribution_coverage_pct,
       manifestFiled: metrics.manifest_agents,
       topAgents,
-      gdp: gdpData?.total_gdp_usd ?? null,
+      gdp: gdpData?.total_revenue_usd ?? null,
       expenses: gdpData?.total_expenses_usd ?? null,
-      netIncome: gdpData?.net_income_usd ?? null,
+      netIncome: gdpData?.total_net_income_usd ?? null,
       statusBreakdown: {
         manifest: metrics.status_breakdown.manifest,
         inferred: metrics.status_breakdown.inferred,

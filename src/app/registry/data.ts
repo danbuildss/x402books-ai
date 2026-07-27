@@ -12,6 +12,7 @@ type SeedAgent = Omit<
   Agent,
   | "bio"
   | "slug"
+  | "adminNotes"
   | "focusStatus"
   | "bankrPriority"
   | "metadataStatus"
@@ -1477,4 +1478,5 @@ export const AGENTS: Agent[] = SEED_AGENTS.map((a) => ({
   profileStatus: deriveProfileStatus(a.verificationStatus),
   booksStatus: "no_books" as const,
   dataStatus: deriveDataStatus(a.lastChecked),
+  adminNotes: null,
 }));
