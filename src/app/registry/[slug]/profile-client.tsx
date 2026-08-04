@@ -860,7 +860,7 @@ function ShareCardModal({ agent, slug, classification, onClose }: {
           {/* Verdict */}
           <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid rgba(80,70,50,0.12)", position: "relative", zIndex: 1 }}>
             <p style={{ fontSize: "0.6rem", fontWeight: 700, color: "rgba(59,122,69,0.65)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 5 }}>
-              Luca&apos;s Verdict
+              Financial Analysis
             </p>
             <p style={{ fontSize: "0.74rem", color: "#7a7364", lineHeight: 1.6 }}>{verdict}</p>
           </div>
@@ -1674,7 +1674,7 @@ function ClaimBanner({ slug, agentName, status, pendingReview = false }: { slug:
                 borderTop: "1px solid var(--line)",
               }}>
                 <p style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--accent)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 4 }}>
-                  Luca financial report
+                  Financial Report
                 </p>
                 <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.6 }}>{lucaSummary}</p>
               </div>
@@ -2334,8 +2334,8 @@ export function ProfileClient({ agent, slug, economics, inferenceActivity, class
         {/* 4 — Financial metrics strip (seamless TL-A grid) */}
         <MetricsStrip metrics={profileMetrics} />
 
-        {/* 5 — Luca verdict (terminal style) */}
-        <div className="tla-section-label">Luca Verdict</div>
+        {/* 5 — Financial verdict */}
+        <div className="tla-section-label">Financial Analysis</div>
         <LucaVerdictBlock
           verdict={operatorVerdict}
           adminNotes={agent.adminNotes}

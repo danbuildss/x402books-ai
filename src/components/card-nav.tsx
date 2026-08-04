@@ -14,7 +14,6 @@ const ITEMS: NavItem[] = [
       { label: "Registry", href: "/registry" },
       { label: "Leaderboard", href: "/leaderboard" },
       { label: "Research", href: "/research" },
-      { label: "Luca", href: "/luca" },
     ],
   },
   {
