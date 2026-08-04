@@ -84,7 +84,6 @@ export function SiteNav() {
           { title: "Registry",    desc: "143 indexed agents with attribution and books status.", href: "/registry" },
           { title: "Agent Books", desc: "Attributed wallet activity turned into readable financials.", href: "/registry" },
           { title: "Leaderboard", desc: "Revenue and attribution rankings across all agents.", href: "/leaderboard" },
-          { title: "Luca",        desc: "AI financial analyst. Reads books, cites sources, never invents data.", href: "/luca" },
         ]} />
         <NavDropdown label="Solutions" items={[
           { title: "For Agent Teams",    desc: "Submit a manifest, get attributed books, share your financial profile.", href: "/registry#verify" },

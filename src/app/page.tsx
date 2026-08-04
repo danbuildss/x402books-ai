@@ -95,13 +95,11 @@ function TerminalCard({ data }: { data: PageData }) {
           </div>
         ))}
 
-        {/* Luca note */}
         <div style={{
           background: "var(--accent-dim)", borderLeft: "2px solid var(--accent)",
           padding: "8px 10px", borderRadius: "0 4px 4px 0", marginTop: 12,
-          animation: "lucaPulse 3.5s 1s ease-in-out infinite",
         }}>
-          <p style={{ fontSize: "0.56rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Luca Note</p>
+          <p style={{ fontSize: "0.56rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 4 }}>Registry Note</p>
           <p style={{ fontSize: "0.68rem", color: "var(--ink-mid)", lineHeight: 1.55, fontFamily: "var(--font-sans)" }}>
             Coverage is thin. Most agents have no declared wallets. Submit a manifest to generate official books.
           </p>
@@ -110,7 +108,7 @@ function TerminalCard({ data }: { data: PageData }) {
 
       {/* Footer */}
       <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 14px", borderTop: "1px solid var(--line)", background: "var(--surface-hi)" }}>
-        {[["BOOKS", "LIVE"], ["LUCA", "ACTIVE"], ["UPDATED", "LIVE"]].map(([k, v]) => (
+        {[["BOOKS", "LIVE"], ["INDEX", "ACTIVE"], ["UPDATED", "LIVE"]].map(([k, v]) => (
           <span key={k} style={{ fontSize: "0.56rem", color: "var(--muted)", letterSpacing: "0.04em" }}>
             {k} <span style={{ color: "var(--accent)" }}>{v}</span>
           </span>
@@ -279,7 +277,6 @@ function Nav({ onSignIn }: { onSignIn: () => void }) {
           { title: "Registry",     desc: "Indexed agents with attribution, books, and verification status.", href: "/registry" },
           { title: "Agent Books",  desc: "Attributed wallet activity turned into readable financials.", href: "/registry" },
           { title: "Leaderboard",  desc: "Revenue and attribution rankings across all agents.", href: "/leaderboard" },
-          { title: "Luca",         desc: "AI financial analyst. Reads books, cites sources, never invents data.", href: "/luca" },
         ]} />
         <NavDropdown label="Solutions" items={[
           { title: "For Agent Teams",  desc: "Submit a manifest, get attributed books, share your financial profile.", href: "/registry#verify" },
@@ -419,7 +416,7 @@ function LandingPage({ data }: { data: PageData }) {
               The financial layer<br />for autonomous agents.
             </h1>
             <p className="anim-3" style={{ fontSize: "0.875rem", color: "var(--ink-mid)", lineHeight: 1.75, maxWidth: 400, marginBottom: 28 }}>
-              Zetta turns attributed agent wallet activity into Agent Books — revenue, expenses, treasury, and net income. Powered by Luca.
+              Zetta turns attributed agent wallet activity into Agent Books — revenue, expenses, treasury, and net income.
             </p>
             <div className="anim-4" style={{ display: "flex", gap: 10, marginBottom: 20 }}>
               <Link href="/registry" style={{
@@ -467,7 +464,7 @@ function LandingPage({ data }: { data: PageData }) {
             { num: "02", name: "Books",        desc: "Attributed transactions classified into revenue, expenses, treasury, and net income.", color: "var(--blue)" },
             { num: "03", name: "History",      desc: "Books snapshotted across reporting periods to track trends and operational health.", color: "#8B7CF6" },
             { num: "04", name: "Economy",      desc: "Attributed agents aggregate into Agent GDP — the financial pulse of the autonomous economy.", color: "var(--amber)" },
-            { num: "05", name: "Intelligence", desc: "Luca reads attributed books and produces financial verdicts, signals, and confidence levels.", color: "var(--accent)" },
+            { num: "05", name: "Intelligence", desc: "Attributed books produce financial verdicts, signals, and confidence levels.", color: "var(--accent)" },
           ].map((step, i, arr) => (
             <div key={step.num} style={{ padding: "20px 16px", borderRight: i < arr.length - 1 ? "1px solid var(--line)" : "none", background: "var(--surface)" }}>
               <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.6rem", fontWeight: 700, letterSpacing: "0.06em", color: step.color, marginBottom: 8 }}>{step.num}</p>
@@ -556,14 +553,12 @@ function LandingPage({ data }: { data: PageData }) {
                 <span style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--ink-hi)" }}>{r.val}</span>
               </div>
             ))}
-            {/* Luca note */}
             <div style={{
               marginTop: 14, padding: "10px 12px",
               background: "var(--accent-dim)", border: "1px solid var(--accent-line)",
               borderLeft: "2px solid var(--accent)", borderRadius: "0 4px 4px 0",
-              animation: "lucaPulse 3.5s 1s ease-in-out infinite",
             }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.54rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 5 }}>Luca · Registry Note</p>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.54rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--accent)", marginBottom: 5 }}>Registry Note</p>
               <p style={{ fontSize: "0.71rem", color: "var(--ink-mid)", lineHeight: 1.55 }}>
                 {data.totalAgents} agents indexed. {data.manifestFiled} manifest filed. Attribution coverage is {data.coveragePct}%. Most agents require a wallet manifest before books can be generated.
               </p>
@@ -581,7 +576,7 @@ function LandingPage({ data }: { data: PageData }) {
       {/* ── LIVE DATA BANNER ── */}
       <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 40px 32px" }}>
         <div style={{ background: "var(--surface)", border: "1px solid var(--line)", borderLeft: "2px solid var(--accent)", borderRadius: 6, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0, animation: "lucaPulse 2s ease-in-out infinite" }} />
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--accent)", flexShrink: 0 }} />
           <p style={{ fontSize: "0.72rem", color: "var(--ink-mid)", lineHeight: 1.5, margin: 0 }}>
             <strong style={{ color: "var(--ink-hi)" }}>All data on this page is live.</strong> Agent count, attribution status, books state, and economic metrics update in real time from the Zetta registry. Financial values show <strong style={{ color: "var(--ink-hi)" }}>—</strong> until a wallet manifest is submitted and books are generated — we never show $0.00 for missing data.
           </p>
@@ -598,8 +593,8 @@ function LandingPage({ data }: { data: PageData }) {
           {[
             { label: "Public · Live",        title: "Registry",    desc: `${data.totalAgents} agents indexed with verification status, wallet attribution, books state, and financial profiles.`, href: "/registry",   link: "Browse Registry →" },
             { label: "Public · Rankings",    title: "Leaderboard", desc: "Revenue, treasury, net income, and attribution rankings across all indexed agents.", href: "/leaderboard", link: "View Leaderboard →" },
-            { label: "AI Analyst",           title: "Luca",        desc: "Reads attributed books, cites sources, and refuses to invent missing data. Ask about any agent.", href: "/luca",       link: "Ask Luca →" },
-            { label: "Public · Intelligence",title: "Research",    desc: "Analyst-grade reports on agent finance, treasury concentration, and ecosystem attribution.", href: "/research",   link: "Read Research →" },
+            { label: "Public · Intelligence", title: "Research",    desc: "Analyst-grade reports on agent finance, treasury concentration, and ecosystem attribution.", href: "/research",   link: "Read Research →" },
+            { label: "Agent Teams",          title: "Verify",      desc: "Submit a wallet manifest to get attributed books, verification status, and a public financial profile.", href: "/registry#verify", link: "Submit Manifest →" },
             { label: "Developer",            title: "API",         desc: "Machine-readable books, registry, revenue, truth, and badge endpoints with scoped keys.", href: "/api",        link: "View API →" },
             { label: "Reference",            title: "Docs",        desc: "Wallet manifest schema, verification flows, API references, and developer quickstart.", href: "/docs",       link: "Read Docs →" },
           ].map((card) => (
@@ -630,7 +625,7 @@ function LandingPage({ data }: { data: PageData }) {
             </div>
           </div>
           {[
-            { title: "Products",   links: [{ l: "Registry", h: "/registry" }, { l: "Leaderboard", h: "/leaderboard" }, { l: "Luca", h: "/luca" }, { l: "Research", h: "/research" }, { l: "API", h: "/api" }] },
+            { title: "Products",   links: [{ l: "Registry", h: "/registry" }, { l: "Leaderboard", h: "/leaderboard" }, { l: "Research", h: "/research" }, { l: "API", h: "/api" }] },
             { title: "Resources",  links: [{ l: "How It Works", h: "/about" }, { l: "Methodology", h: "/research" }, { l: "Submit Agent", h: "/registry#verify" }, { l: "Manifest Guide", h: "/register" }, { l: "Docs", h: "https://docs.zettaai.co/quickstart" }] },
             { title: "Company",    links: [{ l: "About", h: "/about" }, { l: "Solutions", h: "/about" }, { l: "Contact", h: "/about" }] },
           ].map((col) => (
@@ -644,7 +639,7 @@ function LandingPage({ data }: { data: PageData }) {
         </div>
         <div style={{ borderTop: "1px solid var(--line)", maxWidth: 1200, margin: "0 auto", padding: "14px 40px", display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: "0.62rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>© 2026 Zetta. All rights reserved.</span>
-          <span style={{ fontSize: "0.62rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>Financial analysis generated by Luca.</span>
+          <span style={{ fontSize: "0.62rem", color: "var(--muted)", fontFamily: "var(--font-mono)" }}>On-chain financial intelligence for autonomous agents.</span>
         </div>
       </footer>
     </>
