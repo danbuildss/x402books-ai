@@ -17,15 +17,11 @@ if [ -d "$HOME/.claude/skills/gstack/bin" ]; then
 else
   echo "[session-start] Installing gstack..."
 
-  # git clone is proxy-blocked for external repos in remote sessions — use zip download
-  curl -sL "https://github.com/garrytan/gstack/archive/refs/heads/main.zip" \
-    -o /tmp/gstack-install.zip
-
+  # Clone via git (zip download is proxy-blocked in remote sessions)
+  GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 https://github.com/garrytan/gstack /tmp/gstack-clone 2>&1 | tail -3
   mkdir -p "$HOME/.claude/skills/gstack"
-  unzip -q /tmp/gstack-install.zip -d /tmp/gstack-extract
-  mv /tmp/gstack-extract/gstack-main/* "$HOME/.claude/skills/gstack/"
-  rm -f /tmp/gstack-install.zip
-  rm -rf /tmp/gstack-extract
+  cp -r /tmp/gstack-clone/. "$HOME/.claude/skills/gstack/"
+  rm -rf /tmp/gstack-clone
 
   cd "$HOME/.claude/skills/gstack" && ./setup --no-prefix 2>&1 | tail -5
 
